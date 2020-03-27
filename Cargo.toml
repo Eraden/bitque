@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "./jirs-cli",
+    "./jirs-server",
+    "./jirs-client"
+]
+

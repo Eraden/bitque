@@ -1,0 +1,11 @@
+[package]
+name = "jirs-cli"
+version = "0.1.0"
+authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
+edition = "2018"
+
+[[bin]]
+name = "jirs"
+path = "./src/main.rs"
+
+[dependencies]
