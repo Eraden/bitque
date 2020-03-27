@@ -3,6 +3,11 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+#[derive(Serialize)]
+pub struct ErrorResponse {
+    pub errors: Vec<String>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Queryable)]
 pub struct Comment {
     pub id: i32,
@@ -34,8 +39,8 @@ pub struct Issue {
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub reporter_id: Option<i32>,
-    pub project_id: Option<i32>,
+    pub reporter_id: i32,
+    pub project_id: i32,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -53,8 +58,8 @@ pub struct IssueForm {
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub reporter_id: Option<i32>,
-    pub project_id: Option<i32>,
+    pub reporter_id: i32,
+    pub project_id: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable)]

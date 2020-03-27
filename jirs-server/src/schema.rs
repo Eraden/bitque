@@ -71,4 +71,10 @@ joinable!(issues -> users (reporter_id));
 joinable!(tokens -> users (user_id));
 joinable!(users -> projects (project_id));
 
-allow_tables_to_appear_in_same_query!(comments, issues, projects, tokens, users,);
+allow_tables_to_appear_in_same_query!(
+    comments,
+    issues,
+    projects,
+    tokens,
+    users,
+);

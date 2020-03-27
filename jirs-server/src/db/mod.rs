@@ -3,8 +3,11 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 
 pub mod authorize_user;
+pub mod issues;
+pub mod projects;
+pub mod users;
 
-type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
+pub type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 pub struct DbExecutor(pub DbPool);
 
@@ -26,5 +29,11 @@ pub fn build_pool() -> DbPool {
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     r2d2::Pool::builder()
         .build(manager)
-        .expect("Failed to create pool.")
+        .unwrap_or_else(|e| panic!("Failed to create pool. {}", e))
+}
+
+pub trait SyncQuery {
+    type Result;
+
+    fn handle(&self, pool: &DbPool) -> Self::Result;
 }

@@ -1,4 +1,5 @@
-use crate::db::DbExecutor;
+use crate::db::{DbExecutor, DbPool, SyncQuery};
+use crate::errors::ServiceErrors;
 use crate::models::{Token, User};
 use actix::{Handler, Message};
 use diesel::prelude::*;
@@ -10,25 +11,50 @@ pub struct AuthorizeUser {
 }
 
 impl Message for AuthorizeUser {
-    type Result = Result<crate::models::User, String>;
+    type Result = Result<crate::models::User, ServiceErrors>;
 }
 
 impl Handler<AuthorizeUser> for DbExecutor {
-    type Result = Result<crate::models::User, String>;
+    type Result = Result<crate::models::User, ServiceErrors>;
 
     fn handle(&mut self, msg: AuthorizeUser, _: &mut Self::Context) -> Self::Result {
         use crate::schema::tokens::dsl::{access_token, tokens};
         use crate::schema::users::dsl::{id, users};
 
-        let conn: &PgConnection = &self.0.get().unwrap();
+        let conn = &self
+            .0
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let token = tokens
             .filter(access_token.eq(msg.access_token))
             .first::<Token>(conn)
-            .map_err(|e| format!("{}", e))?;
+            .map_err(|e| ServiceErrors::RecordNotFound("Token".to_string()))?;
         let user = users
             .filter(id.eq(token.user_id))
             .first::<User>(conn)
-            .map_err(|e| format!("{}", e))?;
+            .map_err(|e| ServiceErrors::RecordNotFound("User".to_string()))?;
+        Ok(user)
+    }
+}
+
+impl SyncQuery for AuthorizeUser {
+    type Result = std::result::Result<crate::models::User, crate::errors::ServiceErrors>;
+
+    fn handle(&self, pool: &DbPool) -> Self::Result {
+        use crate::schema::tokens::dsl::{access_token, tokens};
+        use crate::schema::users::dsl::{id, users};
+
+        let conn = pool
+            .get()
+            .map_err(|_| crate::errors::ServiceErrors::DatabaseConnectionLost)?;
+        let token = tokens
+            .filter(access_token.eq(self.access_token))
+            .first::<Token>(&conn)
+            .map_err(|_| crate::errors::ServiceErrors::Unauthorized)?;
+        let user = users
+            .filter(id.eq(token.user_id))
+            .first::<User>(&conn)
+            .map_err(|_| crate::errors::ServiceErrors::Unauthorized)?;
         Ok(user)
     }
 }

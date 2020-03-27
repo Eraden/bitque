@@ -5,6 +5,7 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 
 pub mod db;
+pub mod errors;
 pub mod middleware;
 pub mod models;
 pub mod routes;
@@ -23,6 +24,7 @@ async fn main() -> Result<(), String> {
             .wrap(actix_web::middleware::Logger::default())
             .wrap(Cors::default())
             .data(db_addr.clone())
+            .data(crate::db::build_pool())
             .service(
                 web::scope("/issues")
                     .wrap(crate::middleware::authorize::Authorize::default())
@@ -34,9 +36,21 @@ async fn main() -> Result<(), String> {
             )
             .service(
                 web::scope("/comments")
+                    .wrap(crate::middleware::authorize::Authorize::default())
                     .service(crate::routes::comments::create)
                     .service(crate::routes::comments::update)
                     .service(crate::routes::comments::delete),
+            )
+            .service(
+                web::scope("/currentUser")
+                    .wrap(crate::middleware::authorize::Authorize::default())
+                    .service(crate::routes::users::current_user),
+            )
+            .service(
+                web::scope("/project")
+                    .wrap(crate::middleware::authorize::Authorize::default())
+                    .service(crate::routes::projects::project_with_users_and_issues)
+                    .service(crate::routes::projects::update),
             )
     })
     .bind("127.0.0.1:8080")
