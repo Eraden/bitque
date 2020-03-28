@@ -2,6 +2,7 @@
 members = [
     "./jirs-cli",
     "./jirs-server",
-    "./jirs-client"
+    "./jirs-client",
+    "./jirs-data",
 ]
 

@@ -10,6 +10,16 @@ table! {
 }
 
 table! {
+    issue_assignees (id) {
+        id -> Int4,
+        issue_id -> Int4,
+        user_id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+table! {
     issues (id) {
         id -> Int4,
         title -> Text,
@@ -66,6 +76,8 @@ table! {
 
 joinable!(comments -> issues (issue_id));
 joinable!(comments -> users (user_id));
+joinable!(issue_assignees -> issues (issue_id));
+joinable!(issue_assignees -> users (user_id));
 joinable!(issues -> projects (project_id));
 joinable!(issues -> users (reporter_id));
 joinable!(tokens -> users (user_id));
@@ -73,6 +85,7 @@ joinable!(users -> projects (project_id));
 
 allow_tables_to_appear_in_same_query!(
     comments,
+    issue_assignees,
     issues,
     projects,
     tokens,

@@ -1,0 +1,17 @@
+[package]
+name = "jirs-data"
+version = "0.1.0"
+authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
+edition = "2018"
+
+[lib]
+name = "jirs_data"
+path = "./src/lib.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = "*"
+serde_json = "*"
+chrono = { version = "*", features = [ "serde" ] }
+uuid = { version = ">=0.7.0, <0.9.0", features = ["serde"] }

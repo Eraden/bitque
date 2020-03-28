@@ -1,5 +1,5 @@
-use crate::models::ErrorResponse;
 use actix_web::HttpResponse;
+use jirs_data::ErrorResponse;
 
 const TOKEN_NOT_FOUND: &str = "Token not found";
 const DATABASE_CONNECTION_FAILED: &str = "Database connection failed";

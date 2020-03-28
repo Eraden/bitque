@@ -28,11 +28,11 @@ impl Handler<AuthorizeUser> for DbExecutor {
         let token = tokens
             .filter(access_token.eq(msg.access_token))
             .first::<Token>(conn)
-            .map_err(|e| ServiceErrors::RecordNotFound("Token".to_string()))?;
+            .map_err(|_e| ServiceErrors::RecordNotFound("Token".to_string()))?;
         let user = users
             .filter(id.eq(token.user_id))
             .first::<User>(conn)
-            .map_err(|e| ServiceErrors::RecordNotFound("User".to_string()))?;
+            .map_err(|_e| ServiceErrors::RecordNotFound("User".to_string()))?;
         Ok(user)
     }
 }

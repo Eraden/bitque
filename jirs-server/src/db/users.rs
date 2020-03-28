@@ -1,8 +1,7 @@
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
-use crate::models::{Issue, User};
+use crate::models::{IssueAssignee, User};
 use actix::{Handler, Message};
-use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -19,19 +18,47 @@ impl Handler<LoadProjectUsers> for DbExecutor {
     type Result = Result<Vec<User>, ServiceErrors>;
 
     fn handle(&mut self, msg: LoadProjectUsers, _ctx: &mut Self::Context) -> Self::Result {
-        use crate::schema::issues::dsl::{issues, project_id, reporter_id};
         use crate::schema::users::dsl::*;
 
         let conn = &self
             .0
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let rows: Vec<(User, Option<Issue>)> = users
-            .distinct()
-            .left_outer_join(issues.on(reporter_id.eq(id)))
+        let rows: Vec<User> = users
+            .distinct_on(id)
             .filter(project_id.eq(msg.project_id))
             .load(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("project issues".to_string()))?;
+            .map_err(|_| ServiceErrors::RecordNotFound("project users".to_string()))?;
+        Ok(rows)
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct LoadIssueAssignees {
+    pub issue_id: i32,
+}
+
+impl Message for LoadIssueAssignees {
+    type Result = Result<Vec<User>, ServiceErrors>;
+}
+
+impl Handler<LoadIssueAssignees> for DbExecutor {
+    type Result = Result<Vec<User>, ServiceErrors>;
+
+    fn handle(&mut self, msg: LoadIssueAssignees, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::issue_assignees::dsl::{issue_assignees, issue_id, user_id};
+        use crate::schema::users::dsl::*;
+
+        let conn = &self
+            .0
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let rows: Vec<(User, IssueAssignee)> = users
+            .distinct_on(id)
+            .inner_join(issue_assignees.on(user_id.eq(id)))
+            .filter(issue_id.eq(msg.issue_id))
+            .load(conn)
+            .map_err(|_| ServiceErrors::RecordNotFound("issue users".to_string()))?;
         let mut vec: Vec<User> = vec![];
         for row in rows {
             vec.push(row.0);

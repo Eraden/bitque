@@ -961,6 +961,16 @@ name = "jirs-client"
 version = "0.1.0"
 
 [[package]]
+name = "jirs-data"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "uuid 0.8.1",
+]
+
+[[package]]
 name = "jirs-server"
 version = "0.1.0"
 dependencies = [
@@ -978,6 +988,7 @@ dependencies = [
  "env_logger 0.7.1",
  "futures",
  "ipnetwork",
+ "jirs-data",
  "libc",
  "num-bigint",
  "num-integer",

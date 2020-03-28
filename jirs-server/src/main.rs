@@ -29,7 +29,7 @@ async fn main() -> Result<(), String> {
                 web::scope("/issues")
                     .wrap(crate::middleware::authorize::Authorize::default())
                     .service(crate::routes::issues::project_issues)
-                    .service(crate::routes::issues::issue_with_users_and_omments)
+                    .service(crate::routes::issues::issue_with_users_and_comments)
                     .service(crate::routes::issues::create)
                     .service(crate::routes::issues::update)
                     .service(crate::routes::issues::delete),
@@ -53,7 +53,7 @@ async fn main() -> Result<(), String> {
                     .service(crate::routes::projects::update),
             )
     })
-    .bind("127.0.0.1:8080")
+    .bind("127.0.0.1:3000")
     .map_err(|e| format!("{}", e))?
     .run()
     .await
