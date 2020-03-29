@@ -4,17 +4,12 @@ import PropTypes from 'prop-types';
 import { ProjectCategory, ProjectCategoryCopy } from 'shared/constants/projects';
 import toast from 'shared/utils/toast';
 import useApi from 'shared/hooks/api';
-import { Form, Breadcrumbs } from 'shared/components';
+import { Breadcrumbs, Form } from 'shared/components';
 
-import { FormCont, FormHeading, FormElement, ActionButton } from './Styles';
-
-const propTypes = {
-  project: PropTypes.object.isRequired,
-  fetchProject: PropTypes.func.isRequired,
-};
+import { ActionButton, FormCont, FormElement, FormHeading } from './Styles';
 
 const ProjectSettings = ({ project, fetchProject }) => {
-  const [{ isUpdating }, updateProject] = useApi.put('/project');
+  const [ { isUpdating }, updateProject ] = useApi.put(`/project/${ project.id }`);
 
   return (
     <Form
@@ -67,6 +62,9 @@ const categoryOptions = Object.values(ProjectCategory).map(category => ({
   label: ProjectCategoryCopy[category],
 }));
 
-ProjectSettings.propTypes = propTypes;
+ProjectSettings.propTypes = {
+  project: PropTypes.object.isRequired,
+  fetchProject: PropTypes.func.isRequired,
+};
 
 export default ProjectSettings;

@@ -1,15 +1,36 @@
 import styled from 'styled-components';
 
 import { color, font } from 'shared/utils/styles';
-import { Button, Form } from 'shared/components';
+import { Button } from 'shared/components';
 
-export const FormElement = styled(Form.Element)`
+export const SignIn = styled.article`
+  margin: 24px auto;
+  display: flex;
+  justify-content: center;
+`;
+
+export const SignInSection = styled.section`
+  padding: 32px 40px;
+  width: 400px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 10px;
+`;
+
+export const Header = styled.h5`
+  color: rgb(94, 108, 132);
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: -0.048px;
+  line-height: 18.2833px;
+`;
+
+export const FormElement = styled.div`
   padding: 25px 40px 35px;
 `;
 
 export const FormHeading = styled.div`
   padding-bottom: 15px;
-  ${font.size(21)}
+  ${ font.size(21) }
 `;
 
 export const SelectItem = styled.div`

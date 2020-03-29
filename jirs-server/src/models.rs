@@ -1,7 +1,8 @@
-use crate::schema::*;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::schema::*;
 
 #[derive(Debug, Serialize, Deserialize, Queryable)]
 #[serde(rename_all = "camelCase")]
@@ -34,8 +35,8 @@ impl Into<jirs_data::Comment> for Comment {
 #[table_name = "comments"]
 pub struct CommentForm {
     pub body: String,
-    pub user_id: Option<i32>,
-    pub issue_id: Option<i32>,
+    pub user_id: i32,
+    pub issue_id: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable)]
@@ -173,11 +174,11 @@ impl Into<jirs_data::Project> for Project {
 #[derive(Debug, Serialize, Deserialize, Insertable)]
 #[serde(rename_all = "camelCase")]
 #[table_name = "projects"]
-pub struct ProjectForm {
-    pub name: String,
-    pub url: String,
-    pub description: String,
-    pub category: String,
+pub struct UpdateProjectForm {
+    pub name: Option<String>,
+    pub url: Option<String>,
+    pub description: Option<String>,
+    pub category: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable)]

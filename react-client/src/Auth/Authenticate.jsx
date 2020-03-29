@@ -1,31 +1,56 @@
-import React, { useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import React from 'react';
+import { connect } from "react-redux";
+import { Redirect } from 'react-router-dom';
 
-import api from 'shared/utils/api';
-import toast from 'shared/utils/toast';
-import { getStoredAuthToken, storeAuthToken } from 'shared/utils/authToken';
-import { PageLoader } from 'shared/components';
+import * as formActions from 'actions/forms';
+import { getStoredAuthToken } from 'shared/utils/authToken';
 
-const Authenticate = () => {
-  const history = useHistory();
+import {
+    ActionButton,
+    Actions,
+    Divider,
+    FormElement,
+    Header,
+    SignIn,
+    SignInSection,
+} from 'Project/IssueCreate/Styles';
 
-  useEffect(() => {
-    const createGuestAccount = async () => {
-      try {
-        const { authToken } = await api.post('/authentication/guest');
-        storeAuthToken(authToken);
-        history.push('/');
-      } catch (error) {
-        toast.error(error);
-      }
-    };
+const Authenticate = ({
+                          onEmailChanged,
+                          onPasswordChanged,
+                          onSubmit,
+                      }) => {
+    if (getStoredAuthToken()) return <Redirect to='/project'/>;
 
-    if (!getStoredAuthToken()) {
-      createGuestAccount();
-    }
-  }, [history]);
-
-  return <PageLoader />;
+    return (
+        <SignIn>
+            <SignInSection>
+                <form onSubmit={ onSubmit }>
+                    <FormElement>
+                        <Header>Zaloguj się na swoje konto</Header>
+                        <input
+                            name='email'
+                            onChange={ onEmailChanged }
+                        />
+                        <input
+                            name='password'
+                            onChange={ onPasswordChanged }
+                        />
+                        <Divider/>
+                        <Actions>
+                            <ActionButton type="submit" variant="primary" isWorking={ false }>
+                                Zaloguj
+                            </ActionButton>
+                        </Actions>
+                    </FormElement>
+                </form>
+            </SignInSection>
+        </SignIn>
+    );
 };
 
-export default Authenticate;
+export default connect(null, {
+    onEmailChanged: formActions.emailChanged,
+    onPasswordChanged: formActions.passwordChanged,
+    onSubmit: formActions.signInSubmit,
+})(Authenticate);

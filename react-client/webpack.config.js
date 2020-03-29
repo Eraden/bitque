@@ -14,9 +14,9 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(t|j)sx?$/,
+        test: /\.([tj])sx?$/,
         exclude: /node_modules/,
-        use: ['swc-loader'],
+        use: [ 'swc-loader' ],
       },
       {
         test: /\.css$/,
@@ -34,17 +34,23 @@ module.exports = {
     ],
   },
   resolve: {
-    // allows us to do absolute imports from "src"
-    modules: [path.join(__dirname, 'src'), 'node_modules'],
-    extensions: ['*', '.js', '.jsx', '.ts', '.tsx'],
+    modules: [ path.join(__dirname, 'src'), 'node_modules' ],
+    extensions: [ '*', '.js', '.jsx', '.ts', '.tsx' ],
   },
-  devtool: 'eval-source-map',
+  devtool: 'source-map',
   devServer: {
     contentBase: path.join(__dirname, 'dev'),
     historyApiFallback: true,
     hot: true,
     port: 8000,
     host: '0.0.0.0',
+    allowedHosts: [
+      'localhost:3000',
+      'localhost:8000',
+    ],
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    }
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),

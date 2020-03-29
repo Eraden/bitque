@@ -1,10 +1,12 @@
+use actix::{Handler, Message};
+use diesel::expression::dsl::not;
+use diesel::expression::sql_literal::sql;
+use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
+
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 use crate::models::Issue;
-use actix::{Handler, Message};
-use diesel::expression::dsl::not;
-use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct LoadIssue {
@@ -61,7 +63,6 @@ impl Handler<LoadProjectIssues> for DbExecutor {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct UpdateIssue {
     pub issue_id: i32,
     pub title: Option<String>,
@@ -153,5 +154,118 @@ impl Handler<UpdateIssue> for DbExecutor {
             .first::<Issue>(conn)
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         Ok(row)
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DeleteIssue {
+    pub issue_id: i32,
+}
+
+impl Message for DeleteIssue {
+    type Result = Result<(), ServiceErrors>;
+}
+
+impl Handler<DeleteIssue> for DbExecutor {
+    type Result = Result<(), ServiceErrors>;
+
+    fn handle(&mut self, msg: DeleteIssue, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::issue_assignees::dsl::{issue_assignees, issue_id};
+        use crate::schema::issues::dsl::issues;
+
+        let conn = &self
+            .0
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        diesel::delete(issue_assignees.filter(issue_id.eq(msg.issue_id)))
+            .execute(conn)
+            .map_err(|e| ServiceErrors::RecordNotFound(format!("issue {}. {}", msg.issue_id, e)))?;
+        diesel::delete(issues.find(msg.issue_id))
+            .execute(conn)
+            .map_err(|e| ServiceErrors::RecordNotFound(format!("issue {}. {}", msg.issue_id, e)))?;
+        Ok(())
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CreateIssue {
+    pub title: String,
+    pub issue_type: String,
+    pub status: String,
+    pub priority: String,
+    pub description: Option<String>,
+    pub description_text: Option<String>,
+    pub estimate: Option<i32>,
+    pub time_spent: Option<i32>,
+    pub time_remaining: Option<i32>,
+    pub project_id: i32,
+    pub reporter_id: i32,
+    pub user_ids: Vec<i32>,
+}
+
+impl Message for CreateIssue {
+    type Result = Result<Issue, ServiceErrors>;
+}
+
+impl Handler<CreateIssue> for DbExecutor {
+    type Result = Result<Issue, ServiceErrors>;
+
+    fn handle(&mut self, msg: CreateIssue, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::issue_assignees::dsl;
+        use crate::schema::issues::dsl::{issues, status};
+
+        let conn = &self
+            .0
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let list_position = issues
+            .filter(status.eq("backlog"))
+            .select(sql("max(list_position) + 1.0"))
+            .get_result::<f64>(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let form = crate::models::CreateIssueForm {
+            title: msg.title,
+            issue_type: msg.issue_type,
+            status: msg.status,
+            priority: msg.priority,
+            list_position,
+            description: msg.description,
+            description_text: msg.description_text,
+            estimate: msg.estimate,
+            time_spent: msg.time_spent,
+            time_remaining: msg.time_remaining,
+            reporter_id: msg.reporter_id,
+            project_id: msg.project_id,
+        };
+
+        let issue = diesel::insert_into(issues)
+            .values(form)
+            .on_conflict_do_nothing()
+            .get_result::<Issue>(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let mut values = vec![];
+        for user_id in msg.user_ids.iter() {
+            values.push(crate::models::CreateIssueAssigneeForm {
+                issue_id: issue.id,
+                user_id: *user_id,
+            });
+        }
+        if !msg.user_ids.contains(&msg.reporter_id) {
+            values.push(crate::models::CreateIssueAssigneeForm {
+                issue_id: issue.id,
+                user_id: msg.reporter_id,
+            });
+        }
+
+        diesel::insert_into(dsl::issue_assignees)
+            .values(values)
+            .execute(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        Ok(issue)
     }
 }

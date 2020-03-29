@@ -1,14 +1,17 @@
+use actix::Addr;
+use actix_web::web::{Data, Json, Path};
+use actix_web::{get, put, HttpRequest, HttpResponse};
+
+use jirs_data::ResponseData;
+
 use crate::db::authorize_user::AuthorizeUser;
 use crate::db::issues::LoadProjectIssues;
-use crate::db::projects::LoadCurrentProject;
+use crate::db::projects::{LoadCurrentProject, UpdateProject};
 use crate::db::users::LoadProjectUsers;
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 use crate::middleware::authorize::token_from_headers;
-use actix::Addr;
-use actix_web::web::Data;
-use actix_web::{get, put, HttpRequest, HttpResponse};
-use jirs_data::ResponseData;
+use crate::routes::user_from_request;
 
 #[get("")]
 pub async fn project_with_users_and_issues(
@@ -73,7 +76,27 @@ pub async fn project_with_users_and_issues(
     HttpResponse::Ok().json(res.into_response())
 }
 
-#[put("")]
-pub async fn update(_req: HttpRequest, _db: Data<Addr<DbExecutor>>) -> HttpResponse {
-    HttpResponse::NotImplemented().body("")
+#[put("/{id}")]
+pub async fn update(
+    req: HttpRequest,
+    payload: Json<jirs_data::UpdateProjectPayload>,
+    path: Path<i32>,
+    db: Data<Addr<DbExecutor>>,
+) -> HttpResponse {
+    let _user = match user_from_request(req, &db).await {
+        Ok(user) => user,
+        Err(response) => return response,
+    };
+    let msg = UpdateProject {
+        project_id: path.into_inner(),
+        name: payload.name.clone(),
+        url: payload.url.clone(),
+        description: payload.description.clone(),
+        category: payload.category.clone(),
+    };
+    match db.send(msg).await {
+        Ok(Ok(project)) => HttpResponse::Ok().json(project),
+        Ok(Err(e)) => e.into_http_response(),
+        _ => ServiceErrors::DatabaseConnectionLost.into_http_response(),
+    }
 }

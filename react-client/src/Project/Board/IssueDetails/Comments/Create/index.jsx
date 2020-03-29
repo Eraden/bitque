@@ -1,62 +1,74 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 
 import api from 'shared/utils/api';
-import useCurrentUser from 'shared/hooks/currentUser';
 import toast from 'shared/utils/toast';
+import { fetchCurrentUser } from "actions/users";
 
 import BodyForm from '../BodyForm';
 import ProTip from './ProTip';
-import { Create, UserAvatar, Right, FakeTextarea } from './Styles';
+import { Create, FakeTextarea, Right, UserAvatar } from './Styles';
 
-const propTypes = {
-  issueId: PropTypes.number.isRequired,
-  fetchIssue: PropTypes.func.isRequired,
-};
+class ProjectBoardIssueDetailsCommentsCreate extends React.Component {
+    state = { isFormOpen: false, isCreating: false, body: '', currentUser: null };
 
-const ProjectBoardIssueDetailsCommentsCreate = ({ issueId, fetchIssue }) => {
-  const [isFormOpen, setFormOpen] = useState(false);
-  const [isCreating, setCreating] = useState(false);
-  const [body, setBody] = useState('');
+    setFormClosed = () => this.setState({ isFormOpen: false });
+    setFormOpened = () => this.setState({ isFormOpen: true });
+    setBody = body => this.setState({ body });
+    setFormOpen = isFormOpen => this.setState({ isFormOpen });
+    setCreatingTrue = () => this.setState({ isCreating: true });
 
-  const { currentUser } = useCurrentUser();
-
-  const handleCommentCreate = async () => {
-    try {
-      setCreating(true);
-      await api.post(`/comments`, { body, issueId, userId: currentUser.id });
-      await fetchIssue();
-      setFormOpen(false);
-      setCreating(false);
-      setBody('');
-    } catch (error) {
-      toast.error(error);
+    componentDidMount() {
+        this.props.fetchCurrentUser({});
     }
-  };
 
-  return (
-    <Create>
-      {currentUser && <UserAvatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} />}
-      <Right>
-        {isFormOpen ? (
-          <BodyForm
-            value={body}
-            onChange={setBody}
-            isWorking={isCreating}
-            onSubmit={handleCommentCreate}
-            onCancel={() => setFormOpen(false)}
-          />
-        ) : (
-          <Fragment>
-            <FakeTextarea onClick={() => setFormOpen(true)}>Add a comment...</FakeTextarea>
-            <ProTip setFormOpen={setFormOpen} />
-          </Fragment>
-        )}
-      </Right>
-    </Create>
-  );
+    handleCommentCreate = async () => {
+        try {
+            this.setCreatingTrue();
+            const response = await api.post(`/comments`, { body: this.state.body, issueId: this.props.issueId });
+            console.log(response);
+            await this.props.fetchIssue();
+            this.setState({ isCreating: false, isFormOpen: false, body: '' });
+        } catch (error) {
+
+            this.setState({ isCreating: false });
+            toast.error(error);
+        }
+    };
+
+    render() {
+        const { body, isFormOpen, isCreating } = this.state;
+        const { currentUser } = this.props;
+
+        return (
+            <Create>
+                { currentUser && <UserAvatar name={ currentUser.name } avatarUrl={ currentUser.avatarUrl }/> }
+                <Right>
+                    { isFormOpen ? (
+                        <BodyForm
+                            value={ body }
+                            onChange={ this.setBody }
+                            isWorking={ isCreating }
+                            onSubmit={ this.handleCommentCreate }
+                            onCancel={ this.setFormClosed }
+                        />
+                    ) : (
+                        <Fragment>
+                            <FakeTextarea onClick={ this.setFormOpened }>Add a comment...</FakeTextarea>
+                            <ProTip setFormOpen={ this.setFormOpen }/>
+                        </Fragment>
+                    ) }
+                </Right>
+            </Create>
+        );
+    }
+}
+
+ProjectBoardIssueDetailsCommentsCreate.propTypes = {
+    issueId: PropTypes.number.isRequired,
+    fetchIssue: PropTypes.func.isRequired,
+    fetchCurrentUser: PropTypes.func,
 };
 
-ProjectBoardIssueDetailsCommentsCreate.propTypes = propTypes;
-
-export default ProjectBoardIssueDetailsCommentsCreate;
+export default connect(({ users: { currentUser } }) => ({ currentUser }), { fetchCurrentUser })(ProjectBoardIssueDetailsCommentsCreate);

@@ -1,4 +1,4 @@
-import React, { Fragment, useRef } from 'react';
+import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 
 import { Textarea } from 'shared/components';
@@ -13,41 +13,45 @@ const propTypes = {
   onCancel: PropTypes.func.isRequired,
 };
 
-const ProjectBoardIssueDetailsCommentsBodyForm = ({
-  value,
-  onChange,
-  isWorking,
-  onSubmit,
-  onCancel,
-}) => {
-  const $textareaRef = useRef();
+class ProjectBoardIssueDetailsCommentsBodyForm extends React.Component {
+  state = { textArea: React.createRef() };
 
-  const handleSubmit = () => {
-    if ($textareaRef.current.value.trim()) {
-      onSubmit();
+
+  handleSubmit = () => {
+    if (this.state.textArea.current.value.trim()) {
+      this.props.onSubmit();
     }
   };
 
-  return (
-    <Fragment>
-      <Textarea
-        autoFocus
-        placeholder="Add a comment..."
-        value={value}
-        onChange={onChange}
-        ref={$textareaRef}
-      />
-      <Actions>
-        <FormButton variant="primary" isWorking={isWorking} onClick={handleSubmit}>
-          Save
-        </FormButton>
-        <FormButton variant="empty" onClick={onCancel}>
-          Cancel
-        </FormButton>
-      </Actions>
-    </Fragment>
-  );
-};
+  render() {
+    let {
+      value,
+      onChange,
+      isWorking,
+      onCancel,
+    } = this.props;
+
+    return (
+        <Fragment>
+          <Textarea
+              autoFocus
+              placeholder="Add a comment..."
+              value={ value }
+              onChange={ onChange }
+              ref={ this.state.textArea }
+          />
+          <Actions>
+            <FormButton variant="primary" isWorking={ isWorking } onClick={ this.handleSubmit }>
+              Save
+            </FormButton>
+            <FormButton variant="empty" onClick={ onCancel }>
+              Cancel
+            </FormButton>
+          </Actions>
+        </Fragment>
+    );
+  }
+}
 
 ProjectBoardIssueDetailsCommentsBodyForm.propTypes = propTypes;
 

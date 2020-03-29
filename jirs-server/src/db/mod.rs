@@ -3,6 +3,8 @@ use actix::{Actor, SyncContext};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 
+use crate::db::dev::VerboseConnection;
+
 pub mod authorize_user;
 pub mod comments;
 pub mod issues;
@@ -27,14 +29,15 @@ impl DbExecutor {
 }
 
 pub fn build_pool() -> DbPool {
-    std::env::set_var("RUST_LOG", "actix_web=info,diesel=debug");
+    std::env::set_var("RUST_LOG", "actix_web=debug,diesel=debug");
     dotenv::dotenv().ok();
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
-    #[cfg(debug_assertions)]
-    let manager = ConnectionManager::<dev::VerboseConnection>::new(database_url);
     #[cfg(not(debug_assertions))]
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let manager = ConnectionManager::<PgConnection>::new(database_url.clone());
+    #[cfg(debug_assertions)]
+    let manager: ConnectionManager<VerboseConnection> =
+        ConnectionManager::<dev::VerboseConnection>::new(database_url.clone());
     r2d2::Pool::builder()
         .build(manager)
         .unwrap_or_else(|e| panic!("Failed to create pool. {}", e))
@@ -48,12 +51,13 @@ pub trait SyncQuery {
 
 #[cfg(debug_assertions)]
 pub mod dev {
+    use std::ops::Deref;
+
     use diesel::connection::{AnsiTransactionManager, SimpleConnection};
     use diesel::deserialize::QueryableByName;
     use diesel::query_builder::{AsQuery, QueryFragment, QueryId};
     use diesel::sql_types::HasSqlType;
     use diesel::{Connection, ConnectionResult, PgConnection, QueryResult, Queryable};
-    use std::ops::Deref;
 
     pub struct VerboseConnection {
         inner: PgConnection,

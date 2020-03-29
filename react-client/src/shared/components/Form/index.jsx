@@ -1,10 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Formik, Form as FormikForm, Field as FormikField } from 'formik';
+import { Field as FormikField, Form as FormikForm, Formik } from 'formik';
 import { get, mapValues } from 'lodash';
 
 import toast from 'shared/utils/toast';
-import { is, generateErrors } from 'shared/utils/validation';
+import { generateErrors, is } from 'shared/utils/validation';
 
 import Field from './Field';
 
@@ -37,19 +37,30 @@ const Form = ({ validate, validations, ...otherProps }) => (
 
 Form.Element = props => <FormikForm noValidate {...props} />;
 
-Form.Field = mapValues(Field, FieldComponent => ({ name, validate, ...props }) => (
-  <FormikField name={name} validate={validate}>
-    {({ field, form: { touched, errors, setFieldValue } }) => (
-      <FieldComponent
-        {...field}
-        {...props}
-        name={name}
-        error={get(touched, name) && get(errors, name)}
-        onChange={value => setFieldValue(name, value)}
-      />
-    )}
-  </FormikField>
-));
+Form.Field = mapValues(Field, FieldComponent => ({ name, validate, ...props }) => {
+    return (
+        <FormikField name={ name } validate={ validate }>
+            { ({ field, form: { touched, errors, setFieldValue } }) => {
+                const onChange = value => {
+                    if (props.onChange) {
+                        props.onChange(name, value)
+                    }
+                    setFieldValue(name, value)
+                };
+
+                return (
+                    <FieldComponent
+                        { ...field }
+                        { ...props }
+                        name={ name }
+                        error={ get(touched, name) && get(errors, name) }
+                        onChange={ onChange }
+                    />
+                )
+            } }
+        </FormikField>
+    )
+});
 
 Form.initialValues = (data, getFieldValues) =>
   getFieldValues((key, defaultValue = '') => {

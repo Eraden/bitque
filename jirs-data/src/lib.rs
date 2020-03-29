@@ -171,3 +171,43 @@ pub struct UpdateIssuePayload {
     pub users: Option<Vec<User>>,
     pub user_ids: Option<Vec<i32>>,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateCommentPayload {
+    pub user_id: Option<i32>,
+    pub issue_id: i32,
+    pub body: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateCommentPayload {
+    pub body: String,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateIssuePayload {
+    pub title: String,
+    #[serde(rename = "type")]
+    pub issue_type: String,
+    pub status: String,
+    pub priority: String,
+    pub description: Option<String>,
+    pub description_text: Option<String>,
+    pub estimate: Option<i32>,
+    pub time_spent: Option<i32>,
+    pub time_remaining: Option<i32>,
+    pub project_id: i32,
+    pub user_ids: Vec<i32>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateProjectPayload {
+    pub name: Option<String>,
+    pub url: Option<String>,
+    pub description: Option<String>,
+    pub category: Option<String>,
+}

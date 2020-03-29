@@ -13,7 +13,7 @@ pub mod schema;
 
 #[actix_rt::main]
 async fn main() -> Result<(), String> {
-    std::env::set_var("RUST_LOG", "actix_web=info,diesel=debug");
+    std::env::set_var("RUST_LOG", "actix_web=debug,diesel=debug");
     env_logger::init();
     dotenv::dotenv().ok();
 
@@ -27,7 +27,6 @@ async fn main() -> Result<(), String> {
             .data(crate::db::build_pool())
             .service(
                 web::scope("/issues")
-                    .wrap(crate::middleware::authorize::Authorize::default())
                     .service(crate::routes::issues::project_issues)
                     .service(crate::routes::issues::issue_with_users_and_comments)
                     .service(crate::routes::issues::create)
@@ -36,19 +35,13 @@ async fn main() -> Result<(), String> {
             )
             .service(
                 web::scope("/comments")
-                    .wrap(crate::middleware::authorize::Authorize::default())
                     .service(crate::routes::comments::create)
                     .service(crate::routes::comments::update)
                     .service(crate::routes::comments::delete),
             )
-            .service(
-                web::scope("/currentUser")
-                    .wrap(crate::middleware::authorize::Authorize::default())
-                    .service(crate::routes::users::current_user),
-            )
+            .service(web::scope("/currentUser").service(crate::routes::users::current_user))
             .service(
                 web::scope("/project")
-                    .wrap(crate::middleware::authorize::Authorize::default())
                     .service(crate::routes::projects::project_with_users_and_issues)
                     .service(crate::routes::projects::update),
             )

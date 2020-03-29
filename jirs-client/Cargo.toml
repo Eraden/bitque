@@ -5,7 +5,9 @@ authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
 edition = "2018"
 
 [lib]
+crate-type = ["cdylib", "rlib"]
 name = "jirs_client"
 path = "./src/lib.rs"
 
 [dependencies]
+yew = { version = "*", features = ["std_web"] }

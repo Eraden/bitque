@@ -1,15 +1,19 @@
+use std::collections::HashMap;
+
+use actix::Addr;
+use actix_web::web::{Data, Json, Path};
+use actix_web::{delete, get, post, put, HttpRequest, HttpResponse};
+
+use jirs_data::ResponseData;
+
 use crate::db::authorize_user::AuthorizeUser;
 use crate::db::comments::LoadIssueComments;
-use crate::db::issues::{LoadIssue, UpdateIssue};
+use crate::db::issues::{CreateIssue, DeleteIssue, LoadIssue, UpdateIssue};
 use crate::db::users::{LoadIssueAssignees, LoadProjectUsers};
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 use crate::middleware::authorize::token_from_headers;
-use actix::Addr;
-use actix_web::web::{Data, Json, Path};
-use actix_web::{delete, get, post, put, HttpRequest, HttpResponse};
-use jirs_data::ResponseData;
-use std::collections::HashMap;
+use crate::routes::user_from_request;
 
 #[get("")]
 pub async fn project_issues() -> HttpResponse {
@@ -45,22 +49,35 @@ pub async fn issue_with_users_and_comments(
     }
 }
 
-#[post("/")]
-pub async fn create(req: HttpRequest, db: Data<Addr<DbExecutor>>) -> HttpResponse {
-    let token = match token_from_headers(req.headers()) {
-        Ok(uuid) => uuid,
-        _ => return crate::errors::ServiceErrors::Unauthorized.into_http_response(),
+#[post("")]
+pub async fn create(
+    req: HttpRequest,
+    payload: Json<jirs_data::CreateIssuePayload>,
+    db: Data<Addr<DbExecutor>>,
+) -> HttpResponse {
+    let user = match user_from_request(req, &db).await {
+        Ok(user) => user,
+        Err(response) => return response,
     };
-    let _user = match db
-        .send(AuthorizeUser {
-            access_token: token,
-        })
-        .await
-    {
-        Ok(Ok(user)) => user,
-        _ => return crate::errors::ServiceErrors::Unauthorized.into_http_response(),
+    let msg = CreateIssue {
+        title: payload.title.clone(),
+        issue_type: payload.issue_type.clone(),
+        status: payload.status.clone(),
+        priority: payload.priority.clone(),
+        description: payload.description.clone(),
+        description_text: payload.description_text.clone(),
+        estimate: payload.estimate.clone(),
+        time_spent: payload.time_spent.clone(),
+        time_remaining: payload.time_remaining.clone(),
+        project_id: payload.project_id,
+        reporter_id: user.id,
+        user_ids: payload.user_ids.clone(),
     };
-    HttpResponse::Ok().content_type("text/html").body("")
+    match db.send(msg).await {
+        Ok(Ok(issue)) => HttpResponse::Ok().json(issue),
+        Ok(Err(e)) => e.into_http_response(),
+        _ => ServiceErrors::DatabaseConnectionLost.into_http_response(),
+    }
 }
 
 #[put("/{id}")]
@@ -112,8 +129,18 @@ pub async fn update(
 }
 
 #[delete("/{id}")]
-pub async fn delete() -> HttpResponse {
-    HttpResponse::Ok().content_type("text/html").body("")
+pub async fn delete(req: HttpRequest, path: Path<i32>, db: Data<Addr<DbExecutor>>) -> HttpResponse {
+    let _user = match user_from_request(req, &db).await {
+        Ok(user) => user,
+        Err(response) => return response,
+    };
+    let issue_id = path.into_inner();
+    let msg = DeleteIssue { issue_id };
+    match db.send(msg).await {
+        Ok(Ok(_)) => HttpResponse::NoContent().body(""),
+        Ok(Err(e)) => e.into_http_response(),
+        _ => ServiceErrors::DatabaseConnectionLost.into_http_response(),
+    }
 }
 
 async fn load_issue(
