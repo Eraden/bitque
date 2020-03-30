@@ -13,10 +13,15 @@ export interface User {
 export enum ActionType {
     CurrentUser = 'CurrentUser',
     FetchCurrentUser = 'FetchCurrentUser',
+    //
     SignInEmailChanged = 'SignInEmailChanged',
     SignInPasswordChanged = 'SignInPasswordChanged',
     SignInRequest = 'SignInRequest',
     SignInSuccess = 'SignInSuccess',
+    //
+    UpdateProjectFormFieldChanged = 'UpdateProjectFormFieldChanged',
+    UpdateProjectFormRequest = 'UpdateProjectFormRequest',
+    UpdateProjectFormSuccess = 'UpdateProjectFormSuccess',
 }
 
 export interface JirsAction extends Action<ActionType> {

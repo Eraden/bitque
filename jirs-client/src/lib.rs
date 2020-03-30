@@ -1,47 +1,45 @@
-use yew::{html, Callback, ClickEvent, Component, ComponentLink, Html, ShouldRender};
+use seed::{prelude::*, *};
 
-struct App {
-    clicked: bool,
-    onclick: Callback<ClickEvent>,
-}
+mod model;
+
+type Model = i32;
 
 enum Msg {
-    Click,
+    Increment,
+    ChangeGuidePage(i32),
+    ChangePage(i32),
 }
 
-impl Component for App {
-    type Message = Msg;
-    type Properties = ();
-
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        App {
-            clicked: false,
-            onclick: link.callback(|_| Msg::Click),
-        }
-    }
-
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::Click => {
-                self.clicked = true;
-                true // Indicate that the Component should re-render
-            }
-        }
-    }
-
-    fn view(&self) -> Html {
-        let button_text = if self.clicked {
-            "Clicked!"
-        } else {
-            "Click me!"
-        };
-
-        html! {
-            <button onclick=&self.onclick>{ button_text }</button>
-        }
+fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
+    match msg {
+        Msg::Increment => *model += 1,
     }
 }
 
-fn main() {
-    yew::start_app::<App>();
+fn view(model: &Model) -> Node<Msg> {
+    div![
+        "This is a counter: ",
+        class!["counter"],
+        button![model.to_string(), ev(Ev::Click, |_| Msg::Increment),],
+    ]
+}
+
+fn routes(url: Url) -> Option<Msg> {
+    if url.path.is_empty() {
+        return Some(Msg::ChangePage(0));
+    }
+
+    match url.path[0].as_ref() {
+        "guide" => match url.path.get(1).as_ref() {
+            Some(page) => Some(Msg::ChangeGuidePage(page.parse::<usize>().unwrap())),
+            None => Some(Msg::ChangePage(0)),
+        },
+        "changelog" => Some(Msg::ChangePage(1)),
+        _ => Some(Msg::ChangePage(0)),
+    }
+}
+
+#[wasm_bindgen(start)]
+pub fn render() {
+    App::builder(update, view).routes(routes).build_and_start();
 }

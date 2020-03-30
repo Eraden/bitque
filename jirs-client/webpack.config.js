@@ -30,6 +30,8 @@ module.exports = {
             args: "--log-level warn",
             extraArgs: "--no-typescript",
         }),
-        new HtmlWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            template: path.resolve(__dirname, "js", "template.ejs"),
+        }),
     ]
 };

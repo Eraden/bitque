@@ -7,6 +7,14 @@ interface SignInFormState {
     password: string,
 }
 
+interface UpdateProjectState {
+    id?: number,
+    name: string,
+    url: string,
+    category: string,
+    description: string,
+}
+
 const initialSignIn = (): SignInFormState => ({ email: '', password: '' });
 
 const signInForm = (state: SignInFormState = initialSignIn(), { type, payload }: JirsAction) => {
@@ -22,4 +30,23 @@ const signInForm = (state: SignInFormState = initialSignIn(), { type, payload }:
     }
 };
 
-export default combineReducers({ signInForm })
+const initialUpdateProject = (): UpdateProjectState => ({
+    id: null,
+    name: '',
+    url: '',
+    category: '',
+    description: '',
+});
+
+const updateProject = (state = initialUpdateProject(), { type, payload }: JirsAction) => {
+    switch (type) {
+        case ActionType.UpdateProjectFormFieldChanged:
+            return { ...state, ...payload };
+        case ActionType.UpdateProjectFormSuccess:
+            return initialUpdateProject();
+        default:
+            return state;
+    }
+};
+
+export default combineReducers({ signInForm, updateProject })

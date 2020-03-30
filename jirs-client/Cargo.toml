@@ -10,4 +10,12 @@ name = "jirs_client"
 path = "./src/lib.rs"
 
 [dependencies]
-yew = { version = "*", features = ["std_web"] }
+jirs-data = { path = "../jirs-data" }
+seed = { version = "*" }
+serde = "*"
+serde_json = "*"
+chrono = { version = "*", features = [ "serde" ] }
+uuid = { version = "*", features = [ "serde" ] }
+wasm-bindgen = "*"
+web-sys = "*"
+js-sys = "*"

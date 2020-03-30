@@ -7,3 +7,6 @@ export const passwordChanged = createAction(ActionType.SignInPasswordChanged, ev
 export const signInSubmit = createAction(ActionType.SignInRequest, event => {
     event.preventDefault();
 });
+export const updateProjectFormFieldChanged = createAction(ActionType.UpdateProjectFormFieldChanged);
+export const updateProjectFormRequest = createAction(ActionType.UpdateProjectFormRequest);
+export const updateProjectFormSuccess = createAction(ActionType.UpdateProjectFormSuccess);
