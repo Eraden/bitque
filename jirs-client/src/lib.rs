@@ -1,6 +1,7 @@
-use crate::model::Page;
 use seed::fetch::FetchObject;
 use seed::{prelude::*, *};
+
+use crate::model::Page;
 
 mod api;
 mod login;
@@ -16,6 +17,7 @@ pub enum Msg {
     CurrentProjectResult(FetchObject<String>),
     CurrentUserResult(FetchObject<String>),
     InternalFailure(String),
+    ToggleAboutTooltip,
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {

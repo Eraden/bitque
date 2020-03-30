@@ -59,6 +59,8 @@ pub struct Model {
     pub comments_by_project_id: HashMap<ProjectId, Vec<Comment>>,
     pub page: Page,
     pub host_url: String,
+    //
+    pub about_tooltip_visible: bool,
 }
 
 impl Default for Model {
@@ -75,6 +77,7 @@ impl Default for Model {
             comments_by_project_id: Default::default(),
             page: Page::Project,
             host_url,
+            about_tooltip_visible: false,
         }
     }
 }

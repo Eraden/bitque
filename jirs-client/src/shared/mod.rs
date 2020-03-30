@@ -1,27 +1,33 @@
-use seed::fetch::{FetchObject, FetchResult, ResponseWithDataResult};
+use seed::fetch::{FetchObject, ResponseWithDataResult};
 use seed::{prelude::*, *};
-use serde::Deserialize;
 
 use jirs_data::FullProjectResponse;
+use styled_button::*;
 
 use crate::model::{Icon, Model, Page};
 use crate::Msg;
 
-pub fn navbar_left(model: &Model) -> Node<Msg> {
-    let mut logo_svg = Node::from_html(include_str!("../static/logo.svg"));
+pub mod styled_button;
+pub mod styled_tooltip;
 
-    aside![
-        id!["navbar-left"],
-        a![
-            attrs![At::Class => "logoLink", At::Href => "/"],
-            div![attrs![At::Class => "styledLogo"], logo_svg]
+pub fn navbar_left(model: &Model) -> Vec<Node<Msg>> {
+    let logo_svg = Node::from_html(include_str!("../../static/logo.svg"));
+
+    vec![
+        about_tooltip_popup(model),
+        aside![
+            id!["navbar-left"],
+            a![
+                attrs![At::Class => "logoLink", At::Href => "/"],
+                div![attrs![At::Class => "styledLogo"], logo_svg]
+            ],
+            navbar_left_item(model, "Search issues", Icon::Search),
+            navbar_left_item(model, "Create Issue", Icon::Plus),
+            div![
+                attrs![At::Class => "bottom"],
+                about_tooltip(model, navbar_left_item(model, "About", Icon::Help)),
+            ],
         ],
-        navbar_left_item(model, "Search issues", Icon::Search),
-        navbar_left_item(model, "Create Issue", Icon::Plus),
-        div![
-            attrs![At::Class => "bottom"],
-            about_tooltip(model, navbar_left_item(model, "About", Icon::Help))
-        ]
     ]
 }
 
@@ -33,16 +39,74 @@ fn navbar_left_item(_model: &Model, text: &str, logo: Icon) -> Node<Msg> {
     ]
 }
 
-pub fn about_tooltip(_model: &Model, children: Node<Msg>) -> Node<Msg> {
-    div![attrs![At::Class => "aboutTooltip"], children]
+pub fn about_tooltip(model: &Model, children: Node<Msg>) -> Node<Msg> {
+    div![
+        attrs![At::Class => "aboutTooltip"],
+        ev(Ev::Click, |_| Msg::ToggleAboutTooltip),
+        children
+    ]
 }
 
-pub fn styled_tooltip() -> Node<Msg> {
-    div![attrs![At::Class => "styledTooltip"]]
+fn about_tooltip_popup(model: &Model) -> Node<Msg> {
+    styled_tooltip::StyledTooltip {
+        visible: model.about_tooltip_visible,
+        class_name: "aboutTooltipPopup".to_string(),
+        children: div![
+        ev(Ev::Click, |_| Msg::ToggleAboutTooltip),
+        attrs![At::Class => "feedbackDropdown"],
+        div![
+            attrs![At::Class => "feedbackImageCont"],
+            img![attrs![At::Src => "/feedback.png", At::Class => "feedbackImage"]]
+        ],
+        div![
+            attrs![At::Class => "feedbackParagraph"],
+            "This simplified Jira clone is built with Seed.rs on the front-end and Actix-Web on the back-end."
+        ],
+        div![
+            attrs![At::Class => "feedbackParagraph"],
+            "Read more on my website or reach out via ",
+            a![
+                attrs![At::Href => "mailto:adrian.wozniak@ita-prog.pl"],
+                strong!["adrian.wozniak@ita-prog.pl"]
+            ]
+        ],
+        a![
+            attrs![
+                At::Href => "https://gitlab.com/adrian.wozniak/jirs",
+                At::Target => "_blank",
+                At::Rel => "noreferrer noopener",
+            ],
+            StyledButton {
+                text: Some("Visit Website".to_string()),
+                variant: Variant::Primary,
+                disabled: false,
+                active: false,
+                icon_only: false,
+                icon: None,
+            }.into_node(),
+      ],
+      a![
+        id!["about-github-button"],
+        attrs![
+            At::Href => "https://gitlab.com/adrian.wozniak/jirs",
+            At::Target => "_blank",
+            At::Rel => "noreferrer noopener",
+        ],
+        StyledButton {
+            text: Some("Github Repo".to_string()),
+            variant: Variant::Secondary,
+            disabled: false,
+            active: false,
+            icon_only: false,
+            icon: Some(Icon::Github),
+        }.into_node()
+      ]
+    ],
+    }.into_node()
 }
 
 pub fn sidebar(model: &Model) -> Node<Msg> {
-    let project_icon = Node::from_html(include_str!("../static/project-avatar.svg"));
+    let project_icon = Node::from_html(include_str!("../../static/project-avatar.svg"));
     let project_info = match model.project.as_ref() {
         Some(project) => li![
             id!["projectInfo"],
@@ -96,10 +160,14 @@ fn sidebar_link_item(model: &Model, name: &str, icon: Icon, page: Option<Page>) 
         attrs![At::Class => class_list.join(" ")],
         a![
             attrs![At::Href => path],
-            i![attrs![At::Class => format!("styledIcon {}", icon)], ""],
+            styled_icon(icon),
             div![attrs![At::Class => "linkText"], name],
         ]
     ]
+}
+
+pub fn styled_icon(icon: Icon) -> Node<Msg> {
+    i![attrs![At::Class => format!("styledIcon {}", icon)], ""]
 }
 
 pub fn divider() -> Node<Msg> {

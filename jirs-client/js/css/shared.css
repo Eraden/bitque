@@ -3,3 +3,104 @@
     padding-top: 18px;
     border-top: 1px solid var(--borderLight);
 }
+
+.styledButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    vertical-align: middle;
+    line-height: 1;
+    white-space: nowrap;
+    border-radius: 3px;
+    transition: all 0.1s;
+    appearance: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14.5px;
+}
+
+.styledButton.withIcon > span.text {
+    margin-left: 7px;
+}
+
+.styledButton:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.styledButton:not(.onlyIcon) {
+    padding: 0 12px;
+}
+
+.styledButton.onlyIcon {
+    padding: 0 9px;
+}
+
+.styledButton.primary {
+    color: #fff;
+    background: var(--primary);
+    font-family: var(--font-medium);
+}
+
+.styledButton.primary:not(:disabled):hover {
+    filter: brightness(115%);
+}
+
+.styledButton.primary:not(:disabled):active {
+    filter: brightness(110%);
+}
+
+.styledButton.primary:not(:disabled).isActive {
+    filter: brightness(110%);
+}
+
+.styledButton.success {
+    color: #fff;
+    background: var(--success);
+}
+
+.styledButton.danger {
+    color: #fff;
+    background: var(--danger);
+}
+
+.styledButton.secondary {
+    color: var(--textDark);
+    background: var(--secondary);
+    font-family: var(--font-regular);
+}
+
+.styledButton.secondary:not(:disabled):hover {
+    background: var(--backgroundLight);
+}
+
+.styledButton.secondary:not(:disabled):active {
+    color: var(--primary);
+    background: var(--backgroundLightPrimary);
+}
+
+.styledButton.secondary:not(:disabled).isActive {
+    color: var(--primary);
+    background: var(--backgroundLightPrimary);
+}
+
+.styledButton.empty {
+    background: #fff;
+    color: var(--textDark);
+    font-family: var(--font-regular);
+}
+
+.styledButton.empty:not(:disabled):hover {
+    background: var(--backgroundLight);
+}
+
+.styledButton.empty:not(:disabled):active {
+    color: var(--primary);
+    background: var(--backgroundLightPrimary);
+}
+
+.styledButton.empty:not(:disabled).isActive {
+    color: var(--primary);
+    background: var(--backgroundLightPrimary);
+}
