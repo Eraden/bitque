@@ -46,9 +46,9 @@
 }
 
 :root /* sizes */ {
-    --appNavBarLeftWidth: 64;
-    --secondarySideBarWidth: 230;
-    --minViewportWidth: 1000;
+    --appNavBarLeftWidth: 64px;
+    --secondarySideBarWidth: 230px;
+    --minViewportWidth: 1000px;
 }
 
 :root /* z-index */ {

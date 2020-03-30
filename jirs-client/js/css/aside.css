@@ -1,0 +1,106 @@
+aside#navbar-left {
+    z-index: var(--navLeft);
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-x: hidden;
+    height: 100vh;
+    width: var(--appNavBarLeftWidth);
+    background: var(--backgroundDarkPrimary);
+    transition: all 0.1s;
+    transform: translateZ(0);
+}
+
+aside#navbar-left:hover {
+    width: 200px;
+    box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.6);
+}
+
+aside#navbar-left > .logoLink {
+    display: block;
+    position: relative;
+    left: 0;
+    margin: 20px 0 10px;
+    transition: left 0.1s;
+}
+
+aside#navbar-left > .logoLink > .styledLogo {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+aside#navbar-left .item {
+    position: relative;
+    width: 100%;
+    height: 42px;
+    line-height: 42px;
+    padding-left: 64px;
+    color: #deebff;
+    transition: color 0.1s;
+    cursor: pointer;
+    user-select: none;
+}
+
+aside#navbar-left .item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+aside#navbar-left .item > .styledIcon {
+    position: absolute;
+    left: 18px;
+}
+
+aside#navbar-left > .item > .styledIcon.search {
+    font-size: 22px;
+    color: #DEEBFE;
+}
+
+aside#navbar-left > .item > .styledIcon.plus {
+    font-size: 27px;
+    color: #DEEBFE;
+}
+
+aside#navbar-left .item > .styledIcon.help {
+    font-size: 27px;
+    color: #DEEBFE;
+}
+
+aside#navbar-left .item > .itemText {
+    position: relative;
+    right: 12px;
+    visibility: hidden;
+    opacity: 0;
+    text-transform: uppercase;
+    transition: all 0.1s;
+    font-family: var(--font-bold);
+    font-size: 12px;
+    transition-property: right, visibility, opacity;
+}
+
+aside#navbar-left > .bottom {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+}
+
+aside#navbar-left > .bottom > .aboutTooltip {}
+
+aside#navbar-left:hover .item > .itemText {
+    right: 0;
+    visibility: visible;
+    opacity: 1;
+}
+
+aside#navbar-left .styledTooltip {
+    z-index: calc(var(--modal) + 1);
+    position: fixed;
+    width: 300px;
+    border-radius: 3px;
+    background: #fff;
+    transform: translateZ(0);
+    box-shadow: rgba(9, 30, 66, 0.25) 0 4px 8px -2px, rgba(9, 30, 66, 0.31) 0 0 1px;
+}

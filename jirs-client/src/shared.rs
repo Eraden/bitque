@@ -7,22 +7,58 @@ use jirs_data::FullProjectResponse;
 use crate::model::{Icon, Model, Page};
 use crate::Msg;
 
+pub fn navbar_left(model: &Model) -> Node<Msg> {
+    let mut logo_svg = Node::from_html(include_str!("../static/logo.svg"));
+
+    aside![
+        id!["navbar-left"],
+        a![
+            attrs![At::Class => "logoLink", At::Href => "/"],
+            div![attrs![At::Class => "styledLogo"], logo_svg]
+        ],
+        navbar_left_item(model, "Search issues", Icon::Search),
+        navbar_left_item(model, "Create Issue", Icon::Plus),
+        div![
+            attrs![At::Class => "bottom"],
+            about_tooltip(model, navbar_left_item(model, "About", Icon::Help))
+        ]
+    ]
+}
+
+fn navbar_left_item(_model: &Model, text: &str, logo: Icon) -> Node<Msg> {
+    div![
+        attrs![At::Class => "item"],
+        i![attrs![At::Class => format!("styledIcon {}", logo)]],
+        span![attrs![At::Class => "itemText"], text]
+    ]
+}
+
+pub fn about_tooltip(_model: &Model, children: Node<Msg>) -> Node<Msg> {
+    div![attrs![At::Class => "aboutTooltip"], children]
+}
+
+pub fn styled_tooltip() -> Node<Msg> {
+    div![attrs![At::Class => "styledTooltip"]]
+}
+
 pub fn sidebar(model: &Model) -> Node<Msg> {
+    let project_icon = Node::from_html(include_str!("../static/project-avatar.svg"));
     let project_info = match model.project.as_ref() {
         Some(project) => li![
             id!["projectInfo"],
+            project_icon,
             div![
-                attrs![At::Class => ".projectTexts";],
-                div![attrs![At::Class => ".projectName";], project.name],
-                div![attrs![At::Class => ".projectCategory";], project.category]
+                attrs![At::Class => "projectTexts";],
+                div![attrs![At::Class => "projectName";], project.name],
+                div![attrs![At::Class => "projectCategory";], project.category]
             ],
         ],
         _ => li![
             id!["projectInfo"],
             div![
-                attrs![At::Class => ".projectTexts";],
-                div![attrs![At::Class => ".projectName";], ""],
-                div![attrs![At::Class => ".projectCategory";], ""]
+                attrs![At::Class => "projectTexts";],
+                div![attrs![At::Class => "projectName";], ""],
+                div![attrs![At::Class => "projectCategory";], ""]
             ],
         ],
     };
@@ -71,7 +107,12 @@ pub fn divider() -> Node<Msg> {
 }
 
 pub fn inner_layout(model: &Model, children: Node<Msg>) -> Node<Msg> {
-    article![id!["inner-layout"], sidebar(model), children,]
+    article![
+        id!["inner-layout"],
+        navbar_left(model),
+        sidebar(model),
+        children,
+    ]
 }
 
 pub fn host_client(host_url: String, path: &str) -> Result<Request, String> {
