@@ -67,7 +67,7 @@ nav#sidebar .linkItem {
     user-select: none;
 }
 
-nav#sidebar .linkItem.notAllowed {
+nav#sidebar .linkItem.notAllowed, nav#sidebar .linkItem.notAllowed > a {
     cursor: not-allowed;
 }
 
@@ -75,17 +75,21 @@ nav#sidebar .linkItem:hover {
     background: var(--backgroundLight);
 }
 
-nav#sidebar .linkItem > i.styledIcon {
-    margin-right: 15px;
-    font-size: 20px;
-}
-
 nav#sidebar .linkItem.active {
     color: var(--primary);
     background: var(--backgroundLight);
 }
 
-nav#sidebar .linkItem > .linkText {
+nav#sidebar .linkItem > a {
+    display: flex;
+}
+
+nav#sidebar .linkItem > a > i.styledIcon {
+    margin-right: 15px;
+    font-size: 20px;
+}
+
+nav#sidebar .linkItem > a > .linkText {
     padding-top: 2px;
     font-size: 14.7px;
 }

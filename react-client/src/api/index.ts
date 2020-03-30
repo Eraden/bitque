@@ -9,7 +9,7 @@ export interface RequestBody {
     method?: string,
 }
 
-export const endpoint = (): string => `http://localhost:3000`;
+export const endpoint = (): string => `http://localhost:5000`;
 
 export const getContentType = (method, form) =>
     method === 'GET' || form instanceof FormData

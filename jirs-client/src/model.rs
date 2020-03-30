@@ -3,18 +3,32 @@ use std::collections::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::HOST_URL;
 use jirs_data::*;
+
+use crate::HOST_URL;
 
 pub type ProjectId = i32;
 pub type StatusCode = u32;
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
+#[serde(rename_all = "kebab-case")]
 pub enum Page {
     Project,
     ProjectSettings,
     Login,
     Register,
+}
+
+impl Page {
+    pub fn to_path(&self) -> String {
+        match self {
+            Page::Project => "/board",
+            Page::ProjectSettings => "/project-settings",
+            Page::Login => "/login",
+            Page::Register => "/register",
+        }
+        .to_string()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
