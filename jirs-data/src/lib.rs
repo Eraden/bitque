@@ -8,7 +8,7 @@ pub trait ResponseData {
     fn into_response(self) -> Self::Response;
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorResponse {
     pub errors: Vec<String>,
@@ -186,7 +186,7 @@ pub struct UpdateCommentPayload {
     pub body: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateIssuePayload {
     pub title: String,
@@ -203,7 +203,7 @@ pub struct CreateIssuePayload {
     pub user_ids: Vec<i32>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateProjectPayload {
     pub name: Option<String>,

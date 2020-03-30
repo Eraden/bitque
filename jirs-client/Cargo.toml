@@ -17,5 +17,11 @@ serde_json = "*"
 chrono = { version = "*", features = [ "serde" ] }
 uuid = { version = "*", features = [ "serde" ] }
 wasm-bindgen = "*"
-web-sys = "*"
 js-sys = "*"
+futures = "^0.1.26"
+
+[dependencies.web-sys]
+version = "*"
+features = [
+    "Window"
+]

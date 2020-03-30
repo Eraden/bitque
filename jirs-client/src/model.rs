@@ -3,40 +3,53 @@ use std::collections::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::HOST_URL;
 use jirs_data::*;
 
-type ProjectId = i32;
+pub type ProjectId = i32;
+pub type StatusCode = u32;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+pub enum Page {
+    Project,
+    ProjectSettings,
+    Login,
+    Register,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateCommentForm {
-    fields: CreateCommentPayload,
+    pub fields: CreateCommentPayload,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateIssueForm {
-    fields: CreateIssuePayload,
+    pub fields: CreateIssuePayload,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateProjectForm {
-    id: ProjectId,
-    fields: UpdateProjectPayload,
+    pub id: ProjectId,
+    pub fields: UpdateProjectPayload,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Model {
-    access_token: Option<Uuid>,
-    user: Option<User>,
-    project: Option<Project>,
-    project_form: Option<UpdateProjectForm>,
-    issue_form: Option<CreateIssueForm>,
-    comment_form: Option<CreateCommentForm>,
-    issues: Vec<Issue>,
-    comments_by_project_id: HashMap<ProjectId, Vec<Comment>>,
+    pub access_token: Option<Uuid>,
+    pub user: Option<User>,
+    pub project: Option<FullProject>,
+    pub project_form: Option<UpdateProjectForm>,
+    pub issue_form: Option<CreateIssueForm>,
+    pub comment_form: Option<CreateCommentForm>,
+    pub issues: Vec<Issue>,
+    pub comments_by_project_id: HashMap<ProjectId, Vec<Comment>>,
+    pub page: Page,
+    pub host_url: String,
 }
 
 impl Default for Model {
     fn default() -> Self {
+        let host_url = unsafe { HOST_URL.clone() };
         Self {
             access_token: None,
             project: None,
@@ -46,6 +59,84 @@ impl Default for Model {
             comment_form: None,
             issues: vec![],
             comments_by_project_id: Default::default(),
+            page: Page::Project,
+            host_url,
         }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum Icon {
+    Bug,
+    Stopwatch,
+    Task,
+    Story,
+    ArrowDown,
+    ArrowLeftCircle,
+    ArrowUp,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    ChevronUp,
+    Board,
+    Help,
+    Link,
+    Menu,
+    More,
+    Attach,
+    Plus,
+    Search,
+    Issues,
+    Settings,
+    Close,
+    Feedback,
+    Trash,
+    Github,
+    Shipping,
+    Component,
+    Reports,
+    Page,
+    Calendar,
+    ArrowLeft,
+    ArrowRight,
+}
+
+impl std::fmt::Display for Icon {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let code = match self {
+            Icon::Bug => "bug",
+            Icon::Stopwatch => "stopwatch",
+            Icon::Task => "task",
+            Icon::Story => "story",
+            Icon::ArrowDown => "arrowDown",
+            Icon::ArrowLeftCircle => "arrowLeftCircle",
+            Icon::ArrowUp => "arrowUp",
+            Icon::ChevronDown => "chevronDown",
+            Icon::ChevronLeft => "chevronLeft",
+            Icon::ChevronRight => "chevronRight",
+            Icon::ChevronUp => "chevronUp",
+            Icon::Board => "board",
+            Icon::Help => "help",
+            Icon::Link => "link",
+            Icon::Menu => "menu",
+            Icon::More => "more",
+            Icon::Attach => "attach",
+            Icon::Plus => "plus",
+            Icon::Search => "search",
+            Icon::Issues => "issues",
+            Icon::Settings => "settings",
+            Icon::Close => "close",
+            Icon::Feedback => "feedback",
+            Icon::Trash => "trash",
+            Icon::Github => "github",
+            Icon::Shipping => "shipping",
+            Icon::Component => "component",
+            Icon::Reports => "reports",
+            Icon::Page => "page",
+            Icon::Calendar => "calendar",
+            Icon::ArrowLeft => "arrowLeft",
+            Icon::ArrowRight => "arrowRight",
+        };
+        f.write_str(code)
     }
 }

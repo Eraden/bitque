@@ -1,0 +1,153 @@
+i.styledIcon {
+    color: var(--primary);
+    display: inline-block;
+    font-size: 16px;
+}
+
+i.styledIcon.left {
+    transform: translate(0, 0);
+}
+
+i.styledIcon.top {
+    transform: translate(0, 0);
+}
+
+i.styledIcon:before {
+    font-family: "jira";
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+i.styledIcon.bug:before {
+    content: "\e90f";
+}
+
+i.styledIcon.stopwatch:before {
+    content: "\e914";
+}
+
+i.styledIcon.task:before {
+    content: "\e910";
+}
+
+i.styledIcon.story:before {
+    content: "\e911";
+}
+
+i.styledIcon.arrowDown:before {
+    content: "\e90a";
+}
+
+i.styledIcon.arrowLeftCircle:before {
+    content: "\e917";
+}
+
+i.styledIcon.arrowUp:before {
+    content: "\e90b";
+}
+
+i.styledIcon.chevronDown:before {
+    content: "\e900";
+}
+
+i.styledIcon.chevronLeft:before {
+    content: "\e901";
+}
+
+i.styledIcon.chevronRight:before {
+    content: "\e902";
+}
+
+i.styledIcon.chevronUp:before {
+    content: "\e903";
+}
+
+i.styledIcon.board:before {
+    content: "\e904";
+}
+
+i.styledIcon.help:before {
+    content: "\e905";
+}
+
+i.styledIcon.link:before {
+    content: "\e90c";
+}
+
+i.styledIcon.menu:before {
+    content: "\e916";
+}
+
+i.styledIcon.more:before {
+    content: "\e90e";
+}
+
+i.styledIcon.attach:before {
+    content: "\e90d";
+}
+
+i.styledIcon.plus:before {
+    content: "\e906";
+}
+
+i.styledIcon.search:before {
+    content: "\e907";
+}
+
+i.styledIcon.issues:before {
+    content: "\e908";
+}
+
+i.styledIcon.settings:before {
+    content: "\e909";
+}
+
+i.styledIcon.close:before {
+    content: "\e913";
+}
+
+i.styledIcon.feedback:before {
+    content: "\e918";
+}
+
+i.styledIcon.trash:before {
+    content: "\e912";
+}
+
+i.styledIcon.github:before {
+    content: "\e915";
+}
+
+i.styledIcon.shipping:before {
+    content: "\e91c";
+}
+
+i.styledIcon.component:before {
+    content: "\e91a";
+}
+
+i.styledIcon.reports:before {
+    content: "\e91b";
+}
+
+i.styledIcon.page:before {
+    content: "\e919";
+}
+
+i.styledIcon.calendar:before {
+    content: "\e91d";
+}
+
+i.styledIcon.arrowLeft:before {
+    content: "\e91e";
+}
+
+i.styledIcon.arrowRight:before {
+    content: "\e91f";
+}

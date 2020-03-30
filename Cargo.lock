@@ -13,7 +13,7 @@ dependencies = [
  "bytes",
  "crossbeam-channel",
  "derive_more",
- "futures",
+ "futures 0.3.4",
  "lazy_static",
  "log 0.4.8",
  "parking_lot",
@@ -52,7 +52,7 @@ dependencies = [
  "actix-utils",
  "derive_more",
  "either",
- "futures",
+ "futures 0.3.4",
  "http",
  "log 0.4.8",
  "trust-dns-proto",
@@ -68,7 +68,7 @@ dependencies = [
  "actix-service",
  "actix-web",
  "derive_more",
- "futures",
+ "futures 0.3.4",
 ]
 
 [[package]]
@@ -150,7 +150,7 @@ dependencies = [
  "actix-macros",
  "actix-threadpool",
  "copyless",
- "futures",
+ "futures 0.3.4",
  "tokio",
 ]
 
@@ -164,7 +164,7 @@ dependencies = [
  "actix-rt",
  "actix-service",
  "actix-utils",
- "futures",
+ "futures 0.3.4",
  "log 0.4.8",
  "mio",
  "mio-uds",
@@ -193,7 +193,7 @@ dependencies = [
  "actix-rt",
  "actix-server",
  "actix-service",
- "futures",
+ "futures 0.3.4",
  "log 0.4.8",
  "net2",
 ]
@@ -225,7 +225,7 @@ dependencies = [
  "actix-utils",
  "derive_more",
  "either",
- "futures",
+ "futures 0.3.4",
  "log 0.4.8",
 ]
 
@@ -241,7 +241,7 @@ dependencies = [
  "bitflags",
  "bytes",
  "either",
- "futures",
+ "futures 0.3.4",
  "log 0.4.8",
  "pin-project",
  "slab",
@@ -269,7 +269,7 @@ dependencies = [
  "bytes",
  "derive_more",
  "encoding_rs",
- "futures",
+ "futures 0.3.4",
  "fxhash",
  "log 0.4.8",
  "mime",
@@ -754,6 +754,12 @@ checksum = "3dcaa9ae7725d12cdb85b3ad99a434db70b468c09ded17e012d86b5c1010f7a7"
 
 [[package]]
 name = "futures"
+version = "0.1.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b980f2816d6ee8673b6517b52cb0e808a180efc92e5c19d02cdda79066703ef"
+
+[[package]]
+name = "futures"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c329ae8753502fb44ae4fc2b622fa2a94652c41e795143765ba0927f92ab780"
@@ -1033,6 +1039,7 @@ name = "jirs-client"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "futures 0.1.29",
  "jirs-data",
  "js-sys",
  "seed",
@@ -1069,7 +1076,7 @@ dependencies = [
  "diesel",
  "dotenv",
  "env_logger 0.7.1",
- "futures",
+ "futures 0.3.4",
  "ipnetwork",
  "jirs-data",
  "libc",
@@ -1638,7 +1645,7 @@ dependencies = [
  "cookie",
  "dbg",
  "enclose",
- "futures",
+ "futures 0.3.4",
  "gloo-timers",
  "indexmap",
  "js-sys",
@@ -1858,7 +1865,7 @@ dependencies = [
  "async-trait",
  "enum-as-inner",
  "failure",
- "futures",
+ "futures 0.3.4",
  "idna 0.2.0",
  "lazy_static",
  "log 0.4.8",
@@ -1877,7 +1884,7 @@ checksum = "6f90b1502b226f8b2514c6d5b37bafa8c200d7ca4102d57dc36ee0f3b7a04a2f"
 dependencies = [
  "cfg-if",
  "failure",
- "futures",
+ "futures 0.3.4",
  "ipconfig",
  "lazy_static",
  "log 0.4.8",

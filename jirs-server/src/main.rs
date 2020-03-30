@@ -17,6 +17,10 @@ async fn main() -> Result<(), String> {
     env_logger::init();
     dotenv::dotenv().ok();
 
+    let port = std::env::var("JIRS_SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
+    let bind = std::env::var("JIRS_SERVER_BIND").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let addr = format!("{}:{}", bind, port);
+
     let db_addr = actix::SyncArbiter::start(4, || crate::db::DbExecutor::new());
 
     HttpServer::new(move || {
@@ -46,7 +50,7 @@ async fn main() -> Result<(), String> {
                     .service(crate::routes::projects::update),
             )
     })
-    .bind("127.0.0.1:3000")
+    .bind(addr)
     .map_err(|e| format!("{}", e))?
     .run()
     .await
