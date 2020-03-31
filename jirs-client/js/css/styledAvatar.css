@@ -1,0 +1,29 @@
+.styledAvatar.image {
+    display: inline-block;
+    border-radius: 100%;
+    /*background-image: url("${imageURL}");*/
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-color: var(--backgroundLight);
+}
+
+.styledAvatar.letter {
+    display: inline-block;
+    /*width: ${props => props.size} px;*/
+    /*height: ${props => props.size} px;*/
+    border-radius: 100%;
+    text-transform: uppercase;
+    color: #fff;
+    /*background: ${props => props.color};*/
+    font-family: var(--font-medium);
+    font-weight: normal;
+    /*${props => font.size(Math.round(props.size / 1.7))}*/
+}
+
+.styledAvatar.letter > span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}

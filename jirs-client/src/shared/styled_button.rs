@@ -1,7 +1,7 @@
 use seed::{prelude::*, *};
 
 use crate::model::Icon;
-use crate::shared::styled_icon;
+use crate::shared::{styled_icon, ToNode};
 use crate::Msg;
 
 pub enum Variant {
@@ -32,21 +32,16 @@ pub struct StyledButton {
     pub active: bool,
     pub text: Option<String>,
     pub icon: Option<Icon>,
+    pub on_click: Option<EventHandler<Msg>>,
 }
 
-impl Into<Node<Msg>> for StyledButton {
-    fn into(self) -> Node<Msg> {
-        styled_button(self)
+impl ToNode for StyledButton {
+    fn into_node(self) -> Node<Msg> {
+        render(self)
     }
 }
 
-impl StyledButton {
-    pub fn into_node(self) -> Node<Msg> {
-        self.into()
-    }
-}
-
-pub fn styled_button(values: StyledButton) -> Node<Msg> {
+pub fn render(values: StyledButton) -> Node<Msg> {
     let StyledButton {
         text,
         variant,
@@ -54,6 +49,7 @@ pub fn styled_button(values: StyledButton) -> Node<Msg> {
         disabled,
         active,
         icon,
+        on_click,
     } = values;
     let mut class_list = vec!["styledButton".to_string(), variant.to_string()];
     if icon_only {
@@ -65,6 +61,10 @@ pub fn styled_button(values: StyledButton) -> Node<Msg> {
     if icon.is_some() {
         class_list.push("withIcon".to_string());
     }
+    let handler = match on_click {
+        Some(h) if !disabled => vec![h],
+        _ => vec![],
+    };
 
     let icon_node = match icon {
         None => empty![],
@@ -75,6 +75,7 @@ pub fn styled_button(values: StyledButton) -> Node<Msg> {
         attrs![
             At::Class => class_list.join(" "),
         ],
+        handler,
         match disabled {
             true => vec![attrs![At::Disabled => true]],
             false => vec![],

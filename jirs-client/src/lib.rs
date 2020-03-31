@@ -11,6 +11,9 @@ mod project_settings;
 mod register;
 mod shared;
 
+pub type UserId = i32;
+pub type AvatarFilterActive = bool;
+
 #[derive(Clone, Debug)]
 pub enum Msg {
     ChangePage(model::Page),
@@ -21,6 +24,8 @@ pub enum Msg {
 
     // project
     ProjectTextFilterChanged(String),
+    ProjectAvatarFilterChanged(UserId, AvatarFilterActive),
+    ProjectToggleOnlyMy,
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {

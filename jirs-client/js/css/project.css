@@ -37,6 +37,33 @@
     width: 160px;
 }
 
+#projectPage > #projectBoardFilters > #avatars {
+    display: flex;
+    flex-direction: row-reverse;
+    margin: 0 12px 0 2px;
+}
+
+#projectPage > #projectBoardFilters > #avatars > .avatarIsActiveBorder {
+    display: inline-flex;
+    margin-left: -2px;
+    border-radius: 50%;
+    transition: transform 0.1s;
+    cursor: pointer;
+    user-select: none;
+}
+
+#projectPage > #projectBoardFilters > #avatars > .avatarIsActiveBorder.isActive {
+    box-shadow: 0 0 0 4px var(--primary);
+}
+
+#projectPage > #projectBoardFilters > #avatars > .avatarIsActiveBorder:hover {
+     transform: translateY(-5px);
+ }
+
+#projectPage > #projectBoardFilters > #avatars > .avatarIsActiveBorder > .styledAvatar {
+    box-shadow: 0 0 0 2px #fff;
+}
+
 @media (max-width: 1100px) {
     #projectPage {
         padding: 25px 20px 50px calc(var(--appNavBarLeftWidth) + var(--secondarySideBarWidth) + 20px);

@@ -1,5 +1,6 @@
 use seed::{prelude::*, *};
 
+use crate::shared::ToNode;
 use crate::Msg;
 
 pub struct StyledTooltip {
@@ -8,19 +9,13 @@ pub struct StyledTooltip {
     pub children: Node<Msg>,
 }
 
-impl Into<Node<Msg>> for StyledTooltip {
-    fn into(self) -> Node<Msg> {
-        styled_tooltip(self)
+impl ToNode for StyledTooltip {
+    fn into_node(self) -> Node<Msg> {
+        render(self)
     }
 }
 
-impl StyledTooltip {
-    pub fn into_node(self) -> Node<Msg> {
-        self.into()
-    }
-}
-
-pub fn styled_tooltip(values: StyledTooltip) -> Node<Msg> {
+pub fn render(values: StyledTooltip) -> Node<Msg> {
     let StyledTooltip {
         visible,
         class_name,

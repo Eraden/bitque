@@ -8,9 +8,14 @@ use crate::Msg;
 
 pub mod aside;
 pub mod navbar_left;
+pub mod styled_avatar;
 pub mod styled_button;
 pub mod styled_input;
 pub mod styled_tooltip;
+
+pub trait ToNode {
+    fn into_node(self) -> Node<Msg>;
+}
 
 pub fn styled_icon(icon: Icon) -> Node<Msg> {
     i![attrs![At::Class => format!("styledIcon {}", icon)], ""]

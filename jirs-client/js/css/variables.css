@@ -63,3 +63,14 @@
     --font-bold: "CircularStdBold";
     --font-black: "CircularStdBlack";
 }
+
+:root {
+    --avatar-color-1: #DA7657;
+    --avatar-color-2: #6ADA57;
+    --avatar-color-3: #5784DA;
+    --avatar-color-4: #AA57DA;
+    --avatar-color-5: #DA5757;
+    --avatar-color-6: #DA5792;
+    --avatar-color-7: #57DACA;
+    --avatar-color-8: #57A5DA;
+}

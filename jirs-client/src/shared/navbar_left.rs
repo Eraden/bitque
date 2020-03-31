@@ -2,7 +2,7 @@ use seed::{prelude::*, *};
 
 use crate::model::{Icon, Model};
 use crate::shared::styled_button::{StyledButton, Variant};
-use crate::shared::styled_tooltip;
+use crate::shared::{styled_tooltip, ToNode};
 use crate::Msg;
 
 pub fn render(model: &Model) -> Vec<Node<Msg>> {
@@ -43,6 +43,27 @@ pub fn about_tooltip(_model: &Model, children: Node<Msg>) -> Node<Msg> {
 }
 
 fn about_tooltip_popup(model: &Model) -> Node<Msg> {
+    let visit_website = StyledButton {
+        text: Some("Visit Website".to_string()),
+        variant: Variant::Primary,
+        disabled: false,
+        active: false,
+        icon_only: false,
+        icon: None,
+        on_click: None,
+    }
+    .into_node();
+    let github_repo = StyledButton {
+        text: Some("Github Repo".to_string()),
+        variant: Variant::Secondary,
+        disabled: false,
+        active: false,
+        icon_only: false,
+        icon: Some(Icon::Github),
+        on_click: None,
+    }
+    .into_node();
+
     styled_tooltip::StyledTooltip {
         visible: model.project_page.about_tooltip_visible,
         class_name: "aboutTooltipPopup".to_string(),
@@ -71,14 +92,7 @@ fn about_tooltip_popup(model: &Model) -> Node<Msg> {
                 At::Target => "_blank",
                 At::Rel => "noreferrer noopener",
             ],
-            StyledButton {
-                text: Some("Visit Website".to_string()),
-                variant: Variant::Primary,
-                disabled: false,
-                active: false,
-                icon_only: false,
-                icon: None,
-            }.into_node(),
+            visit_website,
       ],
       a![
         id!["about-github-button"],
@@ -87,14 +101,7 @@ fn about_tooltip_popup(model: &Model) -> Node<Msg> {
             At::Target => "_blank",
             At::Rel => "noreferrer noopener",
         ],
-        StyledButton {
-            text: Some("Github Repo".to_string()),
-            variant: Variant::Secondary,
-            disabled: false,
-            active: false,
-            icon_only: false,
-            icon: Some(Icon::Github),
-        }.into_node()
+        github_repo
       ]
     ],
     }.into_node()

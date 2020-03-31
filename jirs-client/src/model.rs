@@ -51,6 +51,8 @@ pub struct UpdateProjectForm {
 pub struct ProjectPage {
     pub about_tooltip_visible: bool,
     pub text_filter: String,
+    pub active_avatar_filters: Vec<i32>,
+    pub only_my_filter: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -85,6 +87,8 @@ impl Default for Model {
             project_page: ProjectPage {
                 about_tooltip_visible: false,
                 text_filter: "".to_string(),
+                active_avatar_filters: vec![],
+                only_my_filter: false,
             },
         }
     }

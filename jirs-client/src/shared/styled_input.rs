@@ -1,7 +1,7 @@
 use seed::{prelude::*, *};
 
 use crate::model::Icon;
-use crate::shared::styled_icon;
+use crate::shared::{styled_icon, ToNode};
 use crate::Msg;
 
 pub struct StyledInput {
@@ -11,15 +11,9 @@ pub struct StyledInput {
     pub on_change: EventHandler<Msg>,
 }
 
-impl Into<Node<Msg>> for StyledInput {
-    fn into(self) -> Node<Msg> {
+impl ToNode for StyledInput {
+    fn into_node(self) -> Node<Msg> {
         render(self)
-    }
-}
-
-impl StyledInput {
-    pub fn into_node(self) -> Node<Msg> {
-        self.into()
     }
 }
 
