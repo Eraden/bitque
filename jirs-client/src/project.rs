@@ -40,12 +40,21 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         Msg::ProjectToggleOnlyMy => {
             model.project_page.only_my_filter = !model.project_page.only_my_filter;
         }
+        Msg::ProjectToggleRecentlyUpdated => {
+            model.project_page.recenlty_updated_filter =
+                !model.project_page.recenlty_updated_filter;
+        }
         _ => (),
     }
 }
 
 pub fn view(model: &Model) -> Node<Msg> {
-    let project_section = vec![breadcrumbs(model), header(), project_board_filters(model)];
+    let project_section = vec![
+        breadcrumbs(model),
+        header(),
+        project_board_filters(model),
+        project_board_lists(model),
+    ];
 
     inner_layout(model, "projectPage", project_section)
 }
@@ -101,9 +110,20 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         icon_only: false,
         disabled: false,
         active: model.project_page.only_my_filter,
-        text: Some("Only my".to_string()),
+        text: Some("Only My Issues".to_string()),
         icon: None,
         on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy)),
+    }
+    .into_node();
+
+    let recently_updated = StyledButton {
+        variant: Variant::Empty,
+        icon_only: false,
+        disabled: false,
+        active: model.project_page.only_my_filter,
+        text: Some("Recently Updated".to_string()),
+        icon: None,
+        on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated)),
     }
     .into_node();
 
@@ -112,6 +132,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         search_input,
         avatars_filters(model),
         only_my,
+        recently_updated,
     ]
 }
 
@@ -145,4 +166,8 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
         .collect();
 
     div![id!["avatars"], avatars]
+}
+
+fn project_board_lists(model: &Model) -> Node<Msg> {
+    div![id!["projectBoardLists"]]
 }

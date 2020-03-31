@@ -26,6 +26,7 @@ pub enum Msg {
     ProjectTextFilterChanged(String),
     ProjectAvatarFilterChanged(UserId, AvatarFilterActive),
     ProjectToggleOnlyMy,
+    ProjectToggleRecentlyUpdated,
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {

@@ -53,6 +53,7 @@ pub struct ProjectPage {
     pub text_filter: String,
     pub active_avatar_filters: Vec<i32>,
     pub only_my_filter: bool,
+    pub recenlty_updated_filter: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -89,6 +90,7 @@ impl Default for Model {
                 text_filter: "".to_string(),
                 active_avatar_filters: vec![],
                 only_my_filter: false,
+                recenlty_updated_filter: false,
             },
         }
     }
