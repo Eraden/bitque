@@ -1,4 +1,5 @@
 use seed::fetch::{FetchObject, ResponseWithDataResult};
+use seed::*;
 
 use jirs_data::{FullProjectResponse, Issue};
 
@@ -51,6 +52,8 @@ pub fn current_project_response(fetched: &FetchObject<String>, model: &mut Model
 }
 
 pub fn update_issue_response(fetched: &FetchObject<String>, model: &mut Model) {
+    log!("update_issue_response");
+    log!(fetched);
     if let FetchObject {
         result:
             Ok(ResponseWithDataResult {

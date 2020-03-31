@@ -6,7 +6,7 @@ use crate::model::{Icon, Model, Page};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::{StyledButton, Variant};
 use crate::shared::styled_input::StyledInput;
-use crate::shared::{drag_ev, host_client, inner_layout, ToNode};
+use crate::shared::{drag_ev, inner_layout, ToNode};
 use crate::Msg;
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
@@ -71,7 +71,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                     let mut position = 0f64;
                     let mut found: Option<&mut Issue> = None;
                     for issue in project.issues.iter_mut() {
-                        if issue.status == status.to_payload() {
+                        if issue.status == status {
                             position += 1f64;
                         }
                         if issue.id == issue_id {
@@ -80,22 +80,23 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                         }
                     }
                     if let Some(issue) = found {
-                        issue.status = status.to_payload().to_string();
+                        issue.status = status.clone();
                         issue.list_position = position + 1f64;
+
                         let payload = UpdateIssuePayload {
-                            title: None,
-                            issue_type: None,
+                            title: Some(issue.title.clone()),
+                            issue_type: Some(issue.issue_type.clone()),
                             status: Some(status.to_payload().to_string()),
-                            priority: None,
-                            list_position: Some(position + 1f64),
-                            description: None,
-                            description_text: None,
-                            estimate: None,
-                            time_spent: None,
-                            time_remaining: None,
-                            project_id: None,
-                            users: None,
-                            user_ids: None,
+                            priority: Some(issue.priority.clone()),
+                            list_position: Some(issue.list_position),
+                            description: Some(issue.description.clone()),
+                            description_text: Some(issue.description_text.clone()),
+                            estimate: Some(issue.estimate),
+                            time_spent: Some(issue.time_spent),
+                            time_remaining: Some(issue.time_remaining),
+                            project_id: Some(issue.project_id),
+                            users: Some(vec![]),
+                            user_ids: Some(issue.user_ids.clone()),
                         };
                         orders.skip().perform_cmd(crate::api::update_issue(
                             model.host_url.clone(),
@@ -269,7 +270,7 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
     let issues: Vec<Node<Msg>> = project
         .issues
         .iter()
-        .filter(|issue| status.match_name(issue.status.as_str()))
+        .filter(|issue| status == issue.status)
         .map(|issue| project_issue(model, project, issue))
         .collect();
     let label = status.to_label();
@@ -316,7 +317,7 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
         })
         .collect();
 
-    let mut issue_type_icon = match issue.issue_type.parse::<IssueType>() {
+    let issue_type_icon = match issue.issue_type.parse::<IssueType>() {
         Ok(icon) => {
             let mut node = crate::shared::styled_icon(icon.into());
             node.add_style(
@@ -341,7 +342,7 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
     };
 
     let issue_id = issue.id;
-    let drag_started = drag_ev(Ev::DragStart, move |event| Msg::IssueDragStarted(issue_id));
+    let drag_started = drag_ev(Ev::DragStart, move |_| Msg::IssueDragStarted(issue_id));
     let drag_stopped = drag_ev(Ev::DragEnd, move |_| Msg::IssueDragStopped(issue_id));
 
     let mut class_list = vec!["issue"];

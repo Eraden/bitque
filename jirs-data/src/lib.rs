@@ -50,6 +50,20 @@ pub enum IssueStatus {
     Done,
 }
 
+impl FromStr for IssueStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "backlog" => Ok(IssueStatus::Backlog),
+            "selected" => Ok(IssueStatus::Selected),
+            "in_progress" => Ok(IssueStatus::InProgress),
+            "done" => Ok(IssueStatus::Done),
+            _ => Err(format!("Invalid status {:?}", s)),
+        }
+    }
+}
+
 impl IssueStatus {
     pub fn to_label(&self) -> &str {
         match self {
@@ -69,18 +83,8 @@ impl IssueStatus {
         }
     }
 
-    #[deprecated]
-    pub fn to_deprecated_payload(&self) -> &str {
-        match self {
-            IssueStatus::Backlog => "backlog",
-            IssueStatus::Selected => "selected",
-            IssueStatus::InProgress => "inprogress",
-            IssueStatus::Done => "done",
-        }
-    }
-
     pub fn match_name(&self, name: &str) -> bool {
-        self.to_payload() == name || self.to_deprecated_payload() == name
+        self.to_payload() == name
     }
 }
 
@@ -232,7 +236,7 @@ pub struct Issue {
     pub title: String,
     #[serde(rename = "type")]
     pub issue_type: String,
-    pub status: String,
+    pub status: IssueStatus,
     pub priority: String,
     pub list_position: f64,
     pub description: Option<String>,

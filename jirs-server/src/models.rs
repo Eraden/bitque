@@ -2,6 +2,8 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use jirs_data::IssueStatus;
+
 use crate::schema::*;
 
 #[derive(Debug, Serialize, Deserialize, Queryable)]
@@ -66,7 +68,11 @@ impl Into<jirs_data::Issue> for Issue {
             id: self.id,
             title: self.title,
             issue_type: self.issue_type,
-            status: self.status,
+            status: self
+                .status
+                .as_str()
+                .parse::<IssueStatus>()
+                .unwrap_or_else(|_| IssueStatus::Backlog),
             priority: self.priority,
             list_position: self.list_position,
             description: self.description,

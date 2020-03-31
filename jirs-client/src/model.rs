@@ -8,7 +8,6 @@ use jirs_data::*;
 use crate::{IssueId, UserId, HOST_URL};
 
 pub type ProjectId = i32;
-pub type StatusCode = u32;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
 #[serde(rename_all = "kebab-case")]

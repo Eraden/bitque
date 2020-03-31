@@ -1,8 +1,5 @@
-use seed::fetch::{FetchObject, ResponseWithDataResult};
 use seed::{prelude::*, *};
 use wasm_bindgen::JsCast;
-
-use jirs_data::FullProjectResponse;
 
 use crate::model::{Icon, Model};
 use crate::Msg;

@@ -1,3 +1,5 @@
+use seed::Method;
+
 use jirs_data::UpdateIssuePayload;
 
 use crate::shared::host_client;
@@ -22,9 +24,11 @@ pub async fn update_issue(
     id: i32,
     payload: UpdateIssuePayload,
 ) -> Result<Msg, Msg> {
-    match host_client(host_url, format!("/issue/{id}", id = id).as_str()) {
+    match host_client(host_url, format!("/issues/{id}", id = id).as_str()) {
         Ok(client) => {
             client
+                .method(Method::Put)
+                .header("Content-Type", "application/json")
                 .body_json(&payload)
                 .fetch_json(Msg::IssueUpdateResult)
                 .await
