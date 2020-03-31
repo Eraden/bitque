@@ -16,13 +16,13 @@ export const Title = styled.div`
   padding: 13px 10px 17px;
   text-transform: uppercase;
   color: ${color.textMedium};
-  ${font.size(12.5)};
+  font-size: 12.5px;
   ${mixin.truncateText}
 `;
 
 export const IssuesCount = styled.span`
   text-transform: lowercase;
-  ${font.size(13)};
+  font-size: 13px;
 `;
 
 export const Issues = styled.div`

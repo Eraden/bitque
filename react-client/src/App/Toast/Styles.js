@@ -47,13 +47,13 @@ export const CloseIcon = styled(Icon)`
 
 export const Title = styled.div`
   padding-right: 22px;
-  ${font.size(15)}
+  font-size: 15px
   ${font.medium}
 `;
 
 export const Message = styled.div`
   padding: 8px 10px 0 0;
   white-space: pre-wrap;
-  ${font.size(14)}
+  font-size: 14px
   ${font.medium}
 `;

@@ -56,7 +56,8 @@ export const CloseIcon = styled(Icon)`
   font-size: 25px;
   color: ${color.textMedium};
   transition: all 0.1s;
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
   ${props => closeIconStyles[props.variant]}
 `;
 

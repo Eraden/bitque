@@ -7,7 +7,7 @@ export const TypeButton = styled(Button)`
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: ${color.textMedium};
-  ${font.size(13)}
+  font-size: 13px
 `;
 
 export const Type = styled.div`
@@ -17,5 +17,5 @@ export const Type = styled.div`
 
 export const TypeLabel = styled.div`
   padding: 0 5px 0 7px;
-  ${font.size(15)}
+  font-size: 15px
 `;

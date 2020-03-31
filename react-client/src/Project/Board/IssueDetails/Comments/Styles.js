@@ -8,5 +8,5 @@ export const Comments = styled.div`
 
 export const Title = styled.div`
   ${font.medium}
-  ${font.size(15)}
+  font-size: 15px
 `;

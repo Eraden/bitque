@@ -33,7 +33,8 @@ export const StyledLogo = styled(Logo)`
   display: inline-block;
   margin-left: 8px;
   padding: 10px;
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
 `;
 
 export const Bottom = styled.div`
@@ -51,7 +52,8 @@ export const Item = styled.div`
   padding-left: 64px;
   color: #deebff;
   transition: color 0.1s;
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
@@ -70,7 +72,7 @@ export const ItemText = styled.div`
   transition: all 0.1s;
   transition-property: right, visibility, opacity;
   ${font.bold}
-  ${font.size(12)}
+  font-size: 12px
   ${NavLeft}:hover & {
     right: 0;
     visibility: visible;

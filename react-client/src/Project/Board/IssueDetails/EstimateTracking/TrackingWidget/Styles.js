@@ -35,5 +35,5 @@ export const Values = styled.div`
   display: flex;
   justify-content: space-between;
   padding-top: 3px;
-  ${font.size(14.5)};
+  font-size: 14.5px;
 `;

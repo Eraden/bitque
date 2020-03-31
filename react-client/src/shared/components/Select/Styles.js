@@ -7,7 +7,7 @@ export const StyledSelect = styled.div`
   position: relative;
   border-radius: 4px;
   cursor: pointer;
-  ${font.size(14)}
+  font-size: 14px
   ${props => props.variant === 'empty' && `display: inline-block;`}
   ${props =>
     props.variant === 'normal' &&
@@ -80,7 +80,7 @@ export const AddMore = styled.div`
   display: inline-block;
   margin-bottom: 3px;
   padding: 3px 0;
-  ${font.size(12.5)}
+  font-size: 12.5px
   ${mixin.link()}
   i {
     margin-right: 3px;
@@ -118,7 +118,8 @@ export const ClearIcon = styled(Icon)`
   padding: 5px;
   font-size: 16px;
   color: ${color.textMedium};
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
 `;
 
 export const Options = styled.div`

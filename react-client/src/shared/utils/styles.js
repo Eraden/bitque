@@ -175,7 +175,7 @@ export const mixin = {
     color: ${colorValue};
     background: ${background};
     ${font.bold}
-    ${font.size(12)}
+    font-size: 12px
     i {
       margin-left: 4px;
     }

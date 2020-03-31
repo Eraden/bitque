@@ -32,14 +32,14 @@ export const SelectedMonthYear = styled.div`
   display: inline-block;
   padding-left: 7px;
   ${font.bold}
-  ${font.size(16)}
+  font-size: 16px
 `;
 
 export const YearSelect = styled.select`
   margin-left: 5px;
   width: 60px;
   height: 22px;
-  ${font.size(13)}
+  font-size: 13px
 `;
 
 export const PrevNextIcons = styled.div`
@@ -50,7 +50,8 @@ export const PrevNextIcons = styled.div`
     padding: 7px 5px 4px;
     font-size: 22px;
     color: ${color.textLight};
-    ${mixin.clickable}
+    cursor: pointer;
+    user-select: none;
     &:hover {
       color: ${color.textDarkest};
     }
@@ -69,7 +70,7 @@ export const DayName = styled.div`
   height: 30px;
   line-height: 30px;
   color: ${color.textLight};
-  ${font.size(13)}
+  font-size: 13px
 `;
 
 export const Day = styled.div`
@@ -77,7 +78,7 @@ export const Day = styled.div`
   height: 30px;
   line-height: 30px;
   border-radius: 3px;
-  ${font.size(15)}
+  font-size: 15px
   ${props => !props.isFiller && hoverStyles}
   ${props => props.isToday && font.bold}
   ${props => props.isSelected && selectedStyles}
@@ -96,13 +97,14 @@ export const TimeSection = styled.div`
 
 export const Time = styled.div`
   padding: 5px 0 5px 20px;
-  ${font.size(14)}
+  font-size: 14px
   ${props => !props.isFiller && hoverStyles}
   ${props => props.isSelected && selectedStyles}
 `;
 
 const hoverStyles = css`
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
   &:hover {
     background: ${color.backgroundMedium};
   }

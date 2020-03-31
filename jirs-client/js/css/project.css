@@ -68,7 +68,123 @@
     margin-left: 6px;
 }
 
+#projectPage > #projectBoardFilters > #clearAllFilters {
+    height: 32px;
+    line-height: 32px;
+    margin-left: 15px;
+    padding-left: 12px;
+    border-left: 1px solid var(--borderLightest);
+    color: var(--textDark);
+    font-size: 14.5px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#projectPage > #projectBoardFilters > #clearAllFilters:hover {
+    color: var(--textMedium);
+}
+
 #projectPage > #projectBoardLists {
+    display: flex;
+    margin: 26px -5px 0;
+}
+
+#projectPage > #projectBoardLists > .list {
+    display: flex;
+    flex-direction: column;
+    margin: 0 5px;
+    min-height: 400px;
+    width: 25%;
+    border-radius: 3px;
+    background: var(--backgroundLightest);
+}
+
+#projectPage > #projectBoardLists > .list > .title {
+    padding: 13px 10px 17px;
+    text-transform: uppercase;
+    color: var(--textMedium);
+    font-size: 12.5px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#projectPage > #projectBoardLists > .list > .title > .issuesCount {
+    text-transform: lowercase;
+    font-size: 13px;
+}
+
+#projectPage > #projectBoardLists > .list > .issues {
+    height: 100%;
+    padding: 0 5px;
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink {
+    display: block;
+    margin-bottom: 5px;
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue {
+    padding: 10px;
+    border-radius: 3px;
+    background: #fff;
+    box-shadow: 0 1px 2px 0 rgba(9, 30, 66, 0.25);
+    transition: background 0.1s;
+    cursor: pointer;
+    user-select: none;
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue.isBeingDragged {
+    transform: rotate(3deg);
+    box-shadow: 5px 10px 30px 0 rgba(9, 30, 66, 0.15);
+}
+
+@media (max-width: 1100px) {
+    #projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue {
+        padding: 10px 8px;
+    }
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue:hover {
+    background: var(--backgroundLight);
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .title {
+    padding-bottom: 11px;
+    font-size: 15px;
+}
+
+@media (max-width: 1100px) {
+    #projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .title {
+        font-size: 14.5px
+    }
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > div {
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > div > .issueTypeIcon {
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > div > .issuePriorityIcon {
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > .assignees {
+    display: flex;
+    flex-direction: row-reverse;
+    margin-left: 2px;
+}
+
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > .assignees > .assigneeAvatar,
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > .assignees > .styledAvatar {
+    margin-left: -2px;
+    box-shadow: 0 0 0 2px #fff;
 }
 
 @media (max-width: 1100px) {

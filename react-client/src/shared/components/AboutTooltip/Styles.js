@@ -16,7 +16,7 @@ export const FeedbackImage = styled.img`
 
 export const FeedbackParagraph = styled.p`
   margin-bottom: 12px;
-  ${font.size(15)}
+  font-size: 15px
   &:last-of-type {
     margin-bottom: 22px;
   }

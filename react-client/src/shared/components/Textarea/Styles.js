@@ -14,7 +14,7 @@ export const StyledTextarea = styled.div`
     color: ${color.textDarkest};
     background: ${color.backgroundLightest};
     ${font.regular}
-    ${font.size(15)}
+    font-size: 15px
     &:focus {
       background: #fff;
       border: 1px solid ${color.borderInputFocus};

@@ -25,7 +25,8 @@ export const AvatarIsActiveBorder = styled.div`
   margin-left: -2px;
   border-radius: 50%;
   transition: transform 0.1s;
-  ${mixin.clickable};
+  cursor: pointer;
+    user-select: none;;
   ${props => props.isActive && `box-shadow: 0 0 0 4px ${color.primary}`}
   &:hover {
     transform: translateY(-5px);
@@ -47,8 +48,9 @@ export const ClearAll = styled.div`
   padding-left: 12px;
   border-left: 1px solid ${color.borderLightest};
   color: ${color.textDark};
-  ${font.size(14.5)}
-  ${mixin.clickable}
+  font-size: 14.5px
+  cursor: pointer;
+    user-select: none;
   &:hover {
     color: ${color.textMedium};
   }

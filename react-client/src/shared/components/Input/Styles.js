@@ -20,7 +20,7 @@ export const InputElement = styled.input`
   background: ${color.backgroundLightest};
   transition: background 0.1s;
   ${font.regular}
-  ${font.size(15)}
+  font-size: 15px
   ${props => props.hasIcon && 'padding-left: 32px;'}
   &:hover {
     background: ${color.backgroundLight};

@@ -11,13 +11,13 @@ export const FieldLabel = styled.label`
   padding-bottom: 5px;
   color: ${color.textMedium};
   ${font.medium}
-  ${font.size(13)}
+  font-size: 13px
 `;
 
 export const FieldTip = styled.div`
   padding-top: 6px;
   color: ${color.textMedium};
-  ${font.size(12.5)}
+  font-size: 12.5px
 `;
 
 export const FieldError = styled.div`
@@ -25,5 +25,5 @@ export const FieldError = styled.div`
   line-height: 1;
   color: ${color.danger};
   ${font.medium}
-  ${font.size(12.5)}
+  font-size: 12.5px
 `;

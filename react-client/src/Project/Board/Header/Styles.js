@@ -9,6 +9,6 @@ export const Header = styled.div`
 `;
 
 export const BoardName = styled.div`
-  ${font.size(24)}
+  font-size: 24px
   ${font.medium}
 `;

@@ -4,7 +4,7 @@ import { color, font, mixin } from 'shared/utils/styles';
 
 export const Title = styled.div`
   padding: 20px 0 6px;
-  ${font.size(15)}
+  font-size: 15px
   ${font.medium}
 `;
 
@@ -14,8 +14,9 @@ export const EmptyLabel = styled.div`
   border-radius: 3px;
   color: ${color.textMedium}
   transition: background 0.1s;
-  ${font.size(15)}
-  ${mixin.clickable}
+  font-size: 15px
+  cursor: pointer;
+    user-select: none;
   &:hover {
     background: ${color.backgroundLight};
   }

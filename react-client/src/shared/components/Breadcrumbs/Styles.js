@@ -4,12 +4,12 @@ import { color, font } from 'shared/utils/styles';
 
 export const Container = styled.div`
   color: ${color.textMedium};
-  ${font.size(15)};
+  font-size: 15px;
 `;
 
 export const Divider = styled.span`
   position: relative;
   top: 2px;
   margin: 0 10px;
-  ${font.size(18)};
+  font-size: 18px;
 `;

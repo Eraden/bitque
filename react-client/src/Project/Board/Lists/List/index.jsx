@@ -9,17 +9,6 @@ import { IssueStatusCopy } from 'shared/constants/issues';
 import Issue from './Issue';
 import { List, Title, IssuesCount, Issues } from './Styles';
 
-const propTypes = {
-  status: PropTypes.string.isRequired,
-  project: PropTypes.object.isRequired,
-  filters: PropTypes.object.isRequired,
-  currentUserId: PropTypes.number,
-};
-
-const defaultProps = {
-  currentUserId: null,
-};
-
 const ProjectBoardList = ({ status, project, filters, currentUserId }) => {
   const filteredIssues = filterIssues(project.issues, filters, currentUserId);
   const filteredListIssues = getSortedListIssues(filteredIssues, status);
@@ -78,7 +67,14 @@ const formatIssuesCount = (allListIssues, filteredListIssues) => {
   return allListIssues.length;
 };
 
-ProjectBoardList.propTypes = propTypes;
-ProjectBoardList.defaultProps = defaultProps;
+ProjectBoardList.propTypes = {
+  status: PropTypes.string.isRequired,
+  project: PropTypes.object.isRequired,
+  filters: PropTypes.object.isRequired,
+  currentUserId: PropTypes.number,
+};
+ProjectBoardList.defaultProps = {
+  currentUserId: null,
+};
 
 export default ProjectBoardList;

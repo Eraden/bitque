@@ -13,7 +13,7 @@ export default createGlobalStyle`
     color: ${color.textDarkest};
     -webkit-tap-highlight-color: transparent;
     line-height: 1.2;
-    ${font.size(16)}
+    font-size: 16px
     ${font.regular}
   }
 

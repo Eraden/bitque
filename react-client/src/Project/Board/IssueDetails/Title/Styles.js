@@ -16,7 +16,7 @@ export const TitleTextarea = styled(Textarea)`
     border: 1px solid transparent;
     box-shadow: 0 0 0 1px transparent;
     transition: background 0.1s;
-    ${font.size(24)}
+    font-size: 24px
     ${font.medium}
     &:hover:not(:focus) {
       background: ${color.backgroundLight};
@@ -27,6 +27,6 @@ export const TitleTextarea = styled(Textarea)`
 export const ErrorText = styled.div`
   padding-top: 4px;
   color: ${color.danger};
-  ${font.size(13)}
+  font-size: 13px
   ${font.medium}
 `;

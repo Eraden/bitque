@@ -171,3 +171,13 @@ impl std::fmt::Display for Icon {
         f.write_str(code)
     }
 }
+
+impl From<IssueType> for Icon {
+    fn from(t: IssueType) -> Self {
+        match t {
+            IssueType::Task => Icon::Task,
+            IssueType::Bug => Icon::Bug,
+            IssueType::Story => Icon::Story,
+        }
+    }
+}

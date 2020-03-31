@@ -6,7 +6,8 @@ export const TrackingLink = styled.div`
   padding: 4px 4px 2px 0;
   border-radius: 4px;
   transition: background 0.1s;
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
   &:hover {
     background: ${color.backgroundLight};
   }
@@ -19,7 +20,7 @@ export const ModalContents = styled.div`
 export const ModalTitle = styled.div`
   padding-bottom: 14px;
   ${font.medium}
-  ${font.size(20)}
+  font-size: 20px
 `;
 
 export const Inputs = styled.div`
@@ -36,7 +37,7 @@ export const InputLabel = styled.div`
   padding-bottom: 5px;
   color: ${color.textMedium};
   ${font.medium};
-  ${font.size(13)};
+  font-size: 13px;
 `;
 
 export const Actions = styled.div`

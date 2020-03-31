@@ -41,5 +41,5 @@ export const StyledIcon = styled(Icon)`
 export const Title = styled.h1`
   margin-bottom: 16px;
   padding-left: 42px;
-  ${font.size(29)}
+  font-size: 29px
 `;

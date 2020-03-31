@@ -8,5 +8,5 @@ export const Dates = styled.div`
   line-height: 22px;
   border-top: 1px solid ${color.borderLightest};
   color: ${color.textMedium};
-  ${font.size(13)}
+  font-size: 13px
 `;

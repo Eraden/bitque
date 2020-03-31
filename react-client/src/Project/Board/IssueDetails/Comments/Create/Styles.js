@@ -6,7 +6,7 @@ import { Avatar } from 'shared/components';
 export const Create = styled.div`
   position: relative;
   margin-top: 25px;
-  ${font.size(15)}
+  font-size: 15px
 `;
 
 export const UserAvatar = styled(Avatar)`
@@ -24,7 +24,8 @@ export const FakeTextarea = styled.div`
   border-radius: 4px;
   border: 1px solid ${color.borderLightest};
   color: ${color.textLight};
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
   &:hover {
     border: 1px solid ${color.borderLight};
   }

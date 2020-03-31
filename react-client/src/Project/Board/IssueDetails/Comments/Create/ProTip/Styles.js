@@ -7,7 +7,7 @@ export const Tip = styled.div`
   align-items: center;
   padding-top: 8px;
   color: ${color.textMedium};
-  ${font.size(13)}
+  font-size: 13px
   strong {
     padding-right: 4px;
   }
@@ -23,5 +23,5 @@ export const TipLetter = styled.span`
   color: ${color.textDarkest};
   background: ${color.backgroundMedium};
   ${font.bold}
-  ${font.size(12)}
+  font-size: 12px
 `;

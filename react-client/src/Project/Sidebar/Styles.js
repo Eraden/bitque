@@ -33,13 +33,13 @@ export const ProjectTexts = styled.div`
 
 export const ProjectName = styled.div`
   color: ${color.textDark};
-  ${font.size(15)};
+  font-size: 15px;
   ${font.medium};
 `;
 
 export const ProjectCategory = styled.div`
   color: ${color.textMedium};
-  ${font.size(13)};
+  font-size: 13px;
 `;
 
 export const Divider = styled.div`
@@ -53,7 +53,8 @@ export const LinkItem = styled.div`
   display: flex;
   padding: 8px 12px;
   border-radius: 3px;
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
   ${props =>
     !props.to ? `cursor: not-allowed;` : `&:hover { background: ${color.backgroundLight}; }`}
   i {
@@ -71,7 +72,7 @@ export const LinkItem = styled.div`
 
 export const LinkText = styled.div`
   padding-top: 2px;
-  ${font.size(14.7)};
+  font-size: 14.7px;
 `;
 
 export const NotImplemented = styled.div`
@@ -86,7 +87,7 @@ export const NotImplemented = styled.div`
   color: ${color.textDark};
   background: ${color.backgroundMedium};
   opacity: 0;
-  ${font.size(11.5)};
+  font-size: 11.5px;
   ${font.bold}
   ${LinkItem}:hover & {
     opacity: 1;

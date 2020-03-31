@@ -5,7 +5,8 @@ import { color, font, mixin } from 'shared/utils/styles';
 export const User = styled.div`
   display: flex;
   align-items: center;
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
   ${props =>
     props.isSelectValue &&
     css`
@@ -22,5 +23,5 @@ export const User = styled.div`
 
 export const Username = styled.div`
   padding: 0 3px 0 8px;
-  ${font.size(14.5)}
+  font-size: 14.5px
 `;

@@ -15,8 +15,9 @@ export const StyledButton = styled.button`
   border-radius: 3px;
   transition: all 0.1s;
   appearance: none;
-  ${mixin.clickable}
-  ${font.size(14.5)}
+  cursor: pointer;
+    user-select: none;
+  font-size: 14.5px
   ${props => buttonVariants[props.variant]}
   &:disabled {
     opacity: 0.6;

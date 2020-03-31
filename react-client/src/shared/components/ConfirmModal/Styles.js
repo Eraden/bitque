@@ -11,14 +11,14 @@ export const StyledConfirmModal = styled(Modal)`
 export const Title = styled.div`
   padding-bottom: 25px;
   ${font.medium}
-  ${font.size(22)}
+  font-size: 22px
   line-height: 1.5;
 `;
 
 export const Message = styled.p`
   padding-bottom: 25px;
   white-space: pre-wrap;
-  ${font.size(15)}
+  font-size: 15px
 `;
 
 export const Actions = styled.div`

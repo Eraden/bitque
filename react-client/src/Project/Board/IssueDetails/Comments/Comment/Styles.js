@@ -6,7 +6,7 @@ import { Avatar } from 'shared/components';
 export const Comment = styled.div`
   position: relative;
   margin-top: 25px;
-  ${font.size(15)}
+  font-size: 15px
 `;
 
 export const UserAvatar = styled(Avatar)`
@@ -31,7 +31,7 @@ export const CreatedAt = styled.div`
   display: inline-block;
   padding-bottom: 10px;
   color: ${color.textDark};
-  ${font.size(14.5)}
+  font-size: 14.5px
 `;
 
 export const Body = styled.p`
@@ -43,8 +43,9 @@ const actionLinkStyles = css`
   display: inline-block;
   padding: 2px 0;
   color: ${color.textMedium};
-  ${font.size(14.5)}
-  ${mixin.clickable}
+  font-size: 14.5px
+  cursor: pointer;
+    user-select: none;
   &:hover {
     text-decoration: underline;
   }

@@ -6,6 +6,7 @@ use crate::shared::styled_button::{StyledButton, Variant};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::{host_client, inner_layout, ToNode};
 use crate::Msg;
+use jirs_data::{FullProject, Issue, IssuePriority, IssueStatus, IssueType};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -43,6 +44,12 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         Msg::ProjectToggleRecentlyUpdated => {
             model.project_page.recenlty_updated_filter =
                 !model.project_page.recenlty_updated_filter;
+        }
+        Msg::ProjectClearFilters => {
+            let pp = &mut model.project_page;
+            pp.active_avatar_filters = vec![];
+            pp.recenlty_updated_filter = false;
+            pp.only_my_filter = false;
         }
         _ => (),
     }
@@ -105,6 +112,8 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
     }
     .into_node();
 
+    let project_page = &model.project_page;
+
     let only_my = StyledButton {
         variant: Variant::Empty,
         icon_only: false,
@@ -120,12 +129,24 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         variant: Variant::Empty,
         icon_only: false,
         disabled: false,
-        active: model.project_page.only_my_filter,
+        active: model.project_page.recenlty_updated_filter,
         text: Some("Recently Updated".to_string()),
         icon: None,
         on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated)),
     }
     .into_node();
+
+    let clear_all = match project_page.only_my_filter
+        || project_page.recenlty_updated_filter
+        || !project_page.active_avatar_filters.is_empty()
+    {
+        true => button![
+            id!["clearAllFilters"],
+            "Clear all",
+            mouse_ev(Ev::Click, |_| Msg::ProjectClearFilters),
+        ],
+        false => empty![],
+    };
 
     div![
         id!["projectBoardFilters"],
@@ -133,6 +154,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         avatars_filters(model),
         only_my,
         recently_updated,
+        clear_all
     ]
 }
 
@@ -169,5 +191,88 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
 }
 
 fn project_board_lists(model: &Model) -> Node<Msg> {
-    div![id!["projectBoardLists"]]
+    use jirs_data::IssueStatus;
+
+    div![
+        id!["projectBoardLists"],
+        project_issue_list(model, IssueStatus::Backlog),
+        project_issue_list(model, IssueStatus::Selected),
+        project_issue_list(model, IssueStatus::InProgress),
+        project_issue_list(model, IssueStatus::Done),
+    ]
+}
+
+fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg> {
+    let project = match model.project.as_ref() {
+        Some(p) => p,
+        _ => return empty![],
+    };
+    let issues: Vec<Node<Msg>> = project
+        .issues
+        .iter()
+        .filter(|issue| status.match_name(issue.status.as_str()))
+        .map(|issue| project_issue(model, project, issue))
+        .collect();
+    let label = status.to_label();
+    div![
+        attrs![At::Class => "list"],
+        div![
+            attrs![At::Class => "title"],
+            label,
+            div![attrs![At::Class => "issuesCount"]]
+        ],
+        div![attrs![At::Class => "issues"], issues]
+    ]
+}
+
+fn project_issue(_model: &Model, project: &FullProject, issue: &Issue) -> Node<Msg> {
+    let avatars: Vec<Node<Msg>> = project
+        .users
+        .iter()
+        .filter(|user| issue.user_ids.contains(&user.id))
+        .map(|user| {
+            StyledAvatar {
+                avatar_url: user.avatar_url.clone(),
+                size: 24,
+                name: user.name.clone(),
+                on_click: None,
+            }
+            .into_node()
+        })
+        .collect();
+    let mut issue_type_icon = match issue.issue_type.parse::<IssueType>() {
+        Ok(icon) => {
+            let mut node = crate::shared::styled_icon(icon.into());
+            node.add_style(
+                St::Color,
+                format!("var(--{issue_type})", issue_type = issue.issue_type),
+            );
+            node
+        }
+        Err(e) => span![format!("{}", e)],
+    };
+    let priority_icon = match issue.priority.parse::<IssuePriority>() {
+        Ok(IssuePriority::Low) | Ok(IssuePriority::Lowest) => {
+            crate::shared::styled_icon(Icon::ArrowDown)
+        }
+        Ok(_) => crate::shared::styled_icon(Icon::ArrowUp),
+        Err(e) => span![e.clone()],
+    };
+    a![
+        attrs![At::Class => "issueLink"],
+        div![
+            attrs![At::Class => "issue"],
+            p![attrs![At::Class => "title"], issue.title,],
+            div![
+                attrs![At::Class => "bottom"],
+                div![
+                    // <IssueTypeIcon type={issue.type} />
+                    div![attrs![At::Class => "issueTypeIcon"], issue_type_icon],
+                    // <IssuePriorityIcon priority={issue.priority} top={-1} left={4} />
+                    div![attrs![At::Class => "issuePriorityIcon"], priority_icon]
+                ],
+                div![attrs![At::Class => "assignees"], avatars,],
+            ]
+        ]
+    ]
 }

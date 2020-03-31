@@ -20,7 +20,7 @@ export const SearchInputDebounced = styled(InputDebounced)`
     border: none;
     border-bottom: 2px solid ${color.primary};
     background: #fff;
-    ${font.size(21)}
+    font-size: 21px
     &:focus,
     &:hover {
       box-shadow: none;
@@ -50,7 +50,8 @@ export const Issue = styled.div`
   padding: 4px 10px;
   border-radius: 4px;
   transition: background 0.1s;
-  ${mixin.clickable}
+  cursor: pointer;
+    user-select: none;
   &:hover {
     background: ${color.backgroundLight};
   }
@@ -62,13 +63,13 @@ export const IssueData = styled.div`
 
 export const IssueTitle = styled.div`
   color: ${color.textDark};
-  ${font.size(15)}
+  font-size: 15px
 `;
 
 export const IssueTypeId = styled.div`
   text-transform: uppercase;
   color: ${color.textMedium};
-  ${font.size(12.5)}
+  font-size: 12.5px
 `;
 
 export const SectionTitle = styled.div`
@@ -76,7 +77,7 @@ export const SectionTitle = styled.div`
   text-transform: uppercase;
   color: ${color.textMedium};
   ${font.bold}
-  ${font.size(11.5)}
+  font-size: 11.5px
 `;
 
 export const NoResults = styled.div`
@@ -87,10 +88,10 @@ export const NoResults = styled.div`
 export const NoResultsTitle = styled.div`
   padding-top: 30px;
   ${font.medium}
-  ${font.size(20)}
+  font-size: 20px
 `;
 
 export const NoResultsTip = styled.div`
   padding-top: 10px;
-  ${font.size(15)}
+  font-size: 15px
 `;

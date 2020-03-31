@@ -3,6 +3,10 @@ name = "jirs-client"
 version = "0.1.0"
 authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
 edition = "2018"
+description = "JIRS (Simplified JIRA in Rust) WASM client"
+repository = "https://gitlab.com/adrian.wozniak/jirs"
+license = "MPL-2.0"
+#license-file = "../LICENSE"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
