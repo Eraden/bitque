@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use jirs_data::*;
 
-use crate::HOST_URL;
+use crate::{IssueId, UserId, HOST_URL};
 
 pub type ProjectId = i32;
 pub type StatusCode = u32;
@@ -47,13 +47,21 @@ pub struct UpdateProjectForm {
     pub fields: UpdateProjectPayload,
 }
 
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct Point {
+    pub x: f64,
+    pub y: f64,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProjectPage {
     pub about_tooltip_visible: bool,
     pub text_filter: String,
-    pub active_avatar_filters: Vec<i32>,
+    pub active_avatar_filters: Vec<UserId>,
     pub only_my_filter: bool,
-    pub recenlty_updated_filter: bool,
+    pub recently_updated_filter: bool,
+    pub dragged_issue_id: Option<IssueId>,
+    pub drag_point: Point,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -90,7 +98,9 @@ impl Default for Model {
                 text_filter: "".to_string(),
                 active_avatar_filters: vec![],
                 only_my_filter: false,
-                recenlty_updated_filter: false,
+                recently_updated_filter: false,
+                dragged_issue_id: None,
+                drag_point: Point::default(),
             },
         }
     }

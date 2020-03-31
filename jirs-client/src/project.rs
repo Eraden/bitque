@@ -1,12 +1,13 @@
 use seed::{prelude::*, *};
 
+use jirs_data::{FullProject, Issue, IssuePriority, IssueType, UpdateIssuePayload};
+
 use crate::model::{Icon, Model, Page};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::{StyledButton, Variant};
 use crate::shared::styled_input::StyledInput;
-use crate::shared::{host_client, inner_layout, ToNode};
+use crate::shared::{drag_ev, host_client, inner_layout, ToNode};
 use crate::Msg;
-use jirs_data::{FullProject, Issue, IssuePriority, IssueStatus, IssueType};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -42,14 +43,72 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             model.project_page.only_my_filter = !model.project_page.only_my_filter;
         }
         Msg::ProjectToggleRecentlyUpdated => {
-            model.project_page.recenlty_updated_filter =
-                !model.project_page.recenlty_updated_filter;
+            model.project_page.recently_updated_filter =
+                !model.project_page.recently_updated_filter;
         }
         Msg::ProjectClearFilters => {
             let pp = &mut model.project_page;
             pp.active_avatar_filters = vec![];
-            pp.recenlty_updated_filter = false;
+            pp.recently_updated_filter = false;
             pp.only_my_filter = false;
+        }
+        Msg::IssueDragStarted(issue_id) => {
+            model.project_page.dragged_issue_id = Some(issue_id);
+        }
+        Msg::IssueDragStopped(_) => {
+            model.project_page.dragged_issue_id = None;
+        }
+        Msg::IssueDragOver(x, y) => {
+            model.project_page.drag_point.x = x;
+            model.project_page.drag_point.y = y;
+        }
+        Msg::IssueDropZone(status) => {
+            match (
+                model.project_page.dragged_issue_id.as_ref().cloned(),
+                model.project.as_mut(),
+            ) {
+                (Some(issue_id), Some(project)) => {
+                    let mut position = 0f64;
+                    let mut found: Option<&mut Issue> = None;
+                    for issue in project.issues.iter_mut() {
+                        if issue.status == status.to_payload() {
+                            position += 1f64;
+                        }
+                        if issue.id == issue_id {
+                            found = Some(issue);
+                            break;
+                        }
+                    }
+                    if let Some(issue) = found {
+                        issue.status = status.to_payload().to_string();
+                        issue.list_position = position + 1f64;
+                        let payload = UpdateIssuePayload {
+                            title: None,
+                            issue_type: None,
+                            status: Some(status.to_payload().to_string()),
+                            priority: None,
+                            list_position: Some(position + 1f64),
+                            description: None,
+                            description_text: None,
+                            estimate: None,
+                            time_spent: None,
+                            time_remaining: None,
+                            project_id: None,
+                            users: None,
+                            user_ids: None,
+                        };
+                        orders.skip().perform_cmd(crate::api::update_issue(
+                            model.host_url.clone(),
+                            issue.id,
+                            payload,
+                        ));
+                    }
+                }
+                _ => error!("Drag stopped before drop :("),
+            }
+        }
+        Msg::IssueUpdateResult(fetched) => {
+            crate::api_handlers::update_issue_response(&fetched, model);
         }
         _ => (),
     }
@@ -129,7 +188,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         variant: Variant::Empty,
         icon_only: false,
         disabled: false,
-        active: model.project_page.recenlty_updated_filter,
+        active: model.project_page.recently_updated_filter,
         text: Some("Recently Updated".to_string()),
         icon: None,
         on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated)),
@@ -137,7 +196,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
     .into_node();
 
     let clear_all = match project_page.only_my_filter
-        || project_page.recenlty_updated_filter
+        || project_page.recently_updated_filter
         || !project_page.active_avatar_filters.is_empty()
     {
         true => button![
@@ -214,18 +273,34 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
         .map(|issue| project_issue(model, project, issue))
         .collect();
     let label = status.to_label();
+
+    let send_status = status.clone();
+    let drop_handler = drag_ev(Ev::Drop, move |ev| {
+        ev.prevent_default();
+        Msg::IssueDropZone(send_status)
+    });
+    let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
+        ev.prevent_default();
+        Msg::NoOp
+    });
+
     div![
-        attrs![At::Class => "list"],
+        attrs![At::Class => "list";],
         div![
             attrs![At::Class => "title"],
             label,
             div![attrs![At::Class => "issuesCount"]]
         ],
-        div![attrs![At::Class => "issues"], issues]
+        div![
+            attrs![At::Class => "issues"; At::DropZone => "link"],
+            drop_handler,
+            drag_over_handler,
+            issues
+        ]
     ]
 }
 
-fn project_issue(_model: &Model, project: &FullProject, issue: &Issue) -> Node<Msg> {
+fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Msg> {
     let avatars: Vec<Node<Msg>> = project
         .users
         .iter()
@@ -240,6 +315,7 @@ fn project_issue(_model: &Model, project: &FullProject, issue: &Issue) -> Node<M
             .into_node()
         })
         .collect();
+
     let mut issue_type_icon = match issue.issue_type.parse::<IssueType>() {
         Ok(icon) => {
             let mut node = crate::shared::styled_icon(icon.into());
@@ -252,16 +328,33 @@ fn project_issue(_model: &Model, project: &FullProject, issue: &Issue) -> Node<M
         Err(e) => span![format!("{}", e)],
     };
     let priority_icon = match issue.priority.parse::<IssuePriority>() {
-        Ok(IssuePriority::Low) | Ok(IssuePriority::Lowest) => {
-            crate::shared::styled_icon(Icon::ArrowDown)
+        Ok(p) => {
+            let icon = match p {
+                IssuePriority::Low | IssuePriority::Lowest => Icon::ArrowDown,
+                _ => Icon::ArrowUp,
+            };
+            let mut node = crate::shared::styled_icon(icon);
+            node.add_style(St::Color, format!("var(--{})", p.to_lower_name()));
+            node
         }
-        Ok(_) => crate::shared::styled_icon(Icon::ArrowUp),
         Err(e) => span![e.clone()],
     };
+
+    let issue_id = issue.id;
+    let drag_started = drag_ev(Ev::DragStart, move |event| Msg::IssueDragStarted(issue_id));
+    let drag_stopped = drag_ev(Ev::DragEnd, move |_| Msg::IssueDragStopped(issue_id));
+
+    let mut class_list = vec!["issue"];
+    if Some(issue_id) == model.project_page.dragged_issue_id {
+        class_list.push("hidden");
+    }
+
     a![
         attrs![At::Class => "issueLink"],
         div![
-            attrs![At::Class => "issue"],
+            attrs![At::Class => class_list.join(" "), At::Draggable => true],
+            drag_started,
+            drag_stopped,
             p![attrs![At::Class => "title"], issue.title,],
             div![
                 attrs![At::Class => "bottom"],

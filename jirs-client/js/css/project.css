@@ -87,6 +87,7 @@
 #projectPage > #projectBoardLists {
     display: flex;
     margin: 26px -5px 0;
+    position: relative;
 }
 
 #projectPage > #projectBoardLists > .list {
@@ -134,9 +135,18 @@
     user-select: none;
 }
 
+#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue.hidden {
+    display: none;
+}
+
 #projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue.isBeingDragged {
     transform: rotate(3deg);
-    box-shadow: 5px 10px 30px 0 rgba(9, 30, 66, 0.15);
+    /*box-shadow: 5px 10px 30px 0 rgba(9, 30, 66, 0.15);*/
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 90px;
 }
 
 @media (max-width: 1100px) {

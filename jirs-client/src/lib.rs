@@ -1,9 +1,12 @@
 use seed::fetch::FetchObject;
 use seed::{prelude::*, *};
 
+use jirs_data::IssueStatus;
+
 use crate::model::Page;
 
 mod api;
+mod api_handlers;
 mod login;
 mod model;
 mod project;
@@ -12,10 +15,12 @@ mod register;
 mod shared;
 
 pub type UserId = i32;
+pub type IssueId = i32;
 pub type AvatarFilterActive = bool;
 
 #[derive(Clone, Debug)]
 pub enum Msg {
+    NoOp,
     ChangePage(model::Page),
     CurrentProjectResult(FetchObject<String>),
     CurrentUserResult(FetchObject<String>),
@@ -28,6 +33,15 @@ pub enum Msg {
     ProjectToggleOnlyMy,
     ProjectToggleRecentlyUpdated,
     ProjectClearFilters,
+
+    // dragging
+    IssueDragStarted(IssueId),
+    IssueDragStopped(IssueId),
+    IssueDragOver(f64, f64),
+    IssueDropZone(IssueStatus),
+
+    // issues
+    IssueUpdateResult(FetchObject<String>),
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
@@ -48,7 +62,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         Page::Register => register::update(msg, model, orders),
     }
     if cfg!(debug_assertions) {
-        log!(model);
+        // debug!(model);
     }
 }
 

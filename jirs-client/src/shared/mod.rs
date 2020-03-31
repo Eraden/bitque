@@ -1,5 +1,6 @@
 use seed::fetch::{FetchObject, ResponseWithDataResult};
 use seed::{prelude::*, *};
+use wasm_bindgen::JsCast;
 
 use jirs_data::FullProjectResponse;
 
@@ -51,34 +52,22 @@ pub fn host_client(host_url: String, path: &str) -> Result<Request, String> {
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, _orders: &mut impl Orders<Msg>) {
     match msg {
-        Msg::CurrentProjectResult(FetchObject {
-            result:
-                Ok(ResponseWithDataResult {
-                    data: Ok(body),
-                    status,
-                    ..
-                }),
-            ..
-        }) if status.is_ok() => match serde_json::from_str::<'_, FullProjectResponse>(body) {
-            Ok(project_response) => {
-                model.project = Some(project_response.project);
-            }
-            _ => (),
-        },
-        Msg::CurrentUserResult(FetchObject {
-            result:
-                Ok(ResponseWithDataResult {
-                    data: Ok(body),
-                    status,
-                    ..
-                }),
-            ..
-        }) if status.is_ok() => match serde_json::from_str::<'_, jirs_data::User>(body) {
-            Ok(user) => {
-                model.user = Some(user);
-            }
-            _ => (),
-        },
+        Msg::CurrentProjectResult(fetched) => {
+            crate::api_handlers::current_project_response(fetched, model);
+        }
+        Msg::CurrentUserResult(fetched) => {
+            crate::api_handlers::current_user_response(fetched, model);
+        }
         _ => (),
     }
+}
+
+pub fn drag_ev<Ms>(
+    trigger: impl Into<Ev>,
+    handler: impl FnOnce(web_sys::DragEvent) -> Ms + 'static + Clone,
+) -> EventHandler<Ms> {
+    let closure_handler = move |event: web_sys::Event| {
+        (handler.clone())(event.dyn_ref::<web_sys::DragEvent>().unwrap().clone())
+    };
+    EventHandler::new(trigger, closure_handler)
 }

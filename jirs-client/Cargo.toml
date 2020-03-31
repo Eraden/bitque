@@ -27,5 +27,9 @@ futures = "^0.1.26"
 [dependencies.web-sys]
 version = "*"
 features = [
-    "Window"
+    "Window",
+    "DataTransfer",
+    "DragEvent",
+    "HtmlDivElement",
+    "DomRect"
 ]

@@ -1,6 +1,7 @@
+use std::str::FromStr;
+
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use uuid::Uuid;
 
 pub trait ResponseData {
@@ -96,12 +97,12 @@ impl FromStr for IssuePriority {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "highest" => Ok(IssuePriority::Highest),
-            "high" => Ok(IssuePriority::High),
-            "medium" => Ok(IssuePriority::Medium),
-            "low" => Ok(IssuePriority::Low),
-            "lowest" => Ok(IssuePriority::Lowest),
+        match s.to_lowercase().trim() {
+            "5" | "highest" => Ok(IssuePriority::Highest),
+            "4" | "high" => Ok(IssuePriority::High),
+            "3" | "medium" => Ok(IssuePriority::Medium),
+            "2" | "low" => Ok(IssuePriority::Low),
+            "1" | "lowest" => Ok(IssuePriority::Lowest),
             _ => Err(format!("Unknown priority {}", s)),
         }
     }
@@ -115,6 +116,16 @@ impl IssuePriority {
             IssuePriority::Medium => "3",
             IssuePriority::Low => "2",
             IssuePriority::Lowest => "1",
+        }
+    }
+
+    pub fn to_lower_name(&self) -> &str {
+        match self {
+            IssuePriority::Highest => "highest",
+            IssuePriority::High => "high",
+            IssuePriority::Medium => "medium",
+            IssuePriority::Low => "low",
+            IssuePriority::Lowest => "lowest",
         }
     }
 

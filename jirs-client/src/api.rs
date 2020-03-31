@@ -1,3 +1,5 @@
+use jirs_data::UpdateIssuePayload;
+
 use crate::shared::host_client;
 use crate::Msg;
 
@@ -12,5 +14,21 @@ pub async fn fetch_current_user(host_url: String) -> Result<Msg, Msg> {
     match host_client(host_url, "/currentUser") {
         Ok(client) => client.fetch_string(Msg::CurrentUserResult).await,
         Err(e) => Err(Msg::InternalFailure(e)),
+    }
+}
+
+pub async fn update_issue(
+    host_url: String,
+    id: i32,
+    payload: UpdateIssuePayload,
+) -> Result<Msg, Msg> {
+    match host_client(host_url, format!("/issue/{id}", id = id).as_str()) {
+        Ok(client) => {
+            client
+                .body_json(&payload)
+                .fetch_json(Msg::IssueUpdateResult)
+                .await
+        }
+        Err(e) => return Ok(Msg::InternalFailure(e)),
     }
 }
