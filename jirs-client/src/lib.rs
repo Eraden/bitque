@@ -18,6 +18,9 @@ pub enum Msg {
     CurrentUserResult(FetchObject<String>),
     InternalFailure(String),
     ToggleAboutTooltip,
+
+    // project
+    ProjectTextFilterChanged(String),
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {

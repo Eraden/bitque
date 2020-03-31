@@ -10,13 +10,13 @@ main {
     min-height: 100%;
 }
 
-article#inner-layout {
+article.inner-layout {
     width: 100%;
 }
 
 @media (min-width: 1240px) {
-    article#inner-layout {
-        display: flex;
-        justify-content: start;
-    }
+    /*article.inner-layout {*/
+    /*    display: flex;*/
+    /*    justify-content: start;*/
+    /*}*/
 }

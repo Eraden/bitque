@@ -1,10 +1,10 @@
 import React from 'react';
-import { Route, Redirect, useRouteMatch, useHistory } from 'react-router-dom';
+import { Redirect, Route, useHistory, useRouteMatch } from 'react-router-dom';
 
 import useApi from 'shared/hooks/api';
 import { updateArrayItemById } from 'shared/utils/javascript';
 import { createQueryParamModalHelpers } from 'shared/utils/queryParamModal';
-import { PageLoader, PageError, Modal } from 'shared/components';
+import { Modal, PageError, PageLoader } from 'shared/components';
 
 import NavbarLeft from './NavbarLeft';
 import Sidebar from './Sidebar';
@@ -38,17 +38,17 @@ const Project = () => {
   };
 
   return (
-    <ProjectPage>
-      <NavbarLeft
-        issueSearchModalOpen={issueSearchModalHelpers.open}
-        issueCreateModalOpen={issueCreateModalHelpers.open}
-      />
+      <ProjectPage id={ 'ProjectPage' }>
+          <NavbarLeft
+              issueSearchModalOpen={ issueSearchModalHelpers.open }
+              issueCreateModalOpen={ issueCreateModalHelpers.open }
+          />
 
-      <Sidebar project={project} />
+          <Sidebar project={ project }/>
 
-      {issueSearchModalHelpers.isOpen() && (
-        <Modal
-          isOpen
+          { issueSearchModalHelpers.isOpen() && (
+              <Modal
+                  isOpen
           testid="modal:issue-search"
           variant="aside"
           width={600}

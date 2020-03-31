@@ -6,28 +6,6 @@ import Icon from 'shared/components/Icon';
 
 import { StyledButton, StyledSpinner, Text } from './Styles';
 
-const propTypes = {
-  className: PropTypes.string,
-  children: PropTypes.node,
-  variant: PropTypes.oneOf(['primary', 'success', 'danger', 'secondary', 'empty']),
-  icon: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
-  iconSize: PropTypes.number,
-  disabled: PropTypes.bool,
-  isWorking: PropTypes.bool,
-  onClick: PropTypes.func,
-};
-
-const defaultProps = {
-  className: undefined,
-  children: undefined,
-  variant: 'secondary',
-  icon: undefined,
-  iconSize: 18,
-  disabled: false,
-  isWorking: false,
-  onClick: () => {},
-};
-
 const Button = forwardRef(
   ({ children, variant, icon, iconSize, disabled, isWorking, onClick, ...buttonProps }, ref) => {
     const handleClick = () => {
@@ -52,17 +30,37 @@ const Button = forwardRef(
           <Icon type={icon} size={iconSize} color={getIconColor(variant)} />
         ) : (
           icon
-        )}
-        {children && <Text withPadding={isWorking || icon}>{children}</Text>}
+        ) }
+        { children && <Text withPadding={ isWorking || icon }>{ children }</Text> }
       </StyledButton>
     );
   },
 );
 
 const getIconColor = variant =>
-  ['secondary', 'empty'].includes(variant) ? color.textDark : '#fff';
+    [ 'secondary', 'empty' ].includes(variant) ? color.textDark : '#fff';
 
-Button.propTypes = propTypes;
-Button.defaultProps = defaultProps;
+Button.propTypes = {
+  className: PropTypes.string,
+  children: PropTypes.node,
+  variant: PropTypes.oneOf([ 'primary', 'success', 'danger', 'secondary', 'empty' ]),
+  icon: PropTypes.oneOfType([ PropTypes.string, PropTypes.node ]),
+  iconSize: PropTypes.number,
+  disabled: PropTypes.bool,
+  isWorking: PropTypes.bool,
+  onClick: PropTypes.func,
+};
+
+Button.defaultProps = {
+  className: undefined,
+  children: undefined,
+  variant: 'secondary',
+  icon: undefined,
+  iconSize: 18,
+  disabled: false,
+  isWorking: false,
+  onClick: () => {
+  },
+};
 
 export default Button;

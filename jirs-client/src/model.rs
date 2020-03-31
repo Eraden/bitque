@@ -48,6 +48,12 @@ pub struct UpdateProjectForm {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct ProjectPage {
+    pub about_tooltip_visible: bool,
+    pub text_filter: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Model {
     pub access_token: Option<Uuid>,
     pub user: Option<User>,
@@ -59,8 +65,7 @@ pub struct Model {
     pub comments_by_project_id: HashMap<ProjectId, Vec<Comment>>,
     pub page: Page,
     pub host_url: String,
-    //
-    pub about_tooltip_visible: bool,
+    pub project_page: ProjectPage,
 }
 
 impl Default for Model {
@@ -77,7 +82,10 @@ impl Default for Model {
             comments_by_project_id: Default::default(),
             page: Page::Project,
             host_url,
-            about_tooltip_visible: false,
+            project_page: ProjectPage {
+                about_tooltip_visible: false,
+                text_filter: "".to_string(),
+            },
         }
     }
 }
