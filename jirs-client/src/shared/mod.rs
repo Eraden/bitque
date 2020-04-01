@@ -27,7 +27,14 @@ pub trait ToNode {
 }
 
 pub fn styled_icon(icon: Icon) -> Node<Msg> {
-    i![attrs![At::Class => format!("styledIcon {}", icon)], ""]
+    let style = icon
+        .to_color()
+        .map(|s| format!("color: {}", s))
+        .unwrap_or_default();
+    i![
+        attrs![At::Class => format!("styledIcon {}", icon), At::Style => style],
+        ""
+    ]
 }
 
 pub fn divider() -> Node<Msg> {

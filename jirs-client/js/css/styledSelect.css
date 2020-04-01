@@ -35,7 +35,29 @@
     box-shadow: none;
 }
 
-.styledSelect > .dropDownInput {
+.styledSelect > .valueContainer {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.styledSelect > .valueContainer.normal {
+    min-height: 32px;
+    padding: 5px 5px 5px 10px;
+}
+
+.styledSelect > .dropDown {
+    z-index: var(--dropdown);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    border-radius: 0 0 4px 4px;
+    background: #fff;
+    box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.31) 0px 0px 1px;
+    width: 100%;
+}
+
+.styledSelect > .dropDown > .dropDownInput {
     padding: 10px 14px 8px;
     width: 100%;
     border: none;
@@ -43,7 +65,7 @@
     background: none;
 }
 
-.styledSelect > .dropDownInput:focus {
+.styledSelect > .dropDown > .dropDownInput:focus {
     outline: none;
 }
 
@@ -54,34 +76,38 @@
     -webkit-overflow-scrolling: touch;
 }
 
-.styledSelect > .options::-webkit-scrollbar {
+.styledSelect > .dropDown > .options::-webkit-scrollbar {
     width: 8px;
 }
 
-.styledSelect > .options::-webkit-scrollbar-track {
+.styledSelect > .dropDown > .options::-webkit-scrollbar-track {
     background: none;
 }
 
-.styledSelect > .options::-webkit-scrollbar-thumb {
+.styledSelect > .dropDown > .options::-webkit-scrollbar-thumb {
     border-radius: 99px;
     background: var(--backgroundMedium);
 }
 
-.styledSelect > .options > .option {
+.styledSelect > .dropDown > .options > .option {
     padding: 8px 14px;
     word-break: break-word;
     cursor: pointer;
 }
 
-.styledSelect > .options > .option:last-of-type {
+.styledSelect > .dropDown > .options > .option:last-of-type {
     margin-bottom: 8px;
 }
 
-.styledSelect > .options > .option.jira-select-option-is-active {
+.styledSelect > .dropDown > .options > .option.jira-select-option-is-active {
     background: var(--backgroundLightPrimary);
 }
 
-.styledSelect > .noOptions {
+.styledSelect > .dropDown > .options > .option:hover {
+    background: var(--backgroundLightPrimary);
+}
+
+.styledSelect > .dropDown > .noOptions {
     padding: 5px 15px 15px;
     color: var(--textLight);
 }

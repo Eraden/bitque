@@ -142,6 +142,15 @@ pub enum Icon {
     ArrowRight,
 }
 
+impl Icon {
+    pub fn to_color(self) -> Option<String> {
+        match self {
+            Icon::Bug | Icon::Task | Icon::Story => Some(format!("var(--{})", self)),
+            _ => None,
+        }
+    }
+}
+
 impl std::fmt::Display for Icon {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let code = match self {

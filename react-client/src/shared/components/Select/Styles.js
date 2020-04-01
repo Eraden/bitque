@@ -1,7 +1,7 @@
 import styled, { css } from 'styled-components';
 
 import { color, mixin, zIndexValues } from 'shared/utils/styles';
-import Icon                           from 'shared/components/Icon';
+import Icon from 'shared/components/Icon';
 
 export const StyledSelect = styled.div`
   position: relative;
@@ -96,7 +96,7 @@ export const Dropdown = styled.div`
   left: 0;
   border-radius: 0 0 4px 4px;
   background: #fff;
-  ${mixin.boxShadowDropdown}
+  box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.31) 0px 0px 1px;
   ${props => (props.width ? `width: ${props.width}px;` : 'width: 100%;')}
 `;
 

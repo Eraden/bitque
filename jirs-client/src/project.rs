@@ -9,7 +9,7 @@ use crate::shared::styled_button::{StyledButton, Variant as ButtonVariant};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::StyledSelect;
 use crate::shared::{drag_ev, find_issue, inner_layout, ToNode};
-use crate::Msg;
+use crate::{IssueId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -177,6 +177,7 @@ fn header() -> Node<Msg> {
         text: Some("Github Repo".to_string()),
         icon: Some(Icon::Github),
         on_click: None,
+        children: vec![],
     }
     .into_node();
     div![
@@ -208,6 +209,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         text: Some("Only My Issues".to_string()),
         icon: None,
         on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy)),
+        children: vec![],
     }
     .into_node();
 
@@ -219,6 +221,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         text: Some("Recently Updated".to_string()),
         icon: None,
         on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated)),
+        children: vec![],
     }
     .into_node();
 
@@ -392,23 +395,58 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
     ]
 }
 
-impl ToNode for IssueType {
-    fn into_node(self) -> Node<Msg> {
-        div![self.to_string()]
+#[derive(PartialOrd, PartialEq, Debug)]
+struct IssueTypeOption(IssueId, IssueType);
+
+impl crate::shared::styled_select::SelectOption for IssueTypeOption {
+    fn into_option(self) -> Node<Msg> {
+        let name = self.1.to_label().to_owned();
+
+        let mut icon = crate::shared::styled_icon(self.1.into());
+        icon.add_class("issueTypeIcon");
+
+        div![
+            attrs![At::Class => "type"],
+            icon,
+            div![attrs![At::Class => "typeLabel"], name]
+        ]
+    }
+
+    fn into_value(self) -> Node<Msg> {
+        let issue_id = self.0;
+        let name = self.1.to_label().to_owned();
+
+        StyledButton {
+            variant: ButtonVariant::Empty,
+            icon_only: true,
+            disabled: false,
+            active: false,
+            text: None,
+            icon: Some(self.1.into()),
+            on_click: None,
+            children: vec![span![format!("{}-{}", name, issue_id)]],
+        }
+        .into_node()
     }
 }
 
-fn issue_details(_model: &Model, _issue: &Issue) -> Node<Msg> {
+fn issue_details(_model: &Model, issue: &Issue) -> Node<Msg> {
+    let issue_id = issue.id;
     let issue_type_select = StyledSelect {
         on_change: mouse_ev(Ev::Click, |_| Msg::NoOp),
         variant: crate::shared::styled_select::Variant::Empty,
-        width: 150,
-        name: None,
+        dropdown_width: Some(150),
+        name: Some("type".to_string()),
         placeholder: None,
-        valid: false,
+        valid: true,
         is_multi: false,
-        allow_clear: true,
-        options: vec![IssueType::Story, IssueType::Task, IssueType::Bug],
+        allow_clear: false,
+        options: vec![
+            IssueTypeOption(issue_id, IssueType::Story),
+            IssueTypeOption(issue_id, IssueType::Task),
+            IssueTypeOption(issue_id, IssueType::Bug),
+        ],
+        selected: Some(IssueTypeOption(issue_id, IssueType::Story)),
     }
     .into_node();
 

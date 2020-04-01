@@ -51,6 +51,7 @@ fn about_tooltip_popup(model: &Model) -> Node<Msg> {
         icon_only: false,
         icon: None,
         on_click: None,
+        children: vec![],
     }
     .into_node();
     let github_repo = StyledButton {
@@ -61,6 +62,7 @@ fn about_tooltip_popup(model: &Model) -> Node<Msg> {
         icon_only: false,
         icon: Some(Icon::Github),
         on_click: None,
+        children: vec![],
     }
     .into_node();
 

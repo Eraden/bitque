@@ -28,15 +28,12 @@ pub enum IssueType {
     Story,
 }
 
-impl FromStr for IssueType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "task" => Ok(IssueType::Task),
-            "bug" => Ok(IssueType::Bug),
-            "story" => Ok(IssueType::Story),
-            _ => Err(format!("Unknown type {:?}", s)),
+impl IssueType {
+    pub fn to_label(&self) -> &str {
+        match self {
+            IssueType::Task => "Task",
+            IssueType::Bug => "Bug",
+            IssueType::Story => "Story",
         }
     }
 }

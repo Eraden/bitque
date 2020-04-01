@@ -34,6 +34,7 @@ pub struct StyledButton {
     pub text: Option<String>,
     pub icon: Option<Icon>,
     pub on_click: Option<EventHandler<Msg>>,
+    pub children: Vec<Node<Msg>>,
 }
 
 impl ToNode for StyledButton {
@@ -51,6 +52,7 @@ pub fn render(values: StyledButton) -> Node<Msg> {
         active,
         icon,
         on_click,
+        children,
     } = values;
     let mut class_list = vec!["styledButton".to_string(), variant.to_string()];
     if icon_only {
@@ -72,7 +74,7 @@ pub fn render(values: StyledButton) -> Node<Msg> {
         Some(i) => styled_icon(i),
     };
 
-    button![
+    seed::button![
         attrs![
             At::Class => class_list.join(" "),
         ],
@@ -82,6 +84,10 @@ pub fn render(values: StyledButton) -> Node<Msg> {
             false => vec![],
         },
         icon_node,
-        span![attrs![At::Class => "text"], text.unwrap_or_default()],
+        span![
+            attrs![At::Class => "text"],
+            text.unwrap_or_default(),
+            children
+        ],
     ]
 }

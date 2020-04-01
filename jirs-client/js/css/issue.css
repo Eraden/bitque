@@ -28,6 +28,27 @@
     margin-left: 4px;
 }
 
+.issueDetails > .topActions .styledSelect > .dropDown > .options > .option > .type {
+    display: flex;
+    align-items: center;
+}
+
+.issueDetails > .topActions .styledSelect > .dropDown > .options > .option > .type > .styledIcon {
+    font-size: 18px;
+}
+
+.issueDetails > .topActions .styledSelect > .dropDown > .options > .option > .type > .typeLabel {
+    padding: 0 5px 0 7px;
+    font-size: 15px
+}
+
+.issueDetails > .topActions .styledSelect > .valueContainer > .value {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--textMedium);
+    font-size: 13px
+}
+
 .issueDetails > .sectionTitle {
     margin: 24px 0 5px;
     text-transform: uppercase;
