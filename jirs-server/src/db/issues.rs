@@ -4,6 +4,8 @@ use diesel::expression::sql_literal::sql;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use jirs_data::{IssuePriority, IssueType};
+
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 use crate::models::Issue;
@@ -66,9 +68,9 @@ impl Handler<LoadProjectIssues> for DbExecutor {
 pub struct UpdateIssue {
     pub issue_id: i32,
     pub title: Option<String>,
-    pub issue_type: Option<String>,
+    pub issue_type: Option<IssueType>,
     pub status: Option<String>,
-    pub priority: Option<String>,
+    pub priority: Option<IssuePriority>,
     pub list_position: Option<f64>,
     pub description: Option<Option<String>>,
     pub description_text: Option<Option<String>>,
@@ -191,9 +193,9 @@ impl Handler<DeleteIssue> for DbExecutor {
 #[derive(Serialize, Deserialize)]
 pub struct CreateIssue {
     pub title: String,
-    pub issue_type: String,
+    pub issue_type: IssueType,
     pub status: String,
-    pub priority: String,
+    pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
     pub estimate: Option<i32>,

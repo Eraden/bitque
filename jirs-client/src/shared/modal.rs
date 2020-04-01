@@ -4,6 +4,7 @@ use crate::model::Icon;
 use crate::shared::{styled_icon, ToNode};
 use crate::Msg;
 
+#[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum Variant {
     Center,
@@ -54,12 +55,16 @@ pub fn render(values: Modal) -> Node<Msg> {
     } else {
         empty![]
     };
+
+    let clickable_class = format!("clickableOverlay {}", variant.to_class_name());
+    let styled_modal_class = format!("styledModal {}", variant.to_class_name());
+    let styled_modal_style = format!("max-width: {width}px", width = width);
     div![
         attrs![At::Class => "modal"],
         div![
-            attrs![At::Class => format!("clickableOverlay {}", variant.to_class_name())],
+            attrs![At::Class => clickable_class],
             div![
-                attrs![At::Class => format!("styledModal {}", variant.to_class_name())],
+                attrs![At::Class => styled_modal_class, At::Style => styled_modal_style],
                 icon,
                 children
             ]

@@ -106,6 +106,7 @@ impl Default for Model {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
 pub enum Icon {
     Bug,

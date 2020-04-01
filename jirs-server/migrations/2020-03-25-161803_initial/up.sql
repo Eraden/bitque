@@ -1,9 +1,23 @@
 CREATE EXTENSION "uuid-ossp";
 
-CREATE TYPE ProjectCategory as ENUM (
+CREATE TYPE "ProjectCategoryType" as ENUM (
     'software',
     'marketing',
     'business'
+);
+
+CREATE TYPE "IssuePriorityType" as ENUM (
+    'highest',
+    'high',
+    'medium',
+    'low',
+    'lowest'
+);
+
+CREATE TYPE "IssueTypeType" AS ENUM (
+    'task',
+    'bug',
+    'story'
 );
 
 CREATE TABLE projects (
@@ -29,9 +43,9 @@ CREATE TABLE users (
 CREATE TABLE issues (
     id serial primary key not null,
     title text not null,
-    issue_type text not null,
+    issue_type "IssueTypeType" not null,
     status text not null,
-    priority text not null,
+    priority "IssuePriorityType" not null,
     list_position double precision not null default 0,
     description text,
     description_text text,
@@ -61,4 +75,3 @@ CREATE TABLE tokens (
     created_at timestamp not null default now(),
     updated_at timestamp not null default now()
 );
-

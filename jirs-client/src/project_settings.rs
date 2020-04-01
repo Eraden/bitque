@@ -1,4 +1,4 @@
-use seed::{prelude::*, *};
+use seed::prelude::*;
 
 use crate::shared::inner_layout;
 use crate::{model, Msg};

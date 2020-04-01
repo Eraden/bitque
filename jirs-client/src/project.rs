@@ -1,6 +1,6 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{FullProject, Issue, IssuePriority, IssueType, UpdateIssuePayload};
+use jirs_data::*;
 
 use crate::model::{Icon, Model, Page};
 use crate::shared::styled_avatar::StyledAvatar;
@@ -251,8 +251,6 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
 }
 
 fn project_board_lists(model: &Model) -> Node<Msg> {
-    use jirs_data::IssueStatus;
-
     div![
         id!["projectBoardLists"],
         project_issue_list(model, IssueStatus::Backlog),
@@ -317,28 +315,25 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
         })
         .collect();
 
-    let issue_type_icon = match issue.issue_type.parse::<IssueType>() {
-        Ok(icon) => {
-            let mut node = crate::shared::styled_icon(icon.into());
-            node.add_style(
-                St::Color,
-                format!("var(--{issue_type})", issue_type = issue.issue_type),
-            );
-            node
-        }
-        Err(e) => span![format!("{}", e)],
+    let issue_type_icon = {
+        let mut node = crate::shared::styled_icon(issue.issue_type.clone().into());
+        node.add_style(
+            St::Color,
+            format!(
+                "var(--{issue_type})",
+                issue_type = issue.issue_type.to_string()
+            ),
+        );
+        node
     };
-    let priority_icon = match issue.priority.parse::<IssuePriority>() {
-        Ok(p) => {
-            let icon = match p {
-                IssuePriority::Low | IssuePriority::Lowest => Icon::ArrowDown,
-                _ => Icon::ArrowUp,
-            };
-            let mut node = crate::shared::styled_icon(icon);
-            node.add_style(St::Color, format!("var(--{})", p.to_lower_name()));
-            node
-        }
-        Err(e) => span![e.clone()],
+    let priority_icon = {
+        let icon = match issue.priority {
+            IssuePriority::Low | IssuePriority::Lowest => Icon::ArrowDown,
+            _ => Icon::ArrowUp,
+        };
+        let mut node = crate::shared::styled_icon(icon);
+        node.add_style(St::Color, format!("var(--{})", issue.priority));
+        node
     };
 
     let issue_id = issue.id;

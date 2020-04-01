@@ -1,8 +1,16 @@
 use std::str::FromStr;
 
 use chrono::NaiveDateTime;
+#[cfg(feature = "backend")]
+use diesel::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+#[cfg(feature = "backend")]
+pub use sql::*;
+
+#[cfg(feature = "backend")]
+pub mod sql;
 
 pub trait ResponseData {
     type Response: Serialize;
@@ -10,6 +18,8 @@ pub trait ResponseData {
     fn into_response(self) -> Self::Response;
 }
 
+#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
+#[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum IssueType {
@@ -31,14 +41,13 @@ impl FromStr for IssueType {
     }
 }
 
-impl ToString for IssueType {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for IssueType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            IssueType::Task => "Task",
-            IssueType::Bug => "Bug",
-            IssueType::Story => "Story",
+            IssueType::Task => f.write_str("task"),
+            IssueType::Bug => f.write_str("bug"),
+            IssueType::Story => f.write_str("story"),
         }
-        .to_string()
     }
 }
 
@@ -88,6 +97,8 @@ impl IssueStatus {
     }
 }
 
+#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
+#[cfg_attr(feature = "backend", sql_type = "IssuePriorityType")]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq)]
 pub enum IssuePriority {
     Highest,
@@ -112,6 +123,18 @@ impl FromStr for IssuePriority {
     }
 }
 
+impl std::fmt::Display for IssuePriority {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IssuePriority::Highest => f.write_str("highest"),
+            IssuePriority::High => f.write_str("high"),
+            IssuePriority::Medium => f.write_str("medium"),
+            IssuePriority::Low => f.write_str("low"),
+            IssuePriority::Lowest => f.write_str("lowest"),
+        }
+    }
+}
+
 impl IssuePriority {
     pub fn to_text_value(&self) -> &str {
         match self {
@@ -120,16 +143,6 @@ impl IssuePriority {
             IssuePriority::Medium => "3",
             IssuePriority::Low => "2",
             IssuePriority::Lowest => "1",
-        }
-    }
-
-    pub fn to_lower_name(&self) -> &str {
-        match self {
-            IssuePriority::Highest => "highest",
-            IssuePriority::High => "high",
-            IssuePriority::Medium => "medium",
-            IssuePriority::Low => "low",
-            IssuePriority::Lowest => "lowest",
         }
     }
 
@@ -185,9 +198,9 @@ pub struct FullIssue {
     pub id: i32,
     pub title: String,
     #[serde(rename = "type")]
-    pub issue_type: String,
+    pub issue_type: IssueType,
     pub status: String,
-    pub priority: String,
+    pub priority: IssuePriority,
     pub list_position: f64,
     pub description: Option<String>,
     pub description_text: Option<String>,
@@ -235,9 +248,9 @@ pub struct Issue {
     pub id: i32,
     pub title: String,
     #[serde(rename = "type")]
-    pub issue_type: String,
+    pub issue_type: IssueType,
     pub status: IssueStatus,
-    pub priority: String,
+    pub priority: IssuePriority,
     pub list_position: f64,
     pub description: Option<String>,
     pub description_text: Option<String>,
@@ -293,9 +306,9 @@ pub struct Token {
 pub struct UpdateIssuePayload {
     pub title: Option<String>,
     #[serde(rename = "type")]
-    pub issue_type: Option<String>,
+    pub issue_type: Option<IssueType>,
     pub status: Option<String>,
-    pub priority: Option<String>,
+    pub priority: Option<IssuePriority>,
     pub list_position: Option<f64>,
     pub description: Option<Option<String>>,
     pub description_text: Option<Option<String>>,
@@ -327,9 +340,9 @@ pub struct UpdateCommentPayload {
 pub struct CreateIssuePayload {
     pub title: String,
     #[serde(rename = "type")]
-    pub issue_type: String,
+    pub issue_type: IssueType,
     pub status: String,
-    pub priority: String,
+    pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
     pub estimate: Option<i32>,

@@ -4,6 +4,7 @@ use crate::model::Icon;
 use crate::shared::{styled_icon, ToNode};
 use crate::Msg;
 
+#[allow(dead_code)]
 pub enum Variant {
     Primary,
     Success,

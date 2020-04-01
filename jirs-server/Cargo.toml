@@ -13,7 +13,6 @@ name = "jirs_server"
 path = "./src/main.rs"
 
 [dependencies]
-jirs-data = { path = "../jirs-data" }
 serde = { version = "*", features = ["derive"] }
 actix = { version = "*" }
 actix-web = { version = "*" }
@@ -45,3 +44,6 @@ futures = { version = "*" }
 version = "1.4.4"
 features = [ "unstable", "postgres", "numeric", "extras", "uuidv07" ]
 
+[dependencies.jirs-data]
+path = "../jirs-data"
+features = [ "backend" ]

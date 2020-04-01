@@ -2,7 +2,8 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use jirs_data::IssueStatus;
+use jirs_data::sql::*;
+use jirs_data::{IssuePriority, IssueStatus, IssueType};
 
 use crate::schema::*;
 
@@ -47,9 +48,9 @@ pub struct Issue {
     pub id: i32,
     pub title: String,
     #[serde(rename = "type")]
-    pub issue_type: String,
+    pub issue_type: IssueType,
     pub status: String,
-    pub priority: String,
+    pub priority: IssuePriority,
     pub list_position: f64,
     pub description: Option<String>,
     pub description_text: Option<String>,
@@ -121,9 +122,9 @@ impl Into<jirs_data::FullIssue> for Issue {
 pub struct CreateIssueForm {
     pub title: String,
     #[serde(rename = "type")]
-    pub issue_type: String,
+    pub issue_type: IssueType,
     pub status: String,
-    pub priority: String,
+    pub priority: IssuePriority,
     pub list_position: f64,
     pub description: Option<String>,
     pub description_text: Option<String>,

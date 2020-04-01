@@ -1055,6 +1055,7 @@ name = "jirs-data"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "diesel",
  "serde",
  "serde_json",
  "uuid 0.8.1",

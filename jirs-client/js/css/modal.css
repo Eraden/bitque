@@ -30,14 +30,12 @@
 }
 
 .modal > .clickableOverlay > .styledModal.center {
-    /*max-width: ${props => props.width}px;*/
     vertical-align: middle;
     border-radius: 3px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
 }
 
 .modal > .clickableOverlay > .styledModal.aside {
-    /*max-width: ${props => props.width}px;*/
     min-height: 100vh;
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.15);
 }

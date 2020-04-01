@@ -34,7 +34,7 @@ insert into issues(
 ), (
     'Foo3',
     'bug',
-    'inprogress',
+    'in_progress',
     'low',
     3,
     'hello world 3',

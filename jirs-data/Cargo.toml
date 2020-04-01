@@ -12,10 +12,16 @@ license = "MPL-2.0"
 name = "jirs_data"
 path = "./src/lib.rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+backend = [ "diesel" ]
 
 [dependencies]
 serde = "*"
 serde_json = "*"
 chrono = { version = "*", features = [ "serde" ] }
 uuid = { version = ">=0.7.0, <0.9.0", features = ["serde"] }
+
+[dependencies.diesel]
+optional = true
+version = "1.4.4"
+features = [ "unstable", "postgres", "numeric", "extras", "uuidv07" ]
