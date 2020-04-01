@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components';
 
-import { color, mixin, zIndexValues } from 'shared/utils/styles';
+import { color, zIndexValues } from 'shared/utils/styles';
 import Icon from 'shared/components/Icon';
 
 export const ScrollOverlay = styled.div`
@@ -10,7 +10,9 @@ export const ScrollOverlay = styled.div`
   left: 0;
   height: 100%;
   width: 100%;
-  ${mixin.scrollableY}
+  overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 `;
 
 export const ClickableOverlay = styled.div`
@@ -42,11 +44,11 @@ const modalStyles = {
     max-width: ${props => props.width}px;
     vertical-align: middle;
     border-radius: 3px;
-    ${mixin.boxShadowMedium}
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
   `,
   aside: css`
-    min-height: 100vh;
     max-width: ${props => props.width}px;
+    min-height: 100vh;
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.15);
   `,
 };
@@ -57,7 +59,7 @@ export const CloseIcon = styled(Icon)`
   color: ${color.textMedium};
   transition: all 0.1s;
   cursor: pointer;
-    user-select: none;
+  user-select: none;
   ${props => closeIconStyles[props.variant]}
 `;
 
@@ -81,7 +83,7 @@ const closeIconStyles = {
     text-align: center;
     background: #fff;
     border: 1px solid ${color.borderLightest};
-    ${mixin.boxShadowMedium};
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);;
     &:hover {
       color: ${color.primary};
     }

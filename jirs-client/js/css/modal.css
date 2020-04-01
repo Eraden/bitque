@@ -1,0 +1,80 @@
+.modal {
+    z-index: var(--modal);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal > .clickableOverlay {
+    min-height: 100%;
+    background: rgba(9, 30, 66, 0.54);
+}
+
+.modal > .clickableOverlay.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px;
+}
+
+.modal > .clickableOverlay > .styledModal {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    background: #fff;
+}
+
+.modal > .clickableOverlay > .styledModal.center {
+    /*max-width: ${props => props.width}px;*/
+    vertical-align: middle;
+    border-radius: 3px;
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+.modal > .clickableOverlay > .styledModal.aside {
+    /*max-width: ${props => props.width}px;*/
+    min-height: 100vh;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.15);
+}
+
+.modal > .clickableOverlay > .styledModal.aside > .styledIcon {
+    position: absolute;
+    font-size: 25px;
+    color: var(--textMedium);
+    transition: all 0.1s;
+    cursor: pointer;
+    user-select: none;
+}
+
+.modal > .clickableOverlay > .styledModal.aside > .styledIcon.modalVariantCenter {
+    top: 10px;
+    right: 12px;
+    padding: 3px 5px 0 5px;
+    border-radius: 4px;
+}
+
+.modal > .clickableOverlay > .styledModal.aside > .styledIcon.modalVariantCenter:hover {
+    background: var(--backgroundLight);
+}
+
+.modal > .clickableOverlay > .styledModal.aside > .styledIcon.modalVariantAside {
+    top: 10px;
+    right: -30px;
+    width: 50px;
+    height: 50px;
+    padding-top: 10px;
+    border-radius: 3px;
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--borderLightest);
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+.modal > .clickableOverlay > .styledModal.aside > .styledIcon.modalVariantAside:hover {
+    color: var(--primary);
+}

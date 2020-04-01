@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components';
 
-import { color, font, mixin, zIndexValues } from 'shared/utils/styles';
+import { color, mixin, zIndexValues } from 'shared/utils/styles';
 import Icon from 'shared/components/Icon';
 
 export const StyledSelect = styled.div`
@@ -124,7 +124,9 @@ export const ClearIcon = styled(Icon)`
 
 export const Options = styled.div`
   max-height: 200px;
-  ${mixin.scrollableY};
+  overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;;
   ${mixin.customScrollbar()};
 `;
 

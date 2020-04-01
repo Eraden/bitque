@@ -57,6 +57,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     crate::shared::update(&msg, model, orders);
     match model.page {
         Page::Project => project::update(msg, model, orders),
+        Page::EditIssue(_id) => project::update(msg, model, orders),
         Page::ProjectSettings => project_settings::update(msg, model, orders),
         Page::Login => login::update(msg, model, orders),
         Page::Register => register::update(msg, model, orders),
@@ -69,6 +70,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
 fn view(model: &model::Model) -> Node<Msg> {
     match model.page {
         Page::Project => project::view(model),
+        Page::EditIssue(_id) => project::view(model),
         Page::ProjectSettings => project_settings::view(model),
         Page::Login => login::view(model),
         Page::Register => register::view(model),
@@ -82,6 +84,10 @@ fn routes(url: Url) -> Option<Msg> {
 
     match url.path[0].as_ref() {
         "board" => Some(Msg::ChangePage(model::Page::Project)),
+        "issues" => match url.path.get(1).as_ref().map(|s| s.parse::<i32>()) {
+            Some(Ok(id)) => Some(Msg::ChangePage(model::Page::EditIssue(id))),
+            _ => None,
+        },
         "project-settings" => Some(Msg::ChangePage(model::Page::ProjectSettings)),
         "login" => Some(Msg::ChangePage(model::Page::Login)),
         "register" => Some(Msg::ChangePage(model::Page::Register)),

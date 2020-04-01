@@ -1,34 +1,11 @@
-import React, { Fragment, useState, useRef, useEffect, useCallback } from 'react';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
 import useOnOutsideClick from 'shared/hooks/onOutsideClick';
 import useOnEscapeKeyDown from 'shared/hooks/onEscapeKeyDown';
 
-import { ScrollOverlay, ClickableOverlay, StyledModal, CloseIcon } from './Styles';
-
-const propTypes = {
-  className: PropTypes.string,
-  testid: PropTypes.string,
-  variant: PropTypes.oneOf(['center', 'aside']),
-  width: PropTypes.number,
-  withCloseIcon: PropTypes.bool,
-  isOpen: PropTypes.bool,
-  onClose: PropTypes.func,
-  renderLink: PropTypes.func,
-  renderContent: PropTypes.func.isRequired,
-};
-
-const defaultProps = {
-  className: undefined,
-  testid: 'modal',
-  variant: 'center',
-  width: 600,
-  withCloseIcon: true,
-  isOpen: undefined,
-  onClose: () => {},
-  renderLink: () => {},
-};
+import { ClickableOverlay, CloseIcon, ScrollOverlay, StyledModal } from './Styles';
 
 const Modal = ({
   className,
@@ -76,26 +53,48 @@ const Modal = ({
           <ScrollOverlay>
             <ClickableOverlay variant={variant} ref={$clickableOverlayRef}>
               <StyledModal
-                className={className}
-                variant={variant}
-                width={width}
-                data-testid={testid}
-                ref={$modalRef}
+                  className={className}
+                  variant={ variant }
+                  width={ width }
+                  data-testid={ testid }
+                  ref={ $modalRef }
               >
-                {withCloseIcon && <CloseIcon type="close" variant={variant} onClick={closeModal} />}
-                {renderContent({ close: closeModal })}
+                { withCloseIcon && <CloseIcon type="close" variant={ variant } onClick={ closeModal }/> }
+                { renderContent({ close: closeModal }) }
               </StyledModal>
             </ClickableOverlay>
           </ScrollOverlay>,
-          $root,
-        )}
+            $root,
+        ) }
     </Fragment>
   );
 };
 
 const $root = document.getElementById('root');
 
-Modal.propTypes = propTypes;
-Modal.defaultProps = defaultProps;
+Modal.propTypes = {
+  className: PropTypes.string,
+  testid: PropTypes.string,
+  variant: PropTypes.oneOf([ 'center', 'aside' ]),
+  width: PropTypes.number,
+  withCloseIcon: PropTypes.bool,
+  isOpen: PropTypes.bool,
+  onClose: PropTypes.func,
+  renderLink: PropTypes.func,
+  renderContent: PropTypes.func.isRequired,
+};
+
+Modal.defaultProps = {
+  className: undefined,
+  testid: 'modal',
+  variant: 'center',
+  width: 600,
+  withCloseIcon: true,
+  isOpen: undefined,
+  onClose: () => {
+  },
+  renderLink: () => {
+  },
+};
 
 export default Modal;

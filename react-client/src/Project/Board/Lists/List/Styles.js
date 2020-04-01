@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { color, font, mixin } from 'shared/utils/styles';
+import { color } from 'shared/utils/styles';
 
 export const List = styled.div`
   display: flex;
@@ -17,7 +17,9 @@ export const Title = styled.div`
   text-transform: uppercase;
   color: ${color.textMedium};
   font-size: 12.5px;
-  ${mixin.truncateText}
+  overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 `;
 
 export const IssuesCount = styled.span`

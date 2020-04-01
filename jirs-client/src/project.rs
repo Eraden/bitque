@@ -200,7 +200,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         || project_page.recently_updated_filter
         || !project_page.active_avatar_filters.is_empty()
     {
-        true => button![
+        true => seed::button![
             id!["clearAllFilters"],
             "Clear all",
             mouse_ev(Ev::Click, |_| Msg::ProjectClearFilters),
@@ -360,9 +360,7 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
             div![
                 attrs![At::Class => "bottom"],
                 div![
-                    // <IssueTypeIcon type={issue.type} />
                     div![attrs![At::Class => "issueTypeIcon"], issue_type_icon],
-                    // <IssuePriorityIcon priority={issue.priority} top={-1} left={4} />
                     div![attrs![At::Class => "issuePriorityIcon"], priority_icon]
                 ],
                 div![attrs![At::Class => "assignees"], avatars,],

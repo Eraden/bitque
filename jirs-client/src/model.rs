@@ -13,6 +13,7 @@ pub type ProjectId = i32;
 #[serde(rename_all = "kebab-case")]
 pub enum Page {
     Project,
+    EditIssue(IssueId),
     ProjectSettings,
     Login,
     Register,
@@ -21,12 +22,12 @@ pub enum Page {
 impl Page {
     pub fn to_path(&self) -> String {
         match self {
-            Page::Project => "/board",
-            Page::ProjectSettings => "/project-settings",
-            Page::Login => "/login",
-            Page::Register => "/register",
+            Page::Project => "/board".to_string(),
+            Page::EditIssue(id) => format!("/issues/{id}", id = id),
+            Page::ProjectSettings => "/project-settings".to_string(),
+            Page::Login => "/login".to_string(),
+            Page::Register => "/register".to_string(),
         }
-        .to_string()
     }
 }
 

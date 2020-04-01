@@ -92,7 +92,9 @@ export const TimeSection = styled.div`
   width: 90px;
   padding: 5px 0;
   border-left: 1px solid ${color.borderLight};
-  ${mixin.scrollableY}
+  overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 `;
 
 export const Time = styled.div`

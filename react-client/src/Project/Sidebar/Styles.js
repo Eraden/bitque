@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { color, sizes, font, mixin, zIndexValues } from 'shared/utils/styles';
+import { color, font, mixin, sizes, zIndexValues } from 'shared/utils/styles';
 
 export const Sidebar = styled.div`
   position: fixed;
@@ -12,7 +12,9 @@ export const Sidebar = styled.div`
   padding: 0 16px 24px;
   background: ${color.backgroundLightest};
   border-right: 1px solid ${color.borderLightest};
-  ${mixin.scrollableY}
+  overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   ${mixin.customScrollbar()}
   @media (max-width: 1100px) {
     width: ${sizes.secondarySideBarWidth - 10}px;

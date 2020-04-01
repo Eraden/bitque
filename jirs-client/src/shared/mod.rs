@@ -5,6 +5,7 @@ use crate::model::{Icon, Model};
 use crate::Msg;
 
 pub mod aside;
+pub mod modal;
 pub mod navbar_left;
 pub mod styled_avatar;
 pub mod styled_button;
