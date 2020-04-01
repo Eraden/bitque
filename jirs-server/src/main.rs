@@ -13,7 +13,6 @@ pub mod schema;
 
 #[actix_rt::main]
 async fn main() -> Result<(), String> {
-    std::env::set_var("RUST_LOG", "actix_web=debug,diesel=debug");
     env_logger::init();
     dotenv::dotenv().ok();
 
