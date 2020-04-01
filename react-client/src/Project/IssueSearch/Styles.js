@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
-import { color, font, mixin } from 'shared/utils/styles';
-import { InputDebounced, Spinner, Icon } from 'shared/components';
+import { color, font }                   from 'shared/utils/styles';
+import { Icon, InputDebounced, Spinner } from 'shared/components';
 
 export const IssueSearch = styled.div`
   padding: 25px 35px 60px;
@@ -76,7 +76,7 @@ export const SectionTitle = styled.div`
   padding-bottom: 12px;
   text-transform: uppercase;
   color: ${color.textMedium};
-  ${font.bold}
+  font-family: "CircularStdBold"; font-weight: normal
   font-size: 11.5px
 `;
 

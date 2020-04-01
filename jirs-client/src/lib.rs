@@ -37,11 +37,13 @@ pub enum Msg {
     // dragging
     IssueDragStarted(IssueId),
     IssueDragStopped(IssueId),
-    IssueDragOver(f64, f64),
     IssueDropZone(IssueStatus),
 
     // issues
     IssueUpdateResult(FetchObject<String>),
+
+    // modals
+    CloseModal,
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
@@ -51,6 +53,9 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::ChangePage(page) => {
             model.page = page;
+        }
+        Msg::CloseModal => {
+            model.modal = None;
         }
         _ => (),
     }

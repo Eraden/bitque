@@ -8,5 +8,5 @@ pub fn update(_msg: Msg, _model: &mut model::Model, _orders: &mut impl Orders<Ms
 pub fn view(model: &model::Model) -> Node<Msg> {
     let project_section = vec![];
 
-    inner_layout(model, "projectSettings", project_section)
+    inner_layout(model, "projectSettings", project_section, None)
 }

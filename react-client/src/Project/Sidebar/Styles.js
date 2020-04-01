@@ -90,7 +90,7 @@ export const NotImplemented = styled.div`
   background: ${color.backgroundMedium};
   opacity: 0;
   font-size: 11.5px;
-  ${font.bold}
+  font-family: "CircularStdBold"; font-weight: normal
   ${LinkItem}:hover & {
     opacity: 1;
   }

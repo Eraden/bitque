@@ -1,16 +1,16 @@
-import React, { useState, useRef, useLayoutEffect } from 'react';
-import PropTypes from 'prop-types';
-import { uniq } from 'lodash';
+import React, { useLayoutEffect, useRef, useState } from 'react';
+import PropTypes                                    from 'prop-types';
+import { uniq }                                     from 'lodash';
 
-import { KeyCodes } from 'shared/constants/keyCodes';
+import { KeyCodes } from '../../../shared/constants/keyCodes';
 
-import { ClearIcon, Dropdown, DropdownInput, Options, Option, OptionsNoResults } from './Styles';
+import { ClearIcon, Dropdown, DropdownInput, Option, Options, OptionsNoResults } from './Styles';
 
 const propTypes = {
-  dropdownWidth: PropTypes.number,
-  value: PropTypes.any,
-  isValueEmpty: PropTypes.bool.isRequired,
-  searchValue: PropTypes.string.isRequired,
+  dropdownWidth:      PropTypes.number,
+  value:              PropTypes.any,
+  isValueEmpty:       PropTypes.bool.isRequired,
+  searchValue:        PropTypes.string.isRequired,
   setSearchValue: PropTypes.func.isRequired,
   $inputRef: PropTypes.object.isRequired,
   deactivateDropdown: PropTypes.func.isRequired,
@@ -177,12 +177,12 @@ const SelectDropdown = ({
   return (
     <Dropdown width={dropdownWidth}>
       <DropdownInput
-        type="text"
-        placeholder="Search"
-        ref={$inputRef}
-        autoFocus
-        onKeyDown={handleInputKeyDown}
-        onChange={event => setSearchValue(event.target.value)}
+          type="text"
+          placeholder="Search"
+          autoFocus
+          ref={$inputRef}
+          onKeyDown={handleInputKeyDown}
+          onChange={event => setSearchValue(event.target.value)}
       />
 
       {!isValueEmpty && withClearValue && <ClearIcon type="close" onClick={clearOptionValues} />}

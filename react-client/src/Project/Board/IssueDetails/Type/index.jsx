@@ -1,18 +1,18 @@
-import React from 'react';
+import React     from 'react';
 import PropTypes from 'prop-types';
 
-import { IssueType, IssueTypeCopy } from 'shared/constants/issues';
-import { IssueTypeIcon, Select } from 'shared/components';
+import { IssueType, IssueTypeCopy } from '../../../../shared/constants/issues';
+import { IssueTypeIcon, Select }    from '../../../../shared/components';
 
-import { TypeButton, Type, TypeLabel } from './Styles';
+import { Type, TypeButton, TypeLabel } from './Styles';
 
 const propTypes = {
-  issue: PropTypes.object.isRequired,
-  updateIssue: PropTypes.func.isRequired,
+    issue:       PropTypes.object.isRequired,
+    updateIssue: PropTypes.func.isRequired,
 };
 
 const ProjectBoardIssueDetailsType = ({ issue, updateIssue }) => (
-  <Select
+    <Select
     variant="empty"
     dropdownWidth={150}
     withClearValue={false}

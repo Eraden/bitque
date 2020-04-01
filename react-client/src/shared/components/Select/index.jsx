@@ -1,64 +1,22 @@
-import React, { useState, useRef } from 'react';
-import PropTypes from 'prop-types';
+import React, { useRef, useState } from 'react';
+import PropTypes                   from 'prop-types';
 
 import useOnOutsideClick from 'shared/hooks/onOutsideClick';
-import { KeyCodes } from 'shared/constants/keyCodes';
-import Icon from 'shared/components/Icon';
+import { KeyCodes }      from 'shared/constants/keyCodes';
+import Icon              from 'shared/components/Icon';
 
-import Dropdown from './Dropdown';
-import {
-  StyledSelect,
-  ValueContainer,
-  ChevronIcon,
-  Placeholder,
-  ValueMulti,
-  ValueMultiItem,
-  AddMore,
-} from './Styles';
-
-const propTypes = {
-  className: PropTypes.string,
-  variant: PropTypes.oneOf(['normal', 'empty']),
-  dropdownWidth: PropTypes.number,
-  name: PropTypes.string,
-  value: PropTypes.oneOfType([PropTypes.array, PropTypes.string, PropTypes.number]),
-  defaultValue: PropTypes.any,
-  placeholder: PropTypes.string,
-  invalid: PropTypes.bool,
-  options: PropTypes.array.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onCreate: PropTypes.func,
-  isMulti: PropTypes.bool,
-  withClearValue: PropTypes.bool,
-  renderValue: PropTypes.func,
-  renderOption: PropTypes.func,
-};
-
-const defaultProps = {
-  className: undefined,
-  variant: 'normal',
-  dropdownWidth: undefined,
-  name: undefined,
-  value: undefined,
-  defaultValue: undefined,
-  placeholder: 'Select',
-  invalid: false,
-  onCreate: undefined,
-  isMulti: false,
-  withClearValue: true,
-  renderValue: undefined,
-  renderOption: undefined,
-};
+import Dropdown                                                                                         from './Dropdown';
+import { AddMore, ChevronIcon, Placeholder, StyledSelect, ValueContainer, ValueMulti, ValueMultiItem, } from './Styles';
 
 const Select = ({
-  className,
-  variant,
-  dropdownWidth,
-  name,
-  value: propsValue,
-  defaultValue,
-  placeholder,
-  invalid,
+                  className,
+                  variant,
+                  dropdownWidth,
+                  name,
+                  value: propsValue,
+                  defaultValue,
+                  placeholder,
+                  invalid,
   options,
   onChange,
   onCreate,
@@ -183,27 +141,57 @@ const Select = ({
 
       {isDropdownOpen && (
         <Dropdown
-          dropdownWidth={dropdownWidth}
-          value={value}
-          isValueEmpty={isValueEmpty}
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-          $selectRef={$selectRef}
-          $inputRef={$inputRef}
-          deactivateDropdown={deactivateDropdown}
-          options={options}
-          onChange={handleChange}
-          onCreate={onCreate}
-          isMulti={isMulti}
-          withClearValue={withClearValue}
-          propsRenderOption={propsRenderOption}
+            dropdownWidth={dropdownWidth}
+            value={value}
+            isValueEmpty={isValueEmpty}
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
+            $selectRef={$selectRef}
+            $inputRef={$inputRef}
+            deactivateDropdown={deactivateDropdown}
+            options={options}
+            onChange={handleChange}
+            onCreate={onCreate}
+            isMulti={isMulti}
+            withClearValue={withClearValue}
+            propsRenderOption={propsRenderOption}
         />
       )}
     </StyledSelect>
   );
 };
 
-Select.propTypes = propTypes;
-Select.defaultProps = defaultProps;
+Select.propTypes = {
+  className:      PropTypes.string,
+  variant:        PropTypes.oneOf(['normal', 'empty']),
+  dropdownWidth:  PropTypes.number,
+  name:           PropTypes.string,
+  value:          PropTypes.oneOfType([PropTypes.array, PropTypes.string, PropTypes.number]),
+  defaultValue:   PropTypes.any,
+  placeholder:    PropTypes.string,
+  invalid:        PropTypes.bool,
+  options:        PropTypes.array.isRequired,
+  onChange:       PropTypes.func.isRequired,
+  onCreate:       PropTypes.func,
+  isMulti:        PropTypes.bool,
+  withClearValue: PropTypes.bool,
+  renderValue:    PropTypes.func,
+  renderOption:   PropTypes.func,
+};
+Select.defaultProps = {
+  className:      undefined,
+  variant:        'normal',
+  dropdownWidth:  undefined,
+  name:           undefined,
+  value:          undefined,
+  defaultValue:   undefined,
+  placeholder:    'Select',
+  invalid:        false,
+  onCreate:       undefined,
+  isMulti:        false,
+  withClearValue: true,
+  renderValue:    undefined,
+  renderOption:   undefined,
+};
 
 export default Select;

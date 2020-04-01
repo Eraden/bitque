@@ -10,6 +10,11 @@ use crate::{IssueId, UserId, HOST_URL};
 pub type ProjectId = i32;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub enum ModalType {
+    EditIssue(IssueId),
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum Page {
     Project,
@@ -47,12 +52,6 @@ pub struct UpdateProjectForm {
     pub fields: UpdateProjectPayload,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
-pub struct Point {
-    pub x: f64,
-    pub y: f64,
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProjectPage {
     pub about_tooltip_visible: bool,
@@ -61,7 +60,6 @@ pub struct ProjectPage {
     pub only_my_filter: bool,
     pub recently_updated_filter: bool,
     pub dragged_issue_id: Option<IssueId>,
-    pub drag_point: Point,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -77,6 +75,7 @@ pub struct Model {
     pub page: Page,
     pub host_url: String,
     pub project_page: ProjectPage,
+    pub modal: Option<ModalType>,
 }
 
 impl Default for Model {
@@ -100,8 +99,8 @@ impl Default for Model {
                 only_my_filter: false,
                 recently_updated_filter: false,
                 dragged_issue_id: None,
-                drag_point: Point::default(),
             },
+            modal: None,
         }
     }
 }

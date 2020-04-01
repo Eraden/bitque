@@ -4,10 +4,12 @@
 @import "css/global.css";
 @import "css/sidebar.css";
 @import "css/aside.css";
-@import "css/icon.css";
+@import "css/styledIcon.css";
 @import "css/shared.css";
 @import "css/styledTooltip.css";
 @import "css/styledAvatar.css";
+@import "css/styledSelect.css";
 @import "css/app.css";
 @import "css/modal.css";
+@import "css/issue.css";
 @import "css/project.css";

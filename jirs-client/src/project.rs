@@ -2,11 +2,13 @@ use seed::{prelude::*, *};
 
 use jirs_data::*;
 
-use crate::model::{Icon, Model, Page};
+use crate::model::{Icon, ModalType, Model, Page};
+use crate::shared::modal::{Modal, Variant as ModalVariant};
 use crate::shared::styled_avatar::StyledAvatar;
-use crate::shared::styled_button::{StyledButton, Variant};
+use crate::shared::styled_button::{StyledButton, Variant as ButtonVariant};
 use crate::shared::styled_input::StyledInput;
-use crate::shared::{drag_ev, inner_layout, ToNode};
+use crate::shared::styled_select::StyledSelect;
+use crate::shared::{drag_ev, find_issue, inner_layout, ToNode};
 use crate::Msg;
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
@@ -18,6 +20,15 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             orders
                 .skip()
                 .perform_cmd(crate::api::fetch_current_user(model.host_url.clone()));
+        }
+        Msg::ChangePage(Page::EditIssue(issue_id)) => {
+            orders
+                .skip()
+                .perform_cmd(crate::api::fetch_current_project(model.host_url.clone()));
+            orders
+                .skip()
+                .perform_cmd(crate::api::fetch_current_user(model.host_url.clone()));
+            model.modal = Some(ModalType::EditIssue(issue_id));
         }
         Msg::ToggleAboutTooltip => {
             model.project_page.about_tooltip_visible = !model.project_page.about_tooltip_visible;
@@ -57,10 +68,6 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::IssueDragStopped(_) => {
             model.project_page.dragged_issue_id = None;
-        }
-        Msg::IssueDragOver(x, y) => {
-            model.project_page.drag_point.x = x;
-            model.project_page.drag_point.y = y;
         }
         Msg::IssueDropZone(status) => {
             match (
@@ -116,6 +123,25 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
 }
 
 pub fn view(model: &Model) -> Node<Msg> {
+    let modal = match model.modal {
+        Some(ModalType::EditIssue(issue_id)) => {
+            if let Some(issue) = find_issue(model, issue_id) {
+                let details = issue_details(model, issue);
+                let modal = Modal {
+                    variant: ModalVariant::Center,
+                    width: 1040,
+                    with_icon: false,
+                    children: vec![details],
+                }
+                .into_node();
+                Some(modal)
+            } else {
+                None
+            }
+        }
+        _ => None,
+    };
+
     let project_section = vec![
         breadcrumbs(model),
         header(),
@@ -123,7 +149,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         project_board_lists(model),
     ];
 
-    inner_layout(model, "projectPage", project_section)
+    inner_layout(model, "projectPage", project_section, modal)
 }
 
 fn breadcrumbs(model: &Model) -> Node<Msg> {
@@ -144,7 +170,7 @@ fn breadcrumbs(model: &Model) -> Node<Msg> {
 
 fn header() -> Node<Msg> {
     let button = StyledButton {
-        variant: Variant::Secondary,
+        variant: ButtonVariant::Secondary,
         icon_only: false,
         disabled: false,
         active: false,
@@ -175,7 +201,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
     let project_page = &model.project_page;
 
     let only_my = StyledButton {
-        variant: Variant::Empty,
+        variant: ButtonVariant::Empty,
         icon_only: false,
         disabled: false,
         active: model.project_page.only_my_filter,
@@ -186,7 +212,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
     .into_node();
 
     let recently_updated = StyledButton {
-        variant: Variant::Empty,
+        variant: ButtonVariant::Empty,
         icon_only: false,
         disabled: false,
         active: model.project_page.recently_updated_filter,
@@ -345,8 +371,10 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
         class_list.push("hidden");
     }
 
+    let href = format!("/issues/{id}", id = issue_id);
+
     a![
-        attrs![At::Class => "issueLink"],
+        attrs![At::Class => "issueLink"; At::Href => href],
         div![
             attrs![At::Class => class_list.join(" "), At::Draggable => true],
             drag_started,
@@ -361,5 +389,45 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
                 div![attrs![At::Class => "assignees"], avatars,],
             ]
         ]
+    ]
+}
+
+impl ToNode for IssueType {
+    fn into_node(self) -> Node<Msg> {
+        div![self.to_string()]
+    }
+}
+
+fn issue_details(_model: &Model, _issue: &Issue) -> Node<Msg> {
+    let issue_type_select = StyledSelect {
+        on_change: mouse_ev(Ev::Click, |_| Msg::NoOp),
+        variant: crate::shared::styled_select::Variant::Empty,
+        width: 150,
+        name: None,
+        placeholder: None,
+        valid: false,
+        is_multi: false,
+        allow_clear: true,
+        options: vec![IssueType::Story, IssueType::Task, IssueType::Bug],
+    }
+    .into_node();
+
+    div![
+        attrs![At::Class => "issueDetails"],
+        div![
+            attrs![At::Class => "topActions"],
+            issue_type_select,
+            div![attrs![At::Class => "topActionsRight"]],
+        ],
+        div![
+            attrs![At::Class => "content"],
+            div![
+                attrs![At::Class => "left"],
+                div![attrs![At::Class => "title"]],
+                div![attrs![At::Class => "description"]],
+                div![attrs![At::Class => "comments"]],
+            ],
+            div![attrs![At::Class => "right"]],
+        ],
     ]
 }

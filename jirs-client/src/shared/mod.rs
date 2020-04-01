@@ -1,8 +1,10 @@
 use seed::{prelude::*, *};
 use wasm_bindgen::JsCast;
 
+use jirs_data::Issue;
+
 use crate::model::{Icon, Model};
-use crate::Msg;
+use crate::{IssueId, Msg};
 
 pub mod aside;
 pub mod modal;
@@ -10,7 +12,15 @@ pub mod navbar_left;
 pub mod styled_avatar;
 pub mod styled_button;
 pub mod styled_input;
+pub mod styled_select;
 pub mod styled_tooltip;
+
+pub fn find_issue(model: &Model, issue_id: IssueId) -> Option<&Issue> {
+    match model.project.as_ref() {
+        Some(p) => p.issues.iter().find(|issue| issue.id == issue_id),
+        _ => None,
+    }
+}
 
 pub trait ToNode {
     fn into_node(self) -> Node<Msg>;
@@ -24,8 +34,18 @@ pub fn divider() -> Node<Msg> {
     div![attrs![At::Class => "divider"], ""]
 }
 
-pub fn inner_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
+pub fn inner_layout(
+    model: &Model,
+    page_name: &str,
+    children: Vec<Node<Msg>>,
+    modal: Option<Node<Msg>>,
+) -> Node<Msg> {
+    let modal_node = match modal {
+        Some(modal) => vec![modal],
+        _ => vec![],
+    };
     article![
+        modal_node,
         attrs![At::Class => "inner-layout"],
         id![page_name],
         navbar_left::render(model),

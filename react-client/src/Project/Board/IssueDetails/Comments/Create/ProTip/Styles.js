@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { color, font } from 'shared/utils/styles';
+import { color } from 'shared/utils/styles';
 
 export const Tip = styled.div`
   display: flex;
@@ -22,6 +22,6 @@ export const TipLetter = styled.span`
   border-radius: 2px;
   color: ${color.textDarkest};
   background: ${color.backgroundMedium};
-  ${font.bold}
+  font-family: "CircularStdBold"; font-weight: normal
   font-size: 12px
 `;

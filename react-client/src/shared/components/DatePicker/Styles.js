@@ -31,7 +31,7 @@ export const DateSection = styled.div`
 export const SelectedMonthYear = styled.div`
   display: inline-block;
   padding-left: 7px;
-  ${font.bold}
+  font-family: "CircularStdBold"; font-weight: normal
   font-size: 16px
 `;
 

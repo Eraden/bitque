@@ -1,8 +1,8 @@
-import styled from 'styled-components';
+import styled      from 'styled-components';
 import { NavLink } from 'react-router-dom';
 
-import { font, sizes, color, mixin, zIndexValues } from 'shared/utils/styles';
-import { Logo } from 'shared/components';
+import { color, mixin, sizes, zIndexValues } from 'shared/utils/styles';
+import { Logo }                              from 'shared/components';
 
 export const NavLeft = styled.aside`
   z-index: ${zIndexValues.navLeft};
@@ -71,7 +71,7 @@ export const ItemText = styled.div`
   text-transform: uppercase;
   transition: all 0.1s;
   transition-property: right, visibility, opacity;
-  ${font.bold}
+  font-family: "CircularStdBold"; font-weight: normal
   font-size: 12px
   ${NavLeft}:hover & {
     right: 0;

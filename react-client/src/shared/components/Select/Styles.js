@@ -1,7 +1,7 @@
 import styled, { css } from 'styled-components';
 
 import { color, mixin, zIndexValues } from 'shared/utils/styles';
-import Icon from 'shared/components/Icon';
+import Icon                           from 'shared/components/Icon';
 
 export const StyledSelect = styled.div`
   position: relative;
@@ -119,14 +119,14 @@ export const ClearIcon = styled(Icon)`
   font-size: 16px;
   color: ${color.textMedium};
   cursor: pointer;
-    user-select: none;
+  user-select: none;
 `;
 
 export const Options = styled.div`
   max-height: 200px;
   overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   ${mixin.customScrollbar()};
 `;
 

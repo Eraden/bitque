@@ -48,6 +48,7 @@ pub fn render(values: Modal) -> Node<Msg> {
         with_icon,
         children,
     } = values;
+
     let icon = if with_icon {
         let mut styled_icon = styled_icon(Icon::Close);
         styled_icon.add_class(variant.to_icon_class_name().to_string());
@@ -56,6 +57,12 @@ pub fn render(values: Modal) -> Node<Msg> {
         empty![]
     };
 
+    let close_handler = mouse_ev(Ev::Click, |_| Msg::CloseModal);
+    let body_handler = mouse_ev(Ev::Click, |ev| {
+        ev.stop_propagation();
+        Msg::NoOp
+    });
+
     let clickable_class = format!("clickableOverlay {}", variant.to_class_name());
     let styled_modal_class = format!("styledModal {}", variant.to_class_name());
     let styled_modal_style = format!("max-width: {width}px", width = width);
@@ -63,8 +70,10 @@ pub fn render(values: Modal) -> Node<Msg> {
         attrs![At::Class => "modal"],
         div![
             attrs![At::Class => clickable_class],
+            close_handler,
             div![
                 attrs![At::Class => styled_modal_class, At::Style => styled_modal_style],
+                body_handler,
                 icon,
                 children
             ]

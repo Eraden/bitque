@@ -1,7 +1,7 @@
 import { css } from 'styled-components';
-import Color from 'color';
+import Color   from 'color';
 
-import { IssueType, IssueStatus, IssuePriority } from 'shared/constants/issues';
+import { IssuePriority, IssueStatus, IssueType } from 'shared/constants/issues';
 
 export const color = {
   primary: '#0052cc', // Blue
@@ -174,7 +174,7 @@ export const mixin = {
     user-select: none;
     color: ${colorValue};
     background: ${background};
-    ${font.bold}
+    font-family: "CircularStdBold"; font-weight: normal
     font-size: 12px
     i {
       margin-left: 4px;

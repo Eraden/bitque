@@ -1,0 +1,38 @@
+.issueDetails > .content {
+    display: flex;
+    padding: 0 30px 60px;
+}
+
+.issueDetails > .content > .left {
+    width: 65%;
+    padding-right: 50px;
+}
+
+.issueDetails > .content > .right {
+    width: 35%;
+    padding-top: 5px;
+}
+
+.issueDetails > .topActions {
+    display: flex;
+    justify-content: space-between;
+    padding: 21px 18px 0;
+}
+
+.issueDetails > .topActions > .topActionsRight {
+    display: flex;
+    align-items: center;
+}
+
+.issueDetails > .topActions > .topActionsRight > * {
+    margin-left: 4px;
+}
+
+.issueDetails > .sectionTitle {
+    margin: 24px 0 5px;
+    text-transform: uppercase;
+    color: var(--textMedium);
+    font-size: 12.5px;
+    font-family: "CircularStdBold", serif;
+    font-weight: normal
+}

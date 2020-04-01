@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { color, font } from 'shared/utils/styles';
+import { color } from 'shared/utils/styles';
 
 export const Content = styled.div`
   display: flex;
@@ -36,5 +36,5 @@ export const SectionTitle = styled.div`
   text-transform: uppercase;
   color: ${color.textMedium};
   font-size: 12.5px
-  ${font.bold}
+  font-family: "CircularStdBold"; font-weight: normal
 `;
