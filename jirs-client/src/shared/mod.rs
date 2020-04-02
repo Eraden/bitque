@@ -45,12 +45,8 @@ pub fn inner_layout(
     model: &Model,
     page_name: &str,
     children: Vec<Node<Msg>>,
-    modal: Option<Node<Msg>>,
+    modal_node: Node<Msg>,
 ) -> Node<Msg> {
-    let modal_node = match modal {
-        Some(modal) => vec![modal],
-        _ => vec![],
-    };
     article![
         modal_node,
         attrs![At::Class => "inner-layout"],

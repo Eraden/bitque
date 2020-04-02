@@ -84,7 +84,7 @@ pub struct Model {
     pub page: Page,
     pub host_url: String,
     pub project_page: ProjectPage,
-    pub modal: Option<ModalType>,
+    pub modals: Vec<ModalType>,
 }
 
 impl Default for Model {
@@ -109,7 +109,7 @@ impl Default for Model {
                 recently_updated_filter: false,
                 dragged_issue_id: None,
             },
-            modal: None,
+            modals: vec![],
         }
     }
 }

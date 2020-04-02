@@ -2,14 +2,12 @@ use seed::{prelude::*, *};
 
 use jirs_data::*;
 
-use crate::api::update_issue;
-use crate::model::{EditIssueModal, Icon, ModalType, Model, Page};
-use crate::shared::modal::{Modal, Variant as ModalVariant};
+use crate::model::{EditIssueModal, Icon, Model, Page};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::{StyledButton, Variant as ButtonVariant};
 use crate::shared::styled_input::StyledInput;
-use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
-use crate::shared::{drag_ev, find_issue, inner_layout, ToNode};
+use crate::shared::styled_select::StyledSelect;
+use crate::shared::{drag_ev, inner_layout, ToNode};
 use crate::{FieldId, IssueId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
@@ -22,26 +20,13 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 .skip()
                 .perform_cmd(crate::api::fetch_current_user(model.host_url.clone()));
         }
-        Msg::ChangePage(Page::EditIssue(issue_id)) => {
+        Msg::ChangePage(Page::EditIssue(_issue_id)) => {
             orders
                 .skip()
                 .perform_cmd(crate::api::fetch_current_project(model.host_url.clone()));
             orders
                 .skip()
                 .perform_cmd(crate::api::fetch_current_user(model.host_url.clone()));
-            let value = find_issue(model, issue_id)
-                .map(|issue| issue.issue_type.clone())
-                .unwrap_or_else(|| IssueType::Task);
-            model.modal = Some(ModalType::EditIssue(
-                issue_id,
-                EditIssueModal {
-                    id: issue_id,
-                    top_select_opened: false,
-                    top_select_filter: "".to_string(),
-                    value,
-                    link_copied: false,
-                },
-            ));
         }
         Msg::ToggleAboutTooltip => {
             model.project_page.about_tooltip_visible = !model.project_page.about_tooltip_visible;
@@ -131,61 +116,6 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 _ => error!("Drag stopped before drop :("),
             }
         }
-        Msg::StyledSelectChanged(FieldId::IssueTypeEditModalTop, change) => {
-            match (change, model.modal.as_mut()) {
-                (StyledSelectChange::Text(ref text), Some(ModalType::EditIssue(_, modal))) => {
-                    modal.top_select_filter = text.clone();
-                }
-                (
-                    StyledSelectChange::DropDownVisibility(flag),
-                    Some(ModalType::EditIssue(_, modal)),
-                ) => {
-                    modal.top_select_opened = flag;
-                }
-                (
-                    StyledSelectChange::Changed(value),
-                    Some(ModalType::EditIssue(issue_id, modal)),
-                ) => {
-                    modal.value = value.into();
-                    let project = match model.project.as_mut() {
-                        Some(p) => p,
-                        _ => return,
-                    };
-                    let mut found: Option<&mut Issue> = None;
-                    for issue in project.issues.iter_mut() {
-                        if issue.id == *issue_id {
-                            found = Some(issue);
-                            break;
-                        }
-                    }
-                    let issue = match found {
-                        Some(i) => i,
-                        _ => return,
-                    };
-
-                    let form = UpdateIssuePayload {
-                        title: Some(issue.title.clone()),
-                        issue_type: Some(modal.value.clone()),
-                        status: Some(issue.status.clone()),
-                        priority: Some(issue.priority.clone()),
-                        list_position: Some(issue.list_position),
-                        description: Some(issue.description.clone()),
-                        description_text: Some(issue.description_text.clone()),
-                        estimate: Some(issue.estimate.clone()),
-                        time_spent: Some(issue.time_spent.clone()),
-                        time_remaining: Some(issue.time_remaining.clone()),
-                        project_id: Some(issue.project_id.clone()),
-                        user_ids: Some(issue.user_ids.clone()),
-                    };
-                    orders.skip().perform_cmd(update_issue(
-                        model.host_url.clone(),
-                        *issue_id,
-                        form,
-                    ));
-                }
-                _ => {}
-            }
-        }
         Msg::IssueUpdateResult(fetched) => {
             crate::api_handlers::update_issue_response(&fetched, model);
         }
@@ -194,25 +124,6 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
 }
 
 pub fn view(model: &Model) -> Node<Msg> {
-    let modal = match &model.modal {
-        Some(ModalType::EditIssue(issue_id, modal)) => {
-            if let Some(issue) = find_issue(model, *issue_id) {
-                let details = issue_details(model, issue, &modal);
-                let modal = Modal {
-                    variant: ModalVariant::Center,
-                    width: 1040,
-                    with_icon: false,
-                    children: vec![details],
-                }
-                .into_node();
-                Some(modal)
-            } else {
-                None
-            }
-        }
-        _ => None,
-    };
-
     let project_section = vec![
         breadcrumbs(model),
         header(),
@@ -220,7 +131,12 @@ pub fn view(model: &Model) -> Node<Msg> {
         project_board_lists(model),
     ];
 
-    inner_layout(model, "projectPage", project_section, modal)
+    inner_layout(
+        model,
+        "projectPage",
+        project_section,
+        crate::modal::view(model),
+    )
 }
 
 fn breadcrumbs(model: &Model) -> Node<Msg> {
@@ -512,7 +428,7 @@ impl crate::shared::styled_select::SelectOption for IssueTypeOption {
     }
 }
 
-fn issue_details(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> {
+pub fn issue_details(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> {
     let issue_id = issue.id;
 
     let issue_type_select = StyledSelect {

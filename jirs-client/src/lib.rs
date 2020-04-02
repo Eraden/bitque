@@ -9,6 +9,7 @@ use crate::shared::styled_select::StyledSelectChange;
 mod api;
 mod api_handlers;
 mod login;
+mod modal;
 mod model;
 mod project;
 mod project_settings;
@@ -51,7 +52,7 @@ pub enum Msg {
     IssueUpdateResult(FetchObject<String>),
 
     // modals
-    CloseModal,
+    PopModal,
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
@@ -62,12 +63,10 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         Msg::ChangePage(page) => {
             model.page = page;
         }
-        Msg::CloseModal => {
-            model.modal = None;
-        }
         _ => (),
     }
     crate::shared::update(&msg, model, orders);
+    crate::modal::update(&msg, model, orders);
     match model.page {
         Page::Project => project::update(msg, model, orders),
         Page::EditIssue(_id) => project::update(msg, model, orders),
