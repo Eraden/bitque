@@ -5,3 +5,4 @@
 file = "src/schema.rs"
 import_types = ["diesel::sql_types::*", "jirs_data::sql::*"]
 with_docs = true
+patch_file = "./src/schema.patch"
