@@ -1,3 +1,5 @@
+#![allow(unused_imports, dead_code)]
+
 table! {
     use diesel::sql_types::*;
     use jirs_data::sql::*;

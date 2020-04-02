@@ -1,0 +1,13 @@
+diff --git a/jirs-server/src/schema.rs b/jirs-server/src/schema.rs
+index 00d1c0b..5b82ccf 100644
+--- a/jirs-server/src/schema.rs
++++ b/jirs-server/src/schema.rs
+@@ -1,6 +1,8 @@
++#![allow(unused_imports, dead_code)]
++
+ table! {
+     use diesel::sql_types::*;
+     use jirs_data::sql::*;
+ 
+     /// Representation of the `comments` table.
+     ///
