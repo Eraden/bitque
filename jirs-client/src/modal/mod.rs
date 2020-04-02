@@ -1,12 +1,15 @@
+use seed::{prelude::*, *};
+
+use jirs_data::{Issue, IssueType, UpdateIssuePayload};
+
 use crate::api::update_issue;
 use crate::model::{EditIssueModal, ModalType, Page};
-use crate::project::issue_details;
 use crate::shared::modal::{Modal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{find_issue, ToNode};
 use crate::{model, FieldId, Msg};
-use jirs_data::{Issue, IssueType, UpdateIssuePayload};
-use seed::{prelude::*, *};
+
+mod issue_details;
 
 pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -95,7 +98,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .map(|modal| match modal {
             ModalType::EditIssue(issue_id, modal) => {
                 if let Some(issue) = find_issue(model, *issue_id) {
-                    let details = issue_details(model, issue, &modal);
+                    let details = issue_details::view(model, issue, &modal);
                     let modal = Modal {
                         variant: ModalVariant::Center,
                         width: 1040,

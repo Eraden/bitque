@@ -1,7 +1,7 @@
 use seed::{prelude::*, *};
 
-use crate::model::Icon;
-use crate::shared::{styled_icon, ToNode};
+use crate::shared::styled_icon::{Icon, StyledIcon};
+use crate::shared::ToNode;
 use crate::Msg;
 
 pub struct StyledInput {
@@ -36,8 +36,8 @@ pub fn render(values: StyledInput) -> Node<Msg> {
     }
 
     let icon = match icon {
-        Some(icon) => vec![styled_icon(icon)],
-        _ => vec![],
+        Some(icon) => StyledIcon::build(icon).build().into_node(),
+        _ => empty![],
     };
 
     div![

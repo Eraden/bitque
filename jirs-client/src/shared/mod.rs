@@ -3,7 +3,7 @@ use wasm_bindgen::JsCast;
 
 use jirs_data::Issue;
 
-use crate::model::{Icon, Model};
+use crate::model::Model;
 use crate::{IssueId, Msg};
 
 pub mod aside;
@@ -11,6 +11,7 @@ pub mod modal;
 pub mod navbar_left;
 pub mod styled_avatar;
 pub mod styled_button;
+pub mod styled_icon;
 pub mod styled_input;
 pub mod styled_select;
 pub mod styled_tooltip;
@@ -24,17 +25,6 @@ pub fn find_issue(model: &Model, issue_id: IssueId) -> Option<&Issue> {
 
 pub trait ToNode {
     fn into_node(self) -> Node<Msg>;
-}
-
-pub fn styled_icon(icon: Icon) -> Node<Msg> {
-    let style = icon
-        .to_color()
-        .map(|s| format!("color: {}", s))
-        .unwrap_or_default();
-    i![
-        attrs![At::Class => format!("styledIcon {}", icon), At::Style => style],
-        ""
-    ]
 }
 
 pub fn divider() -> Node<Msg> {

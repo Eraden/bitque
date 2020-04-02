@@ -12,6 +12,7 @@ pub type ProjectId = i32;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
     EditIssue(IssueId, EditIssueModal),
+    DeleteIssueConfirm(IssueId),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq)]
@@ -110,102 +111,6 @@ impl Default for Model {
                 dragged_issue_id: None,
             },
             modals: vec![],
-        }
-    }
-}
-
-#[allow(dead_code)]
-#[derive(Copy, Clone, Debug)]
-pub enum Icon {
-    Bug,
-    Stopwatch,
-    Task,
-    Story,
-    ArrowDown,
-    ArrowLeftCircle,
-    ArrowUp,
-    ChevronDown,
-    ChevronLeft,
-    ChevronRight,
-    ChevronUp,
-    Board,
-    Help,
-    Link,
-    Menu,
-    More,
-    Attach,
-    Plus,
-    Search,
-    Issues,
-    Settings,
-    Close,
-    Feedback,
-    Trash,
-    Github,
-    Shipping,
-    Component,
-    Reports,
-    Page,
-    Calendar,
-    ArrowLeft,
-    ArrowRight,
-}
-
-impl Icon {
-    pub fn to_color(self) -> Option<String> {
-        match self {
-            Icon::Bug | Icon::Task | Icon::Story => Some(format!("var(--{})", self)),
-            _ => None,
-        }
-    }
-}
-
-impl std::fmt::Display for Icon {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let code = match self {
-            Icon::Bug => "bug",
-            Icon::Stopwatch => "stopwatch",
-            Icon::Task => "task",
-            Icon::Story => "story",
-            Icon::ArrowDown => "arrowDown",
-            Icon::ArrowLeftCircle => "arrowLeftCircle",
-            Icon::ArrowUp => "arrowUp",
-            Icon::ChevronDown => "chevronDown",
-            Icon::ChevronLeft => "chevronLeft",
-            Icon::ChevronRight => "chevronRight",
-            Icon::ChevronUp => "chevronUp",
-            Icon::Board => "board",
-            Icon::Help => "help",
-            Icon::Link => "link",
-            Icon::Menu => "menu",
-            Icon::More => "more",
-            Icon::Attach => "attach",
-            Icon::Plus => "plus",
-            Icon::Search => "search",
-            Icon::Issues => "issues",
-            Icon::Settings => "settings",
-            Icon::Close => "close",
-            Icon::Feedback => "feedback",
-            Icon::Trash => "trash",
-            Icon::Github => "github",
-            Icon::Shipping => "shipping",
-            Icon::Component => "component",
-            Icon::Reports => "reports",
-            Icon::Page => "page",
-            Icon::Calendar => "calendar",
-            Icon::ArrowLeft => "arrowLeft",
-            Icon::ArrowRight => "arrowRight",
-        };
-        f.write_str(code)
-    }
-}
-
-impl From<IssueType> for Icon {
-    fn from(t: IssueType) -> Self {
-        match t {
-            IssueType::Task => Icon::Task,
-            IssueType::Bug => Icon::Bug,
-            IssueType::Story => Icon::Story,
         }
     }
 }

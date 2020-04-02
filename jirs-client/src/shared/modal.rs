@@ -1,7 +1,7 @@
 use seed::{prelude::*, *};
 
-use crate::model::Icon;
-use crate::shared::{styled_icon, ToNode};
+use crate::shared::styled_icon::{Icon, StyledIcon};
+use crate::shared::ToNode;
 use crate::Msg;
 
 #[allow(dead_code)]
@@ -50,9 +50,10 @@ pub fn render(values: Modal) -> Node<Msg> {
     } = values;
 
     let icon = if with_icon {
-        let mut styled_icon = styled_icon(Icon::Close);
-        styled_icon.add_class(variant.to_icon_class_name().to_string());
-        styled_icon
+        StyledIcon::build(Icon::Close)
+            .add_class(variant.to_icon_class_name().to_string())
+            .build()
+            .into_node()
     } else {
         empty![]
     };

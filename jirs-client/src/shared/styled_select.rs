@@ -1,5 +1,6 @@
 use seed::{prelude::*, *};
 
+use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
@@ -136,7 +137,7 @@ where
     };
 
     let clear_icon = match (opened, allow_clear) {
-        (true, true) => crate::shared::styled_icon(crate::model::Icon::Close),
+        (true, true) => StyledIcon::build(Icon::Close).build().into_node(),
         _ => empty![],
     };
 

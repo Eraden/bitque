@@ -2,13 +2,13 @@ use seed::{prelude::*, *};
 
 use jirs_data::*;
 
-use crate::model::{EditIssueModal, Icon, Model, Page};
+use crate::model::{Model, Page};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::{StyledButton, Variant as ButtonVariant};
+use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
-use crate::shared::styled_select::StyledSelect;
 use crate::shared::{drag_ev, inner_layout, ToNode};
-use crate::{FieldId, IssueId, Msg};
+use crate::Msg;
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -156,17 +156,12 @@ fn breadcrumbs(model: &Model) -> Node<Msg> {
 }
 
 fn header() -> Node<Msg> {
-    let button = StyledButton {
-        variant: ButtonVariant::Secondary,
-        icon_only: false,
-        disabled: false,
-        active: false,
-        text: Some("Github Repo".to_string()),
-        icon: Some(Icon::Github),
-        on_click: None,
-        children: vec![],
-    }
-    .into_node();
+    let button = StyledButton::build()
+        .secondary()
+        .text("Github Repo".to_string())
+        .icon(Icon::Github)
+        .build()
+        .into_node();
     div![
         id!["projectBoardHeader"],
         div![id!["boardName"], "Kanban board"],
@@ -190,7 +185,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
 
     let only_my = StyledButton {
         variant: ButtonVariant::Empty,
-        icon_only: false,
+
         disabled: false,
         active: model.project_page.only_my_filter,
         text: Some("Only My Issues".to_string()),
@@ -202,7 +197,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
 
     let recently_updated = StyledButton {
         variant: ButtonVariant::Empty,
-        icon_only: false,
+
         disabled: false,
         active: model.project_page.recently_updated_filter,
         text: Some("Recently Updated".to_string()),
@@ -332,24 +327,23 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
         .collect();
 
     let issue_type_icon = {
-        let mut node = crate::shared::styled_icon(issue.issue_type.clone().into());
-        node.add_style(
-            St::Color,
-            format!(
-                "var(--{issue_type})",
+        StyledIcon::build(issue.issue_type.clone().into())
+            .add_style(format!(
+                "color: var(--{issue_type})",
                 issue_type = issue.issue_type.to_string()
-            ),
-        );
-        node
+            ))
+            .build()
+            .into_node()
     };
     let priority_icon = {
         let icon = match issue.priority {
             IssuePriority::Low | IssuePriority::Lowest => Icon::ArrowDown,
             _ => Icon::ArrowUp,
         };
-        let mut node = crate::shared::styled_icon(icon);
-        node.add_style(St::Color, format!("var(--{})", issue.priority));
-        node
+        StyledIcon::build(icon)
+            .add_style(format!("color: var(--{})", issue.priority))
+            .build()
+            .into_node()
     };
 
     let issue_id = issue.id;
@@ -379,130 +373,5 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
                 div![attrs![At::Class => "assignees"], avatars,],
             ]
         ]
-    ]
-}
-
-#[derive(PartialOrd, PartialEq, Debug)]
-struct IssueTypeOption(IssueId, IssueType);
-
-impl crate::shared::styled_select::SelectOption for IssueTypeOption {
-    fn into_option(self) -> Node<Msg> {
-        let name = self.1.to_label().to_owned();
-
-        let mut icon = crate::shared::styled_icon(self.1.into());
-        icon.add_class("issueTypeIcon");
-
-        div![
-            attrs![At::Class => "type"],
-            icon,
-            div![attrs![At::Class => "typeLabel"], name]
-        ]
-    }
-
-    fn into_value(self) -> Node<Msg> {
-        let issue_id = self.0;
-        let name = self.1.to_label().to_owned();
-
-        StyledButton {
-            variant: ButtonVariant::Empty,
-            icon_only: true,
-            disabled: false,
-            active: false,
-            text: None,
-            icon: Some(self.1.into()),
-            on_click: None,
-            children: vec![span![format!("{}-{}", name, issue_id)]],
-        }
-        .into_node()
-    }
-
-    fn match_text_filter(&self, text_filter: &str) -> bool {
-        self.1
-            .to_string()
-            .to_lowercase()
-            .contains(&text_filter.to_lowercase())
-    }
-
-    fn to_value(&self) -> u32 {
-        self.1.clone().into()
-    }
-}
-
-pub fn issue_details(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> {
-    let issue_id = issue.id;
-
-    let issue_type_select = StyledSelect {
-        id: FieldId::IssueTypeEditModalTop,
-        variant: crate::shared::styled_select::Variant::Empty,
-        dropdown_width: Some(150),
-        name: Some("type".to_string()),
-        placeholder: None,
-        text_filter: modal.top_select_filter.clone(),
-        opened: modal.top_select_opened,
-        valid: true,
-        is_multi: false,
-        allow_clear: false,
-        options: vec![
-            IssueTypeOption(issue_id, IssueType::Story),
-            IssueTypeOption(issue_id, IssueType::Task),
-            IssueTypeOption(issue_id, IssueType::Bug),
-        ],
-        selected: vec![IssueTypeOption(issue_id, modal.value.clone())],
-    }
-    .into_node();
-
-    let click_handler = mouse_ev(Ev::Click, move |_| {
-        use wasm_bindgen::JsCast;
-
-        let link = format!("http://localhost:7000/issues/{id}", id = issue_id);
-        let el = match seed::html_document().create_element("textarea") {
-            Ok(el) => el
-                .dyn_ref::<web_sys::HtmlTextAreaElement>()
-                .unwrap()
-                .clone(),
-            _ => return Msg::NoOp,
-        };
-        seed::body().append_child(&el).unwrap();
-        el.set_text_content(Some(link.as_str()));
-        el.select();
-        el.set_selection_range(0, 9999).unwrap();
-        seed::html_document().exec_command("copy").unwrap();
-        seed::body().remove_child(&el).unwrap();
-        Msg::NoOp
-    });
-
-    let copy_button = StyledButton {
-        variant: ButtonVariant::Empty,
-        icon_only: false,
-        disabled: false,
-        active: false,
-        text: None,
-        icon: Some(Icon::Link),
-        on_click: Some(click_handler),
-        children: vec![span![if modal.link_copied {
-            "Link Copied"
-        } else {
-            "Copy link"
-        }]],
-    }
-    .into_node();
-
-    div![
-        attrs![At::Class => "issueDetails"],
-        div![
-            attrs![At::Class => "topActions"],
-            issue_type_select,
-            div![attrs![At::Class => "topActionsRight"], copy_button],
-        ],
-        div![
-            attrs![At::Class => "content"],
-            div![
-                attrs![At::Class => "left"],
-                div![attrs![At::Class => "title"]],
-                div![attrs![At::Class => "description"]],
-                div![attrs![At::Class => "comments"]],
-            ],
-            div![attrs![At::Class => "right"]],
-        ],
     ]
 }

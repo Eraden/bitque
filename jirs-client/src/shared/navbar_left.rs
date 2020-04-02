@@ -1,7 +1,8 @@
 use seed::{prelude::*, *};
 
-use crate::model::{Icon, Model};
-use crate::shared::styled_button::{StyledButton, Variant};
+use crate::model::Model;
+use crate::shared::styled_button::StyledButton;
+use crate::shared::styled_icon::Icon;
 use crate::shared::{styled_tooltip, ToNode};
 use crate::Msg;
 
@@ -43,28 +44,17 @@ pub fn about_tooltip(_model: &Model, children: Node<Msg>) -> Node<Msg> {
 }
 
 fn about_tooltip_popup(model: &Model) -> Node<Msg> {
-    let visit_website = StyledButton {
-        text: Some("Visit Website".to_string()),
-        variant: Variant::Primary,
-        disabled: false,
-        active: false,
-        icon_only: false,
-        icon: None,
-        on_click: None,
-        children: vec![],
-    }
-    .into_node();
-    let github_repo = StyledButton {
-        text: Some("Github Repo".to_string()),
-        variant: Variant::Secondary,
-        disabled: false,
-        active: false,
-        icon_only: false,
-        icon: Some(Icon::Github),
-        on_click: None,
-        children: vec![],
-    }
-    .into_node();
+    let visit_website = StyledButton::build()
+        .text("Visit Website".to_string())
+        .primary()
+        .build()
+        .into_node();
+    let github_repo = StyledButton::build()
+        .text("Github Repo".to_string())
+        .secondary()
+        .icon(Icon::Github)
+        .build()
+        .into_node();
 
     styled_tooltip::StyledTooltip {
         visible: model.project_page.about_tooltip_visible,

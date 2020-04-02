@@ -1,7 +1,8 @@
 use seed::{prelude::*, *};
 
-use crate::model::{Icon, Model, Page};
-use crate::shared::{divider, styled_icon};
+use crate::model::{Model, Page};
+use crate::shared::styled_icon::{Icon, StyledIcon};
+use crate::shared::{divider, ToNode};
 use crate::Msg;
 
 pub fn render(model: &Model) -> Node<Msg> {
@@ -55,11 +56,12 @@ fn sidebar_link_item(model: &Model, name: &str, icon: Icon, page: Option<Page>) 
     if Some(model.page) == page {
         class_list.push("active".to_string());
     }
+    let icon_node = StyledIcon::build(icon).build().into_node();
     li![
         attrs![At::Class => class_list.join(" ")],
         a![
             attrs![At::Href => path],
-            styled_icon(icon),
+            icon_node,
             div![attrs![At::Class => "linkText"], name],
         ]
     ]
