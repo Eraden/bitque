@@ -1,25 +1,25 @@
-import React from 'react';
+import React                                          from 'react';
 import { Redirect, Route, useHistory, useRouteMatch } from 'react-router-dom';
 
-import useApi from 'shared/hooks/api';
-import { updateArrayItemById } from 'shared/utils/javascript';
-import { createQueryParamModalHelpers } from 'shared/utils/queryParamModal';
-import { Modal, PageError, PageLoader } from 'shared/components';
+import useApi                           from '../shared/hooks/api';
+import { updateArrayItemById }          from '../shared/utils/javascript';
+import { createQueryParamModalHelpers } from '../shared/utils/queryParamModal';
+import { Modal, PageError, PageLoader } from '../shared/components';
 
-import NavbarLeft from './NavbarLeft';
-import Sidebar from './Sidebar';
-import Board from './Board';
-import IssueSearch from './IssueSearch';
-import IssueCreate from './IssueCreate';
+import NavbarLeft      from './NavbarLeft';
+import Sidebar         from './Sidebar';
+import Board           from './Board';
+import IssueSearch     from './IssueSearch';
+import IssueCreate     from './IssueCreate';
 import ProjectSettings from './ProjectSettings';
 import { ProjectPage } from './Styles';
 
 const Project = () => {
-  const match = useRouteMatch();
-  const history = useHistory();
+    const match = useRouteMatch();
+    const history = useHistory();
 
-  const issueSearchModalHelpers = createQueryParamModalHelpers('issue-search');
-  const issueCreateModalHelpers = createQueryParamModalHelpers('issue-create');
+    const issueSearchModalHelpers = createQueryParamModalHelpers('issue-search');
+    const issueCreateModalHelpers = createQueryParamModalHelpers('issue-create');
 
   const [{ data, error, setLocalData }, fetchProject] = useApi.get('/project');
 

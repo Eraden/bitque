@@ -1,17 +1,9 @@
 import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
+import PropTypes           from 'prop-types';
 
-import { Textarea } from 'shared/components';
+import { Textarea } from '../../../../../shared/components';
 
 import { Actions, FormButton } from './Styles';
-
-const propTypes = {
-  value: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
-  isWorking: PropTypes.bool.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-  onCancel: PropTypes.func.isRequired,
-};
 
 class ProjectBoardIssueDetailsCommentsBodyForm extends React.Component {
   state = { textArea: React.createRef() };
@@ -53,6 +45,12 @@ class ProjectBoardIssueDetailsCommentsBodyForm extends React.Component {
   }
 }
 
-ProjectBoardIssueDetailsCommentsBodyForm.propTypes = propTypes;
+ProjectBoardIssueDetailsCommentsBodyForm.propTypes = {
+  value:     PropTypes.string.isRequired,
+  onChange:  PropTypes.func.isRequired,
+  isWorking: PropTypes.bool.isRequired,
+  onSubmit:  PropTypes.func.isRequired,
+  onCancel:  PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetailsCommentsBodyForm;

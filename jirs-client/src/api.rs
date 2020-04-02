@@ -30,7 +30,7 @@ pub async fn update_issue(
                 .method(Method::Put)
                 .header("Content-Type", "application/json")
                 .body_json(&payload)
-                .fetch_json(Msg::IssueUpdateResult)
+                .fetch_string(Msg::IssueUpdateResult)
                 .await
         }
         Err(e) => return Ok(Msg::InternalFailure(e)),

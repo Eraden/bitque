@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
-import { color, font, mixin, zIndexValues } from 'shared/utils/styles';
-import { Icon } from 'shared/components';
+import { color, font, mixin, zIndexValues } from '../../shared/utils/styles';
+import { Icon }                             from '../../shared/components';
 
 export const Container = styled.div`
   z-index: ${zIndexValues.modal + 1};
@@ -21,7 +21,7 @@ export const StyledToast = styled.div`
   cursor: pointer;
   transition: all 0.15s;
   ${mixin.clearfix}
-  ${mixin.hardwareAccelerate}
+  transform: translateZ(0);
 
   &.jira-toast-enter,
   &.jira-toast-exit.jira-toast-exit-active {

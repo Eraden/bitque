@@ -2,6 +2,7 @@ use seed::{prelude::*, *};
 
 use jirs_data::*;
 
+use crate::api::update_issue;
 use crate::model::{EditIssueModal, Icon, ModalType, Model, Page};
 use crate::shared::modal::{Modal, Variant as ModalVariant};
 use crate::shared::styled_avatar::StyledAvatar;
@@ -38,6 +39,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                     top_select_opened: false,
                     top_select_filter: "".to_string(),
                     value,
+                    link_copied: false,
                 },
             ));
         }
@@ -97,31 +99,34 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                             break;
                         }
                     }
-                    if let Some(issue) = found {
-                        issue.status = status.clone();
-                        issue.list_position = position + 1f64;
+                    let issue = match found {
+                        Some(i) => i,
+                        _ => return,
+                    };
 
-                        let payload = UpdateIssuePayload {
-                            title: Some(issue.title.clone()),
-                            issue_type: Some(issue.issue_type.clone()),
-                            status: Some(status.to_payload().to_string()),
-                            priority: Some(issue.priority.clone()),
-                            list_position: Some(issue.list_position),
-                            description: Some(issue.description.clone()),
-                            description_text: Some(issue.description_text.clone()),
-                            estimate: Some(issue.estimate),
-                            time_spent: Some(issue.time_spent),
-                            time_remaining: Some(issue.time_remaining),
-                            project_id: Some(issue.project_id),
-                            users: Some(vec![]),
-                            user_ids: Some(issue.user_ids.clone()),
-                        };
-                        orders.skip().perform_cmd(crate::api::update_issue(
-                            model.host_url.clone(),
-                            issue.id,
-                            payload,
-                        ));
-                    }
+                    issue.status = status.clone();
+                    issue.list_position = position + 1f64;
+
+                    let payload = UpdateIssuePayload {
+                        title: Some(issue.title.clone()),
+                        issue_type: Some(issue.issue_type.clone()),
+                        status: Some(status),
+                        priority: Some(issue.priority.clone()),
+                        list_position: Some(issue.list_position),
+                        description: Some(issue.description.clone()),
+                        description_text: Some(issue.description_text.clone()),
+                        estimate: Some(issue.estimate),
+                        time_spent: Some(issue.time_spent),
+                        time_remaining: Some(issue.time_remaining),
+                        project_id: Some(issue.project_id),
+                        user_ids: Some(issue.user_ids.clone()),
+                    };
+                    model.project_page.dragged_issue_id = None;
+                    orders.skip().perform_cmd(crate::api::update_issue(
+                        model.host_url.clone(),
+                        issue.id,
+                        payload,
+                    ));
                 }
                 _ => error!("Drag stopped before drop :("),
             }
@@ -137,8 +142,46 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 ) => {
                     modal.top_select_opened = flag;
                 }
-                (StyledSelectChange::Changed(value), Some(ModalType::EditIssue(_, modal))) => {
+                (
+                    StyledSelectChange::Changed(value),
+                    Some(ModalType::EditIssue(issue_id, modal)),
+                ) => {
                     modal.value = value.into();
+                    let project = match model.project.as_mut() {
+                        Some(p) => p,
+                        _ => return,
+                    };
+                    let mut found: Option<&mut Issue> = None;
+                    for issue in project.issues.iter_mut() {
+                        if issue.id == *issue_id {
+                            found = Some(issue);
+                            break;
+                        }
+                    }
+                    let issue = match found {
+                        Some(i) => i,
+                        _ => return,
+                    };
+
+                    let form = UpdateIssuePayload {
+                        title: Some(issue.title.clone()),
+                        issue_type: Some(modal.value.clone()),
+                        status: Some(issue.status.clone()),
+                        priority: Some(issue.priority.clone()),
+                        list_position: Some(issue.list_position),
+                        description: Some(issue.description.clone()),
+                        description_text: Some(issue.description_text.clone()),
+                        estimate: Some(issue.estimate.clone()),
+                        time_spent: Some(issue.time_spent.clone()),
+                        time_remaining: Some(issue.time_remaining.clone()),
+                        project_id: Some(issue.project_id.clone()),
+                        user_ids: Some(issue.user_ids.clone()),
+                    };
+                    orders.skip().perform_cmd(update_issue(
+                        model.host_url.clone(),
+                        *issue_id,
+                        form,
+                    ));
                 }
                 _ => {}
             }
@@ -405,10 +448,10 @@ fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Ms
     let href = format!("/issues/{id}", id = issue_id);
 
     a![
+        drag_started,
         attrs![At::Class => "issueLink"; At::Href => href],
         div![
             attrs![At::Class => class_list.join(" "), At::Draggable => true],
-            drag_started,
             drag_stopped,
             p![attrs![At::Class => "title"], issue.title,],
             div![
@@ -492,12 +535,48 @@ fn issue_details(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<
     }
     .into_node();
 
+    let click_handler = mouse_ev(Ev::Click, move |_| {
+        use wasm_bindgen::JsCast;
+
+        let link = format!("http://localhost:7000/issues/{id}", id = issue_id);
+        let el = match seed::html_document().create_element("textarea") {
+            Ok(el) => el
+                .dyn_ref::<web_sys::HtmlTextAreaElement>()
+                .unwrap()
+                .clone(),
+            _ => return Msg::NoOp,
+        };
+        seed::body().append_child(&el).unwrap();
+        el.set_text_content(Some(link.as_str()));
+        el.select();
+        el.set_selection_range(0, 9999).unwrap();
+        seed::html_document().exec_command("copy").unwrap();
+        seed::body().remove_child(&el).unwrap();
+        Msg::NoOp
+    });
+
+    let copy_button = StyledButton {
+        variant: ButtonVariant::Empty,
+        icon_only: false,
+        disabled: false,
+        active: false,
+        text: None,
+        icon: Some(Icon::Link),
+        on_click: Some(click_handler),
+        children: vec![span![if modal.link_copied {
+            "Link Copied"
+        } else {
+            "Copy link"
+        }]],
+    }
+    .into_node();
+
     div![
         attrs![At::Class => "issueDetails"],
         div![
             attrs![At::Class => "topActions"],
             issue_type_select,
-            div![attrs![At::Class => "topActionsRight"]],
+            div![attrs![At::Class => "topActionsRight"], copy_button],
         ],
         div![
             attrs![At::Class => "content"],

@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
-import { color, font } from 'shared/utils/styles';
-import { Textarea } from 'shared/components';
+import { color, font } from '../../../../shared/utils/styles';
+import { Textarea }    from '../../../../shared/components';
 
 export const TitleTextarea = styled(Textarea)`
   margin: 18px 0 0 -8px;

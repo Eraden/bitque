@@ -1,20 +1,20 @@
-import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
+import React, { Fragment }                  from 'react';
+import PropTypes                            from 'prop-types';
 import { Route, useHistory, useRouteMatch } from 'react-router-dom';
 
-import useMergeState from 'shared/hooks/mergeState';
-import { Breadcrumbs, Modal } from 'shared/components';
+import useMergeState          from '../../shared/hooks/mergeState';
+import { Breadcrumbs, Modal } from '../../shared/components';
 
-import Header from './Header';
-import Filters from './Filters';
-import Lists from './Lists';
+import Header       from './Header';
+import Filters      from './Filters';
+import Lists        from './Lists';
 import IssueDetails from './IssueDetails';
 
 const defaultFilters = {
-  searchTerm: '',
-  userIds: [],
-  myOnly: false,
-  recent: false,
+    searchTerm: '',
+    userIds:    [],
+    myOnly:     false,
+    recent:     false,
 };
 
 const ProjectBoard = ({ project, fetchProject, updateLocalProjectIssues }) => {

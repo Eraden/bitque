@@ -12,12 +12,6 @@ pub use sql::*;
 #[cfg(feature = "backend")]
 pub mod sql;
 
-pub trait ResponseData {
-    type Response: Serialize;
-
-    fn into_response(self) -> Self::Response;
-}
-
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq)]
@@ -69,7 +63,10 @@ impl std::fmt::Display for IssueType {
     }
 }
 
+#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
+#[cfg_attr(feature = "backend", sql_type = "IssueStatusType")]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq)]
+#[serde(rename_all = "lowercase")]
 pub enum IssueStatus {
     Backlog,
     Selected,
@@ -198,26 +195,12 @@ pub struct FullProject {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct FullProjectResponse {
-    pub project: FullProject,
-}
-
-impl ResponseData for FullProject {
-    type Response = FullProjectResponse;
-
-    fn into_response(self) -> Self::Response {
-        FullProjectResponse { project: self }
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct FullIssue {
     pub id: i32,
     pub title: String,
     #[serde(rename = "type")]
     pub issue_type: IssueType,
-    pub status: String,
+    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub list_position: f64,
     pub description: Option<String>,
@@ -234,17 +217,26 @@ pub struct FullIssue {
     pub comments: Vec<Comment>,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct FullIssueResponse {
-    pub issue: FullIssue,
-}
-
-impl ResponseData for FullIssue {
-    type Response = FullIssueResponse;
-
-    fn into_response(self) -> Self::Response {
-        FullIssueResponse { issue: self }
+impl Into<Issue> for FullIssue {
+    fn into(self) -> Issue {
+        Issue {
+            id: self.id,
+            title: self.title,
+            issue_type: self.issue_type,
+            status: self.status,
+            priority: self.priority,
+            list_position: self.list_position,
+            description: self.description,
+            description_text: self.description_text,
+            estimate: self.estimate,
+            time_spent: self.time_spent,
+            time_remaining: self.time_remaining,
+            reporter_id: self.reporter_id,
+            project_id: self.project_id,
+            created_at: self.created_at,
+            updated_at: self.updated_at,
+            user_ids: self.user_ids,
+        }
     }
 }
 
@@ -325,7 +317,7 @@ pub struct UpdateIssuePayload {
     pub title: Option<String>,
     #[serde(rename = "type")]
     pub issue_type: Option<IssueType>,
-    pub status: Option<String>,
+    pub status: Option<IssueStatus>,
     pub priority: Option<IssuePriority>,
     pub list_position: Option<f64>,
     pub description: Option<Option<String>>,
@@ -334,8 +326,6 @@ pub struct UpdateIssuePayload {
     pub time_spent: Option<Option<i32>>,
     pub time_remaining: Option<Option<i32>>,
     pub project_id: Option<i32>,
-
-    pub users: Option<Vec<User>>,
     pub user_ids: Option<Vec<i32>>,
 }
 
@@ -359,7 +349,7 @@ pub struct CreateIssuePayload {
     pub title: String,
     #[serde(rename = "type")]
     pub issue_type: IssueType,
-    pub status: String,
+    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,

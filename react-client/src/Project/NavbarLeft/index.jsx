@@ -1,14 +1,9 @@
-import React from 'react';
+import React     from 'react';
 import PropTypes from 'prop-types';
 
-import { AboutTooltip, Icon } from 'shared/components';
+import { AboutTooltip, Icon } from '../../shared/components';
 
 import { Bottom, Item, ItemText, LogoLink, NavLeft, StyledLogo } from './Styles';
-
-const propTypes = {
-  issueSearchModalOpen: PropTypes.func.isRequired,
-  issueCreateModalOpen: PropTypes.func.isRequired,
-};
 
 const ProjectNavbarLeft = ({ issueSearchModalOpen, issueCreateModalOpen }) => (
     <NavLeft class={ 'NavLeft' }>
@@ -41,6 +36,9 @@ const ProjectNavbarLeft = ({ issueSearchModalOpen, issueCreateModalOpen }) => (
   </NavLeft>
 );
 
-ProjectNavbarLeft.propTypes = propTypes;
+ProjectNavbarLeft.propTypes = {
+    issueSearchModalOpen: PropTypes.func.isRequired,
+    issueCreateModalOpen: PropTypes.func.isRequired,
+};
 
 export default ProjectNavbarLeft;

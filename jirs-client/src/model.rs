@@ -20,6 +20,7 @@ pub struct EditIssueModal {
     pub top_select_opened: bool,
     pub top_select_filter: String,
     pub value: IssueType,
+    pub link_copied: bool,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]

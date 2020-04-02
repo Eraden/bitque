@@ -1,7 +1,7 @@
 use seed::fetch::{FetchObject, ResponseWithDataResult};
 use seed::*;
 
-use jirs_data::{FullProjectResponse, Issue};
+use jirs_data::{FullIssue, FullProject, Issue};
 
 use crate::model::Model;
 
@@ -42,9 +42,9 @@ pub fn current_project_response(fetched: &FetchObject<String>, model: &mut Model
         if status.is_error() {
             return;
         }
-        match serde_json::from_str::<'_, FullProjectResponse>(body.as_str()) {
-            Ok(project_response) => {
-                model.project = Some(project_response.project);
+        match serde_json::from_str::<'_, FullProject>(body.as_str()) {
+            Ok(project) => {
+                model.project = Some(project);
             }
             _ => (),
         }
@@ -52,8 +52,6 @@ pub fn current_project_response(fetched: &FetchObject<String>, model: &mut Model
 }
 
 pub fn update_issue_response(fetched: &FetchObject<String>, model: &mut Model) {
-    log!("update_issue_response");
-    log!(fetched);
     if let FetchObject {
         result:
             Ok(ResponseWithDataResult {
@@ -68,18 +66,21 @@ pub fn update_issue_response(fetched: &FetchObject<String>, model: &mut Model) {
             return;
         }
         match (
-            serde_json::from_str::<'_, Issue>(body.as_str()),
+            serde_json::from_str::<'_, FullIssue>(body.as_str()),
             model.project.as_mut(),
         ) {
             (Ok(issue), Some(project)) => {
                 let mut issues: Vec<Issue> = vec![];
-                for i in project.issues.iter() {
+                std::mem::swap(&mut project.issues, &mut issues);
+                for i in issues.into_iter() {
                     if i.id != issue.id {
-                        issues.push(i.clone());
+                        project.issues.push(i);
                     }
                 }
-                issues.push(issue);
-                project.issues = issues;
+                project.issues.push(issue.into());
+            }
+            (Err(error), _) => {
+                error!(error);
             }
             _ => (),
         }

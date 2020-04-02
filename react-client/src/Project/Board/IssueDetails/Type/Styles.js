@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
-import { color, font } from 'shared/utils/styles';
-import { Button } from 'shared/components';
+import { color }  from '../../../../shared/utils/styles';
+import { Button } from '../../../../shared/components';
 
 export const TypeButton = styled(Button)`
   text-transform: uppercase;

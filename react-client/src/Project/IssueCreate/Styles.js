@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
-import { color, font } from 'shared/utils/styles';
-import { Button } from 'shared/components';
+import { color }  from '../../shared/utils/styles';
+import { Button } from '../../shared/components';
 
 export const SignIn = styled.article`
   margin: 24px auto;
@@ -30,7 +30,7 @@ export const FormElement = styled.div`
 
 export const FormHeading = styled.div`
   padding-bottom: 15px;
-  ${ font.size(21) }
+  font-size: 21px; 
 `;
 
 export const SelectItem = styled.div`

@@ -1,9 +1,9 @@
-import React from 'react';
-import { connect } from "react-redux";
+import React        from 'react';
+import { connect }  from "react-redux";
 import { Redirect } from 'react-router-dom';
 
-import * as formActions from 'actions/forms';
-import { getStoredAuthToken } from 'shared/utils/authToken';
+import * as formActions       from '../actions/forms';
+import { getStoredAuthToken } from '../shared/utils/authToken';
 
 import {
     ActionButton,
@@ -13,7 +13,7 @@ import {
     Header,
     SignIn,
     SignInSection,
-} from 'Project/IssueCreate/Styles';
+} from '../Project/IssueCreate/Styles';
 
 const Authenticate = ({
                           onEmailChanged,

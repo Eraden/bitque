@@ -2,8 +2,6 @@ use actix::Addr;
 use actix_web::web::{Data, Json, Path};
 use actix_web::{get, put, HttpRequest, HttpResponse};
 
-use jirs_data::ResponseData;
-
 use crate::db::authorize_user::AuthorizeUser;
 use crate::db::issues::LoadProjectIssues;
 use crate::db::projects::{LoadCurrentProject, UpdateProject};
@@ -73,7 +71,7 @@ pub async fn project_with_users_and_issues(
             .collect(),
         users: users.into_iter().map(|u| u.into()).collect(),
     };
-    HttpResponse::Ok().json(res.into_response())
+    HttpResponse::Ok().json(res)
 }
 
 #[put("/{id}")]

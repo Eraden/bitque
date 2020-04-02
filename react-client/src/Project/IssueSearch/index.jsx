@@ -1,32 +1,28 @@
 import React, { Fragment, useState } from 'react';
-import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
-import { get } from 'lodash';
+import PropTypes                     from 'prop-types';
+import { Link }                      from 'react-router-dom';
+import { get }                       from 'lodash';
 
-import useApi from 'shared/hooks/api';
-import { sortByNewest } from 'shared/utils/javascript';
-import { IssueTypeIcon } from 'shared/components';
+import useApi            from '../../shared/hooks/api';
+import { sortByNewest }  from '../../shared/utils/javascript';
+import { IssueTypeIcon } from '../../shared/components';
 
 import NoResultsSVG from './NoResultsSvg';
 import {
-  IssueSearch,
-  SearchInputCont,
-  SearchInputDebounced,
-  SearchIcon,
-  SearchSpinner,
   Issue,
   IssueData,
+  IssueSearch,
   IssueTitle,
   IssueTypeId,
-  SectionTitle,
   NoResults,
-  NoResultsTitle,
   NoResultsTip,
-} from './Styles';
-
-const propTypes = {
-  project: PropTypes.object.isRequired,
-};
+  NoResultsTitle,
+  SearchIcon,
+  SearchInputCont,
+  SearchInputDebounced,
+  SearchSpinner,
+  SectionTitle,
+}                   from './Styles';
 
 const ProjectIssueSearch = ({ project }) => {
   const [isSearchTermEmpty, setIsSearchTermEmpty] = useState(true);
@@ -96,6 +92,8 @@ const renderIssue = issue => (
   </Link>
 );
 
-ProjectIssueSearch.propTypes = propTypes;
+ProjectIssueSearch.propTypes = {
+  project: PropTypes.object.isRequired,
+};
 
 export default ProjectIssueSearch;

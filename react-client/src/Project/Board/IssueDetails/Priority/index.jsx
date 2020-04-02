@@ -1,26 +1,21 @@
 import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
+import PropTypes           from 'prop-types';
 
-import { IssuePriority, IssuePriorityCopy } from 'shared/constants/issues';
-import { Select, IssuePriorityIcon } from 'shared/components';
+import { IssuePriority, IssuePriorityCopy } from '../../../../shared/constants/issues';
+import { IssuePriorityIcon, Select }        from '../../../../shared/components';
 
-import { SectionTitle } from '../Styles';
-import { Priority, Label } from './Styles';
-
-const propTypes = {
-  issue: PropTypes.object.isRequired,
-  updateIssue: PropTypes.func.isRequired,
-};
+import { SectionTitle }    from '../Styles';
+import { Label, Priority } from './Styles';
 
 const ProjectBoardIssueDetailsPriority = ({ issue, updateIssue }) => (
-  <Fragment>
-    <SectionTitle>Priority</SectionTitle>
-    <Select
-      variant="empty"
-      withClearValue={false}
-      dropdownWidth={343}
-      name="priority"
-      value={issue.priority}
+    <Fragment>
+        <SectionTitle>Priority</SectionTitle>
+        <Select
+            variant="empty"
+            withClearValue={false}
+            dropdownWidth={343}
+            name="priority"
+            value={issue.priority}
       options={Object.values(IssuePriority).map(priority => ({
         value: priority,
         label: IssuePriorityCopy[priority],
@@ -39,6 +34,9 @@ const renderPriorityItem = (priority, isValue) => (
   </Priority>
 );
 
-ProjectBoardIssueDetailsPriority.propTypes = propTypes;
+ProjectBoardIssueDetailsPriority.propTypes = {
+    issue:       PropTypes.object.isRequired,
+    updateIssue: PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetailsPriority;

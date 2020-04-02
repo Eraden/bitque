@@ -1,12 +1,8 @@
-import React from 'react';
+import React     from 'react';
 import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
 
-import { TrackingWidget, WatchIcon, Right, BarCont, Bar, Values } from './Styles';
-
-const propTypes = {
-  issue: PropTypes.object.isRequired,
-};
+import { Bar, BarCont, Right, TrackingWidget, Values, WatchIcon } from './Styles';
 
 const ProjectBoardIssueDetailsTrackingWidget = ({ issue }) => (
   <TrackingWidget>
@@ -50,6 +46,8 @@ const renderRemainingOrEstimate = ({ timeRemaining, estimate }) => {
   }
 };
 
-ProjectBoardIssueDetailsTrackingWidget.propTypes = propTypes;
+ProjectBoardIssueDetailsTrackingWidget.propTypes = {
+  issue: PropTypes.object.isRequired,
+};
 
 export default ProjectBoardIssueDetailsTrackingWidget;

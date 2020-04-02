@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { color, font, mixin, sizes, zIndexValues } from 'shared/utils/styles';
+import { color, font, sizes, zIndexValues } from '../../shared/utils/styles';
 
 export const Sidebar = styled.div`
   position: fixed;
@@ -15,7 +15,17 @@ export const Sidebar = styled.div`
   overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-  ${mixin.customScrollbar()}
+  &::-webkit-scrollbar {
+      width: 8px;
+    }
+    &::-webkit-scrollbar-track {
+      background: none;
+    }
+    &::-webkit-scrollbar-thumb {
+      border-radius: 99px;
+      background: ${color.backgroundMedium};
+    }
+  
   @media (max-width: 1100px) {
     width: ${sizes.secondarySideBarWidth - 10}px;
   }

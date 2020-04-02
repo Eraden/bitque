@@ -1,20 +1,26 @@
-import React from 'react';
+import React     from 'react';
 import PropTypes from 'prop-types';
 
-import { IssuePriority, IssuePriorityCopy, IssueStatus, IssueType, IssueTypeCopy, } from 'shared/constants/issues';
-import toast from 'shared/utils/toast';
-import api from 'shared/utils/api';
-import { Avatar, Form, Icon, IssuePriorityIcon, IssueTypeIcon } from 'shared/components';
+import {
+    IssuePriority,
+    IssuePriorityCopy,
+    IssueStatus,
+    IssueType,
+    IssueTypeCopy,
+}                                                               from '../../shared/constants/issues';
+import toast                                                    from '../../shared/utils/toast';
+import api                                                      from '../../shared/utils/api';
+import { Avatar, Form, Icon, IssuePriorityIcon, IssueTypeIcon } from '../../shared/components';
 
 import { ActionButton, Actions, Divider, FormElement, FormHeading, SelectItem, SelectItemLabel, } from './Styles';
 
 class ProjectIssueCreate extends React.Component {
     state = {
         isCreating: false, form: {
-            type: IssueType.TASK,
-            title: '',
+            type:        IssueType.TASK,
+            title:       '',
             description: '',
-            reporterId: null,
+            reporterId:  null,
             userIds: [],
             priority: IssuePriority.MEDIUM,
         }

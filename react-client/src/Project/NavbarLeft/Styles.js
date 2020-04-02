@@ -1,8 +1,8 @@
 import styled      from 'styled-components';
 import { NavLink } from 'react-router-dom';
 
-import { color, mixin, sizes, zIndexValues } from 'shared/utils/styles';
-import { Logo }                              from 'shared/components';
+import { color, sizes, zIndexValues } from '../../shared/utils/styles';
+import { Logo }                       from '../../shared/components';
 
 export const NavLeft = styled.aside`
   z-index: ${zIndexValues.navLeft};
@@ -14,7 +14,7 @@ export const NavLeft = styled.aside`
   width: ${sizes.appNavBarLeftWidth}px;
   background: ${color.backgroundDarkPrimary};
   transition: all 0.1s;
-  ${mixin.hardwareAccelerate}
+  transform: translateZ(0);
   &:hover {
     width: 200px;
     box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.6);

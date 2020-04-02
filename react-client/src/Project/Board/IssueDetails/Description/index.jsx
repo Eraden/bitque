@@ -1,15 +1,10 @@
 import React, { Fragment, useState } from 'react';
-import PropTypes from 'prop-types';
+import PropTypes                     from 'prop-types';
 
-import { getTextContentsFromHtmlString } from 'shared/utils/browser';
-import { TextEditor, TextEditedContent, Button } from 'shared/components';
+import { getTextContentsFromHtmlString }         from '../../../../shared/utils/browser';
+import { Button, TextEditedContent, TextEditor } from '../../../../shared/components';
 
-import { Title, EmptyLabel, Actions } from './Styles';
-
-const propTypes = {
-  issue: PropTypes.object.isRequired,
-  updateIssue: PropTypes.func.isRequired,
-};
+import { Actions, EmptyLabel, Title } from './Styles';
 
 const ProjectBoardIssueDetailsDescription = ({ issue, updateIssue }) => {
   const [description, setDescription] = useState(issue.description);
@@ -54,6 +49,9 @@ const ProjectBoardIssueDetailsDescription = ({ issue, updateIssue }) => {
   );
 };
 
-ProjectBoardIssueDetailsDescription.propTypes = propTypes;
+ProjectBoardIssueDetailsDescription.propTypes = {
+  issue:       PropTypes.object.isRequired,
+  updateIssue: PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetailsDescription;

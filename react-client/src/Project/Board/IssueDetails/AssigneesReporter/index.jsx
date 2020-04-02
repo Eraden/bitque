@@ -1,16 +1,10 @@
 import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
+import PropTypes           from 'prop-types';
 
-import { Avatar, Select, Icon } from 'shared/components';
+import { Avatar, Icon, Select } from '../../../../shared/components';
 
-import { SectionTitle } from '../Styles';
+import { SectionTitle }   from '../Styles';
 import { User, Username } from './Styles';
-
-const propTypes = {
-  issue: PropTypes.object.isRequired,
-  updateIssue: PropTypes.func.isRequired,
-  projectUsers: PropTypes.array.isRequired,
-};
 
 const ProjectBoardIssueDetailsAssigneesReporter = ({ issue, updateIssue, projectUsers }) => {
   const getUserById = userId => projectUsers.find(user => user.id === userId);
@@ -66,6 +60,10 @@ const renderUser = (user, isSelectValue, removeOptionValue) => (
   </User>
 );
 
-ProjectBoardIssueDetailsAssigneesReporter.propTypes = propTypes;
+ProjectBoardIssueDetailsAssigneesReporter.propTypes = {
+    issue:        PropTypes.object.isRequired,
+    updateIssue:  PropTypes.func.isRequired,
+    projectUsers: PropTypes.array.isRequired,
+};
 
 export default ProjectBoardIssueDetailsAssigneesReporter;

@@ -1,38 +1,30 @@
 import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
+import PropTypes           from 'prop-types';
 
-import api from 'shared/utils/api';
-import useApi from 'shared/hooks/api';
-import { PageError, CopyLinkButton, Button, AboutTooltip } from 'shared/components';
+import api                                                 from '../../../shared/utils/api';
+import useApi                                              from '../../../shared/hooks/api';
+import { AboutTooltip, Button, CopyLinkButton, PageError } from '../../../shared/components';
 
-import Loader from './Loader';
-import Type from './Type';
-import Delete from './Delete';
-import Title from './Title';
-import Description from './Description';
-import Comments from './Comments';
-import Status from './Status';
-import AssigneesReporter from './AssigneesReporter';
-import Priority from './Priority';
-import EstimateTracking from './EstimateTracking';
-import Dates from './Dates';
-import { TopActions, TopActionsRight, Content, Left, Right } from './Styles';
-
-const propTypes = {
-  issueId: PropTypes.string.isRequired,
-  projectUsers: PropTypes.array.isRequired,
-  fetchProject: PropTypes.func.isRequired,
-  updateLocalProjectIssues: PropTypes.func.isRequired,
-  modalClose: PropTypes.func.isRequired,
-};
+import Loader                                                from './Loader';
+import Type                                                  from './Type';
+import Delete                                                from './Delete';
+import Title                                                 from './Title';
+import Description                                           from './Description';
+import Comments                                              from './Comments';
+import Status                                                from './Status';
+import AssigneesReporter                                     from './AssigneesReporter';
+import Priority                                              from './Priority';
+import EstimateTracking                                      from './EstimateTracking';
+import Dates                                                 from './Dates';
+import { Content, Left, Right, TopActions, TopActionsRight } from './Styles';
 
 const ProjectBoardIssueDetails = ({
-  issueId,
-  projectUsers,
-  fetchProject,
-  updateLocalProjectIssues,
-  modalClose,
-}) => {
+                                    issueId,
+                                    projectUsers,
+                                    fetchProject,
+                                    updateLocalProjectIssues,
+                                    modalClose,
+                                  }) => {
   const [{ data, error, setLocalData }, fetchIssue] = useApi.get(`/issues/${issueId}`);
 
   if (!data) return <Loader />;
@@ -89,6 +81,12 @@ const ProjectBoardIssueDetails = ({
   );
 };
 
-ProjectBoardIssueDetails.propTypes = propTypes;
+ProjectBoardIssueDetails.propTypes = {
+  issueId:                  PropTypes.string.isRequired,
+  projectUsers:             PropTypes.array.isRequired,
+  fetchProject:             PropTypes.func.isRequired,
+  updateLocalProjectIssues: PropTypes.func.isRequired,
+  modalClose:               PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetails;

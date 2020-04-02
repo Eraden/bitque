@@ -1,25 +1,21 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React                      from 'react';
+import PropTypes                  from 'prop-types';
 import { NavLink, useRouteMatch } from 'react-router-dom';
 
-import { ProjectCategoryCopy } from 'shared/constants/projects';
-import { Icon, ProjectAvatar } from 'shared/components';
+import { ProjectCategoryCopy } from '../../shared/constants/projects';
+import { Icon, ProjectAvatar } from '../../shared/components';
 
 import {
-  Sidebar,
-  ProjectInfo,
-  ProjectTexts,
-  ProjectName,
-  ProjectCategory,
   Divider,
   LinkItem,
   LinkText,
   NotImplemented,
+  ProjectCategory,
+  ProjectInfo,
+  ProjectName,
+  ProjectTexts,
+  Sidebar,
 } from './Styles';
-
-const propTypes = {
-  project: PropTypes.object.isRequired,
-};
 
 const ProjectSidebar = ({ project }) => {
   const match = useRouteMatch();
@@ -62,6 +58,8 @@ const renderLinkItem = (match, text, iconType, path) => {
   );
 };
 
-ProjectSidebar.propTypes = propTypes;
+ProjectSidebar.propTypes = {
+  project: PropTypes.object.isRequired,
+};
 
 export default ProjectSidebar;

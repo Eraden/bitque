@@ -49,7 +49,7 @@ pub struct Issue {
     pub title: String,
     #[serde(rename = "type")]
     pub issue_type: IssueType,
-    pub status: String,
+    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub list_position: f64,
     pub description: Option<String>,
@@ -69,11 +69,7 @@ impl Into<jirs_data::Issue> for Issue {
             id: self.id,
             title: self.title,
             issue_type: self.issue_type,
-            status: self
-                .status
-                .as_str()
-                .parse::<IssueStatus>()
-                .unwrap_or_else(|_| IssueStatus::Backlog),
+            status: self.status,
             priority: self.priority,
             list_position: self.list_position,
             description: self.description,
@@ -123,7 +119,7 @@ pub struct CreateIssueForm {
     pub title: String,
     #[serde(rename = "type")]
     pub issue_type: IssueType,
-    pub status: String,
+    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub list_position: f64,
     pub description: Option<String>,

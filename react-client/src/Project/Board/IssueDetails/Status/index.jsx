@@ -1,23 +1,18 @@
 import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
+import PropTypes           from 'prop-types';
 
-import { IssueStatus, IssueStatusCopy } from 'shared/constants/issues';
-import { Select, Icon } from 'shared/components';
+import { IssueStatus, IssueStatusCopy } from '../../../../shared/constants/issues';
+import { Icon, Select }                 from '../../../../shared/components';
 
 import { SectionTitle } from '../Styles';
-import { Status } from './Styles';
-
-const propTypes = {
-  issue: PropTypes.object.isRequired,
-  updateIssue: PropTypes.func.isRequired,
-};
+import { Status }       from './Styles';
 
 const ProjectBoardIssueDetailsStatus = ({ issue, updateIssue }) => (
-  <Fragment>
-    <SectionTitle>Status</SectionTitle>
-    <Select
-      variant="empty"
-      dropdownWidth={343}
+    <Fragment>
+        <SectionTitle>Status</SectionTitle>
+        <Select
+            variant="empty"
+            dropdownWidth={343}
       withClearValue={false}
       name="status"
       value={issue.status}
@@ -39,6 +34,9 @@ const ProjectBoardIssueDetailsStatus = ({ issue, updateIssue }) => (
   </Fragment>
 );
 
-ProjectBoardIssueDetailsStatus.propTypes = propTypes;
+ProjectBoardIssueDetailsStatus.propTypes = {
+    issue:       PropTypes.object.isRequired,
+    updateIssue: PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetailsStatus;

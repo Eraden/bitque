@@ -1,35 +1,22 @@
 import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
-import { isNil } from 'lodash';
+import PropTypes           from 'prop-types';
+import { isNil }           from 'lodash';
 
-import { InputDebounced, Modal, Button } from 'shared/components';
+import { Button, InputDebounced, Modal } from '../../../../shared/components';
 
-import TrackingWidget from './TrackingWidget';
-import { SectionTitle } from '../Styles';
-import {
-  TrackingLink,
-  ModalContents,
-  ModalTitle,
-  Inputs,
-  InputCont,
-  InputLabel,
-  Actions,
-} from './Styles';
-
-const propTypes = {
-  issue: PropTypes.object.isRequired,
-  updateIssue: PropTypes.func.isRequired,
-};
+import TrackingWidget                                                                       from './TrackingWidget';
+import { SectionTitle }                                                                     from '../Styles';
+import { Actions, InputCont, InputLabel, Inputs, ModalContents, ModalTitle, TrackingLink, } from './Styles';
 
 const ProjectBoardIssueDetailsEstimateTracking = ({ issue, updateIssue }) => (
-  <Fragment>
-    <SectionTitle>Original Estimate (hours)</SectionTitle>
-    {renderHourInput('estimate', issue, updateIssue)}
+    <Fragment>
+        <SectionTitle>Original Estimate (hours)</SectionTitle>
+        {renderHourInput('estimate', issue, updateIssue)}
 
-    <SectionTitle>Time Tracking</SectionTitle>
-    <Modal
-      testid="modal:tracking"
-      width={400}
+        <SectionTitle>Time Tracking</SectionTitle>
+        <Modal
+            testid="modal:tracking"
+            width={400}
       renderLink={modal => (
         <TrackingLink onClick={modal.open}>
           <TrackingWidget issue={issue} />
@@ -72,6 +59,9 @@ const renderHourInput = (fieldName, issue, updateIssue) => (
   />
 );
 
-ProjectBoardIssueDetailsEstimateTracking.propTypes = propTypes;
+ProjectBoardIssueDetailsEstimateTracking.propTypes = {
+    issue:       PropTypes.object.isRequired,
+    updateIssue: PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetailsEstimateTracking;

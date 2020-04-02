@@ -4,8 +4,6 @@ use actix::Addr;
 use actix_web::web::{Data, Json, Path};
 use actix_web::{delete, get, post, put, HttpRequest, HttpResponse};
 
-use jirs_data::ResponseData;
-
 use crate::db::authorize_user::AuthorizeUser;
 use crate::db::comments::LoadIssueComments;
 use crate::db::issues::{CreateIssue, DeleteIssue, LoadIssue, UpdateIssue};
@@ -44,7 +42,7 @@ pub async fn issue_with_users_and_comments(
     };
 
     match load_issue(issue_id, db).await {
-        Ok(full_issue) => HttpResponse::Ok().json(full_issue.into_response()),
+        Ok(full_issue) => HttpResponse::Ok().json(full_issue),
         Err(e) => e.into_http_response(),
     }
 }
@@ -92,13 +90,13 @@ pub async fn update(
         Ok(uuid) => uuid,
         _ => return crate::errors::ServiceErrors::Unauthorized.into_http_response(),
     };
-    let _user = match db
+    match db
         .send(AuthorizeUser {
             access_token: token,
         })
         .await
     {
-        Ok(Ok(user)) => user,
+        Ok(Ok(_)) => (),
         _ => return crate::errors::ServiceErrors::Unauthorized.into_http_response(),
     };
     let signal = UpdateIssue {
@@ -115,7 +113,6 @@ pub async fn update(
         time_remaining: payload.time_remaining.clone(),
         project_id: payload.project_id.clone(),
         user_ids: payload.user_ids.clone(),
-        users: payload.users.clone(),
     };
     match db.send(signal).await {
         Ok(Ok(_)) => (),
@@ -123,7 +120,7 @@ pub async fn update(
         _ => return ServiceErrors::DatabaseConnectionLost.into_http_response(),
     };
     match load_issue(issue_id, db).await {
-        Ok(full_issue) => HttpResponse::Ok().json(full_issue.into_response()),
+        Ok(full_issue) => HttpResponse::Ok().json(full_issue),
         Err(e) => e.into_http_response(),
     }
 }

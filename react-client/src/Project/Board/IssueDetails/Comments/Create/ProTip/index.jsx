@@ -1,14 +1,10 @@
 import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
+import PropTypes            from 'prop-types';
 
-import { KeyCodes } from 'shared/constants/keyCodes';
-import { isFocusedElementEditable } from 'shared/utils/browser';
+import { KeyCodes }                 from '../../../../../../shared/constants/keyCodes';
+import { isFocusedElementEditable } from '../../../../../../shared/utils/browser';
 
 import { Tip, TipLetter } from './Styles';
-
-const propTypes = {
-  setFormOpen: PropTypes.func.isRequired,
-};
 
 const ProjectBoardIssueDetailsCommentsCreateProTip = ({ setFormOpen }) => {
   useEffect(() => {
@@ -33,6 +29,8 @@ const ProjectBoardIssueDetailsCommentsCreateProTip = ({ setFormOpen }) => {
   );
 };
 
-ProjectBoardIssueDetailsCommentsCreateProTip.propTypes = propTypes;
+ProjectBoardIssueDetailsCommentsCreateProTip.propTypes = {
+  setFormOpen: PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetailsCommentsCreateProTip;

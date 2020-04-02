@@ -1,13 +1,13 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React               from 'react';
+import PropTypes           from 'prop-types';
 import { DragDropContext } from 'react-beautiful-dnd';
 
-import useCurrentUser from 'shared/hooks/currentUser';
-import api from 'shared/utils/api';
-import { insertItemIntoArray, moveItemWithinArray } from 'shared/utils/javascript';
-import { IssueStatus } from 'shared/constants/issues';
+import useCurrentUser                               from '../../../shared/hooks/currentUser';
+import api                                          from '../../../shared/utils/api';
+import { insertItemIntoArray, moveItemWithinArray } from '../../../shared/utils/javascript';
+import { IssueStatus }                              from '../../../shared/constants/issues';
 
-import List from './List';
+import List      from './List';
 import { Lists } from './Styles';
 
 const ProjectBoardLists = ({ project, filters, updateLocalProjectIssues }) => {

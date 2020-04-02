@@ -4,11 +4,13 @@ use diesel::expression::sql_literal::sql;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use jirs_data::{IssuePriority, IssueType};
+use jirs_data::{IssuePriority, IssueStatus, IssueType};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 use crate::models::Issue;
+
+const FAILED_CONNECT_USER_AND_ISSUE: &str = "Failed to create connection between user and issue";
 
 #[derive(Serialize, Deserialize)]
 pub struct LoadIssue {
@@ -69,7 +71,7 @@ pub struct UpdateIssue {
     pub issue_id: i32,
     pub title: Option<String>,
     pub issue_type: Option<IssueType>,
-    pub status: Option<String>,
+    pub status: Option<IssueStatus>,
     pub priority: Option<IssuePriority>,
     pub list_position: Option<f64>,
     pub description: Option<Option<String>>,
@@ -78,8 +80,6 @@ pub struct UpdateIssue {
     pub time_spent: Option<Option<i32>>,
     pub time_remaining: Option<Option<i32>>,
     pub project_id: Option<i32>,
-
-    pub users: Option<Vec<jirs_data::User>>,
     pub user_ids: Option<Vec<i32>>,
 }
 
@@ -121,9 +121,9 @@ impl Handler<UpdateIssue> for DbExecutor {
             dsl::updated_at.eq(chrono::Utc::now().naive_utc()),
         ));
         diesel::debug_query::<diesel::pg::Pg, _>(&chain);
-        chain
-            .get_result::<Issue>(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        chain.get_result::<Issue>(conn).map_err(|_| {
+            ServiceErrors::DatabaseQueryFailed("Failed to update issue".to_string())
+        })?;
 
         if let Some(user_ids) = msg.user_ids.as_ref() {
             use crate::schema::issue_assignees::dsl;
@@ -148,7 +148,9 @@ impl Handler<UpdateIssue> for DbExecutor {
             diesel::insert_into(dsl::issue_assignees)
                 .values(values)
                 .execute(conn)
-                .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+                .map_err(|_| {
+                    ServiceErrors::DatabaseQueryFailed(FAILED_CONNECT_USER_AND_ISSUE.to_string())
+                })?;
         }
 
         let row = issues
@@ -194,7 +196,7 @@ impl Handler<DeleteIssue> for DbExecutor {
 pub struct CreateIssue {
     pub title: String,
     pub issue_type: IssueType,
-    pub status: String,
+    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
@@ -223,7 +225,7 @@ impl Handler<CreateIssue> for DbExecutor {
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
         let list_position = issues
-            .filter(status.eq("backlog"))
+            .filter(status.eq(IssueStatus::Backlog))
             .select(sql("max(list_position) + 1.0"))
             .get_result::<f64>(conn)
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;

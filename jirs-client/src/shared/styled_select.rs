@@ -162,14 +162,6 @@ where
     ]
 }
 
-fn render_option(
-    content: Node<Msg>,
-    on_change: EventHandler<Msg>,
-    on_click: EventHandler<Msg>,
-) -> Node<Msg> {
-    div![attrs![At::Class => "option"], on_change, on_click, content]
-}
-
 fn render_value(mut content: Node<Msg>) -> Node<Msg> {
     content.add_class("value");
     content

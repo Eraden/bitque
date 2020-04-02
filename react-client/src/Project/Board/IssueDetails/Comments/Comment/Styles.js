@@ -1,7 +1,7 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
-import { color, font, mixin } from 'shared/utils/styles';
-import { Avatar } from 'shared/components';
+import { color, font } from '../../../../../shared/utils/styles';
+import { Avatar }      from '../../../../../shared/components';
 
 export const Comment = styled.div`
   position: relative;
@@ -39,7 +39,8 @@ export const Body = styled.p`
   white-space: pre-wrap;
 `;
 
-const actionLinkStyles = css`
+export const EditLink = styled.div`
+  margin-right: 12px;
   display: inline-block;
   padding: 2px 0;
   color: ${color.textMedium};
@@ -51,13 +52,16 @@ const actionLinkStyles = css`
   }
 `;
 
-export const EditLink = styled.div`
-  margin-right: 12px;
-  ${actionLinkStyles}
-`;
-
 export const DeleteLink = styled.div`
-  ${actionLinkStyles}
+  display: inline-block;
+  padding: 2px 0;
+  color: ${color.textMedium};
+  font-size: 14.5px
+  cursor: pointer;
+    user-select: none;
+  &:hover {
+    text-decoration: underline;
+  }
   &:before {
     position: relative;
     right: 6px;

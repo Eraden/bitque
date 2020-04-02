@@ -1,27 +1,13 @@
 import React, { Fragment, useState } from 'react';
-import PropTypes from 'prop-types';
+import PropTypes                     from 'prop-types';
 
-import api from 'shared/utils/api';
-import toast from 'shared/utils/toast';
-import { formatDateTimeConversational } from 'shared/utils/dateTime';
-import { ConfirmModal } from 'shared/components';
+import api                              from '../../../../../shared/utils/api';
+import toast                            from '../../../../../shared/utils/toast';
+import { formatDateTimeConversational } from '../../../../../shared/utils/dateTime';
+import { ConfirmModal }                 from '../../../../../shared/components';
 
-import BodyForm from '../BodyForm';
-import {
-  Comment,
-  UserAvatar,
-  Content,
-  Username,
-  CreatedAt,
-  Body,
-  EditLink,
-  DeleteLink,
-} from './Styles';
-
-const propTypes = {
-  comment: PropTypes.object.isRequired,
-  fetchIssue: PropTypes.func.isRequired,
-};
+import BodyForm                                                                           from '../BodyForm';
+import { Body, Comment, Content, CreatedAt, DeleteLink, EditLink, UserAvatar, Username, } from './Styles';
 
 const ProjectBoardIssueDetailsComment = ({ comment, fetchIssue }) => {
   const [isFormOpen, setFormOpen] = useState(false);
@@ -82,6 +68,9 @@ const ProjectBoardIssueDetailsComment = ({ comment, fetchIssue }) => {
   );
 };
 
-ProjectBoardIssueDetailsComment.propTypes = propTypes;
+ProjectBoardIssueDetailsComment.propTypes = {
+  comment:    PropTypes.object.isRequired,
+  fetchIssue: PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetailsComment;

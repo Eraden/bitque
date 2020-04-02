@@ -1,23 +1,8 @@
-import React from 'react';
+import React     from 'react';
 import PropTypes from 'prop-types';
-import { xor } from 'lodash';
+import { xor }   from 'lodash';
 
-import {
-  Filters,
-  SearchInput,
-  Avatars,
-  AvatarIsActiveBorder,
-  StyledAvatar,
-  StyledButton,
-  ClearAll,
-} from './Styles';
-
-const propTypes = {
-  projectUsers: PropTypes.array.isRequired,
-  defaultFilters: PropTypes.object.isRequired,
-  filters: PropTypes.object.isRequired,
-  mergeFilters: PropTypes.func.isRequired,
-};
+import { AvatarIsActiveBorder, Avatars, ClearAll, Filters, SearchInput, StyledAvatar, StyledButton, } from './Styles';
 
 const ProjectBoardFilters = ({ projectUsers, defaultFilters, filters, mergeFilters }) => {
   const { searchTerm, userIds, myOnly, recent } = filters;
@@ -63,6 +48,11 @@ const ProjectBoardFilters = ({ projectUsers, defaultFilters, filters, mergeFilte
   );
 };
 
-ProjectBoardFilters.propTypes = propTypes;
+ProjectBoardFilters.propTypes = {
+    projectUsers:   PropTypes.array.isRequired,
+    defaultFilters: PropTypes.object.isRequired,
+    filters:        PropTypes.object.isRequired,
+    mergeFilters:   PropTypes.func.isRequired,
+};
 
 export default ProjectBoardFilters;

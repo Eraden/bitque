@@ -1,21 +1,28 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React       from 'react';
+import PropTypes   from 'prop-types';
 import { connect } from "react-redux";
 
-import { ProjectCategory, ProjectCategoryCopy } from 'shared/constants/projects';
-import toast from 'shared/utils/toast';
-import api from 'shared/utils/api';
-import { Breadcrumbs, Form } from 'shared/components';
-import { updateProjectFormFieldChanged, updateProjectFormRequest, updateProjectFormSuccess, } from 'actions/forms';
+import { ProjectCategory, ProjectCategoryCopy } from '../../shared/constants/projects';
+import toast                                    from '../../shared/utils/toast';
+import api                                      from '../../shared/utils/api';
+import {
+    Breadcrumbs,
+    Form
+}                                               from '../../shared/components';
+import {
+    updateProjectFormFieldChanged,
+    updateProjectFormRequest,
+    updateProjectFormSuccess,
+}                                               from '../../actions/forms';
 
 import { ActionButton, FormCont, FormElement, FormHeading } from './Styles';
 
 class ProjectSettings extends React.Component {
     state = {
         isUpdating: false, form: {
-            name: '',
-            url: '',
-            category: '',
+            name:        '',
+            url:         '',
+            category:    '',
             description: '',
         }
     };

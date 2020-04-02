@@ -1,12 +1,12 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import moment from 'moment';
-import { Droppable } from 'react-beautiful-dnd';
+import React            from 'react';
+import PropTypes        from 'prop-types';
+import moment           from 'moment';
+import { Droppable }    from 'react-beautiful-dnd';
 import { intersection } from 'lodash';
 
-import { IssueStatusCopy } from 'shared/constants/issues';
+import { IssueStatusCopy } from '../../../../shared/constants/issues';
 
-import Issue from './Issue';
+import Issue                                from './Issue';
 import { Issues, IssuesCount, List, Title } from './Styles';
 
 const ProjectBoardList = ({ status, project, filters, currentUserId }) => {

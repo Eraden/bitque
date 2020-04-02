@@ -1,7 +1,7 @@
 import styled from 'styled-components/dist/styled-components.esm';
 
-import { color, font } from 'shared/utils/styles';
-import { Button, Form } from 'shared/components';
+import { color, font }  from '../shared/utils/styles';
+import { Button, Form } from '../shared/components';
 
 export const FormElement = styled(Form.Element)`;
   padding: 25px 40px 35px;
@@ -9,7 +9,7 @@ export const FormElement = styled(Form.Element)`;
 
 export const FormHeading = styled.div`
   padding-bottom: 15px;
-  ${ font.size(21) }
+  ${font.size(21)}
 `;
 
 export const SelectItem = styled.div`

@@ -1,17 +1,11 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React             from 'react';
+import PropTypes         from 'prop-types';
 import { useRouteMatch } from 'react-router-dom';
-import { Draggable } from 'react-beautiful-dnd';
+import { Draggable }     from 'react-beautiful-dnd';
 
 import { IssuePriorityIcon, IssueTypeIcon } from '../../../../../shared/components';
 
 import { AssigneeAvatar, Assignees, Bottom, Issue, IssueLink, Title } from './Styles';
-
-const propTypes = {
-    projectUsers: PropTypes.array.isRequired,
-    issue: PropTypes.object.isRequired,
-    index: PropTypes.number.isRequired,
-};
 
 const ProjectBoardListIssue = ({ projectUsers, issue, index }) => {
     const match = useRouteMatch();
@@ -54,6 +48,10 @@ const ProjectBoardListIssue = ({ projectUsers, issue, index }) => {
     );
 };
 
-ProjectBoardListIssue.propTypes = propTypes;
+ProjectBoardListIssue.propTypes = {
+    projectUsers: PropTypes.array.isRequired,
+    issue:        PropTypes.object.isRequired,
+    index:        PropTypes.number.isRequired,
+};
 
 export default ProjectBoardListIssue;

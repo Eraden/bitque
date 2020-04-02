@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
-import { color, font } from 'shared/utils/styles';
-import { Icon } from 'shared/components';
+import { color } from '../../../../../shared/utils/styles';
+import { Icon }  from '../../../../../shared/components';
 
 export const TrackingWidget = styled.div`
   display: flex;

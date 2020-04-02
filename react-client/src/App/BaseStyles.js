@@ -1,6 +1,6 @@
 import { createGlobalStyle } from 'styled-components';
 
-import { color, font, mixin } from 'shared/utils/styles';
+import { color, font } from '../shared/utils/styles';
 
 export default createGlobalStyle`
   html, body, #root {
@@ -89,7 +89,15 @@ export default createGlobalStyle`
   p {
     line-height: 1.4285;
     a {
-      ${mixin.link()}
+      cursor: pointer;
+      color: ${color.textLink};
+      ${font.medium}
+      &:hover, &:visited, &:active {
+        color: ${color.textLink};
+      }
+      &:hover {
+        text-decoration: underline;
+      }
     }
   }
 
@@ -106,5 +114,20 @@ export default createGlobalStyle`
     touch-action: manipulation;
   }
 
-  ${mixin.placeholderColor(color.textLight)}
+  ::-webkit-input-placeholder {
+      color: ${color.textLight} !important;
+      opacity: 1 !important;
+    }
+    :-moz-placeholder {
+      color: ${color.textLight} !important;
+      opacity: 1 !important;
+    }
+    ::-moz-placeholder {
+      color: ${color.textLight} !important;
+      opacity: 1 !important;
+    }
+    :-ms-input-placeholder {
+      color: ${color.textLight} !important;
+      opacity: 1 !important;
+    }
 `;

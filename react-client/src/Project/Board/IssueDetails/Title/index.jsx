@@ -1,15 +1,10 @@
 import React, { Fragment, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
+import PropTypes                             from 'prop-types';
 
-import { KeyCodes } from 'shared/constants/keyCodes';
-import { is, generateErrors } from 'shared/utils/validation';
+import { KeyCodes }           from '../../../../shared/constants/keyCodes';
+import { generateErrors, is } from '../../../../shared/utils/validation';
 
-import { TitleTextarea, ErrorText } from './Styles';
-
-const propTypes = {
-  issue: PropTypes.object.isRequired,
-  updateIssue: PropTypes.func.isRequired,
-};
+import { ErrorText, TitleTextarea } from './Styles';
 
 const ProjectBoardIssueDetailsTitle = ({ issue, updateIssue }) => {
   const $titleInputRef = useRef();
@@ -49,6 +44,9 @@ const ProjectBoardIssueDetailsTitle = ({ issue, updateIssue }) => {
   );
 };
 
-ProjectBoardIssueDetailsTitle.propTypes = propTypes;
+ProjectBoardIssueDetailsTitle.propTypes = {
+  issue:       PropTypes.object.isRequired,
+  updateIssue: PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetailsTitle;

@@ -31,5 +31,8 @@ features = [
     "DataTransfer",
     "DragEvent",
     "HtmlDivElement",
-    "DomRect"
+    "DomRect",
+    "HtmlDocument",
+    "Document",
+    "Selection"
 ]

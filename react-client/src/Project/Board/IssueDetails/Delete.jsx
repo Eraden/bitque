@@ -1,15 +1,9 @@
-import React from 'react';
+import React     from 'react';
 import PropTypes from 'prop-types';
 
-import api from 'shared/utils/api';
-import toast from 'shared/utils/toast';
-import { Button, ConfirmModal } from 'shared/components';
-
-const propTypes = {
-  issue: PropTypes.object.isRequired,
-  fetchProject: PropTypes.func.isRequired,
-  modalClose: PropTypes.func.isRequired,
-};
+import api                      from '../../../shared/utils/api';
+import toast                    from '../../../shared/utils/toast';
+import { Button, ConfirmModal } from '../../../shared/components';
 
 const ProjectBoardIssueDetailsDelete = ({ issue, fetchProject, modalClose }) => {
   const handleIssueDelete = async () => {
@@ -35,6 +29,10 @@ const ProjectBoardIssueDetailsDelete = ({ issue, fetchProject, modalClose }) => 
   );
 };
 
-ProjectBoardIssueDetailsDelete.propTypes = propTypes;
+ProjectBoardIssueDetailsDelete.propTypes = {
+  issue:        PropTypes.object.isRequired,
+  fetchProject: PropTypes.func.isRequired,
+  modalClose:   PropTypes.func.isRequired,
+};
 
 export default ProjectBoardIssueDetailsDelete;

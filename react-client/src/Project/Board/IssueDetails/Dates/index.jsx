@@ -1,13 +1,9 @@
-import React from 'react';
+import React     from 'react';
 import PropTypes from 'prop-types';
 
-import { formatDateTimeConversational } from 'shared/utils/dateTime';
+import { formatDateTimeConversational } from '../../../../shared/utils/dateTime';
 
 import { Dates } from './Styles';
-
-const propTypes = {
-  issue: PropTypes.object.isRequired,
-};
 
 const ProjectBoardIssueDetailsDates = ({ issue }) => (
   <Dates>
@@ -16,6 +12,8 @@ const ProjectBoardIssueDetailsDates = ({ issue }) => (
   </Dates>
 );
 
-ProjectBoardIssueDetailsDates.propTypes = propTypes;
+ProjectBoardIssueDetailsDates.propTypes = {
+    issue: PropTypes.object.isRequired,
+};
 
 export default ProjectBoardIssueDetailsDates;

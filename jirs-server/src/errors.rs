@@ -1,4 +1,5 @@
 use actix_web::HttpResponse;
+
 use jirs_data::ErrorResponse;
 
 const TOKEN_NOT_FOUND: &str = "Token not found";
@@ -7,6 +8,7 @@ const DATABASE_CONNECTION_FAILED: &str = "Database connection failed";
 pub enum ServiceErrors {
     Unauthorized,
     DatabaseConnectionLost,
+    DatabaseQueryFailed(String),
     RecordNotFound(String),
 }
 
@@ -25,6 +27,11 @@ impl Into<HttpResponse> for ServiceErrors {
             ServiceErrors::DatabaseConnectionLost => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
                     errors: vec![DATABASE_CONNECTION_FAILED.to_owned()],
+                })
+            }
+            ServiceErrors::DatabaseQueryFailed(error) => {
+                HttpResponse::BadRequest().json(ErrorResponse {
+                    errors: vec![error.to_owned()],
                 })
             }
             ServiceErrors::RecordNotFound(resource_name) => {
