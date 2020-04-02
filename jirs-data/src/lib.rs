@@ -38,6 +38,27 @@ impl IssueType {
     }
 }
 
+impl Into<u32> for IssueType {
+    fn into(self) -> u32 {
+        match self {
+            IssueType::Task => 1,
+            IssueType::Bug => 2,
+            IssueType::Story => 3,
+        }
+    }
+}
+
+impl Into<IssueType> for u32 {
+    fn into(self) -> IssueType {
+        match self {
+            1 => IssueType::Task,
+            2 => IssueType::Bug,
+            3 => IssueType::Story,
+            _ => IssueType::Task,
+        }
+    }
+}
+
 impl std::fmt::Display for IssueType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

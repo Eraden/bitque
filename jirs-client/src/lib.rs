@@ -4,6 +4,7 @@ use seed::{prelude::*, *};
 use jirs_data::IssueStatus;
 
 use crate::model::Page;
+use crate::shared::styled_select::StyledSelectChange;
 
 mod api;
 mod api_handlers;
@@ -19,8 +20,15 @@ pub type IssueId = i32;
 pub type AvatarFilterActive = bool;
 
 #[derive(Clone, Debug)]
+pub enum FieldId {
+    IssueTypeEditModalTop,
+}
+
+#[derive(Clone, Debug)]
 pub enum Msg {
     NoOp,
+    StyledSelectChanged(FieldId, StyledSelectChange),
+
     ChangePage(model::Page),
     CurrentProjectResult(FetchObject<String>),
     CurrentUserResult(FetchObject<String>),

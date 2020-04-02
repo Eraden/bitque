@@ -2,14 +2,14 @@ use seed::{prelude::*, *};
 
 use jirs_data::*;
 
-use crate::model::{Icon, ModalType, Model, Page};
+use crate::model::{EditIssueModal, Icon, ModalType, Model, Page};
 use crate::shared::modal::{Modal, Variant as ModalVariant};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::{StyledButton, Variant as ButtonVariant};
 use crate::shared::styled_input::StyledInput;
-use crate::shared::styled_select::StyledSelect;
+use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
 use crate::shared::{drag_ev, find_issue, inner_layout, ToNode};
-use crate::{IssueId, Msg};
+use crate::{FieldId, IssueId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -28,7 +28,18 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             orders
                 .skip()
                 .perform_cmd(crate::api::fetch_current_user(model.host_url.clone()));
-            model.modal = Some(ModalType::EditIssue(issue_id));
+            let value = find_issue(model, issue_id)
+                .map(|issue| issue.issue_type.clone())
+                .unwrap_or_else(|| IssueType::Task);
+            model.modal = Some(ModalType::EditIssue(
+                issue_id,
+                EditIssueModal {
+                    id: issue_id,
+                    top_select_opened: false,
+                    top_select_filter: "".to_string(),
+                    value,
+                },
+            ));
         }
         Msg::ToggleAboutTooltip => {
             model.project_page.about_tooltip_visible = !model.project_page.about_tooltip_visible;
@@ -115,6 +126,23 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 _ => error!("Drag stopped before drop :("),
             }
         }
+        Msg::StyledSelectChanged(FieldId::IssueTypeEditModalTop, change) => {
+            match (change, model.modal.as_mut()) {
+                (StyledSelectChange::Text(ref text), Some(ModalType::EditIssue(_, modal))) => {
+                    modal.top_select_filter = text.clone();
+                }
+                (
+                    StyledSelectChange::DropDownVisibility(flag),
+                    Some(ModalType::EditIssue(_, modal)),
+                ) => {
+                    modal.top_select_opened = flag;
+                }
+                (StyledSelectChange::Changed(value), Some(ModalType::EditIssue(_, modal))) => {
+                    modal.value = value.into();
+                }
+                _ => {}
+            }
+        }
         Msg::IssueUpdateResult(fetched) => {
             crate::api_handlers::update_issue_response(&fetched, model);
         }
@@ -123,10 +151,10 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
 }
 
 pub fn view(model: &Model) -> Node<Msg> {
-    let modal = match model.modal {
-        Some(ModalType::EditIssue(issue_id)) => {
-            if let Some(issue) = find_issue(model, issue_id) {
-                let details = issue_details(model, issue);
+    let modal = match &model.modal {
+        Some(ModalType::EditIssue(issue_id, modal)) => {
+            if let Some(issue) = find_issue(model, *issue_id) {
+                let details = issue_details(model, issue, &modal);
                 let modal = Modal {
                     variant: ModalVariant::Center,
                     width: 1040,
@@ -428,16 +456,30 @@ impl crate::shared::styled_select::SelectOption for IssueTypeOption {
         }
         .into_node()
     }
+
+    fn match_text_filter(&self, text_filter: &str) -> bool {
+        self.1
+            .to_string()
+            .to_lowercase()
+            .contains(&text_filter.to_lowercase())
+    }
+
+    fn to_value(&self) -> u32 {
+        self.1.clone().into()
+    }
 }
 
-fn issue_details(_model: &Model, issue: &Issue) -> Node<Msg> {
+fn issue_details(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> {
     let issue_id = issue.id;
+
     let issue_type_select = StyledSelect {
-        on_change: mouse_ev(Ev::Click, |_| Msg::NoOp),
+        id: FieldId::IssueTypeEditModalTop,
         variant: crate::shared::styled_select::Variant::Empty,
         dropdown_width: Some(150),
         name: Some("type".to_string()),
         placeholder: None,
+        text_filter: modal.top_select_filter.clone(),
+        opened: modal.top_select_opened,
         valid: true,
         is_multi: false,
         allow_clear: false,
@@ -446,7 +488,7 @@ fn issue_details(_model: &Model, issue: &Issue) -> Node<Msg> {
             IssueTypeOption(issue_id, IssueType::Task),
             IssueTypeOption(issue_id, IssueType::Bug),
         ],
-        selected: Some(IssueTypeOption(issue_id, IssueType::Story)),
+        selected: vec![IssueTypeOption(issue_id, modal.value.clone())],
     }
     .into_node();
 

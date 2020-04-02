@@ -9,9 +9,17 @@ use crate::{IssueId, UserId, HOST_URL};
 
 pub type ProjectId = i32;
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
-    EditIssue(IssueId),
+    EditIssue(IssueId, EditIssueModal),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq)]
+pub struct EditIssueModal {
+    pub id: i32,
+    pub top_select_opened: bool,
+    pub top_select_filter: String,
+    pub value: IssueType,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
