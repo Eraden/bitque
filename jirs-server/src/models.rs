@@ -2,7 +2,6 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use jirs_data::sql::*;
 use jirs_data::{IssuePriority, IssueStatus, IssueType};
 
 use crate::schema::*;
