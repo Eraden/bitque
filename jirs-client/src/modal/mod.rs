@@ -16,6 +16,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         Msg::PopModal => match model.modals.pop() {
             _ => (),
         },
+
         Msg::ChangePage(Page::EditIssue(issue_id)) => {
             let value = find_issue(model, *issue_id)
                 .map(|issue| issue.issue_type.clone())
@@ -87,6 +88,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
                 _ => {}
             }
         }
+
         _ => (),
     }
 }

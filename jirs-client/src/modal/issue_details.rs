@@ -95,6 +95,7 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
         Msg::NoOp
     });
 
+    let close_handler = mouse_ev(Ev::Click, |_| Msg::PopModal);
     let copy_button = StyledButton::build()
         .empty()
         .icon(Icon::Link)
@@ -106,7 +107,6 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
         }]])
         .build()
         .into_node();
-
     let delete_button = StyledButton::build()
         .empty()
         .icon(Icon::Trash.into_styled_builder().size(19).build())
@@ -115,6 +115,7 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
     let close_button = StyledButton::build()
         .empty()
         .icon(Icon::Close.into_styled_builder().size(24).build())
+        .on_click(close_handler)
         .build()
         .into_node();
 
