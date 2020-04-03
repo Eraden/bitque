@@ -107,10 +107,14 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
         .build()
         .into_node();
 
-    let delete_button = StyledButton::build().primary().build().into_node();
+    let delete_button = StyledButton::build()
+        .empty()
+        .icon(Icon::Trash.into_styled_builder().size(19).build())
+        .build()
+        .into_node();
     let close_button = StyledButton::build()
         .empty()
-        .icon(StyledIcon::build(Icon::Close).size(19).build())
+        .icon(Icon::Close.into_styled_builder().size(24).build())
         .build()
         .into_node();
 

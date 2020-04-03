@@ -49,6 +49,10 @@ impl Icon {
             _ => None,
         }
     }
+
+    pub fn into_styled_builder(self) -> StyledIconBuilder {
+        StyledIcon::build(self)
+    }
 }
 
 impl std::fmt::Display for Icon {
