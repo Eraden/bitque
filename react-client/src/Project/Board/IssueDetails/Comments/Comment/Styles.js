@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 import { color, font } from '../../../../../shared/utils/styles';
-import { Avatar }      from '../../../../../shared/components';
+import { Avatar } from '../../../../../shared/components';
 
 export const Comment = styled.div`
   position: relative;
@@ -23,8 +23,8 @@ export const Username = styled.div`
   display: inline-block;
   padding-right: 12px;
   padding-bottom: 10px;
-  color: ${color.textDark};
-  ${font.medium}
+  color: ${ color.textDark };
+  ${ font.medium };font-weight: normal;
 `;
 
 export const CreatedAt = styled.div`

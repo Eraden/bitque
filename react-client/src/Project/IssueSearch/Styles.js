@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { color, font }                   from '../../shared/utils/styles';
+import { color, font } from '../../shared/utils/styles';
 import { Icon, InputDebounced, Spinner } from '../../shared/components';
 
 export const IssueSearch = styled.div`
@@ -87,7 +87,7 @@ export const NoResults = styled.div`
 
 export const NoResultsTitle = styled.div`
   padding-top: 30px;
-  ${font.medium}
+  ${ font.medium };font-weight: normal;
   font-size: 20px
 `;
 

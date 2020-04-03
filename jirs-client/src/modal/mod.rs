@@ -4,7 +4,7 @@ use jirs_data::{Issue, IssueType, UpdateIssuePayload};
 
 use crate::api::update_issue;
 use crate::model::{EditIssueModal, ModalType, Page};
-use crate::shared::modal::{Modal, Variant as ModalVariant};
+use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{find_issue, ToNode};
 use crate::{model, FieldChange, FieldId, Msg};
@@ -114,14 +114,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             ModalType::EditIssue(issue_id, modal) => {
                 if let Some(issue) = find_issue(model, *issue_id) {
                     let details = issue_details::view(model, issue, &modal);
-                    let modal = Modal {
-                        variant: ModalVariant::Center,
-                        width: 1040,
-                        with_icon: false,
-                        children: vec![details],
-                    }
-                    .into_node();
-                    modal
+                    StyledModal::build()
+                        .variant(ModalVariant::Center)
+                        .width(1040)
+                        .children(vec![details])
+                        .build()
+                        .into_node()
                 } else {
                     empty![]
                 }

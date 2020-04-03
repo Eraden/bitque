@@ -5,7 +5,7 @@ import { color, font } from '../../../../shared/utils/styles';
 export const Title = styled.div`
   padding: 20px 0 6px;
   font-size: 15px
-  ${font.medium}
+  ${ font.medium };font-weight: normal;
 `;
 
 export const EmptyLabel = styled.div`

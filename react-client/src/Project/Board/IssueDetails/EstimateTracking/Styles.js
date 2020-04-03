@@ -19,7 +19,7 @@ export const ModalContents = styled.div`
 
 export const ModalTitle = styled.div`
   padding-bottom: 14px;
-  ${font.medium}
+  ${ font.medium };font-weight: normal;
   font-size: 20px
 `;
 
@@ -35,8 +35,8 @@ export const InputCont = styled.div`
 
 export const InputLabel = styled.div`
   padding-bottom: 5px;
-  color: ${color.textMedium};
-  ${font.medium};
+  color: ${ color.textMedium };
+  ${ font.medium };font-weight: normal;;
   font-size: 13px;
 `;
 

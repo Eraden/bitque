@@ -15,20 +15,20 @@ export const InputElement = styled.input`
   width: 100%;
   padding: 0 7px;
   border-radius: 3px;
-  border: 1px solid ${color.borderLightest};
-  color: ${color.textDarkest};
-  background: ${color.backgroundLightest};
+  border: 1px solid ${ color.borderLightest };
+  color: ${ color.textDarkest };
+  background: ${ color.backgroundLightest };
   transition: background 0.1s;
-  ${font.regular}
+  ${ font.regular };font-weight: normal;
   font-size: 15px
-  ${props => props.hasIcon && 'padding-left: 32px;'}
+  ${ props => props.hasIcon && 'padding-left: 32px;' }
   &:hover {
-    background: ${color.backgroundLight};
+    background: ${ color.backgroundLight };
   }
   &:focus {
     background: #fff;
-    border: 1px solid ${color.borderInputFocus};
-    box-shadow: 0 0 0 1px ${color.borderInputFocus};
+    border: 1px solid ${ color.borderInputFocus };
+    box-shadow: 0 0 0 1px ${ color.borderInputFocus };
   }
   ${props =>
     props.invalid &&

@@ -10,11 +10,11 @@ export default createGlobalStyle`
   }
 
   body {
-    color: ${color.textDarkest};
+    color: ${ color.textDarkest };
     -webkit-tap-highlight-color: transparent;
     line-height: 1.2;
     font-size: 16px
-    ${font.regular}
+    ${ font.regular };font-weight: normal;
   }
 
   #root {
@@ -27,7 +27,7 @@ export default createGlobalStyle`
   optgroup,
   select,
   textarea {
-    ${font.regular}
+    ${ font.regular };font-weight: normal;
   }
 
   *, *:after, *:before, input[type="search"] {
@@ -83,17 +83,17 @@ export default createGlobalStyle`
     display: none;
   }
   select option {
-    color: ${color.textDarkest};
+    color: ${ color.textDarkest };
   }
 
   p {
     line-height: 1.4285;
     a {
       cursor: pointer;
-      color: ${color.textLink};
-      ${font.medium}
+      color: ${ color.textLink };
+      ${ font.medium };font-weight: normal;
       &:hover, &:visited, &:active {
-        color: ${color.textLink};
+        color: ${ color.textLink };
       }
       &:hover {
         text-decoration: underline;

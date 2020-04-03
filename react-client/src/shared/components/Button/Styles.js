@@ -27,36 +27,36 @@ export const StyledButton = styled.button`
 
 const colored = css`
   color: #fff;
-  background: ${props => color[props.variant]};
-  ${font.medium}
+  background: ${ props => color[props.variant] };
+  ${ font.medium };font-weight: normal;
   &:not(:disabled) {
     &:hover {
-      background: ${props => mixin.lighten(color[props.variant], 0.15)};
+      background: ${ props => mixin.lighten(color[props.variant], 0.15) };
     }
     &:active {
-      background: ${props => mixin.darken(color[props.variant], 0.1)};
+      background: ${ props => mixin.darken(color[props.variant], 0.1) };
     }
-    ${props =>
-      props.isActive &&
-      css`
+    ${ props =>
+    props.isActive &&
+    css`
         background: ${mixin.darken(color[props.variant], 0.1)} !important;
       `}
   }
 `;
 
 const secondaryAndEmptyShared = css`
-  color: ${color.textDark};
-  ${font.regular}
+  color: ${ color.textDark };
+  ${ font.regular };font-weight: normal;
   &:not(:disabled) {
     &:hover {
-      background: ${color.backgroundLight};
+      background: ${ color.backgroundLight };
     }
     &:active {
-      color: ${color.primary};
-      background: ${color.backgroundLightPrimary};
+      color: ${ color.primary };
+      background: ${ color.backgroundLightPrimary };
     }
-    ${props =>
-      props.isActive &&
+    ${ props =>
+    props.isActive &&
       css`
         color: ${color.primary};
         background: ${color.backgroundLightPrimary} !important;

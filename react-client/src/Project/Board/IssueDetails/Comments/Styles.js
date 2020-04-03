@@ -7,6 +7,6 @@ export const Comments = styled.div`
 `;
 
 export const Title = styled.div`
-  ${font.medium}
+  ${ font.medium };font-weight: normal;
   font-size: 15px
 `;

@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { font }         from '../../shared/utils/styles';
+import { font } from '../../shared/utils/styles';
 import { Button, Form } from '../../shared/components';
 
 export const FormCont = styled.div`
@@ -16,7 +16,7 @@ export const FormElement = styled(Form.Element)`
 export const FormHeading = styled.h1`
   padding: 6px 0 15px;
   font-size: 24px
-  ${font.medium}; font-weight: normal;
+  ${ font.medium };font-weight: normal;; font-weight: normal;
 `;
 
 export const ActionButton = styled(Button)`

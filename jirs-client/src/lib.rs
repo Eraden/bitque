@@ -56,6 +56,7 @@ pub enum Msg {
 
     // issues
     IssueUpdateResult(FetchObject<String>),
+    DeleteIssue(IssueId),
 
     // modals
     ModalOpened(ModalType),

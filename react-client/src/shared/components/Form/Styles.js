@@ -9,8 +9,8 @@ export const StyledField = styled.div`
 export const FieldLabel = styled.label`
   display: block;
   padding-bottom: 5px;
-  color: ${color.textMedium};
-  ${font.medium}
+  color: ${ color.textMedium };
+  ${ font.medium };font-weight: normal;
   font-size: 13px
 `;
 
@@ -23,7 +23,7 @@ export const FieldTip = styled.div`
 export const FieldError = styled.div`
   margin-top: 6px;
   line-height: 1;
-  color: ${color.danger};
-  ${font.medium}
+  color: ${ color.danger };
+  ${ font.medium };font-weight: normal;
   font-size: 12.5px
 `;

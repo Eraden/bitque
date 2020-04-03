@@ -1,33 +1,39 @@
-use seed::EventHandler;
 use seed::{prelude::*, *};
 
+use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::ToNode;
 use crate::Msg;
 
-const TITLE: &str = "Warning";
-const MESSAGE: &str = "Are you sure you want to continue with this action?";
-const CONFIRM_TEXT: &str = "Confirm";
-const CANCEL_TEXT: &str = "Cancel";
-
-#[derive(Debug)]
+#[allow(dead_code)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum Variant {
-    Primary,
+    Center,
+    Aside,
+}
+
+impl Variant {
+    pub fn to_class_name(&self) -> &str {
+        match self {
+            Variant::Center => "center",
+            Variant::Aside => "aside",
+        }
+    }
+
+    pub fn to_icon_class_name(&self) -> &str {
+        match self {
+            Variant::Center => "modalVariantCenter",
+            Variant::Aside => "modalVariantAside",
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct StyledModal {
     pub variant: Variant,
-    pub title: String,
-    pub message: String,
-    pub confirm_text: String,
-    pub cancel_text: String,
-    pub on_confirm: Option<EventHandler<Msg>>,
-}
-
-impl StyledModal {
-    pub fn build() -> StyledModalBuilder {
-        StyledModalBuilder::default()
-    }
+    pub width: usize,
+    pub with_icon: bool,
+    pub children: Vec<Node<Msg>>,
+    pub class_list: Vec<String>,
 }
 
 impl ToNode for StyledModal {
@@ -36,14 +42,19 @@ impl ToNode for StyledModal {
     }
 }
 
+impl StyledModal {
+    pub fn build() -> StyledModalBuilder {
+        Default::default()
+    }
+}
+
 #[derive(Default)]
 pub struct StyledModalBuilder {
     variant: Option<Variant>,
-    title: Option<String>,
-    message: Option<String>,
-    confirm_text: Option<String>,
-    cancel_text: Option<String>,
-    on_confirm: Option<Option<EventHandler<Msg>>>,
+    width: Option<usize>,
+    with_icon: Option<bool>,
+    children: Option<Vec<Node<Msg>>>,
+    class_list: Vec<String>,
 }
 
 impl StyledModalBuilder {
@@ -52,53 +63,33 @@ impl StyledModalBuilder {
         self
     }
 
-    pub fn title<S>(mut self, title: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.title = Some(title.into());
+    pub fn width(mut self, width: usize) -> Self {
+        self.width = Some(width);
         self
     }
 
-    pub fn message<S>(mut self, message: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.message = Some(message.into());
+    pub fn with_icon(mut self, with_icon: bool) -> Self {
+        self.with_icon = Some(with_icon);
         self
     }
 
-    pub fn confirm_text<S>(mut self, confirm_text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.confirm_text = Some(confirm_text.into());
+    pub fn children(mut self, children: Vec<Node<Msg>>) -> Self {
+        self.children = Some(children);
         self
     }
 
-    pub fn cancel_text<S>(mut self, cancel_text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.cancel_text = Some(cancel_text.into());
-        self
-    }
-
-    pub fn on_confirm(mut self, on_confirm: EventHandler<Msg>) -> Self {
-        self.on_confirm = Some(Some(on_confirm));
+    pub fn add_class(mut self, name: String) -> Self {
+        self.class_list.push(name);
         self
     }
 
     pub fn build(self) -> StyledModal {
         StyledModal {
-            variant: self.variant.unwrap_or_else(|| Variant::Primary),
-            title: self.title.unwrap_or_else(|| TITLE.to_string()),
-            message: self.message.unwrap_or_else(|| MESSAGE.to_string()),
-            confirm_text: self
-                .confirm_text
-                .unwrap_or_else(|| CONFIRM_TEXT.to_string()),
-            cancel_text: self.cancel_text.unwrap_or_else(|| CANCEL_TEXT.to_string()),
-            on_confirm: None,
+            variant: self.variant.unwrap_or_else(|| Variant::Center),
+            width: self.width.unwrap_or_else(|| 130),
+            with_icon: self.with_icon.unwrap_or_default(),
+            children: self.children.unwrap_or_default(),
+            class_list: self.class_list,
         }
     }
 }
@@ -106,14 +97,41 @@ impl StyledModalBuilder {
 pub fn render(values: StyledModal) -> Node<Msg> {
     let StyledModal {
         variant,
-        title,
-        message,
-        confirm_text,
-        cancel_text,
-        on_confirm,
+        width,
+        with_icon,
+        children,
+        mut class_list,
     } = values;
+
+    let icon = if with_icon {
+        StyledIcon::build(Icon::Close)
+            .add_class(variant.to_icon_class_name().to_string())
+            .build()
+            .into_node()
+    } else {
+        empty![]
+    };
+
+    let close_handler = mouse_ev(Ev::Click, |_| Msg::ModalDropped);
+    let body_handler = mouse_ev(Ev::Click, |ev| {
+        ev.stop_propagation();
+        Msg::NoOp
+    });
+
+    let clickable_class = format!("clickableOverlay {}", variant.to_class_name());
+    class_list.push(format!("styledModal {}", variant.to_class_name()));
+    let styled_modal_style = format!("max-width: {width}px", width = width);
     div![
         attrs![At::Class => "modal"],
-        div![attrs![At::Class => "styledModal"]]
+        div![
+            attrs![At::Class => clickable_class],
+            close_handler,
+            div![
+                attrs![At::Class => class_list.join(" "), At::Style => styled_modal_style],
+                body_handler,
+                icon,
+                children
+            ]
+        ]
     ]
 }

@@ -1,5 +1,5 @@
 import { css } from 'styled-components';
-import Color   from 'color';
+import Color from 'color';
 
 import { IssuePriority, IssueStatus, IssueType } from 'shared/constants/issues';
 
@@ -66,11 +66,11 @@ export const zIndexValues = {
 };
 
 export const font = {
-  regular: 'font-family: "CircularStdBook"; font-weight: normal;',
-  medium: 'font-family: "CircularStdMedium"; font-weight: normal;',
-  bold: 'font-family: "CircularStdBold"; font-weight: normal;',
-  black: 'font-family: "CircularStdBlack"; font-weight: normal;',
-  size: size => `font-size: ${size}px;`,
+  regular: 'font-family: "CircularStdBook";',
+  medium: 'font-family: "CircularStdMedium";',
+  bold: 'font-family: "CircularStdBold";',
+  black: 'font-family: "CircularStdBlack";',
+  size: size => `font-size: ${ size }px;`,
 };
 
 export const mixin = {
@@ -155,10 +155,10 @@ export const mixin = {
   `,
   link: (colorValue = color.textLink) => css`
     cursor: pointer;
-    color: ${colorValue};
-    ${font.medium}
+    color: ${ colorValue };
+    ${ font.medium };font-weight: normal;
     &:hover, &:visited, &:active {
-      color: ${colorValue};
+      color: ${ colorValue };
     }
     &:hover {
       text-decoration: underline;

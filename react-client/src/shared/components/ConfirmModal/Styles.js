@@ -1,8 +1,8 @@
 import styled from 'styled-components';
 
 import { font } from '../../../shared/utils/styles';
-import Modal    from '../../../shared/components/Modal';
-import Button   from '../../../shared/components/Button';
+import Modal from '../../../shared/components/Modal';
+import Button from '../../../shared/components/Button';
 
 export const StyledConfirmModal = styled(Modal)`
   padding: 35px 40px 40px;
@@ -10,7 +10,7 @@ export const StyledConfirmModal = styled(Modal)`
 
 export const Title = styled.div`
   padding-bottom: 25px;
-  ${font.medium}
+  ${ font.medium };font-weight: normal;
   font-size: 22px
   line-height: 1.5;
 `;

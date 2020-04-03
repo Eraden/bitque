@@ -44,9 +44,9 @@ export const ProjectTexts = styled.div`
 `;
 
 export const ProjectName = styled.div`
-  color: ${color.textDark};
+  color: ${ color.textDark };
   font-size: 15px;
-  ${font.medium};
+  ${ font.medium };font-weight: normal;;
 `;
 
 export const ProjectCategory = styled.div`

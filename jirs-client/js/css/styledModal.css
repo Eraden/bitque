@@ -77,6 +77,29 @@
     color: var(--primary);
 }
 
-.styledModal.confirmModal {
+.modal > .clickableOverlay > .styledModal.confirmModal {
     padding: 35px 40px 40px;
+}
+
+.modal > .clickableOverlay > .styledModal.confirmModal > .title {
+    padding-bottom: 25px;
+    font-family: var(--font-medium);
+    font-weight: normal;
+    font-size: 22px;
+    line-height: 1.5;
+}
+
+.modal > .clickableOverlay > .styledModal.confirmModal > .message {
+    padding-bottom: 25px;
+    white-space: pre-wrap;
+    font-size: 15px
+}
+
+.modal > .clickableOverlay > .styledModal.confirmModal > .actions {
+    display: flex;
+    padding-top: 6px;
+}
+
+.modal > .clickableOverlay > .styledModal.confirmModal > .actions > .styledButton {
+    margin-right: 10px;
 }

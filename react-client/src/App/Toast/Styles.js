@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 import { color, font, mixin, zIndexValues } from '../../shared/utils/styles';
-import { Icon }                             from '../../shared/components';
+import { Icon } from '../../shared/components';
 
 export const Container = styled.div`
   z-index: ${zIndexValues.modal + 1};
@@ -48,12 +48,12 @@ export const CloseIcon = styled(Icon)`
 export const Title = styled.div`
   padding-right: 22px;
   font-size: 15px
-  ${font.medium}
+  ${ font.medium };font-weight: normal;
 `;
 
 export const Message = styled.div`
   padding: 8px 10px 0 0;
   white-space: pre-wrap;
   font-size: 14px
-  ${font.medium}
+  ${ font.medium };font-weight: normal;
 `;
