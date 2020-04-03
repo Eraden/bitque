@@ -1,19 +1,19 @@
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
-import PropTypes from 'prop-types';
+import ReactDOM                                                      from 'react-dom';
+import PropTypes                                                     from 'prop-types';
 
-import useOnOutsideClick from 'shared/hooks/onOutsideClick';
-import useOnEscapeKeyDown from 'shared/hooks/onEscapeKeyDown';
+import useOnOutsideClick  from '../../../shared/hooks/onOutsideClick';
+import useOnEscapeKeyDown from '../../../shared/hooks/onEscapeKeyDown';
 
 import { ClickableOverlay, CloseIcon, ScrollOverlay, StyledModal } from './Styles';
 
 const Modal = ({
-  className,
-  testid,
-  variant,
-  width,
-  withCloseIcon,
-  isOpen: propsIsOpen,
+                 className,
+                 testid,
+                 variant,
+                 width,
+                 withCloseIcon,
+                 isOpen: propsIsOpen,
   onClose: tellParentToClose,
   renderLink,
   renderContent,

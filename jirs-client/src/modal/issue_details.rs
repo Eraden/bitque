@@ -2,12 +2,12 @@ use seed::{prelude::*, *};
 
 use jirs_data::{Issue, IssueType};
 
-use crate::model::{EditIssueModal, Model};
+use crate::model::{EditIssueModal, ModalType, Model};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_select::{StyledSelect, Variant as SelectVariant};
 use crate::shared::ToNode;
-use crate::{FieldId, IssueId, Msg};
+use crate::{FieldChange, FieldId, IssueId, Msg};
 
 #[derive(PartialOrd, PartialEq, Debug)]
 struct IssueTypeOption(IssueId, IssueType);
@@ -92,10 +92,13 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
         el.set_selection_range(0, 9999).unwrap();
         seed::html_document().exec_command("copy").unwrap();
         seed::body().remove_child(&el).unwrap();
-        Msg::NoOp
+        Msg::ModalChanged(FieldChange::LinkCopied(FieldId::CopyButtonLabel, true))
+    });
+    let close_handler = mouse_ev(Ev::Click, |_| Msg::ModalDropped);
+    let delete_confirmation_handler = mouse_ev(Ev::Click, move |_| {
+        Msg::ModalOpened(ModalType::DeleteIssueConfirm(issue_id))
     });
 
-    let close_handler = mouse_ev(Ev::Click, |_| Msg::PopModal);
     let copy_button = StyledButton::build()
         .empty()
         .icon(Icon::Link)
@@ -110,6 +113,7 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
     let delete_button = StyledButton::build()
         .empty()
         .icon(Icon::Trash.into_styled_builder().size(19).build())
+        .on_click(delete_confirmation_handler)
         .build()
         .into_node();
     let close_button = StyledButton::build()

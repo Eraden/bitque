@@ -76,3 +76,7 @@
 .modal > .clickableOverlay > .styledModal.aside > .styledIcon.modalVariantAside:hover {
     color: var(--primary);
 }
+
+.styledModal.confirmModal {
+    padding: 35px 40px 40px;
+}

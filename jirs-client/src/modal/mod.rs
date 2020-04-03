@@ -7,15 +7,28 @@ use crate::model::{EditIssueModal, ModalType, Page};
 use crate::shared::modal::{Modal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{find_issue, ToNode};
-use crate::{model, FieldId, Msg};
+use crate::{model, FieldChange, FieldId, Msg};
 
+mod confirm_delete_issue;
 mod issue_details;
 
 pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
-        Msg::PopModal => match model.modals.pop() {
+        Msg::ModalDropped => match model.modals.pop() {
             _ => (),
         },
+
+        Msg::ModalChanged(FieldChange::LinkCopied(FieldId::CopyButtonLabel, true)) => {
+            for modal in model.modals.iter_mut() {
+                if let ModalType::EditIssue(_, edit) = modal {
+                    edit.link_copied = true;
+                }
+            }
+        }
+
+        Msg::ModalOpened(modal_type) => {
+            model.modals.push(modal_type.clone());
+        }
 
         Msg::ChangePage(Page::EditIssue(issue_id)) => {
             let value = find_issue(model, *issue_id)
@@ -113,6 +126,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                     empty![]
                 }
             }
+            ModalType::DeleteIssueConfirm(_id) => confirm_delete_issue::view(model),
             _ => empty![],
         })
         .collect();

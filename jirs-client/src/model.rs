@@ -25,7 +25,6 @@ pub struct EditIssueModal {
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
-#[serde(rename_all = "kebab-case")]
 pub enum Page {
     Project,
     EditIssue(IssueId),

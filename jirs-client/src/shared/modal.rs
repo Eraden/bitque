@@ -58,7 +58,7 @@ pub fn render(values: Modal) -> Node<Msg> {
         empty![]
     };
 
-    let close_handler = mouse_ev(Ev::Click, |_| Msg::PopModal);
+    let close_handler = mouse_ev(Ev::Click, |_| Msg::ModalDropped);
     let body_handler = mouse_ev(Ev::Click, |ev| {
         ev.stop_propagation();
         Msg::NoOp

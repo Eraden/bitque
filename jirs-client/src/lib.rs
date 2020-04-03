@@ -3,7 +3,7 @@ use seed::{prelude::*, *};
 
 use jirs_data::IssueStatus;
 
-use crate::model::Page;
+use crate::model::{ModalType, Page};
 use crate::shared::styled_select::StyledSelectChange;
 
 mod api;
@@ -23,6 +23,12 @@ pub type AvatarFilterActive = bool;
 #[derive(Clone, Debug)]
 pub enum FieldId {
     IssueTypeEditModalTop,
+    CopyButtonLabel,
+}
+
+#[derive(Clone, Debug)]
+pub enum FieldChange {
+    LinkCopied(FieldId, bool),
 }
 
 #[derive(Clone, Debug)]
@@ -52,7 +58,9 @@ pub enum Msg {
     IssueUpdateResult(FetchObject<String>),
 
     // modals
-    PopModal,
+    ModalOpened(ModalType),
+    ModalDropped,
+    ModalChanged(FieldChange),
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {

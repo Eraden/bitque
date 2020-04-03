@@ -13,6 +13,7 @@ pub mod styled_avatar;
 pub mod styled_button;
 pub mod styled_icon;
 pub mod styled_input;
+pub mod styled_modal;
 pub mod styled_select;
 pub mod styled_tooltip;
 
