@@ -1,9 +1,10 @@
-use crate::db::{DbExecutor, DbPool, SyncQuery};
-use crate::errors::ServiceErrors;
-use crate::models::{Token, User};
 use actix::{Handler, Message};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+
+use crate::db::{DbExecutor, DbPool, SyncQuery};
+use crate::errors::ServiceErrors;
+use crate::models::{Token, User};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AuthorizeUser {
@@ -28,11 +29,13 @@ impl Handler<AuthorizeUser> for DbExecutor {
         let token = tokens
             .filter(access_token.eq(msg.access_token))
             .first::<Token>(conn)
-            .map_err(|_e| ServiceErrors::RecordNotFound("Token".to_string()))?;
+            .map_err(|_e| {
+                ServiceErrors::RecordNotFound(format!("token for {}", msg.access_token))
+            })?;
         let user = users
             .filter(id.eq(token.user_id))
             .first::<User>(conn)
-            .map_err(|_e| ServiceErrors::RecordNotFound("User".to_string()))?;
+            .map_err(|_e| ServiceErrors::RecordNotFound(format!("user {}", token.user_id)))?;
         Ok(user)
     }
 }

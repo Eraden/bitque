@@ -1081,11 +1081,13 @@ dependencies = [
  "ipnetwork",
  "jirs-data",
  "libc",
+ "log 0.4.8",
  "num-bigint",
  "num-integer",
  "num-traits",
  "percent-encoding 2.1.0",
  "pq-sys",
+ "pretty_env_logger",
  "quickcheck",
  "r2d2",
  "serde",
@@ -1396,6 +1398,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ac25eee5a0582f45a67e837e350d784e7003bd29a5f460796772061ca49ffda"
 dependencies = [
  "vcpkg",
+]
+
+[[package]]
+name = "pretty_env_logger"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "926d36b9553851b8b0005f1275891b392ee4d2d833852c417ed025477350fb9d"
+dependencies = [
+ "env_logger 0.7.1",
+ "log 0.4.8",
 ]
 
 [[package]]

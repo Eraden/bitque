@@ -57,9 +57,12 @@ impl Handler<LoadProjectIssues> for DbExecutor {
             .0
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let vec = issues
-            .filter(project_id.eq(msg.project_id))
-            .distinct()
+        let chain = issues.filter(project_id.eq(msg.project_id)).distinct();
+        debug!(
+            "{}",
+            diesel::debug_query::<diesel::pg::Pg, _>(&chain).to_string()
+        );
+        let vec = chain
             .load::<Issue>(conn)
             .map_err(|_| ServiceErrors::RecordNotFound("project issues".to_string()))?;
         Ok(vec)
@@ -120,7 +123,10 @@ impl Handler<UpdateIssue> for DbExecutor {
                 .map(|project_id| dsl::project_id.eq(project_id)),
             dsl::updated_at.eq(chrono::Utc::now().naive_utc()),
         ));
-        diesel::debug_query::<diesel::pg::Pg, _>(&chain);
+        debug!(
+            "{}",
+            diesel::debug_query::<diesel::pg::Pg, _>(&chain).to_string()
+        );
         chain.get_result::<Issue>(conn).map_err(|_| {
             ServiceErrors::DatabaseQueryFailed("Failed to update issue".to_string())
         })?;

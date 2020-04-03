@@ -53,6 +53,7 @@ pub mod dev {
     use std::ops::Deref;
 
     use diesel::connection::{AnsiTransactionManager, SimpleConnection};
+    use diesel::debug_query;
     use diesel::deserialize::QueryableByName;
     use diesel::query_builder::{AsQuery, QueryFragment, QueryId};
     use diesel::sql_types::HasSqlType;
@@ -72,8 +73,6 @@ pub mod dev {
 
     impl SimpleConnection for VerboseConnection {
         fn batch_execute(&self, query: &str) -> QueryResult<()> {
-            use diesel::debug_query;
-            debug_query::<diesel::pg::Pg, _>(&query);
             self.inner.batch_execute(query)
         }
     }
@@ -87,8 +86,6 @@ pub mod dev {
         }
 
         fn execute(&self, query: &str) -> QueryResult<usize> {
-            use diesel::debug_query;
-            debug_query::<diesel::pg::Pg, _>(&query);
             self.inner.execute(query)
         }
 
@@ -99,8 +96,6 @@ pub mod dev {
             Self::Backend: HasSqlType<T::SqlType>,
             U: Queryable<T::SqlType, Self::Backend>,
         {
-            use diesel::debug_query;
-            debug_query::<diesel::pg::Pg, _>(&source);
             self.inner.query_by_index(source)
         }
 
@@ -109,8 +104,8 @@ pub mod dev {
             T: QueryFragment<Self::Backend> + QueryId,
             U: QueryableByName<Self::Backend>,
         {
-            use diesel::debug_query;
-            debug_query::<diesel::pg::Pg, _>(&source);
+            let q = debug_query::<Self::Backend, _>(&source).to_string();
+            debug!("{:?}", q);
             self.inner.query_by_name(source)
         }
 
@@ -118,8 +113,8 @@ pub mod dev {
         where
             T: QueryFragment<Self::Backend> + QueryId,
         {
-            use diesel::debug_query;
-            debug_query::<diesel::pg::Pg, _>(&source);
+            let q = debug_query::<Self::Backend, _>(&source).to_string();
+            debug!("{:?}", q);
             self.inner.execute_returning_count(source)
         }
 

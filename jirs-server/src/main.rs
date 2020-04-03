@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate log;
 
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
@@ -13,8 +15,8 @@ pub mod schema;
 
 #[actix_rt::main]
 async fn main() -> Result<(), String> {
-    env_logger::init();
     dotenv::dotenv().ok();
+    pretty_env_logger::init();
 
     let port = std::env::var("JIRS_SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
     let bind = std::env::var("JIRS_SERVER_BIND").unwrap_or_else(|_| "0.0.0.0".to_string());
