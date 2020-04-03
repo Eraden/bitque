@@ -10,7 +10,7 @@ module.exports = {
     entry:     path.resolve(__dirname, 'js', 'index.js'),
     output:    {
         filename:   '[name].js',
-        path:       path.resolve(__dirname, 'dev'),
+        path:       path.resolve(__dirname, process.env.NODE_ENV === 'production' ? 'dist' : 'dev'),
         publicPath: '/',
     },
     devtool:   'source-map',
