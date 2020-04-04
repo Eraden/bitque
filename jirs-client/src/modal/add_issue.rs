@@ -1,3 +1,7 @@
+use seed::{prelude::*, *};
+
+use jirs_data::IssueType;
+
 use crate::model::{AddIssueModal, Model};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_form::StyledForm;
@@ -6,8 +10,6 @@ use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelect;
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
-use jirs_data::IssueType;
-use seed::{prelude::*, *};
 
 pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let select_type = StyledSelect::build(FieldId::IssueTypeAddIssueModal)
@@ -16,6 +18,7 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .text_filter(modal.type_select_filter.as_str())
         .opened(modal.type_select_opened)
         .valid(true)
+        .tip("Start typing to get a list of possible matches.")
         .options(vec![
             IssueTypeOption(IssueType::Story),
             IssueTypeOption(IssueType::Task),
@@ -24,9 +27,25 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .selected(vec![IssueTypeOption(modal.issue_type.clone())])
         .build()
         .into_node();
+
+    let submit = StyledButton::build()
+        .primary()
+        .text("Create Issue")
+        .add_class("action")
+        .build()
+        .into_node();
+    let cancel = StyledButton::build()
+        .empty()
+        .add_class("action")
+        .text("Cancel")
+        .build()
+        .into_node();
+    let actions = div![attrs![At::Class => "actions"], submit, cancel];
+
     let form = StyledForm::build()
         .heading("Create issue")
         .add_field(select_type)
+        .add_field(actions)
         .build()
         .into_node();
 
@@ -61,14 +80,12 @@ impl crate::shared::styled_select::SelectOption for IssueTypeOption {
         let name = self.0.to_label().to_owned();
 
         let type_icon = StyledIcon::build(self.0.into()).build().into_node();
-        let chevron_icon = StyledIcon::build(Icon::ChevronDown).build().into_node();
-        div![attrs![At::Class => "option"], type_icon, name, chevron_icon]
-        // StyledButton::build()
-        //     .secondary()
-        //     .children(vec![span![format!("{}", name)]])
-        //     .icon(StyledIcon::build(self.0.into()).build())
-        //     .build()
-        //     .into_node()
+
+        div![
+            attrs![At::Class => "selectItem"],
+            type_icon,
+            div![attrs![At::Class => "selectItemLabel"], name]
+        ]
     }
 
     fn match_text_filter(&self, text_filter: &str) -> bool {

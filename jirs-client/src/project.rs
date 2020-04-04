@@ -182,29 +182,20 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
 
     let project_page = &model.project_page;
 
-    let only_my = StyledButton {
-        variant: ButtonVariant::Empty,
+    let only_my = StyledButton::build()
+        .empty()
+        .active(model.project_page.only_my_filter)
+        .text("Only My Issues")
+        .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy))
+        .build()
+        .into_node();
 
-        disabled: false,
-        active: model.project_page.only_my_filter,
-        text: Some("Only My Issues".to_string()),
-        icon: None,
-        on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy)),
-        children: vec![],
-    }
-    .into_node();
-
-    let recently_updated = StyledButton {
-        variant: ButtonVariant::Empty,
-
-        disabled: false,
-        active: model.project_page.recently_updated_filter,
-        text: Some("Recently Updated".to_string()),
-        icon: None,
-        on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated)),
-        children: vec![],
-    }
-    .into_node();
+    let recently_updated = StyledButton::build()
+        .empty()
+        .text("Recently Updated")
+        .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated))
+        .build()
+        .into_node();
 
     let clear_all = match project_page.only_my_filter
         || project_page.recently_updated_filter

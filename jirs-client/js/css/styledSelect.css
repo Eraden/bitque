@@ -46,6 +46,18 @@
     padding: 5px 5px 5px 10px;
 }
 
+.styledSelect > .valueContainer > .chevronIcon {
+    margin-left: auto;
+    font-size: 18px;
+    color: var(--textMedium);
+}
+
+.styledSelectTip {
+    padding-top: 6px;
+    color: var(--textMedium);
+    font-size: 12.5px;
+}
+
 .styledSelect > .dropDown {
     z-index: var(--dropdown);
     position: absolute;
@@ -53,7 +65,7 @@
     left: 0;
     border-radius: 0 0 4px 4px;
     background: #fff;
-    box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.31) 0px 0px 1px;
+    box-shadow: rgba(9, 30, 66, 0.25) 0 4px 8px -2px, rgba(9, 30, 66, 0.31) 0 0 1px;
     width: 100%;
 }
 

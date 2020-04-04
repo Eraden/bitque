@@ -59,6 +59,7 @@ where
     selected: Vec<Child>,
     text_filter: String,
     opened: bool,
+    tip: Option<String>,
 }
 
 impl<Child> ToNode for StyledSelect<Child>
@@ -88,6 +89,7 @@ where
             selected: None,
             text_filter: None,
             opened: None,
+            tip: None,
         }
     }
 }
@@ -109,6 +111,7 @@ where
     selected: Option<Vec<Child>>,
     text_filter: Option<String>,
     opened: Option<bool>,
+    tip: Option<String>,
 }
 
 impl<Child> StyledSelectBuilder<Child>
@@ -129,6 +132,7 @@ where
             selected: self.selected.unwrap_or_default(),
             text_filter: self.text_filter.unwrap_or_default(),
             opened: self.opened.unwrap_or_default(),
+            tip: self.tip,
         }
     }
 
@@ -173,6 +177,14 @@ where
         self
     }
 
+    pub fn tip<S>(mut self, tip: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.tip = Some(tip.into());
+        self
+    }
+
     pub fn normal(mut self) -> Self {
         self.variant = Some(Variant::Normal);
         self
@@ -190,12 +202,13 @@ where
         name,
         placeholder: _,
         valid,
-        is_multi: _,
+        is_multi,
         allow_clear,
         options,
         selected,
         text_filter,
         opened,
+        tip,
     } = values;
 
     let on_text = input_ev(Ev::KeyUp, |value| {
@@ -211,12 +224,20 @@ where
     });
 
     let dropdown_style = dropdown_width
-        .map(|n| format!("width: {}px", n))
-        .unwrap_or_default();
+        .map(|n| format!("width: {}px;", n))
+        .unwrap_or_else(|| format!("width: 100%;"));
     let mut select_class = vec!["styledSelect".to_string(), format!("{}", variant)];
     if !valid {
         select_class.push("invalid".to_string());
     }
+
+    let chevron_down = match (selected.is_empty() || !is_multi) && variant != Variant::Empty {
+        true => StyledIcon::build(Icon::ChevronDown)
+            .add_class("chevronIcon")
+            .build()
+            .into_node(),
+        _ => empty![],
+    };
 
     let children: Vec<Node<Msg>> = options
         .into_iter()
@@ -237,6 +258,10 @@ where
         .collect();
 
     let value = selected.into_iter().map(|m| render_value(m.into_value()));
+    let tip_node = match tip {
+        Some(s) => div![attrs![At::Class => "styledSelectTip"], s],
+        _ => empty![],
+    };
 
     let text_input = match opened {
         true => seed::input![
@@ -263,19 +288,23 @@ where
         _ => seed::div![attrs![ At::Class => "options" ], children],
     };
 
-    seed::div![
-        attrs![At::Class => select_class.join(" ")],
-        div![
-            attrs![At::Class => format!("valueContainer {}", variant)],
-            visibility_handler,
-            value,
+    div![
+        seed::div![
+            attrs![At::Class => select_class.join(" ")],
+            div![
+                attrs![At::Class => format!("valueContainer {}", variant)],
+                visibility_handler,
+                value,
+                chevron_down,
+            ],
+            div![
+                attrs![At::Class => "dropDown", At::Style => dropdown_style],
+                text_input,
+                clear_icon,
+                option_list
+            ]
         ],
-        div![
-            attrs![At::Class => "dropDown", At::Style => dropdown_style],
-            text_input,
-            clear_icon,
-            option_list
-        ]
+        tip_node,
     ]
 }
 

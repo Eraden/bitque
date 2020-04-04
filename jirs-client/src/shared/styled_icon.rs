@@ -131,13 +131,19 @@ impl StyledIconBuilder {
         self
     }
 
-    pub fn add_class(mut self, name: String) -> Self {
-        self.class_list.push(name);
+    pub fn add_class<S>(mut self, name: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.class_list.push(name.into());
         self
     }
 
-    pub fn add_style(mut self, name: String) -> Self {
-        self.style_list.push(name);
+    pub fn add_style<S>(mut self, name: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.style_list.push(name.into());
         self
     }
 

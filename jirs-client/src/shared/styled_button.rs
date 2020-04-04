@@ -27,13 +27,14 @@ impl ToString for Variant {
 
 #[derive(Default)]
 pub struct StyledButtonBuilder {
-    pub variant: Option<Variant>,
-    pub disabled: Option<bool>,
-    pub active: Option<bool>,
-    pub text: Option<Option<String>>,
-    pub icon: Option<Option<Node<Msg>>>,
-    pub on_click: Option<Option<EventHandler<Msg>>>,
-    pub children: Option<Vec<Node<Msg>>>,
+    variant: Option<Variant>,
+    disabled: Option<bool>,
+    active: Option<bool>,
+    text: Option<Option<String>>,
+    icon: Option<Option<Node<Msg>>>,
+    on_click: Option<Option<EventHandler<Msg>>>,
+    children: Option<Vec<Node<Msg>>>,
+    class_list: Vec<String>,
 }
 
 impl StyledButtonBuilder {
@@ -67,13 +68,16 @@ impl StyledButtonBuilder {
     //     self
     // }
 
-    // pub fn active(mut self, value: bool) -> Self {
-    //     self.active = Some(value);
-    //     self
-    // }
+    pub fn active(mut self, value: bool) -> Self {
+        self.active = Some(value);
+        self
+    }
 
-    pub fn text(mut self, value: String) -> Self {
-        self.text = Some(Some(value));
+    pub fn text<S>(mut self, value: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.text = Some(Some(value.into()));
         self
     }
 
@@ -95,6 +99,14 @@ impl StyledButtonBuilder {
         self
     }
 
+    pub fn add_class<S>(mut self, name: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.class_list.push(name.into());
+        self
+    }
+
     pub fn build(self) -> StyledButton {
         StyledButton {
             variant: self.variant.unwrap_or_else(|| Variant::Primary),
@@ -104,18 +116,20 @@ impl StyledButtonBuilder {
             icon: self.icon.unwrap_or_else(|| None),
             on_click: self.on_click.unwrap_or_else(|| None),
             children: self.children.unwrap_or_default(),
+            class_list: self.class_list,
         }
     }
 }
 
 pub struct StyledButton {
-    pub variant: Variant,
-    pub disabled: bool,
-    pub active: bool,
-    pub text: Option<String>,
-    pub icon: Option<Node<Msg>>,
-    pub on_click: Option<EventHandler<Msg>>,
-    pub children: Vec<Node<Msg>>,
+    variant: Variant,
+    disabled: bool,
+    active: bool,
+    text: Option<String>,
+    icon: Option<Node<Msg>>,
+    on_click: Option<EventHandler<Msg>>,
+    children: Vec<Node<Msg>>,
+    class_list: Vec<String>,
 }
 
 impl StyledButton {
@@ -139,8 +153,10 @@ pub fn render(values: StyledButton) -> Node<Msg> {
         icon,
         on_click,
         children,
+        mut class_list,
     } = values;
-    let mut class_list = vec!["styledButton".to_string(), variant.to_string()];
+    class_list.push("styledButton".to_string());
+    class_list.push(variant.to_string());
     if children.is_empty() && text.is_none() {
         class_list.push("iconOnly".to_string());
     }

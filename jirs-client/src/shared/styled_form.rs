@@ -1,6 +1,7 @@
+use seed::{prelude::*, *};
+
 use crate::shared::ToNode;
 use crate::Msg;
-use seed::{prelude::*, *};
 
 #[derive(Debug, Clone)]
 pub struct StyledForm {
@@ -54,7 +55,7 @@ pub fn render(values: StyledForm) -> Node<Msg> {
         attrs![At::Class => "styledForm"],
         div![
             attrs![At::Class => "formElement"],
-            div![attrs![At::Class => "heading"], heading],
+            div![attrs![At::Class => "formHeading"], heading],
             fields
         ],
     ]

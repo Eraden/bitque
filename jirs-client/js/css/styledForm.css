@@ -10,3 +10,32 @@
     padding-bottom: 15px;
     font-size: 21px;
 }
+
+.styledForm > .formElement .selectItem {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.styledForm > .formElement .selectItem.withBottomMargin {
+    margin-bottom: 5px;
+}
+
+.styledForm > .formElement .selectItem > .selectItemLabel {
+    padding: 0 3px 0 6px;
+}
+
+.styledForm > .formElement .divider {
+    margin-top: 22px;
+    border-top: 1px solid var(--borderLightest);
+}
+
+.styledForm > .formElement > .actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 30px;
+}
+
+.styledForm > .formElement > .actions > .actionButton {
+    margin-left: 10px;
+}
