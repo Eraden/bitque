@@ -4,6 +4,7 @@ use jirs_data::IssueType;
 
 use crate::model::{AddIssueModal, Model};
 use crate::shared::styled_button::StyledButton;
+use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
@@ -18,13 +19,18 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .text_filter(modal.type_select_filter.as_str())
         .opened(modal.type_select_opened)
         .valid(true)
-        .tip("Start typing to get a list of possible matches.")
         .options(vec![
             IssueTypeOption(IssueType::Story),
             IssueTypeOption(IssueType::Task),
             IssueTypeOption(IssueType::Bug),
         ])
         .selected(vec![IssueTypeOption(modal.issue_type.clone())])
+        .build()
+        .into_node();
+    let issue_type_field = StyledField::build()
+        .label("Issue Type")
+        .tip("Start typing to get a list of possible matches.")
+        .input(select_type)
         .build()
         .into_node();
 
@@ -44,7 +50,8 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
 
     let form = StyledForm::build()
         .heading("Create issue")
-        .add_field(select_type)
+        .add_field(issue_type_field)
+        .add_field(crate::shared::divider())
         .add_field(actions)
         .build()
         .into_node();

@@ -39,3 +39,26 @@
 .styledForm > .formElement > .actions > .actionButton {
     margin-left: 10px;
 }
+
+.styledField {
+    display: block;
+}
+
+.styledField > .styledLabel {
+    display: block;
+    padding-bottom: 5px;
+    color: var(--textMedium);
+    font-family: var(--font-medium);
+    font-weight: normal;
+    font-size: 13px;
+}
+
+.styledField > .styledTip {
+    padding-top: 6px;
+    color: var(--textMedium);
+    font-size: 12.5px;
+}
+
+.styledField > * {
+    display: block;
+}

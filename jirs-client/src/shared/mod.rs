@@ -11,6 +11,7 @@ pub mod navbar_left;
 pub mod styled_avatar;
 pub mod styled_button;
 pub mod styled_confirm_modal;
+pub mod styled_field;
 pub mod styled_form;
 pub mod styled_icon;
 pub mod styled_input;
