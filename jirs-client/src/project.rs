@@ -12,15 +12,9 @@ use crate::Msg;
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
-        Msg::ChangePage(Page::Project) => {
-            orders
-                .skip()
-                .perform_cmd(crate::api::fetch_current_project(model.host_url.clone()));
-            orders
-                .skip()
-                .perform_cmd(crate::api::fetch_current_user(model.host_url.clone()));
-        }
-        Msg::ChangePage(Page::EditIssue(_issue_id)) => {
+        Msg::ChangePage(Page::Project)
+        | Msg::ChangePage(Page::AddIssue)
+        | Msg::ChangePage(Page::EditIssue(..)) => {
             orders
                 .skip()
                 .perform_cmd(crate::api::fetch_current_project(model.host_url.clone()));
@@ -118,6 +112,11 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::IssueUpdateResult(fetched) => {
             crate::api_handlers::update_issue_response(&fetched, model);
+        }
+        Msg::DeleteIssue(issue_id) => {
+            orders
+                .skip()
+                .perform_cmd(crate::api::delete_issue(model.host_url.clone(), issue_id));
         }
         _ => (),
     }

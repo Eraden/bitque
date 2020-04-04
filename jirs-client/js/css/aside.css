@@ -42,6 +42,7 @@ aside#navbar-left .item {
     transition: color 0.1s;
     cursor: pointer;
     user-select: none;
+    display: block;
 }
 
 aside#navbar-left .item:hover {

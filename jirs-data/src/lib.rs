@@ -22,6 +22,12 @@ pub enum IssueType {
     Story,
 }
 
+impl Default for IssueType {
+    fn default() -> Self {
+        IssueType::Task
+    }
+}
+
 impl IssueType {
     pub fn to_label(&self) -> &str {
         match self {
@@ -72,6 +78,12 @@ pub enum IssueStatus {
     Selected,
     InProgress,
     Done,
+}
+
+impl Default for IssueStatus {
+    fn default() -> Self {
+        IssueStatus::Backlog
+    }
 }
 
 impl FromStr for IssueStatus {
@@ -135,6 +147,12 @@ impl FromStr for IssuePriority {
             "1" | "lowest" => Ok(IssuePriority::Lowest),
             _ => Err(format!("Unknown priority {}", s)),
         }
+    }
+}
+
+impl Default for IssuePriority {
+    fn default() -> Self {
+        IssuePriority::Medium
     }
 }
 

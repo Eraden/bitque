@@ -26,6 +26,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .title("Are you sure you want to delete this issue?")
         .message("Once you delete, it's gone for good.")
         .confirm_text("Delete issue")
+        .cancel_text("Cancel")
         .on_confirm(handle_issue_delete)
         .build()
         .into_node()

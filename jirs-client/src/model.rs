@@ -11,6 +11,7 @@ pub type ProjectId = i32;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
+    AddIssue(AddIssueModal),
     EditIssue(IssueId, EditIssueModal),
     DeleteIssueConfirm(IssueId),
 }
@@ -24,10 +25,31 @@ pub struct EditIssueModal {
     pub link_copied: bool,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialOrd, PartialEq)]
+pub struct AddIssueModal {
+    pub title: String,
+    #[serde(rename = "type")]
+    pub issue_type: IssueType,
+    pub status: IssueStatus,
+    pub priority: IssuePriority,
+    pub description: Option<String>,
+    pub description_text: Option<String>,
+    pub estimate: Option<i32>,
+    pub time_spent: Option<i32>,
+    pub time_remaining: Option<i32>,
+    pub project_id: i32,
+    pub user_ids: Vec<i32>,
+
+    // modal fields
+    pub type_select_filter: String,
+    pub type_select_opened: bool,
+}
+
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub enum Page {
     Project,
     EditIssue(IssueId),
+    AddIssue,
     ProjectSettings,
     Login,
     Register,
@@ -38,6 +60,7 @@ impl Page {
         match self {
             Page::Project => "/board".to_string(),
             Page::EditIssue(id) => format!("/issues/{id}", id = id),
+            Page::AddIssue => format!("/add-issues"),
             Page::ProjectSettings => "/project-settings".to_string(),
             Page::Login => "/login".to_string(),
             Page::Register => "/register".to_string(),

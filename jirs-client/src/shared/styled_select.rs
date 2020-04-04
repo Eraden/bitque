@@ -1,5 +1,6 @@
 use seed::{prelude::*, *};
 
+use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
@@ -15,6 +16,12 @@ pub enum StyledSelectChange {
 pub enum Variant {
     Empty,
     Normal,
+}
+
+impl Default for Variant {
+    fn default() -> Self {
+        Variant::Empty
+    }
 }
 
 impl std::fmt::Display for Variant {
@@ -40,18 +47,18 @@ pub struct StyledSelect<Child>
 where
     Child: SelectOption + PartialEq,
 {
-    pub id: FieldId,
-    pub variant: Variant,
-    pub dropdown_width: Option<usize>,
-    pub name: Option<String>,
-    pub placeholder: Option<String>,
-    pub valid: bool,
-    pub is_multi: bool,
-    pub allow_clear: bool,
-    pub options: Vec<Child>,
-    pub selected: Vec<Child>,
-    pub text_filter: String,
-    pub opened: bool,
+    id: FieldId,
+    variant: Variant,
+    dropdown_width: Option<usize>,
+    name: Option<String>,
+    placeholder: Option<String>,
+    valid: bool,
+    is_multi: bool,
+    allow_clear: bool,
+    options: Vec<Child>,
+    selected: Vec<Child>,
+    text_filter: String,
+    opened: bool,
 }
 
 impl<Child> ToNode for StyledSelect<Child>
@@ -60,6 +67,115 @@ where
 {
     fn into_node(self) -> Node<Msg> {
         render(self)
+    }
+}
+
+impl<Child> StyledSelect<Child>
+where
+    Child: SelectOption + PartialEq,
+{
+    pub fn build(id: FieldId) -> StyledSelectBuilder<Child> {
+        StyledSelectBuilder {
+            id,
+            variant: None,
+            dropdown_width: None,
+            name: None,
+            placeholder: None,
+            valid: None,
+            is_multi: None,
+            allow_clear: None,
+            options: None,
+            selected: None,
+            text_filter: None,
+            opened: None,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct StyledSelectBuilder<Child>
+where
+    Child: SelectOption + PartialEq,
+{
+    id: FieldId,
+    variant: Option<Variant>,
+    dropdown_width: Option<Option<usize>>,
+    name: Option<Option<String>>,
+    placeholder: Option<Option<String>>,
+    valid: Option<bool>,
+    is_multi: Option<bool>,
+    allow_clear: Option<bool>,
+    options: Option<Vec<Child>>,
+    selected: Option<Vec<Child>>,
+    text_filter: Option<String>,
+    opened: Option<bool>,
+}
+
+impl<Child> StyledSelectBuilder<Child>
+where
+    Child: SelectOption + PartialEq,
+{
+    pub fn build(self) -> StyledSelect<Child> {
+        StyledSelect {
+            id: self.id,
+            variant: self.variant.unwrap_or_default(),
+            dropdown_width: self.dropdown_width.unwrap_or_default(),
+            name: self.name.unwrap_or_default(),
+            placeholder: self.placeholder.unwrap_or_default(),
+            valid: self.valid.unwrap_or(true),
+            is_multi: self.is_multi.unwrap_or_default(),
+            allow_clear: self.allow_clear.unwrap_or_default(),
+            options: self.options.unwrap_or_default(),
+            selected: self.selected.unwrap_or_default(),
+            text_filter: self.text_filter.unwrap_or_default(),
+            opened: self.opened.unwrap_or_default(),
+        }
+    }
+
+    pub fn dropdown_width(mut self, dropdown_width: usize) -> Self {
+        self.dropdown_width = Some(Some(dropdown_width));
+        self
+    }
+
+    pub fn name<S>(mut self, name: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.name = Some(Some(name.into()));
+        self
+    }
+
+    pub fn text_filter<S>(mut self, text_filter: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.text_filter = Some(text_filter.into());
+        self
+    }
+
+    pub fn opened(mut self, opened: bool) -> Self {
+        self.opened = Some(opened);
+        self
+    }
+
+    pub fn valid(mut self, valid: bool) -> Self {
+        self.valid = Some(valid);
+        self
+    }
+
+    pub fn options(mut self, options: Vec<Child>) -> Self {
+        self.options = Some(options);
+        self
+    }
+
+    pub fn selected(mut self, selected: Vec<Child>) -> Self {
+        self.selected = Some(selected);
+        self
+    }
+
+    pub fn normal(mut self) -> Self {
+        self.variant = Some(Variant::Normal);
+        self
     }
 }
 

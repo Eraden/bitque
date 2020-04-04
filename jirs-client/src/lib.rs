@@ -24,6 +24,7 @@ pub type AvatarFilterActive = bool;
 pub enum FieldId {
     IssueTypeEditModalTop,
     CopyButtonLabel,
+    IssueTypeAddIssueModal,
 }
 
 #[derive(Clone, Debug)]
@@ -56,6 +57,7 @@ pub enum Msg {
 
     // issues
     IssueUpdateResult(FetchObject<String>),
+    IssueDeleteResult(FetchObject<String>),
     DeleteIssue(IssueId),
 
     // modals
@@ -77,7 +79,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     crate::shared::update(&msg, model, orders);
     crate::modal::update(&msg, model, orders);
     match model.page {
-        Page::Project => project::update(msg, model, orders),
+        Page::Project | Page::AddIssue => project::update(msg, model, orders),
         Page::EditIssue(_id) => project::update(msg, model, orders),
         Page::ProjectSettings => project_settings::update(msg, model, orders),
         Page::Login => login::update(msg, model, orders),
@@ -90,7 +92,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
 
 fn view(model: &model::Model) -> Node<Msg> {
     match model.page {
-        Page::Project => project::view(model),
+        Page::Project | Page::AddIssue => project::view(model),
         Page::EditIssue(_id) => project::view(model),
         Page::ProjectSettings => project_settings::view(model),
         Page::Login => login::view(model),
@@ -109,6 +111,7 @@ fn routes(url: Url) -> Option<Msg> {
             Some(Ok(id)) => Some(Msg::ChangePage(model::Page::EditIssue(id))),
             _ => None,
         },
+        "add-issue" => Some(Msg::ChangePage(Page::AddIssue)),
         "project-settings" => Some(Msg::ChangePage(model::Page::ProjectSettings)),
         "login" => Some(Msg::ChangePage(model::Page::Login)),
         "register" => Some(Msg::ChangePage(model::Page::Register)),

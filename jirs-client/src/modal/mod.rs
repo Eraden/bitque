@@ -3,18 +3,23 @@ use seed::{prelude::*, *};
 use jirs_data::{Issue, IssueType, UpdateIssuePayload};
 
 use crate::api::update_issue;
-use crate::model::{EditIssueModal, ModalType, Page};
+use crate::model::{AddIssueModal, EditIssueModal, ModalType, Page};
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{find_issue, ToNode};
 use crate::{model, FieldChange, FieldId, Msg};
 
+mod add_issue;
 mod confirm_delete_issue;
 mod issue_details;
 
 pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::ModalDropped => match model.modals.pop() {
+            Some(ModalType::EditIssue(..)) => {
+                seed::push_route(vec!["board"]);
+                orders.send_msg(Msg::ChangePage(Page::Project));
+            }
             _ => (),
         },
 
@@ -44,6 +49,11 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
                     link_copied: false,
                 },
             ));
+        }
+        Msg::ChangePage(Page::AddIssue) => {
+            let mut modal = AddIssueModal::default();
+            modal.project_id = model.project.as_ref().map(|p| p.id).unwrap_or_default();
+            model.modals.push(ModalType::AddIssue(modal));
         }
 
         Msg::StyledSelectChanged(FieldId::IssueTypeEditModalTop, change) => {
@@ -125,7 +135,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                 }
             }
             ModalType::DeleteIssueConfirm(_id) => confirm_delete_issue::view(model),
-            _ => empty![],
+            ModalType::AddIssue(modal) => add_issue::view(model, modal),
         })
         .collect();
     section![id!["modals"], modals]

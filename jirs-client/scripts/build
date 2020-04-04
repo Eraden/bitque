@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+export NODE_ENV=production
+
+rm -Rf dist
+mkdir -p dist
+
+cp -R ./dev/* ./dist
+yarn svgo -r -o ./dist/ -f ./static
+yarn svgo -r -o ./dist/ -f ./js
+yarn svgo -r -o ./dist/ -f ./dev
+
+for f in $(ls {js,static,dev}/*.png); do
+    yarn optipng -dir ./dist -o7 ${f}
+done
+NODE_ENV=production RUST_LOG=error yarn webpack

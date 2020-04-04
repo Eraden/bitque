@@ -68,10 +68,10 @@ impl StyledModalBuilder {
         self
     }
 
-    pub fn with_icon(mut self, with_icon: bool) -> Self {
-        self.with_icon = Some(with_icon);
-        self
-    }
+    // pub fn with_icon(mut self, with_icon: bool) -> Self {
+    //     self.with_icon = Some(with_icon);
+    //     self
+    // }
 
     pub fn children(mut self, children: Vec<Node<Msg>>) -> Self {
         self.children = Some(children);

@@ -46,13 +46,13 @@ impl StyledButtonBuilder {
         self.variant(Variant::Primary)
     }
 
-    pub fn success(self) -> Self {
-        self.variant(Variant::Success)
-    }
+    // pub fn success(self) -> Self {
+    //     self.variant(Variant::Success)
+    // }
 
-    pub fn danger(self) -> Self {
-        self.variant(Variant::Danger)
-    }
+    // pub fn danger(self) -> Self {
+    //     self.variant(Variant::Danger)
+    // }
 
     pub fn secondary(self) -> Self {
         self.variant(Variant::Secondary)
@@ -62,15 +62,15 @@ impl StyledButtonBuilder {
         self.variant(Variant::Empty)
     }
 
-    pub fn disabled(mut self, value: bool) -> Self {
-        self.disabled = Some(value);
-        self
-    }
+    // pub fn disabled(mut self, value: bool) -> Self {
+    //     self.disabled = Some(value);
+    //     self
+    // }
 
-    pub fn active(mut self, value: bool) -> Self {
-        self.active = Some(value);
-        self
-    }
+    // pub fn active(mut self, value: bool) -> Self {
+    //     self.active = Some(value);
+    //     self
+    // }
 
     pub fn text(mut self, value: String) -> Self {
         self.text = Some(Some(value));

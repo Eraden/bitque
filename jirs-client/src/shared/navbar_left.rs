@@ -18,7 +18,11 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
                 div![attrs![At::Class => "styledLogo"], logo_svg]
             ],
             navbar_left_item(model, "Search issues", Icon::Search),
-            navbar_left_item(model, "Create Issue", Icon::Plus),
+            a![
+                attrs![At::Class => "item"; At::Href=> "/add-issue"; ],
+                i![attrs![At::Class => format!("styledIcon {}", Icon::Plus)]],
+                span![attrs![At::Class => "itemText"], "Create Issue"]
+            ],
             div![
                 attrs![At::Class => "bottom"],
                 about_tooltip(model, navbar_left_item(model, "About", Icon::Help)),

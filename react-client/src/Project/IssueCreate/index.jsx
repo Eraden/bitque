@@ -35,7 +35,6 @@ class ProjectIssueCreate extends React.Component {
                 ...this.state.form,
                 status: IssueStatus.BACKLOG,
                 projectId: project.id,
-                // userIds: values.userIds,
             });
             await fetchProject();
             toast.success('Issue has been successfully created.');

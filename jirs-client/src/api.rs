@@ -36,3 +36,16 @@ pub async fn update_issue(
         Err(e) => return Ok(Msg::InternalFailure(e)),
     }
 }
+
+pub async fn delete_issue(host_url: String, id: i32) -> Result<Msg, Msg> {
+    match host_client(host_url, format!("/issues/{id}", id = id).as_str()) {
+        Ok(client) => {
+            client
+                .method(Method::Delete)
+                .header("Content-Type", "application/json")
+                .fetch_string(Msg::IssueDeleteResult)
+                .await
+        }
+        Err(e) => return Ok(Msg::InternalFailure(e)),
+    }
+}

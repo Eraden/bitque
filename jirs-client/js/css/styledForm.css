@@ -1,0 +1,12 @@
+.styledForm {
+    display: block;
+}
+
+.styledForm > .formElement {
+    padding: 25px 40px 35px;
+}
+
+.styledForm > .formElement > .formHeading {
+    padding-bottom: 15px;
+    font-size: 21px;
+}

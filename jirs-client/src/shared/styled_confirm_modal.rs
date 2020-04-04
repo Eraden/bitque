@@ -12,13 +12,7 @@ const CONFIRM_TEXT: &str = "Confirm";
 const CANCEL_TEXT: &str = "Cancel";
 
 #[derive(Debug)]
-pub enum Variant {
-    Primary,
-}
-
-#[derive(Debug)]
 pub struct StyledConfirmModal {
-    pub variant: Variant,
     pub title: String,
     pub message: String,
     pub confirm_text: String,
@@ -40,7 +34,6 @@ impl ToNode for StyledConfirmModal {
 
 #[derive(Default)]
 pub struct StyledConfirmModalBuilder {
-    variant: Option<Variant>,
     title: Option<String>,
     message: Option<String>,
     confirm_text: Option<String>,
@@ -49,11 +42,6 @@ pub struct StyledConfirmModalBuilder {
 }
 
 impl StyledConfirmModalBuilder {
-    pub fn variant(mut self, variant: Variant) -> Self {
-        self.variant = Some(variant);
-        self
-    }
-
     pub fn title<S>(mut self, title: S) -> Self
     where
         S: Into<String>,
@@ -93,7 +81,6 @@ impl StyledConfirmModalBuilder {
 
     pub fn build(self) -> StyledConfirmModal {
         StyledConfirmModal {
-            variant: self.variant.unwrap_or_else(|| Variant::Primary),
             title: self.title.unwrap_or_else(|| TITLE.to_string()),
             message: self.message.unwrap_or_else(|| MESSAGE.to_string()),
             confirm_text: self
@@ -107,7 +94,6 @@ impl StyledConfirmModalBuilder {
 
 pub fn render(values: StyledConfirmModal) -> Node<Msg> {
     let StyledConfirmModal {
-        variant,
         title,
         message,
         confirm_text,
