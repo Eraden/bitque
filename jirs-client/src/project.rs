@@ -172,13 +172,15 @@ fn header() -> Node<Msg> {
 }
 
 fn project_board_filters(model: &Model) -> Node<Msg> {
-    let search_input = StyledInput {
-        icon: Some(Icon::Search),
-        id: Some("searchInput".to_string()),
-        valid: true,
-        on_change: input_ev(Ev::Change, |value| Msg::ProjectTextFilterChanged(value)),
-    }
-    .into_node();
+    let search_input = StyledInput::build()
+        .icon(Icon::Search)
+        .id("searchInput")
+        .valid(true)
+        .on_change(input_ev(Ev::Change, |value| {
+            Msg::ProjectTextFilterChanged(value)
+        }))
+        .build()
+        .into_node();
 
     let project_page = &model.project_page;
 

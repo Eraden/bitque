@@ -7,6 +7,7 @@ use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_icon::{Icon, StyledIcon};
+use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelect;
 use crate::shared::ToNode;
@@ -34,6 +35,18 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
+    let short_summary = StyledInput::build()
+        .id("issue-short-summary")
+        .valid(true)
+        .build()
+        .into_node();
+    let short_summary_field = StyledField::build()
+        .label("Short Summary")
+        .tip("Concisely summarize the issue in one or two sentences.")
+        .input(short_summary)
+        .build()
+        .into_node();
+
     let submit = StyledButton::build()
         .primary()
         .text("Create Issue")
@@ -52,6 +65,7 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .heading("Create issue")
         .add_field(issue_type_field)
         .add_field(crate::shared::divider())
+        .add_field(short_summary_field)
         .add_field(actions)
         .build()
         .into_node();
