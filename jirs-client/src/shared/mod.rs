@@ -17,6 +17,7 @@ pub mod styled_icon;
 pub mod styled_input;
 pub mod styled_modal;
 pub mod styled_select;
+pub mod styled_textarea;
 pub mod styled_tooltip;
 
 pub fn find_issue(model: &Model, issue_id: IssueId) -> Option<&Issue> {

@@ -18,11 +18,15 @@ jirs-data = { path = "../jirs-data" }
 seed = { version = "*" }
 serde = "*"
 serde_json = "*"
+bincode = "1.2.1"
 chrono = { version = "*", features = [ "serde" ] }
 uuid = { version = "*", features = [ "serde" ] }
 wasm-bindgen = "*"
-js-sys = "*"
 futures = "^0.1.26"
+lazy_static = "*"
+
+[dependencies.js-sys]
+js-sys = "*"
 
 [dependencies.web-sys]
 version = "*"
@@ -34,5 +38,9 @@ features = [
     "DomRect",
     "HtmlDocument",
     "Document",
-    "Selection"
+    "Selection",
+    "CssStyleDeclaration",
+    "WebSocket",
+    "BinaryType",
+    "Blob",
 ]

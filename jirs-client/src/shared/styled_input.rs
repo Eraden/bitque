@@ -2,39 +2,36 @@ use seed::{prelude::*, *};
 
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::ToNode;
-use crate::Msg;
+use crate::{FieldId, Msg};
 
 #[derive(Debug)]
 pub struct StyledInput {
-    id: Option<String>,
+    id: FieldId,
     icon: Option<Icon>,
     valid: bool,
     on_change: Option<EventHandler<Msg>>,
 }
 
 impl StyledInput {
-    pub fn build() -> StyledInputBuilder {
-        StyledInputBuilder::default()
+    pub fn build(id: FieldId) -> StyledInputBuilder {
+        StyledInputBuilder {
+            id,
+            icon: None,
+            valid: None,
+            on_change: None,
+        }
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct StyledInputBuilder {
-    id: Option<String>,
+    id: FieldId,
     icon: Option<Icon>,
     valid: Option<bool>,
     on_change: Option<EventHandler<Msg>>,
 }
 
 impl StyledInputBuilder {
-    pub fn id<S>(mut self, id: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.id = Some(id.into());
-        self
-    }
-
     pub fn icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
         self
@@ -89,15 +86,17 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         _ => empty![],
     };
 
-    let input_node = match on_change {
-        Some(on_change) => seed::input![attrs![At::Class => input_class_list.join(" ")], on_change],
-        _ => seed::input![attrs![At::Class => input_class_list.join(" ")]],
-    };
+    let mut handlers = vec![];
+
+    if let Some(handler) = on_change {
+        handlers.push(handler);
+    }
+    let input_handler = input_ev(Ev::KeyPress, move |value| Msg::InputChanged(id, value));
+    handlers.push(input_handler);
 
     div![
-        id![id.unwrap_or_default()],
         attrs!(At::Class => wrapper_class_list.join(" ")),
         icon,
-        input_node,
+        seed::input![attrs![At::Class => input_class_list.join(" ")], handlers],
     ]
 }

@@ -12,6 +12,7 @@ pub mod middleware;
 pub mod models;
 pub mod routes;
 pub mod schema;
+pub mod ws;
 
 #[actix_rt::main]
 async fn main() -> Result<(), String> {
@@ -30,6 +31,7 @@ async fn main() -> Result<(), String> {
             .wrap(Cors::default())
             .data(db_addr.clone())
             .data(crate::db::build_pool())
+            .service(crate::ws::index)
             .service(
                 web::scope("/issues")
                     .service(crate::routes::issues::project_issues)

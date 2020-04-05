@@ -386,3 +386,9 @@ pub struct UpdateProjectPayload {
     pub description: Option<String>,
     pub category: Option<String>,
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum WsMsg {
+    Ping,
+    Pong,
+}

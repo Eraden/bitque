@@ -4,11 +4,11 @@ use jirs_data::*;
 
 use crate::model::{Model, Page};
 use crate::shared::styled_avatar::StyledAvatar;
-use crate::shared::styled_button::{StyledButton, Variant as ButtonVariant};
+use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::{drag_ev, inner_layout, ToNode};
-use crate::Msg;
+use crate::{FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -172,11 +172,11 @@ fn header() -> Node<Msg> {
 }
 
 fn project_board_filters(model: &Model) -> Node<Msg> {
-    let search_input = StyledInput::build()
+    let search_input = StyledInput::build(FieldId::TextFilterBoard)
         .icon(Icon::Search)
-        .id("searchInput")
         .valid(true)
         .on_change(input_ev(Ev::Change, |value| {
+            crate::api::ws_send(WsMsg::Ping);
             Msg::ProjectTextFilterChanged(value)
         }))
         .build()

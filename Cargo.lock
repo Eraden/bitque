@@ -284,6 +284,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-web-actors"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc1bd41bd66c4e9b5274cec87aac30168e63d64e96fd19db38edef6b46ba2982"
+dependencies = [
+ "actix",
+ "actix-codec",
+ "actix-http",
+ "actix-web",
+ "bytes",
+ "futures 0.3.4",
+ "pin-project",
+]
+
+[[package]]
 name = "actix-web-codegen"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -423,6 +438,16 @@ dependencies = [
  "num-bigint",
  "num-integer",
  "num-traits",
+]
+
+[[package]]
+name = "bincode"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5753e2a71534719bf3f4e57006c3a4f0d2c672a4b676eec84161f763eca87dbf"
+dependencies = [
+ "byteorder",
+ "serde",
 ]
 
 [[package]]
@@ -1038,10 +1063,12 @@ version = "0.1.0"
 name = "jirs-client"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "chrono",
  "futures 0.1.29",
  "jirs-data",
  "js-sys",
+ "lazy_static",
  "seed",
  "serde",
  "serde_json",
@@ -1070,7 +1097,9 @@ dependencies = [
  "actix-rt",
  "actix-service",
  "actix-web",
+ "actix-web-actors",
  "bigdecimal",
+ "bincode",
  "bitflags",
  "byteorder",
  "chrono",

@@ -1,6 +1,5 @@
 use seed::{prelude::*, *};
 
-use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
@@ -51,7 +50,6 @@ where
     variant: Variant,
     dropdown_width: Option<usize>,
     name: Option<String>,
-    placeholder: Option<String>,
     valid: bool,
     is_multi: bool,
     allow_clear: bool,
@@ -80,7 +78,6 @@ where
             variant: None,
             dropdown_width: None,
             name: None,
-            placeholder: None,
             valid: None,
             is_multi: None,
             allow_clear: None,
@@ -101,7 +98,6 @@ where
     variant: Option<Variant>,
     dropdown_width: Option<Option<usize>>,
     name: Option<Option<String>>,
-    placeholder: Option<Option<String>>,
     valid: Option<bool>,
     is_multi: Option<bool>,
     allow_clear: Option<bool>,
@@ -121,7 +117,6 @@ where
             variant: self.variant.unwrap_or_default(),
             dropdown_width: self.dropdown_width.unwrap_or_default(),
             name: self.name.unwrap_or_default(),
-            placeholder: self.placeholder.unwrap_or_default(),
             valid: self.valid.unwrap_or(true),
             is_multi: self.is_multi.unwrap_or_default(),
             allow_clear: self.allow_clear.unwrap_or_default(),
@@ -188,7 +183,6 @@ where
         variant,
         dropdown_width,
         name,
-        placeholder: _,
         valid,
         is_multi,
         allow_clear,

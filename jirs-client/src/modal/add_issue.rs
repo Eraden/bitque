@@ -6,10 +6,11 @@ use crate::model::{AddIssueModal, Model};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
-use crate::shared::styled_icon::{Icon, StyledIcon};
+use crate::shared::styled_icon::StyledIcon;
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelect;
+use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
@@ -35,8 +36,7 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let short_summary = StyledInput::build()
-        .id("issue-short-summary")
+    let short_summary = StyledInput::build(FieldId::SummaryAddIssueModal)
         .valid(true)
         .build()
         .into_node();
@@ -44,6 +44,17 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .label("Short Summary")
         .tip("Concisely summarize the issue in one or two sentences.")
         .input(short_summary)
+        .build()
+        .into_node();
+
+    let description = StyledTextarea::build()
+        .height(110)
+        .build(FieldId::DescriptionAddIssueModal)
+        .into_node();
+    let description_field = StyledField::build()
+        .label("Description")
+        .tip("Describe the issue in as much detail as you'd like.")
+        .input(description)
         .build()
         .into_node();
 
@@ -66,6 +77,7 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .add_field(issue_type_field)
         .add_field(crate::shared::divider())
         .add_field(short_summary_field)
+        .add_field(description_field)
         .add_field(actions)
         .build()
         .into_node();

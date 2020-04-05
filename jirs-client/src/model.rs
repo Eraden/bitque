@@ -94,7 +94,7 @@ pub struct ProjectPage {
     pub dragged_issue_id: Option<IssueId>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub struct Model {
     pub access_token: Option<Uuid>,
     pub user: Option<User>,

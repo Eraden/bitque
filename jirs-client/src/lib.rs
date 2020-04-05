@@ -1,9 +1,13 @@
+#[macro_use]
+extern crate lazy_static;
+
 use seed::fetch::FetchObject;
 use seed::{prelude::*, *};
 
 use jirs_data::IssueStatus;
 
-use crate::model::{ModalType, Page};
+use crate::api::ws;
+use crate::model::{ModalType, Model, Page};
 use crate::shared::styled_select::StyledSelectChange;
 
 mod api;
@@ -22,9 +26,16 @@ pub type AvatarFilterActive = bool;
 
 #[derive(Clone, Debug)]
 pub enum FieldId {
+    // edit issue
     IssueTypeEditModalTop,
+    // project boards
+    TextFilterBoard,
+    //
     CopyButtonLabel,
+    // add issue
     IssueTypeAddIssueModal,
+    SummaryAddIssueModal,
+    DescriptionAddIssueModal,
 }
 
 #[derive(Clone, Debug)]
@@ -54,6 +65,9 @@ pub enum Msg {
     IssueDragStarted(IssueId),
     IssueDragStopped(IssueId),
     IssueDropZone(IssueStatus),
+
+    // inputs
+    InputChanged(FieldId, String),
 
     // issues
     IssueUpdateResult(FetchObject<String>),
@@ -128,7 +142,16 @@ pub fn set_host_url(url: String) {
     }
 }
 
+fn after_mount(_url: Url, _orders: &mut impl Orders<Msg>) -> AfterMount<Model> {
+    ws();
+    let model = Model::default();
+    AfterMount::new(model).url_handling(UrlHandling::None)
+}
+
 #[wasm_bindgen]
 pub fn render() {
-    App::builder(update, view).routes(routes).build_and_start();
+    App::builder(update, view)
+        .routes(routes)
+        .after_mount(after_mount)
+        .build_and_start();
 }
