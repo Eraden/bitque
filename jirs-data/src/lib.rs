@@ -391,6 +391,8 @@ pub struct UpdateProjectPayload {
 pub enum WsMsg {
     Ping,
     Pong,
+    AuthorizeRequest(Uuid),
+    AuthorizeLoaded(Result<User, String>),
     ProjectRequest,
     ProjectLoaded(Project),
     ProjectIssuesRequest(i32),

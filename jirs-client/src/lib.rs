@@ -58,6 +58,11 @@ pub enum FieldChange {
 #[derive(Clone, Debug)]
 pub enum Msg {
     NoOp,
+
+    // Auth Token
+    AuthTokenStored,
+    AuthTokenErased,
+
     StyledSelectChanged(FieldId, StyledSelectChange),
 
     ChangePage(model::Page),

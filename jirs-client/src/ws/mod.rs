@@ -5,7 +5,7 @@ use seed::{prelude::*, *};
 use jirs_data::WsMsg;
 
 use crate::model::Model;
-use crate::{model, Msg, APP, RECEIVED};
+use crate::{model, Msg, APP};
 
 pub fn handle(msg: WsMsg) {
     let app = match unsafe { APP.as_mut().unwrap() }.write() {

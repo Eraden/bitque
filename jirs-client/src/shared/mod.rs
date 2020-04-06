@@ -51,17 +51,45 @@ pub fn inner_layout(
     ]
 }
 
-pub fn host_client(host_url: String, path: &str) -> Result<Request, String> {
-    let url = format!("{}{}", host_url, path);
+pub fn write_auth_token(token: Option<uuid::Uuid>) -> Result<Msg, String> {
     let w = window();
     let store = match w.local_storage() {
         Ok(Some(store)) => store,
         _ => return Err("Local storage is not available".to_string()),
     };
-    let token = match store.get_item("authToken") {
-        Ok(Some(s)) => s,
-        _ => "".to_string(),
+    store
+        .set_item(
+            "authToken",
+            token
+                .as_ref()
+                .map(|t| format!("{}", t))
+                .unwrap_or_default()
+                .as_str(),
+        )
+        .map_err(|_e| "Failed to read auth token".to_string())?;
+    Ok(match token {
+        Some(_) => Msg::AuthTokenStored,
+        _ => Msg::AuthTokenErased,
+    })
+}
+
+pub fn read_auth_token() -> Result<uuid::Uuid, String> {
+    let w = window();
+    let store = match w.local_storage() {
+        Ok(Some(store)) => store,
+        _ => return Err("Local storage is not available".to_string()),
     };
+    store
+        .get_item("authToken")
+        .map_err(|e| "Failed to read auth token".to_string())?
+        .ok_or_else(|| "Auth token not found".to_string())?
+        .parse()
+        .map_err(|_| "Bad token format".to_string())
+}
+
+pub fn host_client(host_url: String, path: &str) -> Result<Request, String> {
+    let url = format!("{}{}", host_url, path);
+    let token = read_auth_token()?;
     Ok(Request::new(url).header("Authorization", format!("Bearer {}", token).as_str()))
 }
 
