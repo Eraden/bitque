@@ -395,6 +395,8 @@ pub enum WsMsg {
     AuthorizeLoaded(Result<User, String>),
     ProjectRequest,
     ProjectLoaded(Project),
-    ProjectIssuesRequest(i32),
+    ProjectIssuesRequest,
     ProjectIssuesLoaded(Vec<Issue>),
+    ProjectUsersRequest,
+    ProjectUsersLoaded(Vec<User>),
 }

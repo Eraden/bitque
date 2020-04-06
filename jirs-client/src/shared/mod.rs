@@ -21,10 +21,7 @@ pub mod styled_textarea;
 pub mod styled_tooltip;
 
 pub fn find_issue(model: &Model, issue_id: IssueId) -> Option<&Issue> {
-    match model.project.as_ref() {
-        Some(p) => p.issues.iter().find(|issue| issue.id == issue_id),
-        _ => None,
-    }
+    model.issues.iter().find(|issue| issue.id == issue_id)
 }
 
 pub trait ToNode {
@@ -81,7 +78,7 @@ pub fn read_auth_token() -> Result<uuid::Uuid, String> {
     };
     store
         .get_item("authToken")
-        .map_err(|e| "Failed to read auth token".to_string())?
+        .map_err(|_e| "Failed to read auth token".to_string())?
         .ok_or_else(|| "Auth token not found".to_string())?
         .parse()
         .map_err(|_| "Bad token format".to_string())
@@ -91,18 +88,6 @@ pub fn host_client(host_url: String, path: &str) -> Result<Request, String> {
     let url = format!("{}{}", host_url, path);
     let token = read_auth_token()?;
     Ok(Request::new(url).header("Authorization", format!("Bearer {}", token).as_str()))
-}
-
-pub fn update(msg: &Msg, model: &mut crate::model::Model, _orders: &mut impl Orders<Msg>) {
-    match msg {
-        Msg::CurrentProjectResult(fetched) => {
-            crate::api_handlers::current_project_response(fetched, model);
-        }
-        Msg::CurrentUserResult(fetched) => {
-            crate::api_handlers::current_user_response(fetched, model);
-        }
-        _ => (),
-    }
 }
 
 pub fn drag_ev<Ms>(

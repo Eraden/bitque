@@ -97,19 +97,20 @@ pub struct ProjectPage {
 #[derive(Debug)]
 pub struct Model {
     pub access_token: Option<Uuid>,
-    pub user: Option<User>,
-    pub project: Option<FullProject>,
     pub project_form: Option<UpdateProjectForm>,
     pub issue_form: Option<CreateIssueForm>,
     pub comment_form: Option<CreateCommentForm>,
-    pub issues: Vec<Issue>,
+
     pub comments_by_project_id: HashMap<ProjectId, Vec<Comment>>,
     pub page: Page,
     pub host_url: String,
     pub project_page: ProjectPage,
     pub modals: Vec<ModalType>,
 
-    pub current_project: Option<Project>,
+    pub project: Option<Project>,
+    pub user: Option<User>,
+    pub issues: Vec<Issue>,
+    pub users: Vec<User>,
 }
 
 impl Default for Model {
@@ -117,12 +118,12 @@ impl Default for Model {
         let host_url = unsafe { HOST_URL.clone() };
         Self {
             access_token: None,
-            project: None,
             user: None,
             issue_form: None,
             project_form: None,
             comment_form: None,
             issues: vec![],
+            users: vec![],
             comments_by_project_id: Default::default(),
             page: Page::Project,
             host_url,
@@ -135,7 +136,7 @@ impl Default for Model {
                 dragged_issue_id: None,
             },
             modals: vec![],
-            current_project: None,
+            project: None,
         }
     }
 }

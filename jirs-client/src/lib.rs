@@ -5,7 +5,9 @@ use seed::{prelude::*, *};
 
 use jirs_data::{IssueStatus, WsMsg};
 
+use crate::api::send_ws_msg;
 use crate::model::{ModalType, Model, Page};
+use crate::shared::read_auth_token;
 use crate::shared::styled_select::StyledSelectChange;
 
 mod api;
@@ -67,7 +69,6 @@ pub enum Msg {
 
     ChangePage(model::Page),
     CurrentProjectResult(FetchObject<String>),
-    CurrentUserResult(FetchObject<String>),
     InternalFailure(String),
     ToggleAboutTooltip,
 
@@ -110,7 +111,6 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         _ => (),
     }
     crate::ws::update(&msg, model, orders);
-    crate::shared::update(&msg, model, orders);
     crate::modal::update(&msg, model, orders);
     match model.page {
         Page::Project | Page::AddIssue => project::update(msg, model, orders),
@@ -171,11 +171,18 @@ pub fn handle_ws_message(value: &wasm_bindgen::JsValue) {
         v.push(a.get_index(idx));
     }
     match bincode::deserialize(v.as_slice()) {
-        Ok(msg) => unsafe {
+        Ok(msg) => {
             ws::handle(msg);
-        },
+        }
         _ => (),
     };
+}
+
+#[wasm_bindgen]
+pub fn reconnected() {
+    if let Ok(uuid) = read_auth_token() {
+        send_ws_msg(WsMsg::AuthorizeRequest(uuid));
+    }
 }
 
 #[wasm_bindgen]
@@ -185,8 +192,6 @@ extern "C" {
 
 #[wasm_bindgen]
 pub fn render() {
-    use seed::*;
-
     seed::set_interval(
         Box::new(|| {
             let binary = bincode::serialize(&jirs_data::WsMsg::Ping).unwrap();
@@ -199,6 +204,11 @@ pub fn render() {
     let app = seed::App::builder(update, view)
         .routes(routes)
         .build_and_start();
+
+    match crate::shared::read_auth_token() {
+        Ok(uuid) => send_ws_msg(WsMsg::AuthorizeRequest(uuid)),
+        _ => (),
+    };
 
     let cell_app = std::sync::RwLock::new(app);
     unsafe {

@@ -13,6 +13,7 @@ import("../pkg/index.js").then(module => {
         ws.binaryType = 'blob';
         ws.onopen = event => {
             console.log('open', event);
+            module.reconnected();
         };
         ws.onerror = event => {
             console.error(event);

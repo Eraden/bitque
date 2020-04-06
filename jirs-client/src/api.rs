@@ -14,20 +14,6 @@ pub fn send_ws_msg(msg: WsMsg) {
     send_bin_code(data);
 }
 
-pub async fn fetch_current_project(host_url: String) -> Result<Msg, Msg> {
-    match host_client(host_url, "/project") {
-        Ok(client) => client.fetch_string(Msg::CurrentProjectResult).await,
-        Err(e) => Err(Msg::InternalFailure(e)),
-    }
-}
-
-pub async fn fetch_current_user(host_url: String) -> Result<Msg, Msg> {
-    match host_client(host_url, "/currentUser") {
-        Ok(client) => client.fetch_string(Msg::CurrentUserResult).await,
-        Err(e) => Err(Msg::InternalFailure(e)),
-    }
-}
-
 pub async fn update_issue(
     host_url: String,
     id: i32,

@@ -1,10 +1,7 @@
-use std::sync::RwLock;
-
-use seed::{prelude::*, *};
+use seed::prelude::*;
 
 use jirs_data::WsMsg;
 
-use crate::model::Model;
 use crate::{model, Msg, APP};
 
 pub fn handle(msg: WsMsg) {
@@ -19,12 +16,21 @@ pub fn handle(msg: WsMsg) {
     }
 }
 
-pub fn update(msg: &Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>) {
+pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::WsMsg(WsMsg::ProjectLoaded(project)) => {
-            model.current_project = Some(project.clone());
-            log!(model);
+            model.project = Some(project.clone());
+        }
+        Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(user))) => {
+            model.user = Some(user.clone());
+        }
+        Msg::WsMsg(WsMsg::ProjectIssuesLoaded(v)) => {
+            model.issues = v.clone();
+        }
+        Msg::WsMsg(WsMsg::ProjectUsersLoaded(v)) => {
+            model.users = v.clone();
         }
         _ => (),
-    }
+    };
+    orders.render();
 }

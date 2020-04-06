@@ -72,12 +72,8 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
                     Some(ModalType::EditIssue(issue_id, modal)),
                 ) => {
                     modal.value = (*value).into();
-                    let project = match model.project.as_mut() {
-                        Some(p) => p,
-                        _ => return,
-                    };
                     let mut found: Option<&mut Issue> = None;
-                    for issue in project.issues.iter_mut() {
+                    for issue in model.issues.iter_mut() {
                         if issue.id == *issue_id {
                             found = Some(issue);
                             break;

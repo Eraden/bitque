@@ -15,15 +15,11 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
     match msg {
         Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
-        | Msg::ChangePage(Page::EditIssue(..)) => {
+        | Msg::ChangePage(Page::EditIssue(..))
+        | Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) => {
             send_ws_msg(jirs_data::WsMsg::ProjectRequest);
-
-            orders
-                .skip()
-                .perform_cmd(crate::api::fetch_current_project(model.host_url.clone()));
-            orders
-                .skip()
-                .perform_cmd(crate::api::fetch_current_user(model.host_url.clone()));
+            send_ws_msg(jirs_data::WsMsg::ProjectIssuesRequest);
+            send_ws_msg(jirs_data::WsMsg::ProjectUsersRequest);
         }
         Msg::ToggleAboutTooltip => {
             model.project_page.about_tooltip_visible = !model.project_page.about_tooltip_visible;
@@ -64,55 +60,50 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         Msg::IssueDragStopped(_) => {
             model.project_page.dragged_issue_id = None;
         }
-        Msg::IssueDropZone(status) => {
-            match (
-                model.project_page.dragged_issue_id.as_ref().cloned(),
-                model.project.as_mut(),
-            ) {
-                (Some(issue_id), Some(project)) => {
-                    let mut position = 0f64;
-                    let mut found: Option<&mut Issue> = None;
-                    for issue in project.issues.iter_mut() {
-                        if issue.status == status {
-                            position += 1f64;
-                        }
-                        if issue.id == issue_id {
-                            found = Some(issue);
-                            break;
-                        }
+        Msg::IssueDropZone(status) => match model.project_page.dragged_issue_id.as_ref().cloned() {
+            Some(issue_id) => {
+                let mut position = 0f64;
+                let mut found: Option<&mut Issue> = None;
+                for issue in model.issues.iter_mut() {
+                    if issue.status == status {
+                        position += 1f64;
                     }
-                    let issue = match found {
-                        Some(i) => i,
-                        _ => return,
-                    };
-
-                    issue.status = status.clone();
-                    issue.list_position = position + 1f64;
-
-                    let payload = UpdateIssuePayload {
-                        title: Some(issue.title.clone()),
-                        issue_type: Some(issue.issue_type.clone()),
-                        status: Some(status),
-                        priority: Some(issue.priority.clone()),
-                        list_position: Some(issue.list_position),
-                        description: Some(issue.description.clone()),
-                        description_text: Some(issue.description_text.clone()),
-                        estimate: Some(issue.estimate),
-                        time_spent: Some(issue.time_spent),
-                        time_remaining: Some(issue.time_remaining),
-                        project_id: Some(issue.project_id),
-                        user_ids: Some(issue.user_ids.clone()),
-                    };
-                    model.project_page.dragged_issue_id = None;
-                    orders.skip().perform_cmd(crate::api::update_issue(
-                        model.host_url.clone(),
-                        issue.id,
-                        payload,
-                    ));
+                    if issue.id == issue_id {
+                        found = Some(issue);
+                        break;
+                    }
                 }
-                _ => error!("Drag stopped before drop :("),
+                let issue = match found {
+                    Some(i) => i,
+                    _ => return,
+                };
+
+                issue.status = status.clone();
+                issue.list_position = position + 1f64;
+
+                let payload = UpdateIssuePayload {
+                    title: Some(issue.title.clone()),
+                    issue_type: Some(issue.issue_type.clone()),
+                    status: Some(status),
+                    priority: Some(issue.priority.clone()),
+                    list_position: Some(issue.list_position),
+                    description: Some(issue.description.clone()),
+                    description_text: Some(issue.description_text.clone()),
+                    estimate: Some(issue.estimate),
+                    time_spent: Some(issue.time_spent),
+                    time_remaining: Some(issue.time_remaining),
+                    project_id: Some(issue.project_id),
+                    user_ids: Some(issue.user_ids.clone()),
+                };
+                model.project_page.dragged_issue_id = None;
+                orders.skip().perform_cmd(crate::api::update_issue(
+                    model.host_url.clone(),
+                    issue.id,
+                    payload,
+                ));
             }
-        }
+            _ => error!("Drag stopped before drop :("),
+        },
         Msg::IssueUpdateResult(fetched) => {
             crate::api_handlers::update_issue_response(&fetched, model);
         }
@@ -224,12 +215,8 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
 }
 
 fn avatars_filters(model: &Model) -> Node<Msg> {
-    let project = match model.project.as_ref() {
-        Some(p) => p,
-        _ => return empty![],
-    };
     let active_avatar_filters = &model.project_page.active_avatar_filters;
-    let avatars: Vec<Node<Msg>> = project
+    let avatars: Vec<Node<Msg>> = model
         .users
         .iter()
         .map(|user| {
@@ -270,11 +257,11 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
         Some(p) => p,
         _ => return empty![],
     };
-    let issues: Vec<Node<Msg>> = project
+    let issues: Vec<Node<Msg>> = model
         .issues
         .iter()
         .filter(|issue| status == issue.status)
-        .map(|issue| project_issue(model, project, issue))
+        .map(|issue| project_issue(model, issue))
         .collect();
     let label = status.to_label();
 
@@ -304,8 +291,8 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
     ]
 }
 
-fn project_issue(model: &Model, project: &FullProject, issue: &Issue) -> Node<Msg> {
-    let avatars: Vec<Node<Msg>> = project
+fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
+    let avatars: Vec<Node<Msg>> = model
         .users
         .iter()
         .filter(|user| issue.user_ids.contains(&user.id))
