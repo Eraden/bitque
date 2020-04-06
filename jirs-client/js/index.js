@@ -23,6 +23,9 @@ import("../pkg/index.js").then(module => {
             const array = new Uint8Array(arrayBuffer);
             module.handle_ws_message(array);
         };
+        ws.onclose = () => {
+            setTimeout(() => buildWebSocket(), 600);
+        };
     };
     buildWebSocket();
 
