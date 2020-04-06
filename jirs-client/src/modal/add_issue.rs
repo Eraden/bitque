@@ -48,6 +48,7 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .into_node();
 
     let description = StyledTextarea::build()
+        .on_change(input_ev(Ev::Change, |_| Msg::NoOp))
         .height(110)
         .build(FieldId::DescriptionAddIssueModal)
         .into_node();

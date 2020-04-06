@@ -5,6 +5,7 @@ use jirs_data::ErrorResponse;
 const TOKEN_NOT_FOUND: &str = "Token not found";
 const DATABASE_CONNECTION_FAILED: &str = "Database connection failed";
 
+#[derive(Debug)]
 pub enum ServiceErrors {
     Unauthorized,
     DatabaseConnectionLost,

@@ -2,6 +2,7 @@ use seed::{prelude::*, *};
 
 use jirs_data::*;
 
+use crate::api::send_ws_msg;
 use crate::model::{Model, Page};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
@@ -15,6 +16,8 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
         | Msg::ChangePage(Page::EditIssue(..)) => {
+            send_ws_msg(jirs_data::WsMsg::ProjectRequest);
+
             orders
                 .skip()
                 .perform_cmd(crate::api::fetch_current_project(model.host_url.clone()));
@@ -176,7 +179,6 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         .icon(Icon::Search)
         .valid(true)
         .on_change(input_ev(Ev::Change, |value| {
-            crate::api::ws_send(WsMsg::Ping);
             Msg::ProjectTextFilterChanged(value)
         }))
         .build()

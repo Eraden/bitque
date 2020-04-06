@@ -108,6 +108,8 @@ pub struct Model {
     pub host_url: String,
     pub project_page: ProjectPage,
     pub modals: Vec<ModalType>,
+
+    pub current_project: Option<Project>,
 }
 
 impl Default for Model {
@@ -133,6 +135,7 @@ impl Default for Model {
                 dragged_issue_id: None,
             },
             modals: vec![],
+            current_project: None,
         }
     }
 }

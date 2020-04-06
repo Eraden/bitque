@@ -387,8 +387,12 @@ pub struct UpdateProjectPayload {
     pub category: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum WsMsg {
     Ping,
     Pong,
+    ProjectRequest,
+    ProjectLoaded(Project),
+    ProjectIssuesRequest(i32),
+    ProjectIssuesLoaded(Vec<Issue>),
 }

@@ -1,12 +1,10 @@
-#[macro_use]
-extern crate lazy_static;
+use std::sync::RwLock;
 
 use seed::fetch::FetchObject;
 use seed::{prelude::*, *};
 
-use jirs_data::IssueStatus;
+use jirs_data::{IssueStatus, WsMsg};
 
-use crate::api::ws;
 use crate::model::{ModalType, Model, Page};
 use crate::shared::styled_select::StyledSelectChange;
 
@@ -19,6 +17,7 @@ mod project;
 mod project_settings;
 mod register;
 mod shared;
+mod ws;
 
 pub type UserId = i32;
 pub type IssueId = i32;
@@ -36,6 +35,19 @@ pub enum FieldId {
     IssueTypeAddIssueModal,
     SummaryAddIssueModal,
     DescriptionAddIssueModal,
+}
+
+impl std::fmt::Display for FieldId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FieldId::IssueTypeEditModalTop => f.write_str("issueTypeEditModalTop"),
+            FieldId::TextFilterBoard => f.write_str("textFilterBoard"),
+            FieldId::CopyButtonLabel => f.write_str("copyButtonLabel"),
+            FieldId::IssueTypeAddIssueModal => f.write_str("issueTypeAddIssueModal"),
+            FieldId::SummaryAddIssueModal => f.write_str("summaryAddIssueModal"),
+            FieldId::DescriptionAddIssueModal => f.write_str("descriptionAddIssueModal"),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -78,18 +90,21 @@ pub enum Msg {
     ModalOpened(ModalType),
     ModalDropped,
     ModalChanged(FieldChange),
+
+    WsMsg(jirs_data::WsMsg),
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if cfg!(debug_assertions) {
         log!(msg);
     }
-    match msg {
+    match &msg {
         Msg::ChangePage(page) => {
-            model.page = page;
+            model.page = page.clone();
         }
         _ => (),
     }
+    crate::ws::update(&msg, model, orders);
     crate::shared::update(&msg, model, orders);
     crate::modal::update(&msg, model, orders);
     match model.page {
@@ -134,6 +149,7 @@ fn routes(url: Url) -> Option<Msg> {
 }
 
 pub static mut HOST_URL: String = String::new();
+pub static mut APP: Option<RwLock<App<Msg, Model, Node<Msg>>>> = None;
 
 #[wasm_bindgen]
 pub fn set_host_url(url: String) {
@@ -142,16 +158,45 @@ pub fn set_host_url(url: String) {
     }
 }
 
-fn after_mount(_url: Url, _orders: &mut impl Orders<Msg>) -> AfterMount<Model> {
-    ws();
-    let model = Model::default();
-    AfterMount::new(model).url_handling(UrlHandling::None)
+#[wasm_bindgen]
+pub fn handle_ws_message(value: &wasm_bindgen::JsValue) {
+    let a = js_sys::Uint8Array::new(value);
+    let mut v = Vec::new();
+    for idx in 0..a.length() {
+        v.push(a.get_index(idx));
+    }
+    match bincode::deserialize(v.as_slice()) {
+        Ok(msg) => unsafe {
+            ws::handle(msg);
+        },
+        _ => (),
+    };
+}
+
+#[wasm_bindgen]
+extern "C" {
+    pub fn send_bin_code(data: wasm_bindgen::JsValue);
 }
 
 #[wasm_bindgen]
 pub fn render() {
-    App::builder(update, view)
+    use seed::*;
+
+    seed::set_interval(
+        Box::new(|| {
+            let binary = bincode::serialize(&jirs_data::WsMsg::Ping).unwrap();
+            let data = JsValue::from_serde(&binary).unwrap();
+            send_bin_code(data);
+        }) as Box<dyn Fn()>,
+        5000,
+    );
+
+    let app = seed::App::builder(update, view)
         .routes(routes)
-        .after_mount(after_mount)
         .build_and_start();
+
+    let cell_app = std::sync::RwLock::new(app);
+    unsafe {
+        APP = Some(cell_app);
+    };
 }

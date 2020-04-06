@@ -71,14 +71,14 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         on_change,
     } = values;
 
-    let mut wrapper_class_list = vec!["styledInput"];
+    let mut wrapper_class_list = vec!["styledInput".to_string(), format!("{}", id)];
     if !valid {
-        wrapper_class_list.push("invalid");
+        wrapper_class_list.push("invalid".to_string());
     }
 
-    let mut input_class_list = vec!["inputElement"];
+    let mut input_class_list = vec!["inputElement".to_string()];
     if icon.is_some() {
-        input_class_list.push("withIcon");
+        input_class_list.push("withIcon".to_string());
     }
 
     let icon = match icon {

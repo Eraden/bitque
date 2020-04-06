@@ -1068,7 +1068,6 @@ dependencies = [
  "futures 0.1.29",
  "jirs-data",
  "js-sys",
- "lazy_static",
  "seed",
  "serde",
  "serde_json",
