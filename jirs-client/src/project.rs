@@ -116,7 +116,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                     user_ids: Some(issue.user_ids.clone()),
                 };
                 model.project_page.dragged_issue_id = None;
-                send_ws_msg(WsMsg::IssueUpdateRequest(payload));
+                send_ws_msg(WsMsg::IssueUpdateRequest(issue_id, payload));
             }
             _ => error!("Drag stopped before drop :("),
         },

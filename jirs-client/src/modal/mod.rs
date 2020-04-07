@@ -98,7 +98,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
                         project_id: Some(issue.project_id.clone()),
                         user_ids: Some(issue.user_ids.clone()),
                     };
-                    send_ws_msg(jirs_data::WsMsg::IssueUpdateRequest(form));
+                    send_ws_msg(jirs_data::WsMsg::IssueUpdateRequest(issue_id.clone(), form));
                 }
                 _ => {}
             }
