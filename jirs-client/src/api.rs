@@ -14,24 +14,6 @@ pub fn send_ws_msg(msg: WsMsg) {
     send_bin_code(data);
 }
 
-pub async fn update_issue(
-    host_url: String,
-    id: i32,
-    payload: UpdateIssuePayload,
-) -> Result<Msg, Msg> {
-    match host_client(host_url, format!("/issues/{id}", id = id).as_str()) {
-        Ok(client) => {
-            client
-                .method(Method::Put)
-                .header("Content-Type", "application/json")
-                .body_json(&payload)
-                .fetch_string(Msg::IssueUpdateResult)
-                .await
-        }
-        Err(e) => return Ok(Msg::InternalFailure(e)),
-    }
-}
-
 pub async fn delete_issue(host_url: String, id: i32) -> Result<Msg, Msg> {
     match host_client(host_url, format!("/issues/{id}", id = id).as_str()) {
         Ok(client) => {

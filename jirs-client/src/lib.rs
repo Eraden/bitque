@@ -11,7 +11,6 @@ use crate::shared::read_auth_token;
 use crate::shared::styled_select::StyledSelectChange;
 
 mod api;
-mod api_handlers;
 mod login;
 mod modal;
 mod model;

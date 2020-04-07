@@ -2,7 +2,7 @@ use seed::{prelude::*, *};
 
 use jirs_data::{Issue, IssueType, UpdateIssuePayload};
 
-use crate::api::update_issue;
+use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, EditIssueModal, ModalType, Page};
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelectChange;
@@ -98,11 +98,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
                         project_id: Some(issue.project_id.clone()),
                         user_ids: Some(issue.user_ids.clone()),
                     };
-                    orders.skip().perform_cmd(update_issue(
-                        model.host_url.clone(),
-                        *issue_id,
-                        form,
-                    ));
+                    send_ws_msg(jirs_data::WsMsg::IssueUpdateRequest(form));
                 }
                 _ => {}
             }

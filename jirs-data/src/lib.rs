@@ -361,7 +361,7 @@ pub struct UpdateCommentPayload {
     pub body: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateIssuePayload {
     pub title: String,
@@ -391,12 +391,25 @@ pub struct UpdateProjectPayload {
 pub enum WsMsg {
     Ping,
     Pong,
+
+    // auth
     AuthorizeRequest(Uuid),
     AuthorizeLoaded(Result<User, String>),
+    AuthorizeExpired,
+
+    // project page
     ProjectRequest,
     ProjectLoaded(Project),
     ProjectIssuesRequest,
     ProjectIssuesLoaded(Vec<Issue>),
     ProjectUsersRequest,
     ProjectUsersLoaded(Vec<User>),
+
+    // issue
+    IssueUpdateRequest(UpdateIssuePayload),
+    IssueUpdated(Issue),
+    IssueDeleteRequest(i32),
+    IssueDeleted(i32),
+    IssueCreateRequest(CreateIssuePayload),
+    IssueCreated(Issue),
 }

@@ -21,6 +21,26 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             send_ws_msg(jirs_data::WsMsg::ProjectIssuesRequest);
             send_ws_msg(jirs_data::WsMsg::ProjectUsersRequest);
         }
+        Msg::WsMsg(WsMsg::IssueUpdated(issue)) => {
+            let mut old: Vec<Issue> = vec![];
+            std::mem::swap(&mut old, &mut model.issues);
+            for is in old {
+                if is.id == issue.id {
+                    model.issues.push(issue.clone())
+                } else {
+                    model.issues.push(is);
+                }
+            }
+        }
+        Msg::WsMsg(WsMsg::IssueDeleted(id)) => {
+            let mut old: Vec<Issue> = vec![];
+            std::mem::swap(&mut old, &mut model.issues);
+            for is in old {
+                if is.id != id {
+                    model.issues.push(is);
+                }
+            }
+        }
         Msg::ToggleAboutTooltip => {
             model.project_page.about_tooltip_visible = !model.project_page.about_tooltip_visible;
         }
@@ -96,17 +116,10 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                     user_ids: Some(issue.user_ids.clone()),
                 };
                 model.project_page.dragged_issue_id = None;
-                orders.skip().perform_cmd(crate::api::update_issue(
-                    model.host_url.clone(),
-                    issue.id,
-                    payload,
-                ));
+                send_ws_msg(WsMsg::IssueUpdateRequest(payload));
             }
             _ => error!("Drag stopped before drop :("),
         },
-        Msg::IssueUpdateResult(fetched) => {
-            crate::api_handlers::update_issue_response(&fetched, model);
-        }
         Msg::DeleteIssue(issue_id) => {
             orders
                 .skip()
@@ -253,10 +266,6 @@ fn project_board_lists(model: &Model) -> Node<Msg> {
 }
 
 fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg> {
-    let project = match model.project.as_ref() {
-        Some(p) => p,
-        _ => return empty![],
-    };
     let issues: Vec<Node<Msg>> = model
         .issues
         .iter()
