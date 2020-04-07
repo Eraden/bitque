@@ -9,7 +9,6 @@ pub struct StyledInput {
     id: FieldId,
     icon: Option<Icon>,
     valid: bool,
-    on_change: Option<EventHandler<Msg>>,
 }
 
 impl StyledInput {
@@ -18,7 +17,6 @@ impl StyledInput {
             id,
             icon: None,
             valid: None,
-            on_change: None,
         }
     }
 }
@@ -28,7 +26,6 @@ pub struct StyledInputBuilder {
     id: FieldId,
     icon: Option<Icon>,
     valid: Option<bool>,
-    on_change: Option<EventHandler<Msg>>,
 }
 
 impl StyledInputBuilder {
@@ -42,17 +39,11 @@ impl StyledInputBuilder {
         self
     }
 
-    pub fn on_change(mut self, on_change: EventHandler<Msg>) -> Self {
-        self.on_change = Some(on_change);
-        self
-    }
-
     pub fn build(self) -> StyledInput {
         StyledInput {
             id: self.id,
             icon: self.icon,
             valid: self.valid.unwrap_or_default(),
-            on_change: self.on_change,
         }
     }
 }
@@ -64,12 +55,7 @@ impl ToNode for StyledInput {
 }
 
 pub fn render(values: StyledInput) -> Node<Msg> {
-    let StyledInput {
-        id,
-        icon,
-        valid,
-        on_change,
-    } = values;
+    let StyledInput { id, icon, valid } = values;
 
     let mut wrapper_class_list = vec!["styledInput".to_string(), format!("{}", id)];
     if !valid {
@@ -88,10 +74,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
 
     let mut handlers = vec![];
 
-    if let Some(handler) = on_change {
-        handlers.push(handler);
-    }
-    let input_handler = input_ev(Ev::KeyPress, move |value| Msg::InputChanged(id, value));
+    let input_handler = input_ev(Ev::KeyUp, move |value| Msg::InputChanged(id, value));
     handlers.push(input_handler);
 
     div![

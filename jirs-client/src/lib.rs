@@ -72,7 +72,6 @@ pub enum Msg {
     ToggleAboutTooltip,
 
     // project
-    ProjectTextFilterChanged(String),
     ProjectAvatarFilterChanged(UserId, AvatarFilterActive),
     ProjectToggleOnlyMy,
     ProjectToggleRecentlyUpdated,

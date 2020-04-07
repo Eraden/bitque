@@ -3,11 +3,12 @@ use seed::{prelude::*, *};
 use jirs_data::*;
 
 use crate::api::send_ws_msg;
-use crate::model::{Model, Page};
+use crate::model::{ModalType, Model, Page};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
+use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{drag_ev, inner_layout, ToNode};
 use crate::{FieldId, Msg};
 
@@ -44,7 +45,23 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         Msg::ToggleAboutTooltip => {
             model.project_page.about_tooltip_visible = !model.project_page.about_tooltip_visible;
         }
-        Msg::ProjectTextFilterChanged(text) => {
+        Msg::StyledSelectChanged(
+            FieldId::IssueTypeEditModalTop,
+            StyledSelectChange::Text(text),
+        ) => {
+            let modal = model
+                .modals
+                .iter_mut()
+                .filter_map(|modal| match modal {
+                    ModalType::EditIssue(_, modal) => Some(modal),
+                    _ => None,
+                })
+                .last();
+            if let Some(m) = modal {
+                m.top_select_filter = text;
+            }
+        }
+        Msg::InputChanged(FieldId::TextFilterBoard, text) => {
             model.project_page.text_filter = text;
         }
         Msg::ProjectAvatarFilterChanged(user_id, active) => match active {
@@ -182,9 +199,6 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
     let search_input = StyledInput::build(FieldId::TextFilterBoard)
         .icon(Icon::Search)
         .valid(true)
-        .on_change(input_ev(Ev::Change, |value| {
-            Msg::ProjectTextFilterChanged(value)
-        }))
         .build()
         .into_node();
 
@@ -269,7 +283,13 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
     let issues: Vec<Node<Msg>> = model
         .issues
         .iter()
-        .filter(|issue| status == issue.status)
+        .filter(|issue| {
+            status == issue.status
+                && (model.project_page.text_filter.is_empty()
+                    || issue
+                        .title
+                        .contains(model.project_page.text_filter.as_str()))
+        })
         .map(|issue| project_issue(model, issue))
         .collect();
     let label = status.to_label();

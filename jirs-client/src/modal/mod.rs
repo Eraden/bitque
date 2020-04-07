@@ -106,6 +106,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
 
         _ => (),
     }
+    add_issue::update(msg, model, orders);
 }
 
 pub fn view(model: &model::Model) -> Node<Msg> {

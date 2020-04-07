@@ -2,7 +2,7 @@ use seed::{prelude::*, *};
 
 use jirs_data::IssueType;
 
-use crate::model::{AddIssueModal, Model};
+use crate::model::{AddIssueModal, ModalType, Model};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
@@ -10,9 +10,50 @@ use crate::shared::styled_icon::StyledIcon;
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelect;
+use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
+
+pub fn update(msg: &Msg, model: &mut crate::model::Model, _orders: &mut impl Orders<Msg>) {
+    let modal = model.modals.iter_mut().find(|modal| match modal {
+        ModalType::AddIssue(..) => true,
+        _ => false,
+    });
+    let modal = match modal {
+        Some(ModalType::AddIssue(modal)) => modal,
+        _ => return,
+    };
+
+    match msg {
+        Msg::InputChanged(FieldId::DescriptionAddIssueModal, value) => {
+            modal.description = Some(value.clone());
+        }
+        Msg::InputChanged(FieldId::SummaryAddIssueModal, value) => {
+            modal.title = value.clone();
+        }
+        Msg::StyledSelectChanged(
+            FieldId::IssueTypeAddIssueModal,
+            StyledSelectChange::DropDownVisibility(b),
+        ) => {
+            modal.type_select_opened = *b;
+        }
+        Msg::StyledSelectChanged(
+            FieldId::IssueTypeAddIssueModal,
+            StyledSelectChange::Text(text),
+        ) => {
+            modal.type_select_filter = text.clone();
+        }
+        Msg::StyledSelectChanged(
+            FieldId::IssueTypeAddIssueModal,
+            StyledSelectChange::Changed(id),
+        ) => {
+            modal.issue_type = (*id).into();
+        }
+        _ => (),
+    }
+    log!(modal);
+}
 
 pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let select_type = StyledSelect::build(FieldId::IssueTypeAddIssueModal)

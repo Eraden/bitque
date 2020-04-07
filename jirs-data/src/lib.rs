@@ -14,7 +14,7 @@ pub mod sql;
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
-#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum IssueType {
     Task,
@@ -71,7 +71,7 @@ impl std::fmt::Display for IssueType {
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueStatusType")]
-#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum IssueStatus {
     Backlog,
@@ -126,7 +126,7 @@ impl IssueStatus {
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssuePriorityType")]
-#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
 pub enum IssuePriority {
     Highest,
     High,
