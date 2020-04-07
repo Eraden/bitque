@@ -96,16 +96,23 @@ pub struct ProjectPage {
 
 #[derive(Debug)]
 pub struct Model {
+    pub host_url: String,
     pub access_token: Option<Uuid>,
+
+    // mapped
+    pub comments_by_project_id: HashMap<ProjectId, Vec<Comment>>,
+
+    // forms
     pub project_form: Option<UpdateProjectForm>,
     pub issue_form: Option<CreateIssueForm>,
     pub comment_form: Option<CreateCommentForm>,
 
-    pub comments_by_project_id: HashMap<ProjectId, Vec<Comment>>,
-    pub page: Page,
-    pub host_url: String,
-    pub project_page: ProjectPage,
+    // modals
     pub modals: Vec<ModalType>,
+
+    // pages
+    pub page: Page,
+    pub project_page: ProjectPage,
 
     pub project: Option<Project>,
     pub user: Option<User>,

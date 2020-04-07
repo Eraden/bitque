@@ -406,7 +406,7 @@ pub enum WsMsg {
     ProjectUsersLoaded(Vec<User>),
 
     // issue
-    IssueUpdateRequest(UpdateIssuePayload),
+    IssueUpdateRequest(i32, UpdateIssuePayload),
     IssueUpdated(Issue),
     IssueDeleteRequest(i32),
     IssueDeleted(i32),

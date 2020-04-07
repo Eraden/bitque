@@ -6,7 +6,7 @@ use actix_web_actors::ws;
 use jirs_data::{Project, WsMsg};
 
 use crate::db::authorize_user::AuthorizeUser;
-use crate::db::issues::LoadProjectIssues;
+use crate::db::issues::{LoadProjectIssues, UpdateIssue};
 use crate::db::projects::LoadCurrentProject;
 use crate::db::users::LoadProjectUsers;
 use crate::db::DbExecutor;
@@ -53,14 +53,9 @@ impl WebSocketActor {
                     Err("Invalid auth token".to_string()),
                 )),
             },
-            WsMsg::ProjectIssuesRequest => match block_on(self.load_issues()) {
-                Some(msg) => Some(msg),
-                _ => None,
-            },
-            WsMsg::ProjectUsersRequest => match block_on(self.load_project_users()) {
-                Some(msg) => Some(msg),
-                _ => None,
-            },
+            WsMsg::ProjectIssuesRequest => block_on(self.load_issues()),
+            WsMsg::ProjectUsersRequest => block_on(self.load_project_users()),
+            WsMsg::IssueUpdateRequest(id, payload) => block_on(self.update_issue(id, payload)),
             _ => {
                 error!("Failed to resolve message");
                 None
@@ -112,6 +107,49 @@ impl WebSocketActor {
             Ok(Ok(v)) => Some(WsMsg::ProjectUsersLoaded(
                 v.into_iter().map(|i| i.into()).collect(),
             )),
+            _ => None,
+        }
+    }
+
+    async fn update_issue(
+        &mut self,
+        issue_id: i32,
+        payload: jirs_data::UpdateIssuePayload,
+    ) -> Option<WsMsg> {
+        let jirs_data::UpdateIssuePayload {
+            title,
+            issue_type,
+            status,
+            priority,
+            list_position,
+            description,
+            description_text,
+            estimate,
+            time_spent,
+            time_remaining,
+            project_id,
+            user_ids,
+        } = payload;
+        match self
+            .db
+            .send(UpdateIssue {
+                issue_id,
+                title,
+                issue_type,
+                status,
+                priority,
+                list_position,
+                description,
+                description_text,
+                estimate,
+                time_spent,
+                time_remaining,
+                project_id,
+                user_ids,
+            })
+            .await
+        {
+            Ok(Ok(issue)) => Some(WsMsg::IssueUpdated(issue.into())),
             _ => None,
         }
     }
