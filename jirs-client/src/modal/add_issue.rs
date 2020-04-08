@@ -34,6 +34,9 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
     match msg {
         Msg::AddIssue => {
+            let user_id = model.user.as_ref().map(|u| u.id).unwrap_or_default();
+            let project_id = model.project.as_ref().map(|p| p.id).unwrap_or_default();
+
             let payload = jirs_data::CreateIssuePayload {
                 title: modal.title.clone(),
                 issue_type: modal.issue_type.clone(),
@@ -44,8 +47,9 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
                 estimate: modal.estimate.clone(),
                 time_spent: modal.time_spent.clone(),
                 time_remaining: modal.time_remaining.clone(),
-                project_id: modal.project_id.clone(),
+                project_id: modal.project_id.unwrap_or(project_id),
                 user_ids: modal.user_ids.clone(),
+                reporter_id: modal.reporter_id.unwrap_or_else(|| user_id),
             };
             send_ws_msg(jirs_data::WsMsg::IssueCreateRequest(payload));
         }

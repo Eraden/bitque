@@ -52,7 +52,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         }
         Msg::ChangePage(Page::AddIssue) => {
             let mut modal = AddIssueModal::default();
-            modal.project_id = model.project.as_ref().map(|p| p.id).unwrap_or_default();
+            modal.project_id = model.project.as_ref().map(|p| p.id);
             model.modals.push(ModalType::AddIssue(modal));
         }
 

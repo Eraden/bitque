@@ -255,7 +255,10 @@ impl Handler<CreateIssue> for DbExecutor {
             .values(form)
             .on_conflict_do_nothing()
             .get_result::<Issue>(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| {
+                error!("{}", e);
+                ServiceErrors::DatabaseConnectionLost
+            })?;
 
         let mut values = vec![];
         for user_id in msg.user_ids.iter() {

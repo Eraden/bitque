@@ -193,13 +193,13 @@ impl Into<IssuePriority> for u32 {
     }
 }
 
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorResponse {
     pub errors: Vec<String>,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FullProject {
     pub id: i32,
@@ -214,7 +214,7 @@ pub struct FullProject {
     pub users: Vec<User>,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FullIssue {
     pub id: i32,
@@ -261,7 +261,7 @@ impl Into<Issue> for FullIssue {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Project {
     pub id: i32,
@@ -273,7 +273,7 @@ pub struct Project {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Issue {
     pub id: i32,
@@ -296,7 +296,7 @@ pub struct Issue {
     pub user_ids: Vec<i32>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Comment {
     pub id: i32,
@@ -321,7 +321,7 @@ pub struct User {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Token {
     pub id: i32,
@@ -332,7 +332,7 @@ pub struct Token {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateIssuePayload {
     pub title: Option<String>,
@@ -350,7 +350,7 @@ pub struct UpdateIssuePayload {
     pub user_ids: Option<Vec<i32>>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCommentPayload {
     pub user_id: Option<i32>,
@@ -358,13 +358,13 @@ pub struct CreateCommentPayload {
     pub body: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCommentPayload {
     pub body: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateIssuePayload {
     pub title: String,
@@ -379,9 +379,10 @@ pub struct CreateIssuePayload {
     pub time_remaining: Option<i32>,
     pub project_id: i32,
     pub user_ids: Vec<i32>,
+    pub reporter_id: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateProjectPayload {
     pub name: Option<String>,
@@ -390,7 +391,7 @@ pub struct UpdateProjectPayload {
     pub category: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum WsMsg {
     Ping,
     Pong,

@@ -37,7 +37,7 @@ pub struct AddIssueModal {
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub project_id: i32,
+    pub project_id: Option<i32>,
     pub user_ids: Vec<i32>,
     pub reporter_id: Option<i32>,
 
