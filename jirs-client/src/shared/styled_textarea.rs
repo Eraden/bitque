@@ -1,12 +1,12 @@
+use seed::{prelude::*, *};
+
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
-use seed::{prelude::*, *};
 
 #[derive(Debug)]
 pub struct StyledTextarea {
     id: FieldId,
     height: usize,
-    on_change: Option<EventHandler<Msg>>,
 }
 
 impl ToNode for StyledTextarea {
@@ -33,16 +33,10 @@ impl StyledTextareaBuilder {
         self
     }
 
-    pub fn on_change(mut self, on_change: EventHandler<Msg>) -> Self {
-        self.on_change = Some(on_change);
-        self
-    }
-
     pub fn build(self, id: FieldId) -> StyledTextarea {
         StyledTextarea {
             id,
             height: self.height.unwrap_or(110),
-            on_change: self.on_change,
         }
     }
 }
@@ -61,20 +55,13 @@ const ADDITIONAL_HEIGHT: f64 = PADDING_TOP_BOTTOM + BORDER_TOP_BOTTOM;
 //  * 17 is padding top + bottom
 //  * 2 is border top + bottom
 pub fn render(values: StyledTextarea) -> Node<Msg> {
-    let StyledTextarea {
-        id,
-        height,
-        on_change,
-    } = values;
+    let StyledTextarea { id, height } = values;
     let mut style_list = vec![];
     style_list.push(format!("min-height: {}px", height));
 
     let mut handlers = vec![];
-    if let Some(handler) = on_change {
-        handlers.push(handler);
-    }
 
-    let resize_handler = ev(Ev::KeyPress, move |event| {
+    let resize_handler = ev(Ev::KeyUp, move |event| {
         use wasm_bindgen::JsCast;
 
         let target = match event.target() {
@@ -98,7 +85,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         Msg::NoOp
     });
     handlers.push(resize_handler);
-    let text_input_handler = input_ev(Ev::KeyPress, move |value| Msg::InputChanged(id, value));
+    let text_input_handler = input_ev(Ev::KeyUp, move |value| Msg::InputChanged(id, value));
     handlers.push(text_input_handler);
 
     div![

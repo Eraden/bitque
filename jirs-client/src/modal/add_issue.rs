@@ -1,7 +1,8 @@
 use seed::{prelude::*, *};
 
-use jirs_data::IssueType;
+use jirs_data::{IssueType, User};
 
+use crate::model::Page;
 use crate::model::{AddIssueModal, ModalType, Model};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
@@ -55,7 +56,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, _orders: &mut impl Ord
     log!(modal);
 }
 
-pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
+pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let select_type = StyledSelect::build(FieldId::IssueTypeAddIssueModal)
         .name("type")
         .normal()
@@ -89,7 +90,6 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .into_node();
 
     let description = StyledTextarea::build()
-        .on_change(input_ev(Ev::Change, |_| Msg::NoOp))
         .height(110)
         .build(FieldId::DescriptionAddIssueModal)
         .into_node();
@@ -100,15 +100,48 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
+    let reporter_id = modal
+        .reporter_id
+        .or_else(|| model.user.as_ref().map(|u| u.id))
+        .unwrap_or_default();
+    let reporter = StyledSelect::build(FieldId::ReporterAddIssueModal)
+        .options(model.users.iter().map(|u| UserOption(u)).collect())
+        .selected(
+            model
+                .users
+                .iter()
+                .filter_map(|user| {
+                    if user.id == reporter_id {
+                        Some(UserOption(user))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+        )
+        .valid(true)
+        .build()
+        .into_node();
+    let reporter_field = StyledField::build()
+        .input(reporter)
+        .label("Reporter")
+        .tip("")
+        .build()
+        .into_node();
+
     let submit = StyledButton::build()
         .primary()
         .text("Create Issue")
         .add_class("action")
+        .add_class("submit")
+        .add_class("ActionButton")
         .build()
         .into_node();
     let cancel = StyledButton::build()
         .empty()
         .add_class("action")
+        .add_class("cancel")
+        .add_class("actionButton")
         .text("Cancel")
         .build()
         .into_node();
@@ -120,12 +153,14 @@ pub fn view(_model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .add_field(crate::shared::divider())
         .add_field(short_summary_field)
         .add_field(description_field)
+        .add_field(reporter_field)
         .add_field(actions)
         .build()
         .into_node();
 
     StyledModal::build()
         .width(800)
+        .add_class("add-issue")
         .variant(ModalVariant::Center)
         .children(vec![form])
         .build()
@@ -140,7 +175,7 @@ impl crate::shared::styled_select::SelectOption for IssueTypeOption {
         let name = self.0.to_label().to_owned();
 
         let icon = StyledIcon::build(self.0.into())
-            .add_class("issueTypeIcon".to_string())
+            .add_class("issueTypeIcon")
             .build()
             .into_node();
 
@@ -172,5 +207,36 @@ impl crate::shared::styled_select::SelectOption for IssueTypeOption {
 
     fn to_value(&self) -> u32 {
         self.0.clone().into()
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct UserOption<'opt>(pub &'opt User);
+
+impl<'opt> crate::shared::styled_select::SelectOption for UserOption<'opt> {
+    fn into_option(self) -> Node<Msg> {
+        let user = self.0;
+
+        div![
+            attrs![At::Class => "type"],
+            div![attrs![At::Class => "typeLabel"], user.name]
+        ]
+    }
+
+    fn into_value(self) -> Node<Msg> {
+        let user = self.0;
+
+        div![
+            attrs![At::Class => "selectItem"],
+            div![attrs![At::Class => "selectItemLabel"], user.name]
+        ]
+    }
+
+    fn match_text_filter(&self, _text_filter: &str) -> bool {
+        false
+    }
+
+    fn to_value(&self) -> u32 {
+        self.0.id as u32
     }
 }

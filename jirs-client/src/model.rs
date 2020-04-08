@@ -39,10 +39,17 @@ pub struct AddIssueModal {
     pub time_remaining: Option<i32>,
     pub project_id: i32,
     pub user_ids: Vec<i32>,
+    pub reporter_id: Option<i32>,
 
     // modal fields
     pub type_select_filter: String,
     pub type_select_opened: bool,
+
+    pub reporter_select_filter: String,
+    pub reporter_select_opened: bool,
+
+    pub assignees_select_filter: String,
+    pub assignees_select_opened: bool,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]

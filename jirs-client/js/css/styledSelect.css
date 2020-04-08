@@ -52,6 +52,10 @@
     color: var(--textMedium);
 }
 
+.styledSelect > .valueContainer > .placeholder {
+    color: var(--textLight);
+}
+
 .styledSelectTip {
     padding-top: 6px;
     color: var(--textMedium);
@@ -134,3 +138,21 @@
     cursor: pointer;
     user-select: none;
 }
+
+/* issue type */
+
+.styledSelect > .dropDown > .options > .option > .type {
+    display: flex;
+    align-items: center;
+}
+
+.styledSelect > .dropDown > .options > .option > .type > .styledIcon {
+    font-size: 18px;
+}
+
+.styledSelect > .dropDown > .options > .option > .type > .typeLabel {
+    padding: 0 5px 0 7px;
+    font-size: 15px
+}
+
+/* issue priority */

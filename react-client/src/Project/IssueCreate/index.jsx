@@ -1,4 +1,4 @@
-import React     from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -7,18 +7,19 @@ import {
     IssueStatus,
     IssueType,
     IssueTypeCopy,
-}                                                               from '../../shared/constants/issues';
-import toast                                                    from '../../shared/utils/toast';
-import api                                                      from '../../shared/utils/api';
+} from '../../shared/constants/issues';
+import toast from '../../shared/utils/toast';
+import api from '../../shared/utils/api';
 import { Avatar, Form, Icon, IssuePriorityIcon, IssueTypeIcon } from '../../shared/components';
+import { Field } from "../../shared/components/Form";
 
 import { ActionButton, Actions, Divider, FormElement, FormHeading, SelectItem, SelectItemLabel, } from './Styles';
 
 class ProjectIssueCreate extends React.Component {
     state = {
         isCreating: false, form: {
-            type:        IssueType.TASK,
-            title:       '',
+            type: IssueType.TASK,
+            title: '',
             description: '',
             reporterId:  null,
             userIds: [],
@@ -68,7 +69,7 @@ class ProjectIssueCreate extends React.Component {
                     <FormHeading>
                         Create issue
                     </FormHeading>
-                    <Form.Field.Select
+                    <Field.Select
                         name="type"
                         label="Issue Type"
                         tip="Start typing to get a list of possible matches."
@@ -77,19 +78,19 @@ class ProjectIssueCreate extends React.Component {
                         renderValue={ renderType }
                     />
                     <Divider/>
-                    <Form.Field.Input
+                    <Field.Input
                         name="title"
                         label="Short Summary"
                         tip="Concisely summarize the issue in one or two sentences."
                         onChange={ this.onInputChange }
                     />
-                    <Form.Field.TextEditor
+                    <Field.TextEditor
                         name="description"
                         label="Description"
                         tip="Describe the issue in as much detail as you'd like."
                         onChange={ this.onInputChange }
                     />
-                    <Form.Field.Select
+                    <Field.Select
                         name="reporterId"
                         label="Reporter"
                         options={ userOptions(project) }
@@ -97,7 +98,7 @@ class ProjectIssueCreate extends React.Component {
                         renderValue={ renderUser(project) }
                         onChange={ this.onInputChange }
                     />
-                    <Form.Field.Select
+                    <Field.Select
                         isMulti
                         name="userIds"
                         label="Assignees"
@@ -107,7 +108,7 @@ class ProjectIssueCreate extends React.Component {
                         renderOption={ renderUser(project) }
                         renderValue={ renderUser(project) }
                     />
-                    <Form.Field.Select
+                    <Field.Select
                         name="priority"
                         label="Priority"
                         tip="Priority in relation to other issues."

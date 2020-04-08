@@ -36,6 +36,7 @@ pub enum FieldId {
     IssueTypeAddIssueModal,
     SummaryAddIssueModal,
     DescriptionAddIssueModal,
+    ReporterAddIssueModal,
 }
 
 impl std::fmt::Display for FieldId {
@@ -47,6 +48,7 @@ impl std::fmt::Display for FieldId {
             FieldId::IssueTypeAddIssueModal => f.write_str("issueTypeAddIssueModal"),
             FieldId::SummaryAddIssueModal => f.write_str("summaryAddIssueModal"),
             FieldId::DescriptionAddIssueModal => f.write_str("descriptionAddIssueModal"),
+            FieldId::ReporterAddIssueModal => f.write_str("reporterAddIssueModal"),
         }
     }
 }

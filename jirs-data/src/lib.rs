@@ -306,7 +306,7 @@ pub struct Comment {
     pub user: Option<User>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: i32,
