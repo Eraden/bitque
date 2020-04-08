@@ -42,6 +42,7 @@
 
 .styledField {
     display: block;
+    margin-top: 20px;
 }
 
 .styledField > .styledLabel {

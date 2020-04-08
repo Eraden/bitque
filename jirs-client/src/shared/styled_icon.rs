@@ -1,6 +1,6 @@
 use seed::{prelude::*, *};
 
-use jirs_data::IssueType;
+use jirs_data::{IssuePriority, IssueType};
 
 use crate::shared::ToNode;
 use crate::Msg;
@@ -101,6 +101,18 @@ impl From<IssueType> for Icon {
             IssueType::Task => Icon::Task,
             IssueType::Bug => Icon::Bug,
             IssueType::Story => Icon::Story,
+        }
+    }
+}
+
+impl From<IssuePriority> for Icon {
+    fn from(t: IssuePriority) -> Self {
+        match t {
+            IssuePriority::Highest => Icon::ArrowUp,
+            IssuePriority::High => Icon::ArrowUp,
+            IssuePriority::Medium => Icon::ArrowUp,
+            IssuePriority::Low => Icon::ArrowDown,
+            IssuePriority::Lowest => Icon::ArrowDown,
         }
     }
 }

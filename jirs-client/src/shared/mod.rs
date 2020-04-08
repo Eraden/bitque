@@ -84,12 +84,6 @@ pub fn read_auth_token() -> Result<uuid::Uuid, String> {
         .map_err(|_| "Bad token format".to_string())
 }
 
-pub fn host_client(host_url: String, path: &str) -> Result<Request, String> {
-    let url = format!("{}{}", host_url, path);
-    let token = read_auth_token()?;
-    Ok(Request::new(url).header("Authorization", format!("Bearer {}", token).as_str()))
-}
-
 pub fn drag_ev<Ms>(
     trigger: impl Into<Ev>,
     handler: impl FnOnce(web_sys::DragEvent) -> Ms + 'static + Clone,

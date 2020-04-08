@@ -24,7 +24,7 @@ pub type UserId = i32;
 pub type IssueId = i32;
 pub type AvatarFilterActive = bool;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum FieldId {
     // edit issue
     IssueTypeEditModalTop,
@@ -37,6 +37,8 @@ pub enum FieldId {
     SummaryAddIssueModal,
     DescriptionAddIssueModal,
     ReporterAddIssueModal,
+    AssigneesAddIssueModal,
+    IssuePriorityAddIssueModal,
 }
 
 impl std::fmt::Display for FieldId {
@@ -49,6 +51,8 @@ impl std::fmt::Display for FieldId {
             FieldId::SummaryAddIssueModal => f.write_str("summaryAddIssueModal"),
             FieldId::DescriptionAddIssueModal => f.write_str("descriptionAddIssueModal"),
             FieldId::ReporterAddIssueModal => f.write_str("reporterAddIssueModal"),
+            FieldId::AssigneesAddIssueModal => f.write_str("assigneesAddIssueModal"),
+            FieldId::IssuePriorityAddIssueModal => f.write_str("issuePriorityAddIssueModal"),
         }
     }
 }
@@ -88,8 +92,7 @@ pub enum Msg {
     InputChanged(FieldId, String),
 
     // issues
-    IssueUpdateResult(FetchObject<String>),
-    IssueDeleteResult(FetchObject<String>),
+    AddIssue,
     DeleteIssue(IssueId),
 
     // modals

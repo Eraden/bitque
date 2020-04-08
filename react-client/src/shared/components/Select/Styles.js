@@ -1,7 +1,8 @@
 import styled, { css } from 'styled-components';
 
 import { color, mixin, zIndexValues } from 'shared/utils/styles';
-import Icon from 'shared/components/Icon';
+import Icon                           from 'shared/components/Icon';
+import { font }                       from "../../utils/styles";
 
 export const StyledSelect = styled.div`
   position: relative;
@@ -23,8 +24,8 @@ export const StyledSelect = styled.div`
   &:focus {
     outline: none;
     ${props =>
-      props.variant === 'normal' &&
-      css`
+    props.variant === 'normal' &&
+    css`
         border: 1px solid ${color.borderInputFocus};
         box-shadow: 0 0 0 1px ${color.borderInputFocus};
         background: #fff;
@@ -73,7 +74,22 @@ export const ValueMulti = styled.div`
 
 export const ValueMultiItem = styled.div`
   margin: 0 5px 5px 0;
-  ${mixin.tag()}
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  color: ${color.textDarkest};
+  background: ${color.backgroundMedium};
+  font-family: "CircularStdBold";
+  font-weight: normal
+  font-size: 12px
+  
+  i {
+    margin-left: 4px;
+  }
 `;
 
 export const AddMore = styled.div`
@@ -81,7 +97,16 @@ export const AddMore = styled.div`
   margin-bottom: 3px;
   padding: 3px 0;
   font-size: 12.5px
-  ${mixin.link()}
+  cursor: pointer;
+  color: ${color.textLink};
+  ${font.medium};
+  font-weight: normal;
+  &:hover, &:visited, &:active {
+    color: ${color.textLink};
+  }
+  &:hover {
+    text-decoration: underline;
+  }
   i {
     margin-right: 3px;
     vertical-align: middle;

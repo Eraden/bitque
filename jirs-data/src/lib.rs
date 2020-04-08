@@ -168,24 +168,27 @@ impl std::fmt::Display for IssuePriority {
     }
 }
 
-impl IssuePriority {
-    pub fn to_text_value(&self) -> &str {
-        match self {
-            IssuePriority::Highest => "5",
-            IssuePriority::High => "4",
-            IssuePriority::Medium => "3",
-            IssuePriority::Low => "2",
-            IssuePriority::Lowest => "1",
-        }
-    }
-
-    pub fn to_value(&self) -> i32 {
+impl Into<u32> for IssuePriority {
+    fn into(self) -> u32 {
         match self {
             IssuePriority::Highest => 5,
             IssuePriority::High => 4,
             IssuePriority::Medium => 3,
             IssuePriority::Low => 2,
             IssuePriority::Lowest => 1,
+        }
+    }
+}
+
+impl Into<IssuePriority> for u32 {
+    fn into(self) -> IssuePriority {
+        match self {
+            5 => IssuePriority::Highest,
+            4 => IssuePriority::High,
+            3 => IssuePriority::Medium,
+            2 => IssuePriority::Low,
+            1 => IssuePriority::Lowest,
+            _ => IssuePriority::Medium,
         }
     }
 }

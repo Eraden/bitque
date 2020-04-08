@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import PropTypes                   from 'prop-types';
 
-import useOnOutsideClick from 'shared/hooks/onOutsideClick';
-import { KeyCodes }      from 'shared/constants/keyCodes';
-import Icon              from 'shared/components/Icon';
+import useOnOutsideClick from '../../../shared/hooks/onOutsideClick';
+import { KeyCodes }      from '../../../shared/constants/keyCodes';
+import Icon              from '../../../shared/components/Icon';
 
 import Dropdown                                                                                         from './Dropdown';
 import { AddMore, ChevronIcon, Placeholder, StyledSelect, ValueContainer, ValueMulti, ValueMultiItem, } from './Styles';

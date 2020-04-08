@@ -1,21 +1,21 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React        from 'react';
+import PropTypes    from 'prop-types';
 import { uniqueId } from 'lodash';
 
-import InputComponent from 'shared/components/Input';
-import SelectComponent from 'shared/components/Select';
-import TextareaComponent from 'shared/components/Textarea';
-import TextEditorComponent from 'shared/components/TextEditor';
-import DatePickerComponent from 'shared/components/DatePicker';
+import InputComponent      from '../../../shared/components/Input';
+import SelectComponent     from '../../../shared/components/Select';
+import TextareaComponent   from '../../../shared/components/Textarea';
+import TextEditorComponent from '../../../shared/components/TextEditor';
+import DatePickerComponent from '../../../shared/components/DatePicker';
 
 import { FieldError, FieldLabel, FieldTip, StyledField } from './Styles';
 
 const propTypes = {
     className: PropTypes.string,
-    label: PropTypes.string,
-    tip: PropTypes.string,
-    error: PropTypes.string,
-    name: PropTypes.string,
+    label:     PropTypes.string,
+    tip:       PropTypes.string,
+    error:     PropTypes.string,
+    name:      PropTypes.string,
 };
 
 const defaultProps = {

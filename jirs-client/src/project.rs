@@ -12,7 +12,7 @@ use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{drag_ev, inner_layout, ToNode};
 use crate::{FieldId, Msg};
 
-pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
+pub fn update(msg: Msg, model: &mut crate::model::Model, _orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
@@ -138,9 +138,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             _ => error!("Drag stopped before drop :("),
         },
         Msg::DeleteIssue(issue_id) => {
-            orders
-                .skip()
-                .perform_cmd(crate::api::delete_issue(model.host_url.clone(), issue_id));
+            send_ws_msg(jirs_data::WsMsg::IssueDeleted(issue_id));
         }
         _ => (),
     }
@@ -253,15 +251,14 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
             if active {
                 class_list.push("isActive");
             }
-            let styled_avatar = StyledAvatar {
-                avatar_url: user.avatar_url.clone(),
-                size: 32,
-                name: user.name.clone(),
-                on_click: Some(mouse_ev(Ev::Click, move |_| {
+            let styled_avatar = StyledAvatar::build()
+                .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
+                .on_click(mouse_ev(Ev::Click, move |_| {
                     Msg::ProjectAvatarFilterChanged(user_id, active)
-                })),
-            }
-            .into_node();
+                }))
+                .name(user.name.as_str())
+                .build()
+                .into_node();
             div![attrs![At::Class => class_list.join(" ")], styled_avatar]
         })
         .collect();

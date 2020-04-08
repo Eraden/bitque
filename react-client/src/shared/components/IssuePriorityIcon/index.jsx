@@ -1,13 +1,9 @@
-import React from 'react';
+import React     from 'react';
 import PropTypes from 'prop-types';
 
-import { IssuePriority } from 'shared/constants/issues';
+import { IssuePriority } from '../../../shared/constants/issues';
 
 import { PriorityIcon } from './Styles';
-
-const propTypes = {
-  priority: PropTypes.string.isRequired,
-};
 
 const IssuePriorityIcon = ({ priority, ...otherProps }) => {
   const iconType = [IssuePriority.LOW, IssuePriority.LOWEST].includes(priority)
@@ -17,6 +13,8 @@ const IssuePriorityIcon = ({ priority, ...otherProps }) => {
   return <PriorityIcon type={iconType} color={priority} size={18} {...otherProps} />;
 };
 
-IssuePriorityIcon.propTypes = propTypes;
+IssuePriorityIcon.propTypes = {
+  priority: PropTypes.string.isRequired,
+};
 
 export default IssuePriorityIcon;

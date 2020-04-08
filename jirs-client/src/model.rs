@@ -5,18 +5,19 @@ use uuid::Uuid;
 
 use jirs_data::*;
 
-use crate::{IssueId, UserId, HOST_URL};
+use crate::shared::styled_select::StyledSelectState;
+use crate::{FieldId, IssueId, UserId, HOST_URL};
 
 pub type ProjectId = i32;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum ModalType {
     AddIssue(AddIssueModal),
     EditIssue(IssueId, EditIssueModal),
     DeleteIssueConfirm(IssueId),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub struct EditIssueModal {
     pub id: i32,
     pub top_select_opened: bool,
@@ -25,10 +26,9 @@ pub struct EditIssueModal {
     pub link_copied: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub struct AddIssueModal {
     pub title: String,
-    #[serde(rename = "type")]
     pub issue_type: IssueType,
     pub status: IssueStatus,
     pub priority: IssuePriority,
@@ -42,17 +42,36 @@ pub struct AddIssueModal {
     pub reporter_id: Option<i32>,
 
     // modal fields
-    pub type_select_filter: String,
-    pub type_select_opened: bool,
-
-    pub reporter_select_filter: String,
-    pub reporter_select_opened: bool,
-
-    pub assignees_select_filter: String,
-    pub assignees_select_opened: bool,
+    pub type_state: StyledSelectState,
+    pub reporter_state: StyledSelectState,
+    pub assignees_state: StyledSelectState,
+    pub priority_state: StyledSelectState,
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
+impl Default for AddIssueModal {
+    fn default() -> Self {
+        Self {
+            title: Default::default(),
+            issue_type: Default::default(),
+            status: Default::default(),
+            priority: Default::default(),
+            description: Default::default(),
+            description_text: Default::default(),
+            estimate: Default::default(),
+            time_spent: Default::default(),
+            time_remaining: Default::default(),
+            project_id: Default::default(),
+            user_ids: Default::default(),
+            reporter_id: Default::default(),
+            type_state: StyledSelectState::new(FieldId::IssueTypeAddIssueModal),
+            reporter_state: StyledSelectState::new(FieldId::ReporterAddIssueModal),
+            assignees_state: StyledSelectState::new(FieldId::AssigneesAddIssueModal),
+            priority_state: StyledSelectState::new(FieldId::IssuePriorityAddIssueModal),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub enum Page {
     Project,
     EditIssue(IssueId),

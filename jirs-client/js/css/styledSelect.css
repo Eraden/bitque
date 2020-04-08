@@ -52,7 +52,8 @@
     color: var(--textMedium);
 }
 
-.styledSelect > .valueContainer > .placeholder {
+.styledSelect > .valueContainer > .placeholder,
+.styledSelect > .valueContainer > .valueMulti > .placeholder {
     color: var(--textLight);
 }
 
@@ -139,20 +140,115 @@
     user-select: none;
 }
 
-/* issue type */
+/* multi value */
+.styledSelect > .valueContainer > .valueMulti {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
 
-.styledSelect > .dropDown > .options > .option > .type {
+.styledSelect > .valueContainer > .valueMulti.normal {
+    padding-top: 5px;
+}
+
+.styledSelect > .valueContainer > .valueMulti > .valueMultiItem {
+    margin-right: 15px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--textDarkest);
+    height: 24px;
+}
+
+.styledSelect > .valueContainer > .valueMulti > .valueMultiItem > .selectItem {
+    margin-right: 5px;
+}
+
+.styledSelect > .valueContainer > .valueMulti > .valueMultiItem > .selectItem > .styledIcon {
+    margin-left: 4px;
+    color: var(--textDarkest);
+}
+
+.styledSelect > .valueContainer > .valueMulti > .addMore {
+    display: inline-block;
+    margin-bottom: 3px;
+    padding: 3px 0;
+    font-size: 12.5px;
+    cursor: pointer;
+    color: var(--textLink);
+    font-family: var(--font-medium);
+    font-weight: normal;
+}
+
+.styledSelect > .valueContainer > .valueMulti > .addMore:hover,
+.styledSelect > .valueContainer > .valueMulti > .addMore:visited,
+.styledSelect > .valueContainer > .valueMulti > .addMore:active {
+    color: var(--textLink);
+}
+
+.styledSelect > .valueContainer > .valueMulti > .addMore:hover {
+    text-decoration: underline;
+}
+
+.styledSelect > .valueContainer > .valueMulti > .addMore > .styledIcon {
+    margin-right: 3px;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+.styledSelect > .dropDown > .options > .option > .optionItem {
     display: flex;
     align-items: center;
 }
 
-.styledSelect > .dropDown > .options > .option > .type > .styledIcon {
+.styledSelect > .dropDown > .options > .option > .optionItem > .styledIcon {
     font-size: 18px;
 }
 
-.styledSelect > .dropDown > .options > .option > .type > .typeLabel {
+.styledSelect > .dropDown > .options > .option > .optionItem > .optionLabel {
     padding: 0 5px 0 7px;
-    font-size: 15px
+    font-size: 15px;
 }
 
 /* issue priority */
+
+.styledSelect > .dropDown > .options > .option > .optionItem.priority > .optionLabel {
+    padding: 0 5px 0 7px;
+    font-size: 15px;
+    text-transform: capitalize;
+}
+
+.styledSelect > .valueContainer > .selectItem.priority > .selectItemLabel {
+    text-transform: capitalize;
+}
+
+.styledSelect > .dropDown > .options > .option > .optionItem.priority > .styledIcon {
+    font-size: 18px;
+}
+
+.styledSelect > .valueContainer > .selectItem.priority.highest > .styledIcon,
+.styledSelect > .dropDown > .options > .option > .optionItem.priority.highest > .styledIcon {
+    color: var(--highest);
+}
+
+.styledSelect > .valueContainer > .selectItem.priority.high > .styledIcon,
+.styledSelect > .dropDown > .options > .option > .optionItem.priority.high > .styledIcon {
+    color: var(--high);
+}
+
+.styledSelect > .valueContainer > .selectItem.priority.medium > .styledIcon,
+.styledSelect > .dropDown > .options > .option > .optionItem.priority.medium > .styledIcon {
+    color: var(--medium);
+}
+
+.styledSelect > .valueContainer > .selectItem.priority.low > .styledIcon,
+.styledSelect > .dropDown > .options > .option > .optionItem.priority.low > .styledIcon {
+    color: var(--low);
+}
+
+.styledSelect > .valueContainer > .selectItem.priority.lowest > .styledIcon,
+.styledSelect > .dropDown > .options > .option > .optionItem.priority.lowest > .styledIcon {
+    color: var(--lowest);
+}

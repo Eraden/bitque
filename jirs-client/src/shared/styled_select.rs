@@ -9,6 +9,7 @@ pub enum StyledSelectChange {
     Text(String),
     DropDownVisibility(bool),
     Changed(u32),
+    RemoveMulti(u32),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -40,6 +41,42 @@ pub trait SelectOption {
     fn match_text_filter(&self, text_filter: &str) -> bool;
 
     fn to_value(&self) -> u32;
+}
+
+#[derive(Debug, Clone, PartialOrd, PartialEq, Hash)]
+pub struct StyledSelectState {
+    pub field_id: FieldId,
+    pub opened: bool,
+    pub text_filter: String,
+}
+
+impl StyledSelectState {
+    pub fn new(field_id: FieldId) -> Self {
+        Self {
+            field_id,
+            opened: false,
+            text_filter: String::new(),
+        }
+    }
+
+    pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
+        match msg {
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::DropDownVisibility(b))
+                if *field_id == self.field_id =>
+            {
+                self.opened = *b;
+                if !self.opened {
+                    self.text_filter.clear();
+                }
+            }
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::Text(text))
+                if *field_id == self.field_id =>
+            {
+                self.text_filter = text.clone();
+            }
+            _ => (),
+        }
+    }
 }
 
 pub struct StyledSelect<Child>
@@ -172,6 +209,11 @@ where
         self.variant = Some(Variant::Normal);
         self
     }
+
+    pub fn multi(mut self) -> Self {
+        self.is_multi = Some(true);
+        self
+    }
 }
 
 pub fn render<Child>(values: StyledSelect<Child>) -> Node<Msg>
@@ -192,11 +234,9 @@ where
         opened,
     } = values;
 
-    let on_text = input_ev(Ev::KeyUp, |value| {
-        Msg::StyledSelectChanged(
-            FieldId::IssueTypeEditModalTop,
-            StyledSelectChange::Text(value),
-        )
+    let field_id = id.clone();
+    let on_text = input_ev(Ev::KeyUp, move |value| {
+        Msg::StyledSelectChanged(field_id, StyledSelectChange::Text(value))
     });
 
     let field_id = id.clone();
@@ -238,8 +278,6 @@ where
         })
         .collect();
 
-    let value = selected.into_iter().map(|m| render_value(m.into_value()));
-
     let text_input = match opened {
         true => seed::input![
             attrs![
@@ -265,6 +303,27 @@ where
         _ => seed::div![attrs![ At::Class => "options" ], children],
     };
 
+    let value: Vec<Node<Msg>> = if is_multi {
+        let add_icon = StyledIcon::build(Icon::Plus).build().into_node();
+        let mut children: Vec<Node<Msg>> = selected
+            .into_iter()
+            .map(|m| into_multi_value(m, id.clone()))
+            .collect();
+
+        if !children.is_empty() {
+            children.push(div![attrs![At::Class => "addMore"], add_icon, "Add more"]);
+        } else {
+            children.push(div![attrs![At::Class => "placeholder"], "Select"]);
+        }
+
+        vec![div![attrs![At::Class => "valueMulti"], children]]
+    } else {
+        selected
+            .into_iter()
+            .map(|m| render_value(m.into_value()))
+            .collect()
+    };
+
     seed::div![
         attrs![At::Class => select_class.join(" ")],
         div![
@@ -285,4 +344,22 @@ where
 fn render_value(mut content: Node<Msg>) -> Node<Msg> {
     content.add_class("value");
     content
+}
+
+fn into_multi_value<Opt>(opt: Opt, field_id: FieldId) -> Node<Msg>
+where
+    Opt: SelectOption,
+{
+    let close_icon = StyledIcon::build(Icon::Close).size(14).build().into_node();
+    let value = opt.to_value();
+    let mut opt = opt.into_value();
+    opt.add_class("value");
+    opt.add_child(close_icon);
+
+    let handler = mouse_ev(Ev::Click, move |ev| {
+        ev.stop_propagation();
+        Msg::StyledSelectChanged(field_id, StyledSelectChange::RemoveMulti(value))
+    });
+
+    div![attrs![At::Class => "valueMultiItem"], opt, handler]
 }
