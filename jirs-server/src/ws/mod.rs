@@ -34,10 +34,7 @@ impl WsMessageSender for ws::WebsocketContext<WebSocketActor> {
 
 impl WebSocketActor {
     fn handle_ws_msg(&mut self, msg: WsMsg) -> WsResult {
-        // use futures::executor::LocalPool;
         use futures::executor::block_on;
-        // let mut pool = LocalPool::new();
-        // pool.run_until();
 
         if msg != WsMsg::Ping && msg != WsMsg::Pong {
             info!("(2)incoming message: {:?}", msg);
@@ -54,7 +51,7 @@ impl WebSocketActor {
             WsMsg::ProjectIssuesRequest => block_on(self.load_issues())?,
             WsMsg::ProjectUsersRequest => block_on(self.load_project_users())?,
             _ => {
-                error!("Failed to resolve message");
+                error!("No handle for {:?} specified", msg);
                 None
             }
         };
@@ -124,36 +121,22 @@ impl WebSocketActor {
         payload: jirs_data::UpdateIssuePayload,
     ) -> WsResult {
         self.current_user()?;
-        let jirs_data::UpdateIssuePayload {
-            title,
-            issue_type,
-            status,
-            priority,
-            list_position,
-            description,
-            description_text,
-            estimate,
-            time_spent,
-            time_remaining,
-            project_id,
-            user_ids,
-        } = payload;
         let m = match self
             .db
             .send(UpdateIssue {
                 issue_id,
-                title,
-                issue_type,
-                status,
-                priority,
-                list_position,
-                description,
-                description_text,
-                estimate,
-                time_spent,
-                time_remaining,
-                project_id,
-                user_ids,
+                title: payload.title,
+                issue_type: payload.issue_type,
+                status: payload.status,
+                priority: payload.priority,
+                list_position: payload.list_position,
+                description: payload.description,
+                description_text: payload.description_text,
+                estimate: payload.estimate,
+                time_spent: payload.time_spent,
+                time_remaining: payload.time_remaining,
+                project_id: payload.project_id,
+                user_ids: payload.user_ids,
             })
             .await
         {

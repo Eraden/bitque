@@ -76,7 +76,7 @@ pub struct UpdateIssue {
     pub issue_type: Option<IssueType>,
     pub status: Option<IssueStatus>,
     pub priority: Option<IssuePriority>,
-    pub list_position: Option<f64>,
+    pub list_position: Option<i32>,
     pub description: Option<Option<String>>,
     pub description_text: Option<Option<String>>,
     pub estimate: Option<Option<i32>>,
@@ -232,8 +232,8 @@ impl Handler<CreateIssue> for DbExecutor {
 
         let list_position = issues
             .filter(status.eq(IssueStatus::Backlog))
-            .select(sql("max(list_position) + 1.0"))
-            .get_result::<f64>(conn)
+            .select(sql("max(list_position) + 1"))
+            .get_result::<i32>(conn)
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
         let form = crate::models::CreateIssueForm {

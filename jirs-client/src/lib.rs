@@ -86,7 +86,9 @@ pub enum Msg {
     // dragging
     IssueDragStarted(IssueId),
     IssueDragStopped(IssueId),
+    ExchangePosition(IssueId),
     IssueDropZone(IssueStatus),
+    UnlockDragOver,
 
     // inputs
     InputChanged(FieldId, String),

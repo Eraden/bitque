@@ -118,6 +118,7 @@ pub struct ProjectPage {
     pub only_my_filter: bool,
     pub recently_updated_filter: bool,
     pub dragged_issue_id: Option<IssueId>,
+    pub drag_locked: bool,
 }
 
 #[derive(Debug)]
@@ -167,6 +168,7 @@ impl Default for Model {
                 only_my_filter: false,
                 recently_updated_filter: false,
                 dragged_issue_id: None,
+                drag_locked: false,
             },
             modals: vec![],
             project: None,

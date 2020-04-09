@@ -25,7 +25,9 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
             model.user = Some(user.clone());
         }
         Msg::WsMsg(WsMsg::ProjectIssuesLoaded(v)) => {
-            model.issues = v.clone();
+            let mut v = v.clone();
+            v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
+            model.issues = v;
         }
         Msg::WsMsg(WsMsg::ProjectUsersLoaded(v)) => {
             model.users = v.clone();

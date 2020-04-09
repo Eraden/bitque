@@ -115,7 +115,6 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
         _ => (),
     }
-    log!(modal);
 }
 
 pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {

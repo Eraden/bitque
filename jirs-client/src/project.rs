@@ -10,9 +10,9 @@ use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{drag_ev, inner_layout, ToNode};
-use crate::{FieldId, Msg};
+use crate::{FieldId, Msg, APP};
 
-pub fn update(msg: Msg, model: &mut crate::model::Model, _orders: &mut impl Orders<Msg>) {
+pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
@@ -41,6 +41,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, _orders: &mut impl Orde
                     model.issues.push(is);
                 }
             }
+            orders.skip().send_msg(Msg::ModalDropped);
         }
         Msg::ToggleAboutTooltip => {
             model.project_page.about_tooltip_visible = !model.project_page.about_tooltip_visible;
@@ -97,13 +98,73 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, _orders: &mut impl Orde
         Msg::IssueDragStopped(_) => {
             model.project_page.dragged_issue_id = None;
         }
+        Msg::ExchangePosition(issue_bellow_id) => {
+            if model.project_page.drag_locked {
+                return;
+            }
+            log!(issue_bellow_id);
+            log!(model.project_page.dragged_issue_id);
+            let dragged_id = match model.project_page.dragged_issue_id {
+                Some(id) => id,
+                _ => return,
+            };
+
+            let mut below = None;
+            let mut dragged = None;
+            let mut issues = vec![];
+            std::mem::swap(&mut issues, &mut model.issues);
+
+            for issue in issues.into_iter() {
+                match issue.id {
+                    id if id == issue_bellow_id => below = Some(issue),
+                    id if id == dragged_id => dragged = Some(issue),
+                    _ => model.issues.push(issue),
+                };
+            }
+
+            let mut below = match below {
+                Some(below) => below,
+                _ => return,
+            };
+            let mut dragged = match dragged {
+                Some(issue) => issue,
+                _ => {
+                    model.issues.push(below);
+                    return;
+                }
+            };
+            if dragged.status == below.status {
+                std::mem::swap(&mut dragged.list_position, &mut below.list_position);
+                below.status = dragged.status.clone();
+            } else {
+                below.list_position = model
+                    .issues
+                    .iter()
+                    .map(|i| i.list_position)
+                    .max()
+                    .unwrap_or(0)
+                    + 1;
+                std::mem::swap(&mut dragged.list_position, &mut below.list_position);
+                below.status = dragged.status.clone();
+            }
+            model.issues.push(below);
+            model.issues.push(dragged);
+            model
+                .issues
+                .sort_by(|a, b| a.list_position.cmp(&b.list_position));
+            model.project_page.drag_locked = true;
+            // log!(model.issues);
+        }
+        Msg::UnlockDragOver => {
+            model.project_page.drag_locked = false;
+        }
         Msg::IssueDropZone(status) => match model.project_page.dragged_issue_id.as_ref().cloned() {
             Some(issue_id) => {
-                let mut position = 0f64;
+                let mut position = 0;
                 let mut found: Option<&mut Issue> = None;
                 for issue in model.issues.iter_mut() {
                     if issue.status == status {
-                        position += 1f64;
+                        position += 1;
                     }
                     if issue.id == issue_id {
                         found = Some(issue);
@@ -116,7 +177,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, _orders: &mut impl Orde
                 };
 
                 issue.status = status.clone();
-                issue.list_position = position + 1f64;
+                issue.list_position = position + 1;
 
                 let payload = UpdateIssuePayload {
                     title: Some(issue.title.clone()),
@@ -138,7 +199,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, _orders: &mut impl Orde
             _ => error!("Drag stopped before drop :("),
         },
         Msg::DeleteIssue(issue_id) => {
-            send_ws_msg(jirs_data::WsMsg::IssueDeleted(issue_id));
+            send_ws_msg(jirs_data::WsMsg::IssueDeleteRequest(issue_id));
         }
         _ => (),
     }
@@ -356,10 +417,25 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
     let issue_id = issue.id;
     let drag_started = drag_ev(Ev::DragStart, move |_| Msg::IssueDragStarted(issue_id));
     let drag_stopped = drag_ev(Ev::DragEnd, move |_| Msg::IssueDragStopped(issue_id));
+    let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
+        ev.prevent_default();
+        ev.stop_propagation();
+        seed::set_timeout(
+            Box::new(|| {
+                let app = match unsafe { APP.as_mut().unwrap() }.write() {
+                    Ok(app) => app,
+                    _ => return,
+                };
+                app.update(Msg::UnlockDragOver);
+            }),
+            3000,
+        );
+        Msg::ExchangePosition(issue_id)
+    });
 
-    let mut class_list = vec!["issue"];
+    let class_list = vec!["issue"];
     if Some(issue_id) == model.project_page.dragged_issue_id {
-        class_list.push("hidden");
+        // class_list.push("hidden");
     }
 
     let href = format!("/issues/{id}", id = issue_id);
@@ -370,6 +446,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
         div![
             attrs![At::Class => class_list.join(" "), At::Draggable => true],
             drag_stopped,
+            drag_over_handler,
             p![attrs![At::Class => "title"], issue.title,],
             div![
                 attrs![At::Class => "bottom"],
