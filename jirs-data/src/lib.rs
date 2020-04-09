@@ -98,6 +98,17 @@ impl Default for IssueStatus {
     }
 }
 
+impl Into<u32> for IssueStatus {
+    fn into(self) -> u32 {
+        match self {
+            IssueStatus::Backlog => 0,
+            IssueStatus::Selected => 1,
+            IssueStatus::InProgress => 2,
+            IssueStatus::Done => 3,
+        }
+    }
+}
+
 impl FromStr for IssueStatus {
     type Err = String;
 

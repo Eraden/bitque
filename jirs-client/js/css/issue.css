@@ -8,6 +8,32 @@
     padding-right: 50px;
 }
 
+.issueDetails > .content > .left > .styledTextArea {
+    margin: 18px 0 0 -8px;
+    height: 44px;
+    width: 100%;
+}
+
+.issueDetails > .content > .left > .styledTextArea > textarea {
+    padding: 7px 7px 8px;
+    line-height: 1.28;
+    resize: none;
+    transition: background 0.1s;
+    font-size: 24px;
+    font-family: var(--font-medium);
+    font-weight: normal;
+}
+
+.issueDetails > .content > .left > .styledTextArea > textarea:not(:focus) {
+    background: #fff;
+    border: 1px solid transparent;
+    box-shadow: 0 0 0 1px transparent;
+}
+
+.issueDetails > .content > .left > .styledTextArea > textarea:hover:not(:focus) {
+    background: var(--backgroundLight);
+}
+
 .issueDetails > .content > .right {
     width: 35%;
     padding-top: 5px;

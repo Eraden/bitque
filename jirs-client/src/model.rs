@@ -20,10 +20,13 @@ pub enum ModalType {
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub struct EditIssueModal {
     pub id: i32,
-    pub top_select_opened: bool,
-    pub top_select_filter: String,
     pub value: IssueType,
     pub link_copied: bool,
+    pub top_type_state: StyledSelectState,
+    pub status_state: StyledSelectState,
+    pub reporter_state: StyledSelectState,
+    pub assignees_state: StyledSelectState,
+    pub priority_state: StyledSelectState,
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]

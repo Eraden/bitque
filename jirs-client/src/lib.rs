@@ -28,6 +28,15 @@ pub type AvatarFilterActive = bool;
 pub enum FieldId {
     // edit issue
     IssueTypeEditModalTop,
+    TitleIssueEditModal,
+    DescriptionIssueEditModal,
+    StatusIssueEditModal,
+    AssigneesIssueEditModal,
+    ReporterIssueEditModal,
+    PriorityIssueEditModal,
+    EstimateIssueEditModal,
+    TimeSpendIssueEditModal,
+    TimeRemainingIssueEditModal,
     // project boards
     TextFilterBoard,
     //
@@ -53,6 +62,15 @@ impl std::fmt::Display for FieldId {
             FieldId::ReporterAddIssueModal => f.write_str("reporterAddIssueModal"),
             FieldId::AssigneesAddIssueModal => f.write_str("assigneesAddIssueModal"),
             FieldId::IssuePriorityAddIssueModal => f.write_str("issuePriorityAddIssueModal"),
+            FieldId::TitleIssueEditModal => f.write_str("titleIssueEditModal"),
+            FieldId::DescriptionIssueEditModal => f.write_str("descriptionIssueEditModal"),
+            FieldId::StatusIssueEditModal => f.write_str("statusIssueEditModal"),
+            FieldId::AssigneesIssueEditModal => f.write_str("assigneesIssueEditModal"),
+            FieldId::ReporterIssueEditModal => f.write_str("reporterIssueEditModal"),
+            FieldId::PriorityIssueEditModal => f.write_str("priorityIssueEditModal"),
+            FieldId::EstimateIssueEditModal => f.write_str("estimateIssueEditModal"),
+            FieldId::TimeSpendIssueEditModal => f.write_str("timeSpendIssueEditModal"),
+            FieldId::TimeRemainingIssueEditModal => f.write_str("timeRemainingIssueEditModal"),
         }
     }
 }

@@ -7,6 +7,9 @@ use crate::{FieldId, Msg};
 pub struct StyledTextarea {
     id: FieldId,
     height: usize,
+    max_height: usize,
+    value: String,
+    class_list: Vec<String>,
 }
 
 impl ToNode for StyledTextarea {
@@ -24,19 +27,51 @@ impl StyledTextarea {
 #[derive(Debug, Default)]
 pub struct StyledTextareaBuilder {
     height: Option<usize>,
+    max_height: Option<usize>,
     on_change: Option<EventHandler<Msg>>,
+    value: String,
+    class_list: Vec<String>,
 }
 
 impl StyledTextareaBuilder {
+    #[inline]
     pub fn height(mut self, height: usize) -> Self {
         self.height = Some(height);
         self
     }
 
+    #[inline]
+    pub fn max_height(mut self, height: usize) -> Self {
+        self.max_height = Some(height);
+        self
+    }
+
+    #[inline]
+    pub fn value<S>(mut self, value: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.value = value.into();
+        self
+    }
+
+    #[inline]
+    pub fn add_class<S>(mut self, value: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.class_list.push(value.into());
+        self
+    }
+
+    #[inline]
     pub fn build(self, id: FieldId) -> StyledTextarea {
         StyledTextarea {
             id,
+            value: self.value,
             height: self.height.unwrap_or(110),
+            class_list: self.class_list,
+            max_height: self.max_height.unwrap_or_default(),
         }
     }
 }
@@ -55,9 +90,20 @@ const ADDITIONAL_HEIGHT: f64 = PADDING_TOP_BOTTOM + BORDER_TOP_BOTTOM;
 //  * 17 is padding top + bottom
 //  * 2 is border top + bottom
 pub fn render(values: StyledTextarea) -> Node<Msg> {
-    let StyledTextarea { id, height } = values;
+    let StyledTextarea {
+        id,
+        height,
+        max_height,
+        value,
+        mut class_list,
+    } = values;
     let mut style_list = vec![];
-    style_list.push(format!("min-height: {}px", height));
+    if height > 0 {
+        style_list.push(format!("min-height: {}px", height));
+    }
+    if max_height > 0 {
+        style_list.push(format!("max-height: {}px", max_height));
+    }
 
     let mut handlers = vec![];
 
@@ -88,15 +134,18 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
     let text_input_handler = input_ev(Ev::KeyUp, move |value| Msg::InputChanged(id, value));
     handlers.push(text_input_handler);
 
+    class_list.push("textAreaInput".to_string());
+
     div![
         attrs![At::Class => "styledTextArea"],
         div![attrs![At::Class => "textAreaHeading"]],
         textarea![
             attrs![
-                At::Class => "textAreaInput";
+                At::Class => class_list.join(" ");
                 At::ContentEditable => "true";
                 At::Style => style_list.join(";");
             ],
+            value,
             handlers,
         ]
     ]

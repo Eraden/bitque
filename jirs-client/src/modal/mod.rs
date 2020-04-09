@@ -5,7 +5,7 @@ use jirs_data::{Issue, IssueType, UpdateIssuePayload};
 use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, EditIssueModal, ModalType, Page};
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
-use crate::shared::styled_select::StyledSelectChange;
+use crate::shared::styled_select::{StyledSelectChange, StyledSelectState};
 use crate::shared::{find_issue, ToNode};
 use crate::{model, FieldChange, FieldId, Msg};
 
@@ -43,10 +43,13 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
                 *issue_id,
                 EditIssueModal {
                     id: *issue_id,
-                    top_select_opened: false,
-                    top_select_filter: "".to_string(),
                     value,
                     link_copied: false,
+                    top_type_state: StyledSelectState::new(FieldId::IssueTypeEditModalTop),
+                    status_state: StyledSelectState::new(FieldId::StatusIssueEditModal),
+                    reporter_state: StyledSelectState::new(FieldId::ReporterIssueEditModal),
+                    assignees_state: StyledSelectState::new(FieldId::AssigneesIssueEditModal),
+                    priority_state: StyledSelectState::new(FieldId::PriorityIssueEditModal),
                 },
             ));
         }
@@ -59,13 +62,13 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         Msg::StyledSelectChanged(FieldId::IssueTypeEditModalTop, change) => {
             match (change, model.modals.last_mut()) {
                 (StyledSelectChange::Text(ref text), Some(ModalType::EditIssue(_, modal))) => {
-                    modal.top_select_filter = text.clone();
+                    modal.top_type_state.text_filter = text.clone();
                 }
                 (
                     StyledSelectChange::DropDownVisibility(flag),
                     Some(ModalType::EditIssue(_, modal)),
                 ) => {
-                    modal.top_select_opened = *flag;
+                    modal.top_type_state.opened = *flag;
                 }
                 (
                     StyledSelectChange::Changed(value),
@@ -107,6 +110,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         _ => (),
     }
     add_issue::update(msg, model, orders);
+    issue_details::update(msg, model, orders);
 }
 
 pub fn view(model: &model::Model) -> Node<Msg> {

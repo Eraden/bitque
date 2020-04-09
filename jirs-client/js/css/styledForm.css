@@ -63,31 +63,3 @@
 .styledField > * {
     display: block;
 }
-
-.styledTextArea {
-    display: inline-block;
-    width: 100%;
-}
-
-.styledTextArea > textarea {
-    overflow-y: hidden;
-    width: 100%;
-    padding: 8px 12px 9px;
-    border-radius: 3px;
-    border: 1px solid var(--borderLightest);
-    color: var(--textDarkest);
-    background: var(--backgroundLightest);
-    font-family: var(--font-regular);
-    font-weight: normal;
-    font-size: 15px
-}
-
-.styledTextArea > textarea:focus {
-    background: #fff;
-    border: 1px solid var(--borderInputFocus);
-    box-shadow: 0 0 0 1px var(--borderInputFocus);
-}
-
-.styledTextArea > textarea.invalid:focus {
-    border: 1px solid var(--danger);
-}

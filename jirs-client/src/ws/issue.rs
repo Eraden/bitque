@@ -1,5 +1,3 @@
-use seed::*;
-
 use jirs_data::*;
 
 use crate::api::send_ws_msg;

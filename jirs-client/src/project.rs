@@ -59,7 +59,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 })
                 .last();
             if let Some(m) = modal {
-                m.top_select_filter = text;
+                m.top_type_state.text_filter = text;
             }
         }
         Msg::InputChanged(FieldId::TextFilterBoard, text) => {

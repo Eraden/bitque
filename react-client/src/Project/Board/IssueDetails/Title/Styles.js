@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 import { color, font } from '../../../../shared/utils/styles';
-import { Textarea } from '../../../../shared/components';
+import { Textarea }    from '../../../../shared/components';
 
 export const TitleTextarea = styled(Textarea)`
   margin: 18px 0 0 -8px;
@@ -17,9 +17,10 @@ export const TitleTextarea = styled(Textarea)`
     box-shadow: 0 0 0 1px transparent;
     transition: background 0.1s;
     font-size: 24px
-    ${ font.medium };font-weight: normal;
+    ${font.medium};
+    font-weight: normal;
     &:hover:not(:focus) {
-      background: ${ color.backgroundLight };
+      background: ${color.backgroundLight};
     }
   }
 `;

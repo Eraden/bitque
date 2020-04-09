@@ -66,6 +66,7 @@ pub fn render(values: StyledField) -> Node<Msg> {
         Some(s) => div![attrs![At::Class => "styledTip"], s],
         _ => empty![],
     };
+
     div![
         attrs![At::Class => "styledField"],
         seed::label![attrs![At::Class => "styledLabel"], label],
