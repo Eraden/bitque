@@ -1,0 +1,149 @@
+use seed::*;
+
+use jirs_data::*;
+
+use crate::api::send_ws_msg;
+use crate::model::Model;
+use crate::IssueId;
+
+pub fn drag_started(issue_id: IssueId, model: &mut Model) {
+    model.project_page.dragged_issue_id = Some(issue_id);
+
+    mark_dirty(issue_id, model);
+}
+
+pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
+    if model.project_page.dragged_issue_id == Some(issue_bellow_id)
+        || model.project_page.last_drag_exchange_id == Some(issue_bellow_id)
+    {
+        return;
+    }
+    let dragged_id = match model.project_page.dragged_issue_id {
+        Some(id) => id,
+        _ => return,
+    };
+
+    let mut below = None;
+    let mut dragged = None;
+    let mut issues = vec![];
+    std::mem::swap(&mut issues, &mut model.issues);
+
+    for issue in issues.into_iter() {
+        match issue.id {
+            id if id == issue_bellow_id => below = Some(issue),
+            id if id == dragged_id => dragged = Some(issue),
+            _ => model.issues.push(issue),
+        };
+    }
+
+    let mut below = match below {
+        Some(below) => below,
+        _ => return,
+    };
+    let mut dragged = match dragged {
+        Some(issue) => issue,
+        _ => {
+            model.issues.push(below);
+            return;
+        }
+    };
+    if dragged.status != below.status {
+        let mut issues = vec![];
+        std::mem::swap(&mut issues, &mut model.issues);
+        for mut c in issues.into_iter() {
+            if c.status == below.status && c.list_position > below.list_position {
+                c.list_position += 1;
+                mark_dirty(c.id, model);
+            }
+            model.issues.push(c);
+        }
+        dragged.list_position = below.list_position + 1;
+        dragged.status = below.status.clone();
+    }
+    std::mem::swap(&mut dragged.list_position, &mut below.list_position);
+
+    mark_dirty(dragged.id, model);
+    mark_dirty(below.id, model);
+
+    model.issues.push(below);
+    model.issues.push(dragged);
+    model
+        .issues
+        .sort_by(|a, b| a.list_position.cmp(&b.list_position));
+    model.project_page.last_drag_exchange_id = Some(issue_bellow_id);
+}
+
+pub fn dropped(_status: IssueStatus, model: &mut Model) {
+    for issue in model.issues.iter() {
+        if !model.project_page.dirty_issues.contains(&issue.id) {
+            continue;
+        }
+
+        let payload = UpdateIssuePayload {
+            title: Some(issue.title.clone()),
+            issue_type: Some(issue.issue_type.clone()),
+            status: Some(issue.status.clone()),
+            priority: Some(issue.priority.clone()),
+            list_position: Some(issue.list_position),
+            description: Some(issue.description.clone()),
+            description_text: Some(issue.description_text.clone()),
+            estimate: Some(issue.estimate),
+            time_spent: Some(issue.time_spent),
+            time_remaining: Some(issue.time_remaining),
+            project_id: Some(issue.project_id),
+            user_ids: Some(issue.user_ids.clone()),
+        };
+        model.project_page.dragged_issue_id = None;
+        send_ws_msg(WsMsg::IssueUpdateRequest(issue.id, payload));
+        model.project_page.last_drag_exchange_id = None;
+    }
+}
+
+pub fn change_status(status: IssueStatus, model: &mut Model) {
+    let issue_id = match model.project_page.dragged_issue_id.as_ref().cloned() {
+        Some(issue_id) => issue_id,
+        _ => return,
+    };
+
+    let mut old: Vec<Issue> = vec![];
+    let mut pos = 0;
+    let mut found: Option<Issue> = None;
+    std::mem::swap(&mut old, &mut model.issues);
+    old.sort_by(|a, b| a.list_position.cmp(&b.list_position));
+
+    for mut issue in old.into_iter() {
+        if issue.status == status {
+            issue.list_position = pos;
+            pos += 1;
+        }
+        if issue.id != issue_id {
+            model.issues.push(issue);
+        } else {
+            found = Some(issue);
+        }
+    }
+
+    let mut issue = match found {
+        Some(i) => i,
+        _ => {
+            return;
+        }
+    };
+
+    if issue.status == status {
+        model.issues.push(issue);
+        return;
+    }
+    issue.status = status.clone();
+    issue.list_position = pos + 1;
+    model.issues.push(issue);
+
+    mark_dirty(issue_id, model);
+}
+
+#[inline]
+fn mark_dirty(id: IssueId, model: &mut Model) {
+    if !model.project_page.dirty_issues.contains(&id) {
+        model.project_page.dirty_issues.push(id);
+    }
+}

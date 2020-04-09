@@ -10,7 +10,7 @@ use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{drag_ev, inner_layout, ToNode};
-use crate::{FieldId, Msg, APP};
+use crate::{FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -92,112 +92,15 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             pp.recently_updated_filter = false;
             pp.only_my_filter = false;
         }
-        Msg::IssueDragStarted(issue_id) => {
-            model.project_page.dragged_issue_id = Some(issue_id);
-        }
+        Msg::IssueDragStarted(issue_id) => crate::ws::issue::drag_started(issue_id, model),
         Msg::IssueDragStopped(_) => {
             model.project_page.dragged_issue_id = None;
         }
         Msg::ExchangePosition(issue_bellow_id) => {
-            if model.project_page.drag_locked {
-                return;
-            }
-            log!(issue_bellow_id);
-            log!(model.project_page.dragged_issue_id);
-            let dragged_id = match model.project_page.dragged_issue_id {
-                Some(id) => id,
-                _ => return,
-            };
-
-            let mut below = None;
-            let mut dragged = None;
-            let mut issues = vec![];
-            std::mem::swap(&mut issues, &mut model.issues);
-
-            for issue in issues.into_iter() {
-                match issue.id {
-                    id if id == issue_bellow_id => below = Some(issue),
-                    id if id == dragged_id => dragged = Some(issue),
-                    _ => model.issues.push(issue),
-                };
-            }
-
-            let mut below = match below {
-                Some(below) => below,
-                _ => return,
-            };
-            let mut dragged = match dragged {
-                Some(issue) => issue,
-                _ => {
-                    model.issues.push(below);
-                    return;
-                }
-            };
-            if dragged.status == below.status {
-                std::mem::swap(&mut dragged.list_position, &mut below.list_position);
-                below.status = dragged.status.clone();
-            } else {
-                below.list_position = model
-                    .issues
-                    .iter()
-                    .map(|i| i.list_position)
-                    .max()
-                    .unwrap_or(0)
-                    + 1;
-                std::mem::swap(&mut dragged.list_position, &mut below.list_position);
-                below.status = dragged.status.clone();
-            }
-            model.issues.push(below);
-            model.issues.push(dragged);
-            model
-                .issues
-                .sort_by(|a, b| a.list_position.cmp(&b.list_position));
-            model.project_page.drag_locked = true;
-            // log!(model.issues);
+            crate::ws::issue::exchange_position(issue_bellow_id, model)
         }
-        Msg::UnlockDragOver => {
-            model.project_page.drag_locked = false;
-        }
-        Msg::IssueDropZone(status) => match model.project_page.dragged_issue_id.as_ref().cloned() {
-            Some(issue_id) => {
-                let mut position = 0;
-                let mut found: Option<&mut Issue> = None;
-                for issue in model.issues.iter_mut() {
-                    if issue.status == status {
-                        position += 1;
-                    }
-                    if issue.id == issue_id {
-                        found = Some(issue);
-                        break;
-                    }
-                }
-                let issue = match found {
-                    Some(i) => i,
-                    _ => return,
-                };
-
-                issue.status = status.clone();
-                issue.list_position = position + 1;
-
-                let payload = UpdateIssuePayload {
-                    title: Some(issue.title.clone()),
-                    issue_type: Some(issue.issue_type.clone()),
-                    status: Some(status),
-                    priority: Some(issue.priority.clone()),
-                    list_position: Some(issue.list_position),
-                    description: Some(issue.description.clone()),
-                    description_text: Some(issue.description_text.clone()),
-                    estimate: Some(issue.estimate),
-                    time_spent: Some(issue.time_spent),
-                    time_remaining: Some(issue.time_remaining),
-                    project_id: Some(issue.project_id),
-                    user_ids: Some(issue.user_ids.clone()),
-                };
-                model.project_page.dragged_issue_id = None;
-                send_ws_msg(WsMsg::IssueUpdateRequest(issue_id, payload));
-            }
-            _ => error!("Drag stopped before drop :("),
-        },
+        Msg::IssueDragOverStatus(status) => crate::ws::issue::change_status(status, model),
+        Msg::IssueDropZone(status) => crate::ws::issue::dropped(status, model),
         Msg::DeleteIssue(issue_id) => {
             send_ws_msg(jirs_data::WsMsg::IssueDeleteRequest(issue_id));
         }
@@ -357,9 +260,11 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
         ev.prevent_default();
         Msg::IssueDropZone(send_status)
     });
+
+    let send_status = status.clone();
     let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
         ev.prevent_default();
-        Msg::NoOp
+        Msg::IssueDragOverStatus(send_status)
     });
 
     div![
@@ -420,23 +325,10 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
     let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
         ev.prevent_default();
         ev.stop_propagation();
-        seed::set_timeout(
-            Box::new(|| {
-                let app = match unsafe { APP.as_mut().unwrap() }.write() {
-                    Ok(app) => app,
-                    _ => return,
-                };
-                app.update(Msg::UnlockDragOver);
-            }),
-            3000,
-        );
         Msg::ExchangePosition(issue_id)
     });
 
     let class_list = vec!["issue"];
-    if Some(issue_id) == model.project_page.dragged_issue_id {
-        // class_list.push("hidden");
-    }
 
     let href = format!("/issues/{id}", id = issue_id);
 

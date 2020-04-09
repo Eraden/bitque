@@ -12,6 +12,11 @@ pub use sql::*;
 #[cfg(feature = "backend")]
 pub mod sql;
 
+pub trait ToVec {
+    type Item;
+    fn ordered() -> Vec<Self::Item>;
+}
+
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
@@ -20,6 +25,14 @@ pub enum IssueType {
     Task,
     Bug,
     Story,
+}
+
+impl ToVec for IssueType {
+    type Item = IssueType;
+
+    fn ordered() -> Vec<Self> {
+        vec![IssueType::Task, IssueType::Bug, IssueType::Story]
+    }
 }
 
 impl Default for IssueType {
@@ -72,7 +85,6 @@ impl std::fmt::Display for IssueType {
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueStatusType")]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
-#[serde(rename_all = "lowercase")]
 pub enum IssueStatus {
     Backlog,
     Selected,
@@ -97,6 +109,19 @@ impl FromStr for IssueStatus {
             "done" => Ok(IssueStatus::Done),
             _ => Err(format!("Invalid status {:?}", s)),
         }
+    }
+}
+
+impl ToVec for IssueStatus {
+    type Item = IssueStatus;
+
+    fn ordered() -> Vec<Self> {
+        vec![
+            IssueStatus::Backlog,
+            IssueStatus::Selected,
+            IssueStatus::InProgress,
+            IssueStatus::Done,
+        ]
     }
 }
 
@@ -135,16 +160,30 @@ pub enum IssuePriority {
     Lowest,
 }
 
+impl ToVec for IssuePriority {
+    type Item = IssuePriority;
+
+    fn ordered() -> Vec<Self> {
+        vec![
+            IssuePriority::Highest,
+            IssuePriority::High,
+            IssuePriority::Medium,
+            IssuePriority::Low,
+            IssuePriority::Lowest,
+        ]
+    }
+}
+
 impl FromStr for IssuePriority {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().trim() {
-            "5" | "highest" => Ok(IssuePriority::Highest),
-            "4" | "high" => Ok(IssuePriority::High),
-            "3" | "medium" => Ok(IssuePriority::Medium),
-            "2" | "low" => Ok(IssuePriority::Low),
-            "1" | "lowest" => Ok(IssuePriority::Lowest),
+            "highest" => Ok(IssuePriority::Highest),
+            "high" => Ok(IssuePriority::High),
+            "medium" => Ok(IssuePriority::Medium),
+            "low" => Ok(IssuePriority::Low),
+            "lowest" => Ok(IssuePriority::Lowest),
             _ => Err(format!("Unknown priority {}", s)),
         }
     }
@@ -194,13 +233,11 @@ impl Into<IssuePriority> for u32 {
 }
 
 #[derive(Clone, Serialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct ErrorResponse {
     pub errors: Vec<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct FullProject {
     pub id: i32,
     pub name: String,
@@ -215,11 +252,9 @@ pub struct FullProject {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct FullIssue {
     pub id: i32,
     pub title: String,
-    #[serde(rename = "type")]
     pub issue_type: IssueType,
     pub status: IssueStatus,
     pub priority: IssuePriority,
@@ -262,7 +297,6 @@ impl Into<Issue> for FullIssue {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Project {
     pub id: i32,
     pub name: String,
@@ -274,11 +308,9 @@ pub struct Project {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Issue {
     pub id: i32,
     pub title: String,
-    #[serde(rename = "type")]
     pub issue_type: IssueType,
     pub status: IssueStatus,
     pub priority: IssuePriority,
@@ -297,7 +329,6 @@ pub struct Issue {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Comment {
     pub id: i32,
     pub body: String,
@@ -310,7 +341,6 @@ pub struct Comment {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: i32,
     pub name: String,
@@ -322,7 +352,6 @@ pub struct User {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Token {
     pub id: i32,
     pub user_id: i32,
@@ -333,10 +362,8 @@ pub struct Token {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct UpdateIssuePayload {
     pub title: Option<String>,
-    #[serde(rename = "type")]
     pub issue_type: Option<IssueType>,
     pub status: Option<IssueStatus>,
     pub priority: Option<IssuePriority>,
@@ -351,7 +378,6 @@ pub struct UpdateIssuePayload {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct CreateCommentPayload {
     pub user_id: Option<i32>,
     pub issue_id: i32,
@@ -359,16 +385,13 @@ pub struct CreateCommentPayload {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct UpdateCommentPayload {
     pub body: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct CreateIssuePayload {
     pub title: String,
-    #[serde(rename = "type")]
     pub issue_type: IssueType,
     pub status: IssueStatus,
     pub priority: IssuePriority,
@@ -383,7 +406,6 @@ pub struct CreateIssuePayload {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct UpdateProjectPayload {
     pub name: Option<String>,
     pub url: Option<String>,

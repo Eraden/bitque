@@ -118,7 +118,8 @@ pub struct ProjectPage {
     pub only_my_filter: bool,
     pub recently_updated_filter: bool,
     pub dragged_issue_id: Option<IssueId>,
-    pub drag_locked: bool,
+    pub last_drag_exchange_id: Option<IssueId>,
+    pub dirty_issues: Vec<IssueId>,
 }
 
 #[derive(Debug)]
@@ -168,7 +169,8 @@ impl Default for Model {
                 only_my_filter: false,
                 recently_updated_filter: false,
                 dragged_issue_id: None,
-                drag_locked: false,
+                last_drag_exchange_id: None,
+                dirty_issues: vec![],
             },
             modals: vec![],
             project: None,

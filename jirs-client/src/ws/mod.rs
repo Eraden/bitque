@@ -4,6 +4,8 @@ use jirs_data::WsMsg;
 
 use crate::{model, Msg, APP};
 
+pub mod issue;
+
 pub fn handle(msg: WsMsg) {
     let app = match unsafe { APP.as_mut().unwrap() }.write() {
         Ok(app) => app,
