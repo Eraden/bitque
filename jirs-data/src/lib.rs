@@ -109,6 +109,18 @@ impl Into<u32> for IssueStatus {
     }
 }
 
+impl Into<IssueStatus> for u32 {
+    fn into(self) -> IssueStatus {
+        match self {
+            0 => IssueStatus::Backlog,
+            1 => IssueStatus::Selected,
+            2 => IssueStatus::InProgress,
+            3 => IssueStatus::Done,
+            _ => IssueStatus::Backlog,
+        }
+    }
+}
+
 impl FromStr for IssueStatus {
     type Err = String;
 
@@ -372,20 +384,21 @@ pub struct Token {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
 pub struct UpdateIssuePayload {
-    pub title: Option<String>,
-    pub issue_type: Option<IssueType>,
-    pub status: Option<IssueStatus>,
-    pub priority: Option<IssuePriority>,
-    pub list_position: Option<i32>,
-    pub description: Option<Option<String>>,
-    pub description_text: Option<Option<String>>,
-    pub estimate: Option<Option<i32>>,
-    pub time_spent: Option<Option<i32>>,
-    pub time_remaining: Option<Option<i32>>,
-    pub project_id: Option<i32>,
-    pub user_ids: Option<Vec<i32>>,
+    pub title: String,
+    pub issue_type: IssueType,
+    pub status: IssueStatus,
+    pub priority: IssuePriority,
+    pub list_position: i32,
+    pub description: Option<String>,
+    pub description_text: Option<String>,
+    pub estimate: Option<i32>,
+    pub time_spent: Option<i32>,
+    pub time_remaining: Option<i32>,
+    pub project_id: i32,
+    pub reporter_id: i32,
+    pub user_ids: Vec<i32>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

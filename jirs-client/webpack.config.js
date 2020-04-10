@@ -62,6 +62,7 @@ module.exports = {
     plugins: [
         new WasmPackPlugin({
             crateDirectory: path.resolve(__dirname),
+            extraArgs: '--no-typescript'
         }),
         new HtmlWebpackPlugin({
             template: path.resolve(__dirname, "js", "template.ejs"),

@@ -1,11 +1,12 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{Issue, IssueType, UpdateIssuePayload};
+use jirs_data::UpdateIssuePayload;
 
 use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, EditIssueModal, ModalType, Page};
+use crate::shared::styled_editor::Mode;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
-use crate::shared::styled_select::{StyledSelectChange, StyledSelectState};
+use crate::shared::styled_select::StyledSelectState;
 use crate::shared::{find_issue, ToNode};
 use crate::{model, FieldChange, FieldId, Msg};
 
@@ -36,75 +37,46 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         }
 
         Msg::ChangePage(Page::EditIssue(issue_id)) => {
-            let value = find_issue(model, *issue_id)
-                .map(|issue| issue.issue_type.clone())
-                .unwrap_or_else(|| IssueType::Task);
-            model.modals.push(ModalType::EditIssue(
-                *issue_id,
-                EditIssueModal {
-                    id: *issue_id,
-                    value,
-                    link_copied: false,
-                    top_type_state: StyledSelectState::new(FieldId::IssueTypeEditModalTop),
-                    status_state: StyledSelectState::new(FieldId::StatusIssueEditModal),
-                    reporter_state: StyledSelectState::new(FieldId::ReporterIssueEditModal),
-                    assignees_state: StyledSelectState::new(FieldId::AssigneesIssueEditModal),
-                    priority_state: StyledSelectState::new(FieldId::PriorityIssueEditModal),
-                },
-            ));
+            let modal = {
+                let issue = match find_issue(model, *issue_id) {
+                    Some(issue) => issue,
+                    _ => return,
+                };
+                ModalType::EditIssue(
+                    *issue_id,
+                    EditIssueModal {
+                        id: *issue_id,
+                        link_copied: false,
+                        payload: UpdateIssuePayload {
+                            title: issue.title.clone(),
+                            issue_type: issue.issue_type.clone(),
+                            status: issue.status.clone(),
+                            priority: issue.priority.clone(),
+                            list_position: issue.list_position.clone(),
+                            description: issue.description.clone(),
+                            description_text: issue.description_text.clone(),
+                            estimate: issue.estimate.clone(),
+                            time_spent: issue.time_spent.clone(),
+                            time_remaining: issue.time_remaining.clone(),
+                            project_id: issue.project_id.clone(),
+                            reporter_id: issue.reporter_id.clone(),
+                            user_ids: issue.user_ids.clone(),
+                        },
+                        top_type_state: StyledSelectState::new(FieldId::IssueTypeEditModalTop),
+                        status_state: StyledSelectState::new(FieldId::StatusIssueEditModal),
+                        reporter_state: StyledSelectState::new(FieldId::ReporterIssueEditModal),
+                        assignees_state: StyledSelectState::new(FieldId::AssigneesIssueEditModal),
+                        priority_state: StyledSelectState::new(FieldId::PriorityIssueEditModal),
+                        description_editor_mode: Mode::Editor,
+                    },
+                )
+            };
+            model.modals.push(modal);
         }
         Msg::ChangePage(Page::AddIssue) => {
             let mut modal = AddIssueModal::default();
             modal.project_id = model.project.as_ref().map(|p| p.id);
             model.modals.push(ModalType::AddIssue(modal));
-        }
-
-        Msg::StyledSelectChanged(FieldId::IssueTypeEditModalTop, change) => {
-            match (change, model.modals.last_mut()) {
-                (StyledSelectChange::Text(ref text), Some(ModalType::EditIssue(_, modal))) => {
-                    modal.top_type_state.text_filter = text.clone();
-                }
-                (
-                    StyledSelectChange::DropDownVisibility(flag),
-                    Some(ModalType::EditIssue(_, modal)),
-                ) => {
-                    modal.top_type_state.opened = *flag;
-                }
-                (
-                    StyledSelectChange::Changed(value),
-                    Some(ModalType::EditIssue(issue_id, modal)),
-                ) => {
-                    modal.value = (*value).into();
-                    let mut found: Option<&mut Issue> = None;
-                    for issue in model.issues.iter_mut() {
-                        if issue.id == *issue_id {
-                            found = Some(issue);
-                            break;
-                        }
-                    }
-                    let issue = match found {
-                        Some(i) => i,
-                        _ => return,
-                    };
-
-                    let form = UpdateIssuePayload {
-                        title: Some(issue.title.clone()),
-                        issue_type: Some(modal.value.clone()),
-                        status: Some(issue.status.clone()),
-                        priority: Some(issue.priority.clone()),
-                        list_position: Some(issue.list_position),
-                        description: Some(issue.description.clone()),
-                        description_text: Some(issue.description_text.clone()),
-                        estimate: Some(issue.estimate.clone()),
-                        time_spent: Some(issue.time_spent.clone()),
-                        time_remaining: Some(issue.time_remaining.clone()),
-                        project_id: Some(issue.project_id.clone()),
-                        user_ids: Some(issue.user_ids.clone()),
-                    };
-                    send_ws_msg(jirs_data::WsMsg::IssueUpdateRequest(issue_id.clone(), form));
-                }
-                _ => {}
-            }
         }
 
         _ => (),
@@ -119,8 +91,8 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .iter()
         .map(|modal| match modal {
             ModalType::EditIssue(issue_id, modal) => {
-                if let Some(issue) = find_issue(model, *issue_id) {
-                    let details = issue_details::view(model, issue, &modal);
+                if let Some(_issue) = find_issue(model, *issue_id) {
+                    let details = issue_details::view(model, &modal);
                     StyledModal::build()
                         .variant(ModalVariant::Center)
                         .width(1040)

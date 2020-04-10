@@ -78,18 +78,19 @@ pub fn dropped(_status: IssueStatus, model: &mut Model) {
         }
 
         let payload = UpdateIssuePayload {
-            title: Some(issue.title.clone()),
-            issue_type: Some(issue.issue_type.clone()),
-            status: Some(issue.status.clone()),
-            priority: Some(issue.priority.clone()),
-            list_position: Some(issue.list_position),
-            description: Some(issue.description.clone()),
-            description_text: Some(issue.description_text.clone()),
-            estimate: Some(issue.estimate),
-            time_spent: Some(issue.time_spent),
-            time_remaining: Some(issue.time_remaining),
-            project_id: Some(issue.project_id),
-            user_ids: Some(issue.user_ids.clone()),
+            title: issue.title.clone(),
+            issue_type: issue.issue_type.clone(),
+            status: issue.status.clone(),
+            priority: issue.priority.clone(),
+            list_position: issue.list_position,
+            description: issue.description.clone(),
+            description_text: issue.description_text.clone(),
+            estimate: issue.estimate,
+            time_spent: issue.time_spent,
+            time_remaining: issue.time_remaining,
+            project_id: issue.project_id,
+            reporter_id: issue.reporter_id,
+            user_ids: issue.user_ids.clone(),
         };
         model.project_page.dragged_issue_id = None;
         send_ws_msg(WsMsg::IssueUpdateRequest(issue.id, payload));

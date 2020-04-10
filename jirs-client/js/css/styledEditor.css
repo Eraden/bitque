@@ -1,0 +1,63 @@
+.styledEditor {
+    display: grid;
+    grid-template-areas: "tab1 tab2" "view view";
+}
+
+.styledEditor > input[type="radio"] {
+    display: none;
+}
+
+.styledEditor > .navbar {
+    border: 1px solid var(--borderLight);
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    font-family: var(--font-medium);
+    font-weight: normal;
+    text-align: center;
+    height: 32px;
+    vertical-align: middle;
+    line-height: 2;
+    white-space: nowrap;
+    transition: all 0.1s;
+    appearance: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14.5px;
+}
+
+.styledEditor > .navbar:hover {
+    background: #fff;
+    border: 1px solid var(--borderInputFocus);
+    box-shadow: 0 0 0 1px var(--borderInputFocus);
+}
+
+.styledEditor > .navbar.active {
+    border-color: var(--borderInputFocus);
+}
+
+.styledEditor > .navbar.editor {
+    grid-area: tab1;
+}
+
+.styledEditor > .navbar.view {
+    grid-area: tab2;
+}
+
+.styledEditor > .styledTextArea {
+    grid-area: view;
+    display: none;
+}
+
+.styledEditor > input.editorRadio:checked ~ .styledTextArea {
+    display: block;
+}
+
+.styledEditor > .view {
+    grid-area: view;
+    display: none;
+    min-height: 40px;
+}
+
+.styledEditor > input.viewRadio:checked ~ .view {
+    display: block;
+}

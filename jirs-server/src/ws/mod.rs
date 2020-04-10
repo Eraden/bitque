@@ -125,18 +125,18 @@ impl WebSocketActor {
             .db
             .send(UpdateIssue {
                 issue_id,
-                title: payload.title,
-                issue_type: payload.issue_type,
-                status: payload.status,
-                priority: payload.priority,
-                list_position: payload.list_position,
-                description: payload.description,
-                description_text: payload.description_text,
-                estimate: payload.estimate,
-                time_spent: payload.time_spent,
-                time_remaining: payload.time_remaining,
-                project_id: payload.project_id,
-                user_ids: payload.user_ids,
+                title: Some(payload.title),
+                issue_type: Some(payload.issue_type),
+                status: Some(payload.status),
+                priority: Some(payload.priority),
+                list_position: Some(payload.list_position),
+                description: Some(payload.description),
+                description_text: Some(payload.description_text),
+                estimate: Some(payload.estimate),
+                time_spent: Some(payload.time_spent),
+                time_remaining: Some(payload.time_remaining),
+                project_id: Some(payload.project_id),
+                user_ids: Some(payload.user_ids),
             })
             .await
         {

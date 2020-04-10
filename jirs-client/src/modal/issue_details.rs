@@ -1,13 +1,14 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{Issue, IssuePriority, IssueStatus, IssueType, ToVec, User};
+use jirs_data::{IssuePriority, IssueStatus, IssueType, ToVec, User};
 
 use crate::model::{EditIssueModal, ModalType, Model};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
+use crate::shared::styled_editor::StyledEditor;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_icon::{Icon, StyledIcon};
-use crate::shared::styled_select::{SelectOption, StyledSelect};
+use crate::shared::styled_select::{SelectOption, StyledSelect, StyledSelectChange};
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::ToNode;
 use crate::{FieldChange, FieldId, IssueId, Msg};
@@ -22,16 +23,72 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     modal.reporter_state.update(msg, orders);
     modal.assignees_state.update(msg, orders);
     modal.priority_state.update(msg, orders);
+
+    match msg {
+        Msg::StyledSelectChanged(
+            FieldId::IssueTypeEditModalTop,
+            StyledSelectChange::Changed(value),
+        ) => {
+            modal.payload.issue_type = (*value).into();
+        }
+        Msg::StyledSelectChanged(
+            FieldId::StatusIssueEditModal,
+            StyledSelectChange::Changed(value),
+        ) => {
+            modal.payload.status = (*value).into();
+        }
+        Msg::StyledSelectChanged(
+            FieldId::ReporterIssueEditModal,
+            StyledSelectChange::Changed(value),
+        ) => {
+            modal.payload.reporter_id = *value as i32;
+        }
+        Msg::StyledSelectChanged(
+            FieldId::AssigneesIssueEditModal,
+            StyledSelectChange::Changed(value),
+        ) => {
+            modal.payload.user_ids.push(*value as i32);
+        }
+        Msg::StyledSelectChanged(
+            FieldId::PriorityIssueEditModal,
+            StyledSelectChange::Changed(value),
+        ) => {
+            modal.payload.priority = (*value).into();
+        }
+        Msg::InputChanged(FieldId::TitleIssueEditModal, value) => {
+            modal.payload.title = value.clone();
+        }
+        Msg::InputChanged(FieldId::DescriptionIssueEditModal, value) => {
+            modal.payload.description = Some(value.clone());
+            modal.payload.description_text = Some(value.clone());
+        }
+        Msg::ModalChanged(FieldChange::TabChanged(FieldId::DescriptionIssueEditModal, mode)) => {
+            modal.description_editor_mode = mode.clone();
+        }
+
+        _ => (),
+    }
 }
 
-pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> {
-    let issue_id = issue.id;
+pub fn view(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
+    let EditIssueModal {
+        id,
+        link_copied,
+        payload,
+        top_type_state,
+        status_state,
+        reporter_state: _,
+        assignees_state: _,
+        priority_state: _,
+        description_editor_mode,
+    } = modal;
+    let issue_id = id.clone();
 
     let issue_type_select = StyledSelect::build(FieldId::IssueTypeEditModalTop)
         .dropdown_width(150)
         .name("type")
-        .text_filter(modal.top_type_state.text_filter.as_str())
-        .opened(modal.top_type_state.opened)
+        .text_filter(top_type_state.text_filter.as_str())
+        .opened(top_type_state.opened)
         .valid(true)
         .options(
             IssueType::ordered()
@@ -39,7 +96,10 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
                 .map(|t| IssueTypeTopOption(issue_id, t))
                 .collect(),
         )
-        .selected(vec![IssueTypeTopOption(issue_id, modal.value.clone())])
+        .selected(vec![IssueTypeTopOption(
+            issue_id,
+            payload.issue_type.clone(),
+        )])
         .build()
         .into_node();
 
@@ -71,7 +131,7 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
         .empty()
         .icon(Icon::Link)
         .on_click(click_handler)
-        .children(vec![span![if modal.link_copied {
+        .children(vec![span![if *link_copied {
             "Link Copied"
         } else {
             "Copy link"
@@ -93,33 +153,65 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
 
     // left
     let title = StyledTextarea::build()
-        .value(issue.title.as_str())
+        .value(payload.title.as_str())
         .add_class("textarea")
         .max_height(48)
         .height(0)
         .build(FieldId::TitleIssueEditModal)
         .into_node();
 
+    let description_text = payload.description.as_ref().cloned().unwrap_or_default();
+    let description = StyledEditor::build(FieldId::DescriptionIssueEditModal)
+        .text(description_text)
+        .mode(description_editor_mode.clone())
+        .build()
+        .into_node();
+    let description_field = StyledField::build().input(description).build().into_node();
+
     // right
     let status = StyledSelect::build(FieldId::StatusIssueEditModal)
         .name("status")
-        .opened(modal.status_state.opened)
-        .text_filter(modal.status_state.text_filter.as_str())
+        .opened(status_state.opened)
+        .normal()
+        .text_filter(status_state.text_filter.as_str())
         .options(
             IssueStatus::ordered()
                 .into_iter()
                 .map(|opt| IssueStatusOption(issue_id, opt))
                 .collect(),
         )
-        .selected(vec![IssueStatusOption(issue_id, issue.status.clone())])
+        .selected(vec![IssueStatusOption(issue_id, payload.status.clone())])
         .valid(true)
         .build()
         .into_node();
-    // let status_field = StyledField::build()
-    //     .input(status)
-    //     .label("Status")
-    //     .build()
-    //     .into_node();
+    let status_field = StyledField::build()
+        .input(status)
+        .label("Status")
+        .build()
+        .into_node();
+
+    let assignees = StyledSelect::build(FieldId::AssigneesIssueEditModal)
+        .name("assignees")
+        .opened(modal.assignees_state.opened)
+        .normal()
+        .multi()
+        .text_filter(modal.assignees_state.text_filter.as_str())
+        .options(model.users.iter().map(|user| UserOption(user)).collect())
+        .selected(
+            model
+                .users
+                .iter()
+                .filter(|user| payload.user_ids.contains(&user.id))
+                .map(|user| UserOption(user))
+                .collect(),
+        )
+        .build()
+        .into_node();
+    let assignees_field = StyledField::build()
+        .input(assignees)
+        .label("Assignees")
+        .build()
+        .into_node();
 
     div![
         attrs![At::Class => "issueDetails"],
@@ -138,10 +230,10 @@ pub fn view(_model: &Model, issue: &Issue, modal: &EditIssueModal) -> Node<Msg> 
             div![
                 attrs![At::Class => "left"],
                 title,
-                div![attrs![At::Class => "description"]],
+                description_field,
                 div![attrs![At::Class => "comments"]],
             ],
-            div![attrs![At::Class => "right"], status],
+            div![attrs![At::Class => "right"], status_field, assignees_field,],
         ],
     ]
 }

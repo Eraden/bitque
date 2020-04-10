@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 use jirs_data::*;
 
+use crate::shared::styled_editor::Mode;
 use crate::shared::styled_select::StyledSelectState;
 use crate::{FieldId, IssueId, UserId, HOST_URL};
 
@@ -20,13 +21,15 @@ pub enum ModalType {
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub struct EditIssueModal {
     pub id: i32,
-    pub value: IssueType,
     pub link_copied: bool,
+    pub payload: UpdateIssuePayload,
     pub top_type_state: StyledSelectState,
     pub status_state: StyledSelectState,
     pub reporter_state: StyledSelectState,
     pub assignees_state: StyledSelectState,
     pub priority_state: StyledSelectState,
+
+    pub description_editor_mode: Mode,
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]

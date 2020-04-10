@@ -8,6 +8,7 @@ use jirs_data::{IssueStatus, WsMsg};
 use crate::api::send_ws_msg;
 use crate::model::{ModalType, Model, Page};
 use crate::shared::read_auth_token;
+use crate::shared::styled_editor::Mode as TabMode;
 use crate::shared::styled_select::StyledSelectChange;
 
 mod api;
@@ -78,6 +79,7 @@ impl std::fmt::Display for FieldId {
 #[derive(Clone, Debug)]
 pub enum FieldChange {
     LinkCopied(FieldId, bool),
+    TabChanged(FieldId, TabMode),
 }
 
 #[derive(Clone, Debug)]
