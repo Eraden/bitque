@@ -1,9 +1,7 @@
 use seed::{prelude::*, *};
 
 use jirs_data::UpdateIssuePayload;
-use jirs_data::*;
 
-use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, EditIssueModal, ModalType, Model, Page};
 use crate::shared::styled_editor::Mode;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
@@ -37,7 +35,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
             model.modals.push(modal_type.clone());
         }
 
-        Msg::WsMsg(jirs_data::WsMsg::ProjectIssuesLoaded(issues)) => match model.page.clone() {
+        Msg::WsMsg(jirs_data::WsMsg::ProjectIssuesLoaded(_issues)) => match model.page.clone() {
             Page::EditIssue(issue_id) if model.modals.is_empty() => {
                 push_edit_modal(&issue_id, model)
             }

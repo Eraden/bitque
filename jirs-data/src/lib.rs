@@ -401,6 +401,26 @@ pub struct UpdateIssuePayload {
     pub user_ids: Vec<i32>,
 }
 
+impl From<Issue> for UpdateIssuePayload {
+    fn from(issue: Issue) -> Self {
+        Self {
+            title: issue.title,
+            issue_type: issue.issue_type,
+            status: issue.status,
+            priority: issue.priority,
+            list_position: issue.list_position,
+            description: issue.description,
+            description_text: issue.description_text,
+            estimate: issue.estimate,
+            time_spent: issue.time_spent,
+            time_remaining: issue.time_remaining,
+            project_id: issue.project_id,
+            reporter_id: issue.reporter_id,
+            user_ids: issue.user_ids,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct CreateCommentPayload {
     pub user_id: Option<i32>,

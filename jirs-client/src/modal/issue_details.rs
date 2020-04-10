@@ -1,13 +1,15 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{IssuePriority, IssueStatus, IssueType, ToVec, User};
+use jirs_data::*;
 
+use crate::api::send_ws_msg;
 use crate::model::{EditIssueModal, ModalType, Model};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_editor::StyledEditor;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_icon::{Icon, StyledIcon};
+use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::{SelectOption, StyledSelect, StyledSelectChange};
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::ToNode;
@@ -25,42 +27,66 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     modal.priority_state.update(msg, orders);
 
     match msg {
+        Msg::WsMsg(WsMsg::IssueUpdated(issue)) => {
+            modal.payload = issue.clone().into();
+        }
         Msg::StyledSelectChanged(
             FieldId::IssueTypeEditModalTop,
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.issue_type = (*value).into();
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
         }
         Msg::StyledSelectChanged(
             FieldId::StatusIssueEditModal,
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.status = (*value).into();
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
         }
         Msg::StyledSelectChanged(
             FieldId::ReporterIssueEditModal,
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.reporter_id = *value as i32;
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
         }
         Msg::StyledSelectChanged(
             FieldId::AssigneesIssueEditModal,
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.user_ids.push(*value as i32);
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
+        }
+        Msg::StyledSelectChanged(
+            FieldId::AssigneesIssueEditModal,
+            StyledSelectChange::RemoveMulti(value),
+        ) => {
+            let mut old = vec![];
+            std::mem::swap(&mut old, &mut modal.payload.user_ids);
+            let dropped = *value as i32;
+            for id in old.into_iter() {
+                if id != dropped {
+                    modal.payload.user_ids.push(id);
+                }
+            }
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
         }
         Msg::StyledSelectChanged(
             FieldId::PriorityIssueEditModal,
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.priority = (*value).into();
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
         }
         Msg::InputChanged(FieldId::TitleIssueEditModal, value) => {
             modal.payload.title = value.clone();
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
         }
         Msg::InputChanged(FieldId::DescriptionIssueEditModal, value) => {
             modal.payload.description = Some(value.clone());
             modal.payload.description_text = Some(value.clone());
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
         }
         Msg::ModalChanged(FieldChange::TabChanged(FieldId::DescriptionIssueEditModal, mode)) => {
             modal.description_editor_mode = mode.clone();
@@ -164,6 +190,7 @@ pub fn view(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let description = StyledEditor::build(FieldId::DescriptionIssueEditModal)
         .text(description_text)
         .mode(description_editor_mode.clone())
+        .update_on(Ev::Change)
         .build()
         .into_node();
     let description_field = StyledField::build().input(description).build().into_node();
@@ -213,6 +240,58 @@ pub fn view(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
+    let reporter = StyledSelect::build(FieldId::ReporterIssueEditModal)
+        .name("reporter")
+        .opened(modal.reporter_state.opened)
+        .normal()
+        .text_filter(modal.reporter_state.text_filter.as_str())
+        .options(model.users.iter().map(|user| UserOption(user)).collect())
+        .selected(
+            model
+                .users
+                .iter()
+                .filter(|user| payload.reporter_id == user.id)
+                .map(|user| UserOption(user))
+                .collect(),
+        )
+        .build()
+        .into_node();
+    let reporter_field = StyledField::build()
+        .input(reporter)
+        .label("Reporter")
+        .build()
+        .into_node();
+
+    let priority = StyledSelect::build(FieldId::PriorityIssueEditModal)
+        .name("assignees")
+        .opened(modal.priority_state.opened)
+        .normal()
+        .text_filter(modal.priority_state.text_filter.as_str())
+        .options(
+            IssuePriority::ordered()
+                .into_iter()
+                .map(|p| IssuePriorityOption(p))
+                .collect(),
+        )
+        .selected(vec![IssuePriorityOption(payload.priority.clone())])
+        .build()
+        .into_node();
+    let priority_field = StyledField::build()
+        .input(priority)
+        .label("Priority")
+        .build()
+        .into_node();
+
+    let estimate = StyledInput::build(FieldId::EstimateIssueEditModal)
+        .valid(true)
+        .build()
+        .into_node();
+    let estimate_field = StyledField::build()
+        .input(estimate)
+        .label("Original Estimate (hours)")
+        .build()
+        .into_node();
+
     div![
         attrs![At::Class => "issueDetails"],
         div![
@@ -233,7 +312,14 @@ pub fn view(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
                 description_field,
                 div![attrs![At::Class => "comments"]],
             ],
-            div![attrs![At::Class => "right"], status_field, assignees_field,],
+            div![
+                attrs![At::Class => "right"],
+                status_field,
+                assignees_field,
+                reporter_field,
+                priority_field,
+                estimate_field
+            ],
         ],
     ]
 }

@@ -1,5 +1,11 @@
 insert into projects (name) values ('initial'), ('second'), ('third');
-insert into users (project_id, email, name, avatar_url) values (1, 'john@example.com', 'John Doe', 'http://cdn.onlinewebfonts.com/svg/img_553934.png'), (1, 'kate@exampe.com', 'Kate Snow', 'http://www.asthmamd.org/images/icon_user_6.png');
+insert into users (project_id, email, name, avatar_url) values (
+    1, 'john@example.com', 'John Doe', 'http://cdn.onlinewebfonts.com/svg/img_553934.png
+), (
+    1, 'kate@exampe.com', 'Kate Snow', 'http://www.asthmamd.org/images/icon_user_6.png
+), (
+    1, 'mike@example.com', 'Mike Keningham', 'https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman1-512.png'
+);
 insert into tokens (user_id, access_token, refresh_token) values (1, uuid_generate_v4(), uuid_generate_v4() );
 insert into issues(
     title,

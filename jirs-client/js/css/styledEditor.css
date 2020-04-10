@@ -25,13 +25,23 @@
     font-size: 14.5px;
 }
 
+.styledEditor > .navbar:not(:hover) {
+    border-color: var(--backgroundLightest);
+    background-color: var(--borderLight);
+}
+
+.styledEditor > .navbar.activeTab {
+    background-color: var(--backgroundLightest);
+    border-color: var(--borderLight);
+}
+
 .styledEditor > .navbar:hover {
     background: #fff;
     border: 1px solid var(--borderInputFocus);
     box-shadow: 0 0 0 1px var(--borderInputFocus);
 }
 
-.styledEditor > .navbar.active {
+.styledEditor > .navbar {
     border-color: var(--borderInputFocus);
 }
 
@@ -48,14 +58,15 @@
     display: none;
 }
 
-.styledEditor > input.editorRadio:checked ~ .styledTextArea {
-    display: block;
-}
-
 .styledEditor > .view {
     grid-area: view;
     display: none;
     min-height: 40px;
+    padding-top: 15px;
+}
+
+.styledEditor > input.editorRadio:checked ~ .styledTextArea {
+    display: block;
 }
 
 .styledEditor > input.viewRadio:checked ~ .view {

@@ -206,7 +206,7 @@ pub fn render(values: StyledIcon) -> Node<Msg> {
     }
 
     if let Some(size) = size {
-        style_list.push(format!("width: {s}px; height: {s}px", s = size));
+        style_list.push(format!("font-size: {s}px", s = size));
     }
 
     class_list.push(format!("styledIcon {}", icon));

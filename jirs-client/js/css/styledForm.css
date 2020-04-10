@@ -11,7 +11,8 @@
     font-size: 21px;
 }
 
-.styledForm > .formElement .selectItem {
+/*.styledForm > .formElement*/
+.selectItem {
     display: flex;
     align-items: center;
     margin-right: 15px;

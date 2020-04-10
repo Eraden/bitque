@@ -20,6 +20,7 @@ pub struct StyledEditor {
     id: FieldId,
     text: String,
     mode: Mode,
+    update_event: Ev,
 }
 
 impl StyledEditor {
@@ -28,6 +29,7 @@ impl StyledEditor {
             id,
             text: String::new(),
             mode: Mode::Editor,
+            update_event: None,
         }
     }
 }
@@ -37,6 +39,7 @@ pub struct StyledEditorBuilder {
     id: FieldId,
     text: String,
     mode: Mode,
+    update_event: Option<Ev>,
 }
 
 impl StyledEditorBuilder {
@@ -58,7 +61,13 @@ impl StyledEditorBuilder {
             id: self.id,
             text: self.text,
             mode: self.mode,
+            update_event: self.update_event.unwrap_or_else(|| Ev::KeyUp),
         }
+    }
+
+    pub fn update_on(mut self, ev: Ev) -> Self {
+        self.update_event = Some(ev);
+        self
     }
 }
 
@@ -69,7 +78,12 @@ impl ToNode for StyledEditor {
 }
 
 pub fn render(values: StyledEditor) -> Node<Msg> {
-    let StyledEditor { id, text, mode } = values;
+    let StyledEditor {
+        id,
+        text,
+        mode,
+        update_event,
+    } = values;
 
     let field_id = id.clone();
     let on_editor_clicked = mouse_ev(Ev::Click, move |ev| {
@@ -89,6 +103,7 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
 
     let text_area = StyledTextarea::build()
         .height(40)
+        .update_on(update_event)
         .value(text.as_str())
         .build(id.clone())
         .into_node();
@@ -129,11 +144,13 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
         Mode::View => (
             seed::input![
                 id![editor_id.as_str()],
-                attrs![At::Type => "radio"; At::Name => name.as_str(); At::Class => "editorRadio";],
+                class!["editorRadio"],
+                attrs![At::Type => "radio"; At::Name => name.as_str();],
             ],
             seed::input![
                 id![view_id.as_str()],
-                attrs![ At::Type => "radio"; At::Name => name.as_str(); At::Class => "viewRadio"; At::Checked => true],
+                class!["viewRadio"],
+                attrs![ At::Type => "radio"; At::Name => name.as_str(); At::Checked => true],
             ],
         ),
     };
@@ -141,18 +158,28 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
     div![
         attrs![At::Class => "styledEditor"],
         label![
-            attrs![At::Class => "navbar editorTab", At::For => editor_id.as_str()],
+            if mode == Mode::Editor {
+                class!["navbar editorTab activeTab"]
+            } else {
+                class!["navbar editorTab"]
+            },
+            attrs![At::For => editor_id.as_str()],
             "Editor",
             on_editor_clicked
         ],
         label![
-            attrs![At::Class => "navbar viewTab"; At::For => view_id.as_str()],
+            if mode == Mode::View {
+                class!["navbar viewTab activeTab"]
+            } else {
+                class!["navbar viewTab"]
+            },
+            attrs![At::For => view_id.as_str()],
             "View",
             on_view_clicked
         ],
         editor_radio_node,
         text_area,
         view_radio_node,
-        div![attrs![At::Class => "view"], parsed_node]
+        div![attrs![At::Class => "view"], parsed_node],
     ]
 }

@@ -37,7 +37,7 @@ impl WebSocketActor {
         use futures::executor::block_on;
 
         if msg != WsMsg::Ping && msg != WsMsg::Pong {
-            info!("(2)incoming message: {:?}", msg);
+            info!("incoming message: {:?}", msg);
         }
 
         let msg = match msg {
@@ -196,10 +196,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
                     Ok(m) => m,
                     _ => return,
                 };
-                if msg != WsMsg::Ping && msg != WsMsg::Pong {
-                    info!("(1)incoming message: {:?}", msg);
-                }
-                let _x = 1;
                 match self.handle_ws_msg(msg) {
                     Ok(Some(msg)) => ctx.send_msg(msg),
                     Err(e) => ctx.send_msg(e),

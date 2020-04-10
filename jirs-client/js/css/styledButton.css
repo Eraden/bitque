@@ -23,11 +23,11 @@
     cursor: default;
 }
 
-.styledButton:not(.onlyIcon) {
+.styledButton:not(.iconOnly) {
     padding: 0 12px;
 }
 
-.styledButton.onlyIcon {
+.styledButton.iconOnly {
     padding: 0 9px;
 }
 

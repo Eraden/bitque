@@ -10,6 +10,7 @@ pub struct StyledTextarea {
     max_height: usize,
     value: String,
     class_list: Vec<String>,
+    update_event: Ev,
 }
 
 impl ToNode for StyledTextarea {
@@ -31,6 +32,7 @@ pub struct StyledTextareaBuilder {
     on_change: Option<EventHandler<Msg>>,
     value: String,
     class_list: Vec<String>,
+    update_event: Option<Ev>,
 }
 
 impl StyledTextareaBuilder {
@@ -64,6 +66,11 @@ impl StyledTextareaBuilder {
         self
     }
 
+    pub fn update_on(mut self, ev: Ev) -> Self {
+        self.update_event = Some(ev);
+        self
+    }
+
     #[inline]
     pub fn build(self, id: FieldId) -> StyledTextarea {
         StyledTextarea {
@@ -72,6 +79,7 @@ impl StyledTextareaBuilder {
             height: self.height.unwrap_or(110),
             class_list: self.class_list,
             max_height: self.max_height.unwrap_or_default(),
+            update_event: self.update_event.unwrap_or_else(|| Ev::KeyUp),
         }
     }
 }
@@ -96,11 +104,15 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         max_height,
         value,
         mut class_list,
+        update_event,
     } = values;
     let mut style_list = vec![];
-    if height > 0 {
-        style_list.push(format!("min-height: {}px", height));
+
+    let min_height = get_min_height(value.as_str(), height as f64);
+    if min_height > 0f64 {
+        style_list.push(format!("min-height: {}px", min_height));
     }
+
     if max_height > 0 {
         style_list.push(format!("max-height: {}px", max_height));
     }
@@ -116,22 +128,17 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         };
         let text_area = target.dyn_ref::<web_sys::HtmlTextAreaElement>().unwrap();
         let value: String = text_area.value();
-        let len = value.lines().count() as f64;
-
-        let calc_height = (len * LETTER_HEIGHT) + ADDITIONAL_HEIGHT;
-        let height = if calc_height + ADDITIONAL_HEIGHT < height as f64 {
-            height as f64
-        } else {
-            calc_height + ADDITIONAL_HEIGHT
-        };
+        let min_height = get_min_height(value.as_str(), height as f64);
 
         text_area
             .style()
-            .set_css_text(format!("height: {height}px", height = height).as_str());
+            .set_css_text(format!("height: {min_height}px", min_height = min_height).as_str());
         Msg::NoOp
     });
     handlers.push(resize_handler);
-    let text_input_handler = input_ev(Ev::KeyUp, move |value| Msg::InputChanged(id, value));
+    let text_input_handler = input_ev(update_event.clone(), move |value| {
+        Msg::InputChanged(id, value)
+    });
     handlers.push(text_input_handler);
 
     class_list.push("textAreaInput".to_string());
@@ -149,4 +156,16 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
             handlers,
         ]
     ]
+}
+
+fn get_min_height(value: &str, min_height: f64) -> f64 {
+    let len = value.lines().count() as f64;
+    if value.chars().last() == Some('\n') {}
+
+    let calc_height = (len * LETTER_HEIGHT) + ADDITIONAL_HEIGHT;
+    if calc_height + ADDITIONAL_HEIGHT < min_height {
+        min_height
+    } else {
+        calc_height + ADDITIONAL_HEIGHT
+    }
 }
