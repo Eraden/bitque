@@ -9,8 +9,6 @@ use crate::middleware::authorize::token_from_headers;
 use crate::models::User;
 
 pub mod comments;
-pub mod issues;
-pub mod projects;
 pub mod users;
 
 pub async fn user_from_request(

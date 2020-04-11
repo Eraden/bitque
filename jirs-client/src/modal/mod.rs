@@ -1,7 +1,8 @@
 use seed::{prelude::*, *};
 
-use jirs_data::UpdateIssuePayload;
+use jirs_data::{UpdateIssuePayload, WsMsg};
 
+use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, EditIssueModal, ModalType, Model, Page};
 use crate::shared::styled_editor::Mode;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
@@ -44,6 +45,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
 
         Msg::ChangePage(Page::EditIssue(issue_id)) => {
             push_edit_modal(issue_id, model);
+            send_ws_msg(WsMsg::IssueCommentsRequest(issue_id.clone()));
         }
 
         Msg::ChangePage(Page::AddIssue) => {

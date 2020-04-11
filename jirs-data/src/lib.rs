@@ -17,6 +17,12 @@ pub trait ToVec {
     fn ordered() -> Vec<Self::Item>;
 }
 
+pub type IssueId = i32;
+pub type ProjectId = i32;
+pub type UserId = i32;
+pub type CommentId = i32;
+pub type TokenId = i32;
+
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
@@ -261,67 +267,8 @@ pub struct ErrorResponse {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-pub struct FullProject {
-    pub id: i32,
-    pub name: String,
-    pub url: String,
-    pub description: String,
-    pub category: String,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
-
-    pub issues: Vec<Issue>,
-    pub users: Vec<User>,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-pub struct FullIssue {
-    pub id: i32,
-    pub title: String,
-    pub issue_type: IssueType,
-    pub status: IssueStatus,
-    pub priority: IssuePriority,
-    pub list_position: i32,
-    pub description: Option<String>,
-    pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
-    pub reporter_id: i32,
-    pub project_id: i32,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
-
-    pub user_ids: Vec<i32>,
-    pub comments: Vec<Comment>,
-}
-
-impl Into<Issue> for FullIssue {
-    fn into(self) -> Issue {
-        Issue {
-            id: self.id,
-            title: self.title,
-            issue_type: self.issue_type,
-            status: self.status,
-            priority: self.priority,
-            list_position: self.list_position,
-            description: self.description,
-            description_text: self.description_text,
-            estimate: self.estimate,
-            time_spent: self.time_spent,
-            time_remaining: self.time_remaining,
-            reporter_id: self.reporter_id,
-            project_id: self.project_id,
-            created_at: self.created_at,
-            updated_at: self.updated_at,
-            user_ids: self.user_ids,
-        }
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Project {
-    pub id: i32,
+    pub id: ProjectId,
     pub name: String,
     pub url: String,
     pub description: String,
@@ -332,7 +279,7 @@ pub struct Project {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Issue {
-    pub id: i32,
+    pub id: IssueId,
     pub title: String,
     pub issue_type: IssueType,
     pub status: IssueStatus,
@@ -343,8 +290,8 @@ pub struct Issue {
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub reporter_id: i32,
-    pub project_id: i32,
+    pub reporter_id: UserId,
+    pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 
@@ -353,31 +300,29 @@ pub struct Issue {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Comment {
-    pub id: i32,
+    pub id: CommentId,
     pub body: String,
-    pub user_id: i32,
-    pub issue_id: i32,
+    pub user_id: UserId,
+    pub issue_id: IssueId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-
-    pub user: Option<User>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct User {
-    pub id: i32,
+    pub id: UserId,
     pub name: String,
     pub email: String,
     pub avatar_url: Option<String>,
-    pub project_id: i32,
+    pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Token {
-    pub id: i32,
-    pub user_id: i32,
+    pub id: TokenId,
+    pub user_id: UserId,
     pub access_token: Uuid,
     pub refresh_token: Uuid,
     pub created_at: NaiveDateTime,
@@ -396,9 +341,9 @@ pub struct UpdateIssuePayload {
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub project_id: i32,
-    pub reporter_id: i32,
-    pub user_ids: Vec<i32>,
+    pub project_id: ProjectId,
+    pub reporter_id: UserId,
+    pub user_ids: Vec<UserId>,
 }
 
 impl From<Issue> for UpdateIssuePayload {
@@ -423,8 +368,8 @@ impl From<Issue> for UpdateIssuePayload {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct CreateCommentPayload {
-    pub user_id: Option<i32>,
-    pub issue_id: i32,
+    pub user_id: Option<UserId>,
+    pub issue_id: IssueId,
     pub body: String,
 }
 
@@ -444,9 +389,9 @@ pub struct CreateIssuePayload {
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub project_id: i32,
-    pub user_ids: Vec<i32>,
-    pub reporter_id: i32,
+    pub project_id: ProjectId,
+    pub user_ids: Vec<UserId>,
+    pub reporter_id: UserId,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -476,10 +421,14 @@ pub enum WsMsg {
     ProjectUsersLoaded(Vec<User>),
 
     // issue
-    IssueUpdateRequest(i32, UpdateIssuePayload),
+    IssueUpdateRequest(IssueId, UpdateIssuePayload),
     IssueUpdated(Issue),
-    IssueDeleteRequest(i32),
-    IssueDeleted(i32),
+    IssueDeleteRequest(IssueId),
+    IssueDeleted(IssueId),
     IssueCreateRequest(CreateIssuePayload),
     IssueCreated(Issue),
+
+    // comments
+    IssueCommentsRequest(IssueId),
+    IssueCommentsLoaded(Vec<Comment>),
 }

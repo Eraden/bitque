@@ -20,19 +20,27 @@ pub fn handle(msg: WsMsg) {
 
 pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
-        Msg::WsMsg(WsMsg::ProjectLoaded(project)) => {
-            model.project = Some(project.clone());
-        }
+        // auth
         Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(user))) => {
             model.user = Some(user.clone());
         }
+        // project
+        Msg::WsMsg(WsMsg::ProjectLoaded(project)) => {
+            model.project = Some(project.clone());
+        }
+        // issues
         Msg::WsMsg(WsMsg::ProjectIssuesLoaded(v)) => {
             let mut v = v.clone();
             v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
             model.issues = v;
         }
+        // users
         Msg::WsMsg(WsMsg::ProjectUsersLoaded(v)) => {
             model.users = v.clone();
+        }
+        // comments
+        Msg::WsMsg(WsMsg::IssueCommentsLoaded(comments)) => {
+            model.comments = comments.clone();
         }
         _ => (),
     };

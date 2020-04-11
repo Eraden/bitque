@@ -152,6 +152,7 @@ pub struct Model {
     pub user: Option<User>,
     pub issues: Vec<Issue>,
     pub users: Vec<User>,
+    pub comments: Vec<Comment>,
 }
 
 impl Default for Model {
@@ -180,6 +181,7 @@ impl Default for Model {
             },
             modals: vec![],
             project: None,
+            comments: vec![],
         }
     }
 }

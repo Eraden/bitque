@@ -26,8 +26,6 @@ impl Into<jirs_data::Comment> for Comment {
             issue_id: self.issue_id,
             created_at: self.created_at,
             updated_at: self.updated_at,
-
-            user: None,
         }
     }
 }
@@ -82,31 +80,6 @@ impl Into<jirs_data::Issue> for Issue {
             updated_at: self.updated_at,
 
             user_ids: vec![],
-        }
-    }
-}
-
-impl Into<jirs_data::FullIssue> for Issue {
-    fn into(self) -> jirs_data::FullIssue {
-        jirs_data::FullIssue {
-            id: self.id,
-            title: self.title,
-            issue_type: self.issue_type,
-            status: self.status,
-            priority: self.priority,
-            list_position: self.list_position,
-            description: self.description,
-            description_text: self.description_text,
-            estimate: self.estimate,
-            time_spent: self.time_spent,
-            time_remaining: self.time_remaining,
-            reporter_id: self.reporter_id,
-            project_id: self.project_id,
-            created_at: self.created_at,
-            updated_at: self.updated_at,
-
-            user_ids: vec![],
-            comments: vec![],
         }
     }
 }

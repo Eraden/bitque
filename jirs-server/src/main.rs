@@ -35,25 +35,12 @@ async fn main() -> Result<(), String> {
             .data(crate::db::build_pool())
             .service(crate::ws::index)
             .service(
-                web::scope("/issues")
-                    .service(crate::routes::issues::project_issues)
-                    .service(crate::routes::issues::issue_with_users_and_comments)
-                    .service(crate::routes::issues::create)
-                    .service(crate::routes::issues::update)
-                    .service(crate::routes::issues::delete),
-            )
-            .service(
                 web::scope("/comments")
                     .service(crate::routes::comments::create)
                     .service(crate::routes::comments::update)
                     .service(crate::routes::comments::delete),
             )
             .service(web::scope("/currentUser").service(crate::routes::users::current_user))
-            .service(
-                web::scope("/project")
-                    .service(crate::routes::projects::project_with_users_and_issues)
-                    .service(crate::routes::projects::update),
-            )
     })
     .bind(addr)
     .map_err(|e| format!("{}", e))?
