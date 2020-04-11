@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use actix::{Actor, Addr, StreamHandler};
 use actix_web::web::Data;
 use actix_web::{get, web, Error, HttpRequest, HttpResponse};
@@ -6,6 +8,7 @@ use actix_web_actors::ws;
 use jirs_data::WsMsg;
 
 use crate::db::authorize_user::AuthorizeUser;
+use crate::db::issue_assignees::LoadAssignees;
 use crate::db::issues::{LoadProjectIssues, UpdateIssue};
 use crate::db::projects::LoadCurrentProject;
 use crate::db::users::LoadProjectUsers;
@@ -96,12 +99,39 @@ impl WebSocketActor {
 
     async fn load_issues(&mut self) -> WsResult {
         let project_id = self.current_user().map(|u| u.project_id)?;
-        match self.db.send(LoadProjectIssues { project_id }).await {
-            Ok(Ok(v)) => Ok(Some(WsMsg::ProjectIssuesLoaded(
-                v.into_iter().map(|i| i.into()).collect(),
-            ))),
-            _ => Ok(None),
+
+        let issues: Vec<jirs_data::Issue> =
+            match self.db.send(LoadProjectIssues { project_id }).await {
+                Ok(Ok(v)) => v.into_iter().map(|i| i.into()).collect(),
+                _ => return Ok(None),
+            };
+        let mut issue_map = HashMap::new();
+        let mut queue = vec![];
+        for issue in issues.into_iter() {
+            let f = self.db.send(LoadAssignees {
+                issue_id: issue.id.clone(),
+            });
+            queue.push(f);
+            issue_map.insert(issue.id.clone(), issue);
         }
+        for f in queue {
+            match f.await {
+                Ok(Ok(assignees)) => {
+                    for assignee in assignees {
+                        if let Some(issue) = issue_map.get_mut(&assignee.issue_id) {
+                            issue.user_ids.push(assignee.user_id);
+                        }
+                    }
+                }
+                _ => {}
+            };
+        }
+        let mut issues = vec![];
+        for (_, issue) in issue_map.into_iter() {
+            issues.push(issue);
+        }
+
+        Ok(Some(WsMsg::ProjectIssuesLoaded(issues)))
     }
 
     async fn load_project_users(&mut self) -> WsResult {
@@ -121,7 +151,7 @@ impl WebSocketActor {
         payload: jirs_data::UpdateIssuePayload,
     ) -> WsResult {
         self.current_user()?;
-        let m = match self
+        let mut issue: jirs_data::Issue = match self
             .db
             .send(UpdateIssue {
                 issue_id,
@@ -137,13 +167,29 @@ impl WebSocketActor {
                 time_remaining: Some(payload.time_remaining),
                 project_id: Some(payload.project_id),
                 user_ids: Some(payload.user_ids),
+                reporter_id: Some(payload.reporter_id),
             })
             .await
         {
-            Ok(Ok(issue)) => Some(WsMsg::IssueUpdated(issue.into())),
-            _ => None,
+            Ok(Ok(issue)) => issue.into(),
+            _ => return Ok(None),
         };
-        Ok(m)
+
+        let assignees = match self
+            .db
+            .send(LoadAssignees {
+                issue_id: issue.id.clone(),
+            })
+            .await
+        {
+            Ok(Ok(v)) => v,
+            _ => vec![],
+        };
+        for assignee in assignees {
+            issue.user_ids.push(assignee.user_id);
+        }
+
+        Ok(Some(WsMsg::IssueUpdated(issue.into())))
     }
 
     async fn add_issue(&mut self, payload: jirs_data::CreateIssuePayload) -> WsResult {

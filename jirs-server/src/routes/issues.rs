@@ -99,7 +99,7 @@ pub async fn update(
         Ok(Ok(_)) => (),
         _ => return crate::errors::ServiceErrors::Unauthorized.into_http_response(),
     };
-    let signal = UpdateIssue {
+    let msg = UpdateIssue {
         issue_id,
         title: Some(payload.title.clone()),
         issue_type: Some(payload.issue_type.clone()),
@@ -113,8 +113,9 @@ pub async fn update(
         time_remaining: Some(payload.time_remaining.clone()),
         project_id: Some(payload.project_id.clone()),
         user_ids: Some(payload.user_ids.clone()),
+        reporter_id: Some(payload.reporter_id),
     };
-    match db.send(signal).await {
+    match db.send(msg).await {
         Ok(Ok(_)) => (),
         Ok(Err(e)) => return e.into_http_response(),
         _ => return ServiceErrors::DatabaseConnectionLost.into_http_response(),

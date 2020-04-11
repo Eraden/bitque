@@ -7,6 +7,7 @@ use crate::db::dev::VerboseConnection;
 
 pub mod authorize_user;
 pub mod comments;
+pub mod issue_assignees;
 pub mod issues;
 pub mod projects;
 pub mod users;

@@ -84,6 +84,7 @@ pub struct UpdateIssue {
     pub time_remaining: Option<Option<i32>>,
     pub project_id: Option<i32>,
     pub user_ids: Option<Vec<i32>>,
+    pub reporter_id: Option<i32>,
 }
 
 impl Message for UpdateIssue {
@@ -121,6 +122,8 @@ impl Handler<UpdateIssue> for DbExecutor {
                 .map(|time_remaining| dsl::time_remaining.eq(time_remaining)),
             msg.project_id
                 .map(|project_id| dsl::project_id.eq(project_id)),
+            msg.reporter_id
+                .map(|reporter_id| dsl::reporter_id.eq(reporter_id)),
             dsl::updated_at.eq(chrono::Utc::now().naive_utc()),
         ));
         debug!(
