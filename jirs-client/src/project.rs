@@ -10,7 +10,7 @@ use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{drag_ev, inner_layout, ToNode};
-use crate::{FieldId, Msg};
+use crate::{EditIssueModalFieldId, FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -47,7 +47,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             model.project_page.about_tooltip_visible = !model.project_page.about_tooltip_visible;
         }
         Msg::StyledSelectChanged(
-            FieldId::IssueTypeEditModalTop,
+            FieldId::EditIssueModal(EditIssueModalFieldId::IssueType),
             StyledSelectChange::Text(text),
         ) => {
             let modal = model
@@ -289,13 +289,12 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
         .iter()
         .filter(|user| issue.user_ids.contains(&user.id))
         .map(|user| {
-            StyledAvatar {
-                avatar_url: user.avatar_url.clone(),
-                size: 24,
-                name: user.name.clone(),
-                on_click: None,
-            }
-            .into_node()
+            StyledAvatar::build()
+                .size(24)
+                .name(user.name.as_str())
+                .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
+                .build()
+                .into_node()
         })
         .collect();
 

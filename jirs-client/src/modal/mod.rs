@@ -1,12 +1,10 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{UpdateIssuePayload, WsMsg};
+use jirs_data::WsMsg;
 
 use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, EditIssueModal, ModalType, Model, Page};
-use crate::shared::styled_editor::Mode;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
-use crate::shared::styled_select::StyledSelectState;
 use crate::shared::{find_issue, ToNode};
 use crate::{model, FieldChange, FieldId, Msg};
 
@@ -91,34 +89,7 @@ fn push_edit_modal(issue_id: &i32, model: &mut Model) {
             Some(issue) => issue,
             _ => return,
         };
-        ModalType::EditIssue(
-            *issue_id,
-            EditIssueModal {
-                id: *issue_id,
-                link_copied: false,
-                payload: UpdateIssuePayload {
-                    title: issue.title.clone(),
-                    issue_type: issue.issue_type.clone(),
-                    status: issue.status.clone(),
-                    priority: issue.priority.clone(),
-                    list_position: issue.list_position.clone(),
-                    description: issue.description.clone(),
-                    description_text: issue.description_text.clone(),
-                    estimate: issue.estimate.clone(),
-                    time_spent: issue.time_spent.clone(),
-                    time_remaining: issue.time_remaining.clone(),
-                    project_id: issue.project_id.clone(),
-                    reporter_id: issue.reporter_id.clone(),
-                    user_ids: issue.user_ids.clone(),
-                },
-                top_type_state: StyledSelectState::new(FieldId::IssueTypeEditModalTop),
-                status_state: StyledSelectState::new(FieldId::StatusIssueEditModal),
-                reporter_state: StyledSelectState::new(FieldId::ReporterIssueEditModal),
-                assignees_state: StyledSelectState::new(FieldId::AssigneesIssueEditModal),
-                priority_state: StyledSelectState::new(FieldId::PriorityIssueEditModal),
-                description_editor_mode: Mode::Editor,
-            },
-        )
+        ModalType::EditIssue(*issue_id, EditIssueModal::new(issue))
     };
     model.modals.push(modal);
 }

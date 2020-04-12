@@ -1,6 +1,7 @@
 use seed::{prelude::*, *};
 
 use crate::shared::styled_icon::{Icon, StyledIcon};
+use crate::shared::styled_select_child::*;
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
@@ -31,16 +32,6 @@ impl std::fmt::Display for Variant {
             Variant::Normal => f.write_str("normal"),
         }
     }
-}
-
-pub trait SelectOption {
-    fn into_option(self) -> Node<Msg>;
-
-    fn into_value(self) -> Node<Msg>;
-
-    fn match_text_filter(&self, text_filter: &str) -> bool;
-
-    fn to_value(&self) -> u32;
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Hash)]
@@ -79,10 +70,7 @@ impl StyledSelectState {
     }
 }
 
-pub struct StyledSelect<Child>
-where
-    Child: SelectOption + PartialEq,
-{
+pub struct StyledSelect {
     id: FieldId,
     variant: Variant,
     dropdown_width: Option<usize>,
@@ -90,26 +78,20 @@ where
     valid: bool,
     is_multi: bool,
     allow_clear: bool,
-    options: Vec<Child>,
-    selected: Vec<Child>,
+    options: Vec<StyledSelectChildBuilder>,
+    selected: Vec<StyledSelectChildBuilder>,
     text_filter: String,
     opened: bool,
 }
 
-impl<Child> ToNode for StyledSelect<Child>
-where
-    Child: SelectOption + PartialEq,
-{
+impl ToNode for StyledSelect {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-impl<Child> StyledSelect<Child>
-where
-    Child: SelectOption + PartialEq,
-{
-    pub fn build(id: FieldId) -> StyledSelectBuilder<Child> {
+impl StyledSelect {
+    pub fn build(id: FieldId) -> StyledSelectBuilder {
         StyledSelectBuilder {
             id,
             variant: None,
@@ -127,10 +109,7 @@ where
 }
 
 #[derive(Debug)]
-pub struct StyledSelectBuilder<Child>
-where
-    Child: SelectOption + PartialEq,
-{
+pub struct StyledSelectBuilder {
     id: FieldId,
     variant: Option<Variant>,
     dropdown_width: Option<Option<usize>>,
@@ -138,17 +117,14 @@ where
     valid: Option<bool>,
     is_multi: Option<bool>,
     allow_clear: Option<bool>,
-    options: Option<Vec<Child>>,
-    selected: Option<Vec<Child>>,
+    options: Option<Vec<StyledSelectChildBuilder>>,
+    selected: Option<Vec<StyledSelectChildBuilder>>,
     text_filter: Option<String>,
     opened: Option<bool>,
 }
 
-impl<Child> StyledSelectBuilder<Child>
-where
-    Child: SelectOption + PartialEq,
-{
-    pub fn build(self) -> StyledSelect<Child> {
+impl StyledSelectBuilder {
+    pub fn build(self) -> StyledSelect {
         StyledSelect {
             id: self.id,
             variant: self.variant.unwrap_or_default(),
@@ -195,12 +171,12 @@ where
         self
     }
 
-    pub fn options(mut self, options: Vec<Child>) -> Self {
+    pub fn options(mut self, options: Vec<StyledSelectChildBuilder>) -> Self {
         self.options = Some(options);
         self
     }
 
-    pub fn selected(mut self, selected: Vec<Child>) -> Self {
+    pub fn selected(mut self, selected: Vec<StyledSelectChildBuilder>) -> Self {
         self.selected = Some(selected);
         self
     }
@@ -210,16 +186,18 @@ where
         self
     }
 
+    pub fn empty(mut self) -> Self {
+        self.variant = Some(Variant::Empty);
+        self
+    }
+
     pub fn multi(mut self) -> Self {
         self.is_multi = Some(true);
         self
     }
 }
 
-pub fn render<Child>(values: StyledSelect<Child>) -> Node<Msg>
-where
-    Child: SelectOption + PartialEq,
-{
+pub fn render(values: StyledSelect) -> Node<Msg> {
     let StyledSelect {
         id,
         variant,
@@ -247,6 +225,7 @@ where
     let dropdown_style = dropdown_width
         .map(|n| format!("width: {}px;", n))
         .unwrap_or_else(|| format!("width: 100%;"));
+
     let mut select_class = vec!["styledSelect".to_string(), format!("{}", variant)];
     if !valid {
         select_class.push("invalid".to_string());
@@ -262,9 +241,11 @@ where
 
     let children: Vec<Node<Msg>> = options
         .into_iter()
-        .filter(|o| !selected.contains(&o) && o.match_text_filter(text_filter.as_str()))
+        .filter(|o| !selected.contains(&o) && o.match_text(text_filter.as_str()))
         .map(|child| {
-            let value = child.to_value();
+            let child = child.build(DisplayType::SelectOption);
+            let value = child.value();
+            let node = child.into_node();
             let field_id = id.clone();
             let on_change = mouse_ev(Ev::Click, move |_| {
                 Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(value))
@@ -273,7 +254,7 @@ where
                 attrs![At::Class => "option"],
                 on_change,
                 visibility_handler.clone(),
-                child.into_option()
+                node
             ]
         })
         .collect();
@@ -320,12 +301,16 @@ where
     } else {
         selected
             .into_iter()
-            .map(|m| render_value(m.into_value()))
+            .map(|m| render_value(m.build(DisplayType::SelectValue).into_node()))
             .collect()
     };
 
     seed::div![
-        attrs![At::Class => select_class.join(" ")],
+        attrs![At::Class => select_class.join(" "), At::Style => dropdown_style.as_str()],
+        keyboard_ev(Ev::KeyUp, |ev| {
+            ev.stop_propagation();
+            Msg::NoOp
+        }),
         div![
             attrs![At::Class => format!("valueContainer {}", variant)],
             visibility_handler,
@@ -333,7 +318,8 @@ where
             chevron_down,
         ],
         div![
-            attrs![At::Class => "dropDown", At::Style => dropdown_style],
+            class!["dropDown"],
+            attrs![At::Style => dropdown_style.as_str()],
             text_input,
             clear_icon,
             option_list
@@ -346,13 +332,12 @@ fn render_value(mut content: Node<Msg>) -> Node<Msg> {
     content
 }
 
-fn into_multi_value<Opt>(opt: Opt, field_id: FieldId) -> Node<Msg>
-where
-    Opt: SelectOption,
-{
+fn into_multi_value(opt: StyledSelectChildBuilder, field_id: FieldId) -> Node<Msg> {
     let close_icon = StyledIcon::build(Icon::Close).size(14).build().into_node();
-    let value = opt.to_value();
-    let mut opt = opt.into_value();
+    let child = opt.build(DisplayType::SelectValue);
+    let value = child.value();
+
+    let mut opt = child.into_node();
     opt.add_class("value");
     opt.add_child(close_icon);
 

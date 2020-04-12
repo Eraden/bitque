@@ -7,9 +7,7 @@ use jirs_data::*;
 
 use crate::shared::styled_editor::Mode;
 use crate::shared::styled_select::StyledSelectState;
-use crate::{FieldId, IssueId, UserId, HOST_URL};
-
-pub type ProjectId = i32;
+use crate::{AddIssueModalFieldId, EditIssueModalFieldId, FieldId, HOST_URL};
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum ModalType {
@@ -30,6 +28,48 @@ pub struct EditIssueModal {
     pub priority_state: StyledSelectState,
 
     pub description_editor_mode: Mode,
+    pub creating_comment: bool,
+}
+
+impl EditIssueModal {
+    pub fn new(issue: &Issue) -> Self {
+        Self {
+            id: issue.id,
+            link_copied: false,
+            payload: UpdateIssuePayload {
+                title: issue.title.clone(),
+                issue_type: issue.issue_type.clone(),
+                status: issue.status.clone(),
+                priority: issue.priority.clone(),
+                list_position: issue.list_position.clone(),
+                description: issue.description.clone(),
+                description_text: issue.description_text.clone(),
+                estimate: issue.estimate.clone(),
+                time_spent: issue.time_spent.clone(),
+                time_remaining: issue.time_remaining.clone(),
+                project_id: issue.project_id.clone(),
+                reporter_id: issue.reporter_id.clone(),
+                user_ids: issue.user_ids.clone(),
+            },
+            top_type_state: StyledSelectState::new(FieldId::EditIssueModal(
+                EditIssueModalFieldId::IssueType,
+            )),
+            status_state: StyledSelectState::new(FieldId::EditIssueModal(
+                EditIssueModalFieldId::Status,
+            )),
+            reporter_state: StyledSelectState::new(FieldId::EditIssueModal(
+                EditIssueModalFieldId::Reporter,
+            )),
+            assignees_state: StyledSelectState::new(FieldId::EditIssueModal(
+                EditIssueModalFieldId::Assignees,
+            )),
+            priority_state: StyledSelectState::new(FieldId::EditIssueModal(
+                EditIssueModalFieldId::Priority,
+            )),
+            description_editor_mode: Mode::Editor,
+            creating_comment: false,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
@@ -69,10 +109,18 @@ impl Default for AddIssueModal {
             project_id: Default::default(),
             user_ids: Default::default(),
             reporter_id: Default::default(),
-            type_state: StyledSelectState::new(FieldId::IssueTypeAddIssueModal),
-            reporter_state: StyledSelectState::new(FieldId::ReporterAddIssueModal),
-            assignees_state: StyledSelectState::new(FieldId::AssigneesAddIssueModal),
-            priority_state: StyledSelectState::new(FieldId::IssuePriorityAddIssueModal),
+            type_state: StyledSelectState::new(FieldId::AddIssueModal(
+                AddIssueModalFieldId::IssueType,
+            )),
+            reporter_state: StyledSelectState::new(FieldId::AddIssueModal(
+                AddIssueModalFieldId::Reporter,
+            )),
+            assignees_state: StyledSelectState::new(FieldId::AddIssueModal(
+                AddIssueModalFieldId::Assignees,
+            )),
+            priority_state: StyledSelectState::new(FieldId::AddIssueModal(
+                AddIssueModalFieldId::Priority,
+            )),
         }
     }
 }

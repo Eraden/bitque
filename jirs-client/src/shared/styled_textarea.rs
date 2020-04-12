@@ -140,6 +140,10 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         Msg::InputChanged(id, value)
     });
     handlers.push(text_input_handler);
+    handlers.push(keyboard_ev(Ev::KeyUp, |ev| {
+        ev.stop_propagation();
+        Msg::NoOp
+    }));
 
     class_list.push("textAreaInput".to_string());
 

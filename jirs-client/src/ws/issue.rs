@@ -2,7 +2,6 @@ use jirs_data::*;
 
 use crate::api::send_ws_msg;
 use crate::model::Model;
-use crate::IssueId;
 
 pub fn drag_started(issue_id: IssueId, model: &mut Model) {
     model.project_page.dragged_issue_id = Some(issue_id);

@@ -1,21 +1,20 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{IssuePriority, IssueType, User};
+use jirs_data::{IssuePriority, IssueType, ToVec};
 
 use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, ModalType, Model};
-use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
-use crate::shared::styled_icon::StyledIcon;
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelect;
 use crate::shared::styled_select::StyledSelectChange;
+use crate::shared::styled_select_child::ToStyledSelectChild;
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::ToNode;
-use crate::{FieldId, Msg};
+use crate::{AddIssueModalFieldId, FieldId, Msg};
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     let modal = model.modals.iter_mut().find(|modal| match modal {
@@ -58,16 +57,16 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             orders.skip().send_msg(Msg::ModalDropped);
         }
 
-        Msg::InputChanged(FieldId::DescriptionAddIssueModal, value) => {
+        Msg::InputChanged(FieldId::AddIssueModal(AddIssueModalFieldId::Description), value) => {
             modal.description = Some(value.clone());
         }
-        Msg::InputChanged(FieldId::SummaryAddIssueModal, value) => {
+        Msg::InputChanged(FieldId::AddIssueModal(AddIssueModalFieldId::Summary), value) => {
             modal.title = value.clone();
         }
 
         // IssueTypeAddIssueModal
         Msg::StyledSelectChanged(
-            FieldId::IssueTypeAddIssueModal,
+            FieldId::AddIssueModal(AddIssueModalFieldId::IssueType),
             StyledSelectChange::Changed(id),
         ) => {
             modal.issue_type = (*id).into();
@@ -75,7 +74,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
         // ReporterAddIssueModal
         Msg::StyledSelectChanged(
-            FieldId::ReporterAddIssueModal,
+            FieldId::AddIssueModal(AddIssueModalFieldId::Reporter),
             StyledSelectChange::Changed(id),
         ) => {
             modal.reporter_id = Some(*id as i32);
@@ -83,7 +82,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
         // AssigneesAddIssueModal
         Msg::StyledSelectChanged(
-            FieldId::AssigneesAddIssueModal,
+            FieldId::AddIssueModal(AddIssueModalFieldId::Assignees),
             StyledSelectChange::Changed(id),
         ) => {
             let id = *id as i32;
@@ -92,7 +91,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             }
         }
         Msg::StyledSelectChanged(
-            FieldId::AssigneesAddIssueModal,
+            FieldId::AddIssueModal(AddIssueModalFieldId::Assignees),
             StyledSelectChange::RemoveMulti(id),
         ) => {
             let id = *id as i32;
@@ -107,7 +106,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
         // IssuePriorityAddIssueModal
         Msg::StyledSelectChanged(
-            FieldId::IssuePriorityAddIssueModal,
+            FieldId::AddIssueModal(AddIssueModalFieldId::Priority),
             StyledSelectChange::Changed(id),
         ) => {
             modal.priority = (*id).into();
@@ -118,18 +117,19 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 }
 
 pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
-    let select_type = StyledSelect::build(FieldId::IssueTypeAddIssueModal)
+    let select_type = StyledSelect::build(FieldId::AddIssueModal(AddIssueModalFieldId::IssueType))
         .name("type")
         .normal()
         .text_filter(modal.type_state.text_filter.as_str())
         .opened(modal.type_state.opened)
         .valid(true)
-        .options(vec![
-            IssueTypeOption(IssueType::Story),
-            IssueTypeOption(IssueType::Task),
-            IssueTypeOption(IssueType::Bug),
-        ])
-        .selected(vec![IssueTypeOption(modal.issue_type.clone())])
+        .options(
+            IssueType::ordered()
+                .iter()
+                .map(|t| t.to_select_child().name("type"))
+                .collect(),
+        )
+        .selected(vec![modal.issue_type.to_select_child().name("type")])
         .build()
         .into_node();
     let issue_type_field = StyledField::build()
@@ -139,7 +139,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let short_summary = StyledInput::build(FieldId::SummaryAddIssueModal)
+    let short_summary = StyledInput::build(FieldId::AddIssueModal(AddIssueModalFieldId::Summary))
         .valid(true)
         .build()
         .into_node();
@@ -152,7 +152,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
 
     let description = StyledTextarea::build()
         .height(110)
-        .build(FieldId::DescriptionAddIssueModal)
+        .build(FieldId::AddIssueModal(AddIssueModalFieldId::Description))
         .into_node();
     let description_field = StyledField::build()
         .label("Description")
@@ -165,18 +165,24 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .reporter_id
         .or_else(|| model.user.as_ref().map(|u| u.id))
         .unwrap_or_default();
-    let reporter = StyledSelect::build(FieldId::ReporterAddIssueModal)
+    let reporter = StyledSelect::build(FieldId::AddIssueModal(AddIssueModalFieldId::Reporter))
         .normal()
         .text_filter(modal.reporter_state.text_filter.as_str())
         .opened(modal.reporter_state.opened)
-        .options(model.users.iter().map(|u| UserOption(u)).collect())
+        .options(
+            model
+                .users
+                .iter()
+                .map(|u| u.to_select_child().name("reporter"))
+                .collect(),
+        )
         .selected(
             model
                 .users
                 .iter()
                 .filter_map(|user| {
                     if user.id == reporter_id {
-                        Some(UserOption(user))
+                        Some(user.to_select_child().name("reporter"))
                     } else {
                         None
                     }
@@ -193,19 +199,25 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let assignees = StyledSelect::build(FieldId::AssigneesAddIssueModal)
+    let assignees = StyledSelect::build(FieldId::AddIssueModal(AddIssueModalFieldId::Assignees))
         .normal()
         .multi()
         .text_filter(modal.assignees_state.text_filter.as_str())
         .opened(modal.assignees_state.opened)
-        .options(model.users.iter().map(|u| UserOption(u)).collect())
+        .options(
+            model
+                .users
+                .iter()
+                .map(|u| u.to_select_child().name("assignees"))
+                .collect(),
+        )
         .selected(
             model
                 .users
                 .iter()
                 .filter_map(|user| {
                     if modal.user_ids.contains(&user.id) {
-                        Some(UserOption(user))
+                        Some(user.to_select_child().name("assignees"))
                     } else {
                         None
                     }
@@ -222,22 +234,22 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let select_priority = StyledSelect::build(FieldId::IssuePriorityAddIssueModal)
-        .name("priority")
-        .normal()
-        .text_filter(modal.priority_state.text_filter.as_str())
-        .opened(modal.priority_state.opened)
-        .valid(true)
-        .options(vec![
-            IssuePriorityOption(IssuePriority::Highest),
-            IssuePriorityOption(IssuePriority::High),
-            IssuePriorityOption(IssuePriority::Medium),
-            IssuePriorityOption(IssuePriority::Low),
-            IssuePriorityOption(IssuePriority::Lowest),
-        ])
-        .selected(vec![IssuePriorityOption(modal.priority.clone())])
-        .build()
-        .into_node();
+    let select_priority =
+        StyledSelect::build(FieldId::AddIssueModal(AddIssueModalFieldId::Priority))
+            .name("priority")
+            .normal()
+            .text_filter(modal.priority_state.text_filter.as_str())
+            .opened(modal.priority_state.opened)
+            .valid(true)
+            .options(
+                IssuePriority::ordered()
+                    .iter()
+                    .map(|p| p.to_select_child().name("priority"))
+                    .collect(),
+            )
+            .selected(vec![modal.priority.to_select_child().name("priority")])
+            .build()
+            .into_node();
     let issue_priority_field = StyledField::build()
         .label("Issue Type")
         .tip("Priority in relation to other issues.")
@@ -291,140 +303,4 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .children(vec![form])
         .build()
         .into_node()
-}
-
-#[derive(PartialOrd, PartialEq, Debug)]
-pub struct IssueTypeOption(pub IssueType);
-
-impl crate::shared::styled_select::SelectOption for IssueTypeOption {
-    fn into_option(self) -> Node<Msg> {
-        let name = self.0.to_label().to_owned();
-
-        let icon = StyledIcon::build(self.0.into())
-            .add_class("issueTypeIcon")
-            .build()
-            .into_node();
-
-        div![
-            attrs![At::Class => "type optionItem"],
-            icon,
-            div![attrs![At::Class => "typeLabel optionLabel"], name]
-        ]
-    }
-
-    fn into_value(self) -> Node<Msg> {
-        let name = self.0.to_label().to_owned();
-
-        let type_icon = StyledIcon::build(self.0.into()).build().into_node();
-
-        div![
-            attrs![At::Class => "selectItem"],
-            type_icon,
-            div![attrs![At::Class => "selectItemLabel"], name]
-        ]
-    }
-
-    fn match_text_filter(&self, text_filter: &str) -> bool {
-        self.0
-            .to_string()
-            .to_lowercase()
-            .contains(&text_filter.to_lowercase())
-    }
-
-    fn to_value(&self) -> u32 {
-        self.0.clone().into()
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct IssuePriorityOption(IssuePriority);
-
-impl crate::shared::styled_select::SelectOption for IssuePriorityOption {
-    fn into_option(self) -> Node<Msg> {
-        let name = format!("{}", self.0);
-
-        let icon = StyledIcon::build(self.0.into())
-            .add_class("issuePriorityIcon")
-            .size(18)
-            .build()
-            .into_node();
-
-        div![
-            attrs![At::Class => format!("priority optionItem {}", name)],
-            icon,
-            div![attrs![At::Class => "priorityLabel optionLabel"], name]
-        ]
-    }
-
-    fn into_value(self) -> Node<Msg> {
-        let name = format!("{}", self.0);
-
-        let type_icon = StyledIcon::build(self.0.into()).build().into_node();
-
-        div![
-            attrs![At::Class => format!("selectItem priority {}", name)],
-            type_icon,
-            div![attrs![At::Class => "selectItemLabel"], name]
-        ]
-    }
-
-    fn match_text_filter(&self, text_filter: &str) -> bool {
-        self.0
-            .to_string()
-            .to_lowercase()
-            .contains(&text_filter.to_lowercase())
-    }
-
-    fn to_value(&self) -> u32 {
-        self.0.clone().into()
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct UserOption<'opt>(pub &'opt User);
-
-impl<'opt> UserOption<'opt> {
-    fn avatar_node(&self) -> Node<Msg> {
-        let user = self.0;
-        StyledAvatar::build()
-            .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
-            .size(20)
-            .name(user.name.as_str())
-            .build()
-            .into_node()
-    }
-}
-
-impl<'opt> crate::shared::styled_select::SelectOption for UserOption<'opt> {
-    fn into_option(self) -> Node<Msg> {
-        let user = self.0;
-
-        let styled_avatar = self.avatar_node();
-
-        div![
-            attrs![At::Class => "user optionItem"],
-            styled_avatar,
-            div![attrs![At::Class => "typeLabel optionLabel"], user.name]
-        ]
-    }
-
-    fn into_value(self) -> Node<Msg> {
-        let user = self.0;
-
-        let styled_avatar = self.avatar_node();
-
-        div![
-            attrs![At::Class => "selectItem"],
-            styled_avatar,
-            div![attrs![At::Class => "selectItemLabel"], user.name]
-        ]
-    }
-
-    fn match_text_filter(&self, text_filter: &str) -> bool {
-        self.0.name.contains(text_filter)
-    }
-
-    fn to_value(&self) -> u32 {
-        self.0.id as u32
-    }
 }

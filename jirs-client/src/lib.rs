@@ -1,9 +1,8 @@
 use std::sync::RwLock;
 
-use seed::fetch::FetchObject;
 use seed::{prelude::*, *};
 
-use jirs_data::{IssueStatus, WsMsg};
+use jirs_data::*;
 
 use crate::api::send_ws_msg;
 use crate::model::{ModalType, Model, Page};
@@ -21,70 +20,91 @@ mod register;
 mod shared;
 mod ws;
 
-pub type UserId = i32;
-pub type IssueId = i32;
 pub type AvatarFilterActive = bool;
+pub type AppType = App<Msg, Model, Node<Msg>>;
+
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum EditIssueModalFieldId {
+    IssueType,
+    Title,
+    Description,
+    Status,
+    Assignees,
+    Reporter,
+    Priority,
+    Estimate,
+    TimeSpend,
+    TimeRemaining,
+    // comment
+    CommentBody,
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum AddIssueModalFieldId {
+    IssueType,
+    Summary,
+    Description,
+    Reporter,
+    Assignees,
+    Priority,
+}
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum FieldId {
-    // edit issue
-    IssueTypeEditModalTop,
-    TitleIssueEditModal,
-    DescriptionIssueEditModal,
-    StatusIssueEditModal,
-    AssigneesIssueEditModal,
-    ReporterIssueEditModal,
-    PriorityIssueEditModal,
-    EstimateIssueEditModal,
-    TimeSpendIssueEditModal,
-    TimeRemainingIssueEditModal,
+    // issue
+    AddIssueModal(AddIssueModalFieldId),
+    EditIssueModal(EditIssueModalFieldId),
     // project boards
     TextFilterBoard,
-    //
     CopyButtonLabel,
-    // add issue
-    IssueTypeAddIssueModal,
-    SummaryAddIssueModal,
-    DescriptionAddIssueModal,
-    ReporterAddIssueModal,
-    AssigneesAddIssueModal,
-    IssuePriorityAddIssueModal,
 }
 
 impl std::fmt::Display for FieldId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FieldId::IssueTypeEditModalTop => f.write_str("issueTypeEditModalTop"),
+            FieldId::EditIssueModal(sub) => match sub {
+                EditIssueModalFieldId::IssueType => f.write_str("issueTypeEditModalTop"),
+                EditIssueModalFieldId::Title => f.write_str("titleIssueEditModal"),
+                EditIssueModalFieldId::Description => f.write_str("descriptionIssueEditModal"),
+                EditIssueModalFieldId::Status => f.write_str("statusIssueEditModal"),
+                EditIssueModalFieldId::Assignees => f.write_str("assigneesIssueEditModal"),
+                EditIssueModalFieldId::Reporter => f.write_str("reporterIssueEditModal"),
+                EditIssueModalFieldId::Priority => f.write_str("priorityIssueEditModal"),
+                EditIssueModalFieldId::Estimate => f.write_str("estimateIssueEditModal"),
+                EditIssueModalFieldId::TimeSpend => f.write_str("timeSpendIssueEditModal"),
+                EditIssueModalFieldId::TimeRemaining => f.write_str("timeRemainingIssueEditModal"),
+                EditIssueModalFieldId::CommentBody => f.write_str("editIssue-commentBody"),
+            },
+            FieldId::AddIssueModal(sub) => match sub {
+                AddIssueModalFieldId::IssueType => f.write_str("issueTypeAddIssueModal"),
+                AddIssueModalFieldId::Summary => f.write_str("summaryAddIssueModal"),
+                AddIssueModalFieldId::Description => f.write_str("descriptionAddIssueModal"),
+                AddIssueModalFieldId::Reporter => f.write_str("reporterAddIssueModal"),
+                AddIssueModalFieldId::Assignees => f.write_str("assigneesAddIssueModal"),
+                AddIssueModalFieldId::Priority => f.write_str("issuePriorityAddIssueModal"),
+            },
             FieldId::TextFilterBoard => f.write_str("textFilterBoard"),
             FieldId::CopyButtonLabel => f.write_str("copyButtonLabel"),
-            FieldId::IssueTypeAddIssueModal => f.write_str("issueTypeAddIssueModal"),
-            FieldId::SummaryAddIssueModal => f.write_str("summaryAddIssueModal"),
-            FieldId::DescriptionAddIssueModal => f.write_str("descriptionAddIssueModal"),
-            FieldId::ReporterAddIssueModal => f.write_str("reporterAddIssueModal"),
-            FieldId::AssigneesAddIssueModal => f.write_str("assigneesAddIssueModal"),
-            FieldId::IssuePriorityAddIssueModal => f.write_str("issuePriorityAddIssueModal"),
-            FieldId::TitleIssueEditModal => f.write_str("titleIssueEditModal"),
-            FieldId::DescriptionIssueEditModal => f.write_str("descriptionIssueEditModal"),
-            FieldId::StatusIssueEditModal => f.write_str("statusIssueEditModal"),
-            FieldId::AssigneesIssueEditModal => f.write_str("assigneesIssueEditModal"),
-            FieldId::ReporterIssueEditModal => f.write_str("reporterIssueEditModal"),
-            FieldId::PriorityIssueEditModal => f.write_str("priorityIssueEditModal"),
-            FieldId::EstimateIssueEditModal => f.write_str("estimateIssueEditModal"),
-            FieldId::TimeSpendIssueEditModal => f.write_str("timeSpendIssueEditModal"),
-            FieldId::TimeRemainingIssueEditModal => f.write_str("timeRemainingIssueEditModal"),
         }
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum FieldChange {
     LinkCopied(FieldId, bool),
     TabChanged(FieldId, TabMode),
+    ToggleCreateComment(FieldId, bool),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Msg {
     NoOp,
+    GlobalKeyDown {
+        key: String,
+        shift: bool,
+        ctrl: bool,
+        alt: bool,
+    },
 
     // Auth Token
     AuthTokenStored,
@@ -93,7 +113,6 @@ pub enum Msg {
     StyledSelectChanged(FieldId, StyledSelectChange),
 
     ChangePage(model::Page),
-    CurrentProjectResult(FetchObject<String>),
     InternalFailure(String),
     ToggleAboutTooltip,
 
@@ -127,6 +146,9 @@ pub enum Msg {
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
+    if msg == Msg::NoOp {
+        return;
+    }
     if cfg!(debug_assertions) {
         log!(msg);
     }
@@ -226,6 +248,28 @@ pub fn render() {
         }) as Box<dyn Fn()>,
         5000,
     );
+
+    if let Some(body) = seed::html_document().body() {
+        use wasm_bindgen::JsCast;
+
+        let body = body.dyn_ref::<web_sys::HtmlBodyElement>().unwrap().clone();
+        let key_up_closure =
+            wasm_bindgen::closure::Closure::wrap(Box::new(|event: web_sys::KeyboardEvent| {
+                if let Some(Ok(app)) = unsafe { APP.as_mut().map(|app| app.write()) } {
+                    let msg = Msg::GlobalKeyDown {
+                        key: event.key(),
+                        shift: event.shift_key(),
+                        ctrl: event.ctrl_key(),
+                        alt: event.alt_key(),
+                    };
+                    app.update(msg);
+                }
+            })
+                as Box<dyn Fn(web_sys::KeyboardEvent)>);
+        body.add_event_listener_with_callback("keyup", key_up_closure.as_ref().unchecked_ref())
+            .unwrap();
+        key_up_closure.forget();
+    }
 
     let app = seed::App::builder(update, view)
         .routes(routes)

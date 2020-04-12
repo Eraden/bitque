@@ -1,10 +1,10 @@
 use seed::{prelude::*, *};
 use wasm_bindgen::JsCast;
 
-use jirs_data::Issue;
+use jirs_data::*;
 
 use crate::model::Model;
-use crate::{IssueId, Msg};
+use crate::Msg;
 
 pub mod aside;
 pub mod navbar_left;
@@ -18,6 +18,7 @@ pub mod styled_icon;
 pub mod styled_input;
 pub mod styled_modal;
 pub mod styled_select;
+pub mod styled_select_child;
 pub mod styled_textarea;
 pub mod styled_tooltip;
 

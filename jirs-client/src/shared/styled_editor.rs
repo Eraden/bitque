@@ -28,7 +28,7 @@ impl StyledEditor {
         StyledEditorBuilder {
             id,
             text: String::new(),
-            mode: Mode::Editor,
+            mode: Mode::View,
             update_event: None,
         }
     }

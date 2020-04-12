@@ -74,12 +74,17 @@ pub fn render(values: StyledInput) -> Node<Msg> {
 
     let mut handlers = vec![];
 
-    let input_handler = input_ev(Ev::KeyUp, move |value| Msg::InputChanged(id, value));
-    handlers.push(input_handler);
+    handlers.push(input_ev(Ev::KeyUp, move |value| {
+        Msg::InputChanged(id, value)
+    }));
 
     div![
         attrs!(At::Class => wrapper_class_list.join(" ")),
         icon,
+        keyboard_ev(Ev::KeyUp, |ev| {
+            ev.stop_propagation();
+            Msg::NoOp
+        }),
         seed::input![attrs![At::Class => input_class_list.join(" ")], handlers],
     ]
 }

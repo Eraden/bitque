@@ -4,10 +4,11 @@ use crate::shared::ToNode;
 use crate::Msg;
 
 pub struct StyledAvatar {
-    pub avatar_url: Option<String>,
-    pub size: u32,
-    pub name: String,
-    pub on_click: Option<EventHandler<Msg>>,
+    avatar_url: Option<String>,
+    size: u32,
+    name: String,
+    on_click: Option<EventHandler<Msg>>,
+    class_list: Vec<String>,
 }
 
 impl Default for StyledAvatar {
@@ -17,6 +18,7 @@ impl Default for StyledAvatar {
             size: 32,
             name: "".to_string(),
             on_click: None,
+            class_list: vec![],
         }
     }
 }
@@ -28,6 +30,7 @@ impl StyledAvatar {
             size: None,
             name: "".to_string(),
             on_click: None,
+            class_list: vec![],
         }
     }
 }
@@ -39,10 +42,11 @@ impl ToNode for StyledAvatar {
 }
 
 pub struct StyledAvatarBuilder {
-    pub avatar_url: Option<String>,
-    pub size: Option<u32>,
-    pub name: String,
-    pub on_click: Option<EventHandler<Msg>>,
+    avatar_url: Option<String>,
+    size: Option<u32>,
+    name: String,
+    on_click: Option<EventHandler<Msg>>,
+    class_list: Vec<String>,
 }
 
 impl StyledAvatarBuilder {
@@ -50,7 +54,10 @@ impl StyledAvatarBuilder {
     where
         S: Into<String>,
     {
-        self.avatar_url = Some(avatar_url.into());
+        let url = avatar_url.into();
+        if !url.is_empty() {
+            self.avatar_url = Some(url);
+        }
         self
     }
 
@@ -72,12 +79,21 @@ impl StyledAvatarBuilder {
         self
     }
 
+    pub fn add_class<S>(mut self, name: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.class_list.push(name.into());
+        self
+    }
+
     pub fn build(self) -> StyledAvatar {
         StyledAvatar {
             avatar_url: self.avatar_url,
             size: self.size.unwrap_or(32),
             name: self.name,
             on_click: self.on_click,
+            class_list: self.class_list,
         }
     }
 }
@@ -88,7 +104,15 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
         size,
         name,
         on_click,
+        mut class_list,
     } = values;
+
+    class_list.push("styledAvatar".to_string());
+    match avatar_url {
+        Some(_) => class_list.push("image".to_string()),
+        _ => class_list.push("letter".to_string()),
+    };
+
     let shared_style = format!("width: {size}px; height: {size}px", size = size);
     let handler = match on_click {
         None => vec![],
@@ -96,11 +120,11 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
     };
     match avatar_url {
         Some(url) => div![
-            attrs![At::Class => "styledAvatar image", At::Style => format!("{shared}; background-image: url({url});", shared = shared_style, url = url)],
+            attrs![At::Class => class_list.join(" "), At::Style => format!("{shared}; background-image: url({url});", shared = shared_style, url = url)],
             handler,
         ],
         _ => div![
-            attrs![At::Class => "styledAvatar letter", At::Style => shared_style],
+            attrs![At::Class => class_list.join(" "), At::Style => shared_style],
             span![name],
             handler
         ],

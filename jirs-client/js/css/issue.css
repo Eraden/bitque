@@ -34,6 +34,71 @@
     background: var(--backgroundLight);
 }
 
+.issueDetails > .content > .left > .comments {
+    padding-top: 40px;
+}
+
+.issueDetails > .content > .left > .comments > .title {
+    font-family: var(--font-medium);
+    font-weight: normal;
+    font-size: 15px
+}
+
+.issueDetails > .content > .left > .comments > .create {
+    position: relative;
+    margin-top: 25px;
+    font-size: 15px
+}
+
+.issueDetails > .content > .left > .comments > .create > .userAvatar {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.issueDetails > .content > .left > .comments > .create > .right {
+    padding-left: 44px;
+}
+
+.issueDetails > .content > .left > .comments > .create > .right > .fakeTextArea {
+    padding: 12px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--borderLightest);
+    color: var(--textLight);
+    cursor: pointer;
+    user-select: none;
+}
+
+.issueDetails > .content > .left > .comments > .create > .right > .fakeTextArea:hover {
+    border: 1px solid var(--borderLight);
+}
+
+.issueDetails > .content > .left > .comments > .create > .right > .proTip {
+    display: flex;
+    align-items: center;
+    padding-top: 8px;
+    color: var(--textMedium);
+    font-size: 13px;
+}
+
+.issueDetails > .content > .left > .comments > .create > .right > .proTip > .strong {
+    padding-right: 4px;
+}
+
+.issueDetails > .content > .left > .comments > .create > .right > .proTip > .tipLetter {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    margin: 0 4px;
+    padding: 0 4px;
+    border-radius: 2px;
+    color: var(--textDarkest);
+    background: var(--backgroundMedium);
+    font-family: var(--font-bold);
+    font-weight: normal;
+    font-size: 12px
+}
+
 .issueDetails > .content > .right {
     width: 35%;
     padding-top: 5px;

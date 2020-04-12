@@ -1,13 +1,13 @@
 import React, { Fragment } from 'react';
-import PropTypes           from 'prop-types';
-import { connect }         from 'react-redux';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 
-import api                  from '../../../../../shared/utils/api';
-import toast                from '../../../../../shared/utils/toast';
+import api from '../../../../../shared/utils/api';
+import toast from '../../../../../shared/utils/toast';
 import { fetchCurrentUser } from "../../../../../actions/users";
 
-import BodyForm                                    from '../BodyForm';
-import ProTip                                      from './ProTip';
+import BodyForm from '../BodyForm';
+import ProTip from './ProTip';
 import { Create, FakeTextarea, Right, UserAvatar } from './Styles';
 
 class ProjectBoardIssueDetailsCommentsCreate extends React.Component {
@@ -26,8 +26,7 @@ class ProjectBoardIssueDetailsCommentsCreate extends React.Component {
     handleCommentCreate = async () => {
         try {
             this.setCreatingTrue();
-            const response = await api.post(`/comments`, { body: this.state.body, issueId: this.props.issueId });
-            console.log(response);
+            await api.post(`/comments`, { body: this.state.body, issueId: this.props.issueId });
             await this.props.fetchIssue();
             this.setState({ isCreating: false, isFormOpen: false, body: '' });
         } catch (error) {

@@ -163,19 +163,6 @@ impl IssueStatus {
             IssueStatus::Done => "Done",
         }
     }
-
-    pub fn to_payload(&self) -> &str {
-        match self {
-            IssueStatus::Backlog => "backlog",
-            IssueStatus::Selected => "selected",
-            IssueStatus::InProgress => "in_progress",
-            IssueStatus::Done => "done",
-        }
-    }
-
-    pub fn match_name(&self, name: &str) -> bool {
-        self.to_payload() == name
-    }
 }
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]

@@ -31,18 +31,26 @@ version = "*"
 [dependencies.web-sys]
 version = "0.3.22"
 features = [
+    # elements
     "Window",
-    "DataTransfer",
-    "DragEvent",
     "HtmlDivElement",
-    "DomRect",
     "HtmlDocument",
     "Document",
+    "HtmlBodyElement",
+    # types
+    "DataTransfer",
+    "DomRect",
     "Selection",
     "CssStyleDeclaration",
     "WebSocket",
     "BinaryType",
     "Blob",
-    "MessageEvent",
+    "AddEventListenerOptions",
+    # events
+    "EventTarget",
     "ErrorEvent",
+    "MessageEvent",
+    "KeyEvent",
+    "KeyboardEvent",
+    "DragEvent",
 ]
