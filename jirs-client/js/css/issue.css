@@ -99,6 +99,15 @@
     font-size: 12px
 }
 
+.issueDetails > .content > .left > .comments > .create > .right > .actions {
+    display: flex;
+    padding-top: 10px;
+}
+
+.issueDetails > .content > .left > .comments > .create > .right > .actions > .styledButton {
+    margin-right: 6px;
+}
+
 .issueDetails > .content > .right {
     width: 35%;
     padding-top: 5px;

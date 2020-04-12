@@ -266,7 +266,7 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
                 At::Class => "dropDownInput",
                 At::Type => "text"
                 At::Placeholder => "Search"
-                At::AutoFocus => true,
+                At::AutoFocus => "true",
             ],
             on_text.clone(),
         ],

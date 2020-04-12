@@ -153,7 +153,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         textarea![
             attrs![
                 At::Class => class_list.join(" ");
-                At::ContentEditable => "true";
+                At::AutoFocus => "true";
                 At::Style => style_list.join(";");
             ],
             value,

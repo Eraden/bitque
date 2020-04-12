@@ -261,10 +261,31 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .into_node();
 
     let create_comment = if *creating_comment {
+        use crate::shared::styled_button::Variant as ButtonVariant;
+
+        let close_comment_form = mouse_ev(Ev::Click, move |ev| {
+            ev.stop_propagation();
+            Msg::ModalChanged(FieldChange::ToggleCreateComment(
+                FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody),
+                false,
+            ))
+        });
+
         let text_area = StyledTextarea::build()
             .build(FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody))
             .into_node();
-        div![text_area]
+        let submit = StyledButton::build()
+            .variant(ButtonVariant::Primary)
+            .text("Save")
+            .build()
+            .into_node();
+        let cancel = StyledButton::build()
+            .variant(ButtonVariant::Empty)
+            .on_click(close_comment_form)
+            .text("Cancel")
+            .build()
+            .into_node();
+        vec![text_area, div![class!["actions"], submit, cancel]]
     } else {
         let creating_comment = *creating_comment;
         let handler = mouse_ev(Ev::Click, move |ev| {
@@ -274,7 +295,7 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
                 !creating_comment,
             ))
         });
-        div![class!["fakeTextArea"], handler]
+        vec![div![class!["fakeTextArea"], "Add a comment...", handler]]
     };
 
     div![
