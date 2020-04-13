@@ -4,7 +4,6 @@ use crate::shared::styled_editor::StyledEditor;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_input::StyledInput;
-use crate::shared::styled_select::StyledSelect;
 use crate::shared::{inner_layout, ToNode};
 use crate::{model, FieldId, Msg, ProjectSettingsFieldId};
 

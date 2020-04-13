@@ -109,6 +109,19 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::InputChanged(FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody), text) => {
             modal.comment_form.body = text.clone();
         }
+        Msg::InputChanged(FieldId::EditIssueModal(EditIssueModalFieldId::Estimate), value) => {
+            match value.parse::<i32>() {
+                Ok(n) if !value.is_empty() => {
+                    modal.payload.estimate = Some(n);
+                    send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
+                }
+                _ if value.is_empty() => {
+                    modal.payload.estimate = None;
+                    send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
+                }
+                _ => {}
+            }
+        }
         Msg::SaveComment => {
             let msg = match modal.comment_form.id {
                 Some(id) => WsMsg::UpdateComment(UpdateCommentPayload {
@@ -564,6 +577,14 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
 
     let estimate = StyledInput::build(FieldId::EditIssueModal(EditIssueModalFieldId::Estimate))
         .valid(true)
+        .value(
+            payload
+                .estimate
+                .as_ref()
+                .map(|n| n.to_string())
+                .clone()
+                .unwrap_or_default(),
+        )
         .build()
         .into_node();
     let estimate_field = StyledField::build()

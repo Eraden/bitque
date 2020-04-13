@@ -61,14 +61,15 @@ fn about_tooltip_popup(model: &Model) -> Node<Msg> {
         .into_node();
 
     styled_tooltip::StyledTooltip {
-        visible: model.project_page.about_tooltip_visible,
+        visible: model.about_tooltip_visible,
         class_name: "aboutTooltipPopup".to_string(),
         children: div![
         ev(Ev::Click, |_| Msg::ToggleAboutTooltip),
         attrs![At::Class => "feedbackDropdown"],
         div![
             attrs![At::Class => "feedbackImageCont"],
-            img![attrs![At::Src => "/feedback.png", At::Class => "feedbackImage"]]
+            img![attrs![At::Src => "/feedback.png"]],
+            class!["feedbackImage"],
         ],
         div![
             attrs![At::Class => "feedbackParagraph"],

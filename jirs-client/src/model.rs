@@ -76,7 +76,7 @@ impl EditIssueModal {
             priority_state: StyledSelectState::new(FieldId::EditIssueModal(
                 EditIssueModalFieldId::Priority,
             )),
-            description_editor_mode: Mode::Editor,
+            description_editor_mode: Mode::View,
             comment_form: CommentForm {
                 id: None,
                 body: String::new(),
@@ -178,9 +178,8 @@ pub struct UpdateProjectForm {
     pub fields: UpdateProjectPayload,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Default)]
 pub struct ProjectPage {
-    pub about_tooltip_visible: bool,
     pub text_filter: String,
     pub active_avatar_filters: Vec<UserId>,
     pub only_my_filter: bool,
@@ -191,9 +190,22 @@ pub struct ProjectPage {
 }
 
 #[derive(Debug)]
+pub struct ProjectSettingsPage {
+    pub payload: UpdateProjectPayload,
+    pub project_type_state: StyledSelectState,
+}
+
+#[derive(Debug)]
+pub enum PageContent {
+    Project(ProjectPage),
+    ProjectSettings(ProjectSettingsPage),
+}
+
+#[derive(Debug)]
 pub struct Model {
     pub host_url: String,
     pub access_token: Option<Uuid>,
+    pub about_tooltip_visible: bool,
 
     // mapped
     pub comments_by_project_id: HashMap<ProjectId, Vec<Comment>>,
@@ -208,7 +220,7 @@ pub struct Model {
 
     // pages
     pub page: Page,
-    pub project_page: ProjectPage,
+    pub page_content: PageContent,
 
     pub project: Option<Project>,
     pub user: Option<User>,
@@ -231,19 +243,11 @@ impl Default for Model {
             comments_by_project_id: Default::default(),
             page: Page::Project,
             host_url,
-            project_page: ProjectPage {
-                about_tooltip_visible: false,
-                text_filter: "".to_string(),
-                active_avatar_filters: vec![],
-                only_my_filter: false,
-                recently_updated_filter: false,
-                dragged_issue_id: None,
-                last_drag_exchange_id: None,
-                dirty_issues: vec![],
-            },
+            page_content: PageContent::Project(ProjectPage::default()),
             modals: vec![],
             project: None,
             comments: vec![],
+            about_tooltip_visible: false,
         }
     }
 }

@@ -9,6 +9,7 @@ pub struct StyledInput {
     id: FieldId,
     icon: Option<Icon>,
     valid: bool,
+    value: Option<String>,
 }
 
 impl StyledInput {
@@ -17,6 +18,7 @@ impl StyledInput {
             id,
             icon: None,
             valid: None,
+            value: None,
         }
     }
 }
@@ -26,6 +28,7 @@ pub struct StyledInputBuilder {
     id: FieldId,
     icon: Option<Icon>,
     valid: Option<bool>,
+    value: Option<String>,
 }
 
 impl StyledInputBuilder {
@@ -39,11 +42,20 @@ impl StyledInputBuilder {
         self
     }
 
+    pub fn value<S>(mut self, v: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.value = Some(v.into());
+        self
+    }
+
     pub fn build(self) -> StyledInput {
         StyledInput {
             id: self.id,
             icon: self.icon,
             valid: self.valid.unwrap_or_default(),
+            value: self.value,
         }
     }
 }
@@ -55,7 +67,12 @@ impl ToNode for StyledInput {
 }
 
 pub fn render(values: StyledInput) -> Node<Msg> {
-    let StyledInput { id, icon, valid } = values;
+    let StyledInput {
+        id,
+        icon,
+        valid,
+        value,
+    } = values;
 
     let mut wrapper_class_list = vec!["styledInput".to_string(), format!("{}", id)];
     if !valid {
@@ -74,7 +91,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
 
     let mut handlers = vec![];
 
-    handlers.push(input_ev(Ev::KeyUp, move |value| {
+    handlers.push(input_ev(Ev::Change, move |value| {
         Msg::InputChanged(id, value)
     }));
 
@@ -85,6 +102,12 @@ pub fn render(values: StyledInput) -> Node<Msg> {
             ev.stop_propagation();
             Msg::NoOp
         }),
-        seed::input![attrs![At::Class => input_class_list.join(" ")], handlers],
+        seed::input![
+            attrs![
+                At::Class => input_class_list.join(" "),
+                At::Value => value.unwrap_or_default(),
+            ],
+            handlers
+        ],
     ]
 }

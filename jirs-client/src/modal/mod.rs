@@ -16,7 +16,7 @@ mod issue_details;
 pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::ModalDropped => match model.modals.pop() {
-            Some(ModalType::EditIssue(..)) => {
+            Some(ModalType::EditIssue(..)) | Some(ModalType::AddIssue(..)) => {
                 seed::push_route(vec!["board"]);
                 orders.send_msg(Msg::ChangePage(Page::Project));
             }

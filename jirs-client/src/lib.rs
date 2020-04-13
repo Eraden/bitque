@@ -177,6 +177,9 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         Msg::ChangePage(page) => {
             model.page = page.clone();
         }
+        Msg::ToggleAboutTooltip => {
+            model.about_tooltip_visible = !model.about_tooltip_visible;
+        }
         _ => (),
     }
     crate::ws::update(&msg, model, orders);

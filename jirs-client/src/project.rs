@@ -4,7 +4,7 @@ use seed::{prelude::*, *};
 use jirs_data::*;
 
 use crate::api::send_ws_msg;
-use crate::model::{ModalType, Model, Page};
+use crate::model::{ModalType, Model, Page, PageContent};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
@@ -14,6 +14,11 @@ use crate::shared::{drag_ev, inner_layout, ToNode};
 use crate::{EditIssueModalFieldId, FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
+    let project_page = match &mut model.page_content {
+        PageContent::Project(project_page) => project_page,
+        _ => return,
+    };
+
     match msg {
         Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
@@ -44,9 +49,6 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             }
             orders.skip().send_msg(Msg::ModalDropped);
         }
-        Msg::ToggleAboutTooltip => {
-            model.project_page.about_tooltip_visible = !model.project_page.about_tooltip_visible;
-        }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalFieldId::IssueType),
             StyledSelectChange::Text(text),
@@ -64,12 +66,11 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             }
         }
         Msg::InputChanged(FieldId::TextFilterBoard, text) => {
-            model.project_page.text_filter = text;
+            project_page.text_filter = text;
         }
         Msg::ProjectAvatarFilterChanged(user_id, active) => match active {
             true => {
-                model.project_page.active_avatar_filters = model
-                    .project_page
+                project_page.active_avatar_filters = project_page
                     .active_avatar_filters
                     .iter()
                     .filter(|id| **id != user_id)
@@ -77,25 +78,23 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                     .collect();
             }
             false => {
-                model.project_page.active_avatar_filters.push(user_id);
+                project_page.active_avatar_filters.push(user_id);
             }
         },
         Msg::ProjectToggleOnlyMy => {
-            model.project_page.only_my_filter = !model.project_page.only_my_filter;
+            project_page.only_my_filter = !project_page.only_my_filter;
         }
         Msg::ProjectToggleRecentlyUpdated => {
-            model.project_page.recently_updated_filter =
-                !model.project_page.recently_updated_filter;
+            project_page.recently_updated_filter = !project_page.recently_updated_filter;
         }
         Msg::ProjectClearFilters => {
-            let pp = &mut model.project_page;
-            pp.active_avatar_filters = vec![];
-            pp.recently_updated_filter = false;
-            pp.only_my_filter = false;
+            project_page.active_avatar_filters = vec![];
+            project_page.recently_updated_filter = false;
+            project_page.only_my_filter = false;
         }
         Msg::IssueDragStarted(issue_id) => crate::ws::issue::drag_started(issue_id, model),
         Msg::IssueDragStopped(_) => {
-            model.project_page.dragged_issue_id = None;
+            project_page.dragged_issue_id = None;
         }
         Msg::ExchangePosition(issue_bellow_id) => {
             crate::ws::issue::exchange_position(issue_bellow_id, model)
@@ -165,11 +164,14 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let project_page = &model.project_page;
+    let project_page = match &model.page_content {
+        PageContent::Project(page_content) => page_content,
+        _ => return empty![],
+    };
 
     let only_my = StyledButton::build()
         .empty()
-        .active(model.project_page.only_my_filter)
+        .active(project_page.only_my_filter)
         .text("Only My Issues")
         .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy))
         .build()
@@ -205,7 +207,11 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
 }
 
 fn avatars_filters(model: &Model) -> Node<Msg> {
-    let active_avatar_filters = &model.project_page.active_avatar_filters;
+    let project_page = match &model.page_content {
+        PageContent::Project(project_page) => project_page,
+        _ => return empty![],
+    };
+    let active_avatar_filters = &project_page.active_avatar_filters;
     let avatars: Vec<Node<Msg>> = model
         .users
         .iter()
@@ -242,7 +248,11 @@ fn project_board_lists(model: &Model) -> Node<Msg> {
 }
 
 fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg> {
-    let ids = if model.project_page.recently_updated_filter {
+    let project_page = match &model.page_content {
+        PageContent::Project(project_page) => project_page,
+        _ => return empty![],
+    };
+    let ids = if project_page.recently_updated_filter {
         let mut v: Vec<(IssueId, NaiveDateTime)> = model
             .issues
             .iter()
@@ -261,8 +271,8 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
         .iter()
         .filter(|issue| {
             issue_filter_status(issue, &status)
-                && issue_filter_with_text(issue, model.project_page.text_filter.as_str())
-                && issue_filter_with_only_my(issue, model.project_page.only_my_filter, &model.user)
+                && issue_filter_with_text(issue, project_page.text_filter.as_str())
+                && issue_filter_with_only_my(issue, project_page.only_my_filter, &model.user)
                 && issue_filter_with_only_recent(issue, &ids)
         })
         .map(|issue| project_issue(model, issue))
