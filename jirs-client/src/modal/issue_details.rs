@@ -3,7 +3,7 @@ use seed::{prelude::*, *};
 use jirs_data::*;
 
 use crate::api::send_ws_msg;
-use crate::model::{EditIssueModal, ModalType, Model};
+use crate::model::{CommentForm, EditIssueModal, ModalType, Model};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_editor::StyledEditor;
@@ -95,16 +95,65 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         )) => {
             modal.description_editor_mode = mode.clone();
         }
-        Msg::ModalChanged(FieldChange::ToggleCreateComment(
+        Msg::ModalChanged(FieldChange::ToggleCommentForm(
             FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody),
             flag,
         )) => {
-            modal.creating_comment = *flag;
+            modal.comment_form.creating = *flag;
+            if !*flag {
+                modal.comment_form.body.clear();
+                modal.comment_form.id = None;
+            }
         }
-        Msg::GlobalKeyDown { key, .. } if key.as_str() == "m" && !modal.creating_comment => {
+        // comments
+        Msg::InputChanged(FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody), text) => {
+            modal.comment_form.body = text.clone();
+        }
+        Msg::SaveComment => {
+            let msg = match modal.comment_form.id {
+                Some(id) => WsMsg::UpdateComment(UpdateCommentPayload {
+                    id,
+                    body: modal.comment_form.body.clone(),
+                }),
+                _ => WsMsg::CreateComment(CreateCommentPayload {
+                    user_id: None,
+                    body: modal.comment_form.body.clone(),
+                    issue_id: modal.id,
+                }),
+            };
+            send_ws_msg(msg);
             orders
                 .skip()
-                .send_msg(Msg::ModalChanged(FieldChange::ToggleCreateComment(
+                .send_msg(Msg::ModalChanged(FieldChange::ToggleCommentForm(
+                    FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody),
+                    false,
+                )));
+        }
+        Msg::ModalChanged(FieldChange::EditComment(
+            FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody),
+            comment_id,
+        )) => {
+            let id = *comment_id;
+            let body = model
+                .comments
+                .iter()
+                .find(|c| c.id == id)
+                .map(|c| c.body.clone())
+                .unwrap_or_default();
+            modal.comment_form.body = body;
+            modal.comment_form.id = Some(id);
+            modal.comment_form.creating = true;
+        }
+        Msg::DeleteComment(comment_id) => {
+            send_ws_msg(WsMsg::CommentDeleteRequest(*comment_id));
+            orders.skip().send_msg(Msg::ModalDropped);
+        }
+
+        // global
+        Msg::GlobalKeyDown { key, .. } if key.as_str() == "m" && !modal.comment_form.creating => {
+            orders
+                .skip()
+                .send_msg(Msg::ModalChanged(FieldChange::ToggleCommentForm(
                     FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody),
                     true,
                 )));
@@ -225,7 +274,7 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let EditIssueModal {
         payload,
         description_editor_mode,
-        creating_comment,
+        comment_form,
         ..
     } = modal;
 
@@ -260,43 +309,25 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let create_comment = if *creating_comment {
-        use crate::shared::styled_button::Variant as ButtonVariant;
-
-        let close_comment_form = mouse_ev(Ev::Click, move |ev| {
-            ev.stop_propagation();
-            Msg::ModalChanged(FieldChange::ToggleCreateComment(
-                FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody),
-                false,
-            ))
-        });
-
-        let text_area = StyledTextarea::build()
-            .build(FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody))
-            .into_node();
-        let submit = StyledButton::build()
-            .variant(ButtonVariant::Primary)
-            .text("Save")
-            .build()
-            .into_node();
-        let cancel = StyledButton::build()
-            .variant(ButtonVariant::Empty)
-            .on_click(close_comment_form)
-            .text("Cancel")
-            .build()
-            .into_node();
-        vec![text_area, div![class!["actions"], submit, cancel]]
+    let create_comment = if comment_form.creating && comment_form.id.is_none() {
+        build_comment_form(comment_form)
     } else {
-        let creating_comment = *creating_comment;
+        let creating_comment = comment_form.creating;
         let handler = mouse_ev(Ev::Click, move |ev| {
             ev.stop_propagation();
-            Msg::ModalChanged(FieldChange::ToggleCreateComment(
+            Msg::ModalChanged(FieldChange::ToggleCommentForm(
                 FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody),
                 !creating_comment,
             ))
         });
         vec![div![class!["fakeTextArea"], "Add a comment...", handler]]
     };
+
+    let comments: Vec<Node<Msg>> = model
+        .comments
+        .iter()
+        .flat_map(|c| comment(model, modal, c))
+        .collect();
 
     div![
         class!["left"],
@@ -319,9 +350,108 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
                         " to comment"
                     ]
                 ]
-            ]
+            ],
+            comments
         ],
     ]
+}
+
+fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
+    use crate::shared::styled_button::Variant as ButtonVariant;
+
+    let submit_comment_form = mouse_ev(Ev::Click, move |ev| {
+        ev.stop_propagation();
+        Msg::SaveComment
+    });
+    let close_comment_form = mouse_ev(Ev::Click, move |ev| {
+        ev.stop_propagation();
+        Msg::ModalChanged(FieldChange::ToggleCommentForm(
+            FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody),
+            false,
+        ))
+    });
+
+    let text_area = StyledTextarea::build()
+        .value(form.body.as_str())
+        .placeholder("Add a comment...")
+        .build(FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody))
+        .into_node();
+
+    let submit = StyledButton::build()
+        .variant(ButtonVariant::Primary)
+        .on_click(submit_comment_form)
+        .text("Save")
+        .build()
+        .into_node();
+    let cancel = StyledButton::build()
+        .variant(ButtonVariant::Empty)
+        .on_click(close_comment_form)
+        .text("Cancel")
+        .build()
+        .into_node();
+
+    vec![text_area, div![class!["actions"], submit, cancel]]
+}
+
+fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Option<Node<Msg>> {
+    use crate::shared::styled_button::Variant as ButtonVariant;
+
+    let show_form = modal.comment_form.creating && modal.comment_form.id == Some(comment.id);
+
+    let user = model.users.iter().find(|u| u.id == comment.user_id)?;
+
+    let avatar = StyledAvatar::build()
+        .size(32)
+        .avatar_url(user.avatar_url.as_ref().cloned()?)
+        .add_class("userAvatar")
+        .build()
+        .into_node();
+
+    let buttons = if model.user.as_ref().map(|u| u.id) == Some(comment.user_id) {
+        let comment_id = comment.id;
+        let delete_comment_handler = mouse_ev(Ev::Click, move |ev| {
+            ev.stop_propagation();
+            Msg::ModalOpened(ModalType::DeleteCommentConfirm(comment_id))
+        });
+        let edit_button = StyledButton::build()
+            .add_class("editButton")
+            .on_click(mouse_ev(Ev::Click, move |_| {
+                Msg::ModalChanged(FieldChange::EditComment(
+                    FieldId::EditIssueModal(EditIssueModalFieldId::CommentBody),
+                    comment_id,
+                ))
+            }))
+            .text("Edit")
+            .variant(ButtonVariant::Empty)
+            .build()
+            .into_node();
+
+        let cancel_button = StyledButton::build()
+            .add_class("deleteButton")
+            .on_click(delete_comment_handler)
+            .text("Delete")
+            .variant(ButtonVariant::Empty)
+            .build()
+            .into_node();
+
+        vec![edit_button, cancel_button]
+    } else {
+        vec![]
+    };
+
+    let content = if show_form {
+        div![class!["content"], build_comment_form(&modal.comment_form)]
+    } else {
+        div![
+            class!["content"],
+            div![class!["userName"], user.name.as_str()],
+            p![class!["body"], comment.body],
+            buttons,
+        ]
+    };
+
+    let node = div![class!["styledComment"], avatar, content];
+    Some(node)
 }
 
 fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {

@@ -11,6 +11,7 @@ pub struct StyledTextarea {
     value: String,
     class_list: Vec<String>,
     update_event: Ev,
+    placeholder: Option<String>,
 }
 
 impl ToNode for StyledTextarea {
@@ -33,6 +34,7 @@ pub struct StyledTextareaBuilder {
     value: String,
     class_list: Vec<String>,
     update_event: Option<Ev>,
+    placeholder: Option<String>,
 }
 
 impl StyledTextareaBuilder {
@@ -71,6 +73,14 @@ impl StyledTextareaBuilder {
         self
     }
 
+    pub fn placeholder<S>(mut self, placeholder: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.placeholder = Some(placeholder.into());
+        self
+    }
+
     #[inline]
     pub fn build(self, id: FieldId) -> StyledTextarea {
         StyledTextarea {
@@ -80,6 +90,7 @@ impl StyledTextareaBuilder {
             class_list: self.class_list,
             max_height: self.max_height.unwrap_or_default(),
             update_event: self.update_event.unwrap_or_else(|| Ev::KeyUp),
+            placeholder: self.placeholder,
         }
     }
 }
@@ -105,6 +116,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         value,
         mut class_list,
         update_event,
+        placeholder,
     } = values;
     let mut style_list = vec![];
 
@@ -155,6 +167,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
                 At::Class => class_list.join(" ");
                 At::AutoFocus => "true";
                 At::Style => style_list.join(";");
+                At::Placeholder => placeholder.unwrap_or_default();
             ],
             value,
             handlers,

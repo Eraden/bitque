@@ -14,6 +14,14 @@ pub enum ModalType {
     AddIssue(AddIssueModal),
     EditIssue(IssueId, EditIssueModal),
     DeleteIssueConfirm(IssueId),
+    DeleteCommentConfirm(CommentId),
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub struct CommentForm {
+    pub id: Option<CommentId>,
+    pub body: String,
+    pub creating: bool,
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
@@ -28,7 +36,9 @@ pub struct EditIssueModal {
     pub priority_state: StyledSelectState,
 
     pub description_editor_mode: Mode,
-    pub creating_comment: bool,
+
+    // comments
+    pub comment_form: CommentForm,
 }
 
 impl EditIssueModal {
@@ -67,7 +77,11 @@ impl EditIssueModal {
                 EditIssueModalFieldId::Priority,
             )),
             description_editor_mode: Mode::Editor,
-            creating_comment: false,
+            comment_form: CommentForm {
+                id: None,
+                body: String::new(),
+                creating: false,
+            },
         }
     }
 }

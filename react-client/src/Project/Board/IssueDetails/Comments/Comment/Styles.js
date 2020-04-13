@@ -24,7 +24,8 @@ export const Username = styled.div`
   padding-right: 12px;
   padding-bottom: 10px;
   color: ${ color.textDark };
-  ${ font.medium };font-weight: normal;
+  ${ font.medium };
+  font-weight: normal;
 `;
 
 export const CreatedAt = styled.div`
@@ -44,9 +45,9 @@ export const EditLink = styled.div`
   display: inline-block;
   padding: 2px 0;
   color: ${color.textMedium};
-  font-size: 14.5px
+  font-size: 14.5px;
   cursor: pointer;
-    user-select: none;
+  user-select: none;
   &:hover {
     text-decoration: underline;
   }

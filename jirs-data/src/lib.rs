@@ -362,6 +362,7 @@ pub struct CreateCommentPayload {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct UpdateCommentPayload {
+    pub id: i32,
     pub body: String,
 }
 
@@ -418,4 +419,8 @@ pub enum WsMsg {
     // comments
     IssueCommentsRequest(IssueId),
     IssueCommentsLoaded(Vec<Comment>),
+    CreateComment(CreateCommentPayload),
+    UpdateComment(UpdateCommentPayload),
+    CommentDeleteRequest(CommentId),
+    CommentDeleted(CommentId),
 }

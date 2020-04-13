@@ -13,11 +13,11 @@ const CANCEL_TEXT: &str = "Cancel";
 
 #[derive(Debug)]
 pub struct StyledConfirmModal {
-    pub title: String,
-    pub message: String,
-    pub confirm_text: String,
-    pub cancel_text: String,
-    pub on_confirm: Option<EventHandler<Msg>>,
+    title: String,
+    message: String,
+    confirm_text: String,
+    cancel_text: String,
+    on_confirm: Option<EventHandler<Msg>>,
 }
 
 impl StyledConfirmModal {

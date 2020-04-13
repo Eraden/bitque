@@ -40,7 +40,18 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         }
         // comments
         Msg::WsMsg(WsMsg::IssueCommentsLoaded(comments)) => {
-            model.comments = comments.clone();
+            let mut v = comments.clone();
+            v.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
+            model.comments = v;
+        }
+        Msg::WsMsg(WsMsg::CommentDeleted(comment_id)) => {
+            let mut old = vec![];
+            std::mem::swap(&mut model.comments, &mut old);
+            for comment in old.into_iter() {
+                if *comment_id != comment.id {
+                    model.comments.push(comment);
+                }
+            }
         }
         _ => (),
     };

@@ -91,14 +91,16 @@ impl Handler<UpdateComment> for DbExecutor {
             .0
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let row: Comment = diesel::update(
+        let query = diesel::update(
             comments
                 .filter(user_id.eq(msg.user_id))
                 .find(msg.comment_id),
         )
-        .set(body.eq(msg.body))
-        .get_result::<Comment>(conn)
-        .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))?;
+        .set(body.eq(msg.body));
+        info!("{}", diesel::debug_query::<diesel::pg::Pg, _>(&query));
+        let row: Comment = query
+            .get_result::<Comment>(conn)
+            .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))?;
         Ok(row)
     }
 }

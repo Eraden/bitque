@@ -90,6 +90,24 @@ impl WebSocketActor {
                 issue_id,
             ))?,
 
+            WsMsg::CreateComment(payload) => block_on(comments::create_comment(
+                &self.db,
+                &self.current_user,
+                payload,
+            ))?,
+
+            WsMsg::UpdateComment(payload) => block_on(comments::update_comment(
+                &self.db,
+                &self.current_user,
+                payload,
+            ))?,
+
+            WsMsg::CommentDeleteRequest(comment_id) => block_on(comments::delete_comment(
+                &self.db,
+                &self.current_user,
+                comment_id,
+            ))?,
+
             // else fail
             _ => {
                 error!("No handle for {:?} specified", msg);

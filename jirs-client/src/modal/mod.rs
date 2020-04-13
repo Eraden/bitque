@@ -4,6 +4,7 @@ use jirs_data::WsMsg;
 
 use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, EditIssueModal, ModalType, Model, Page};
+use crate::shared::styled_confirm_modal::StyledConfirmModal;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::{find_issue, ToNode};
 use crate::{model, FieldChange, FieldId, Msg};
@@ -43,7 +44,6 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
 
         Msg::ChangePage(Page::EditIssue(issue_id)) => {
             push_edit_modal(issue_id, model);
-            send_ws_msg(WsMsg::IssueCommentsRequest(issue_id.clone()));
         }
 
         Msg::ChangePage(Page::AddIssue) => {
@@ -78,6 +78,16 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             }
             ModalType::DeleteIssueConfirm(_id) => confirm_delete_issue::view(model),
             ModalType::AddIssue(modal) => add_issue::view(model, modal),
+            ModalType::DeleteCommentConfirm(comment_id) => {
+                let comment_id = *comment_id;
+                StyledConfirmModal::build()
+                    .title("Are you sure you want to delete this comment?")
+                    .message("Once you delete, it's gone for good.")
+                    .confirm_text("Delete comment")
+                    .on_confirm(mouse_ev(Ev::Click, move |_| Msg::DeleteComment(comment_id)))
+                    .build()
+                    .into_node()
+            }
         })
         .collect();
     section![id!["modals"], modals]
@@ -91,5 +101,6 @@ fn push_edit_modal(issue_id: &i32, model: &mut Model) {
         };
         ModalType::EditIssue(*issue_id, EditIssueModal::new(issue))
     };
+    send_ws_msg(WsMsg::IssueCommentsRequest(issue_id.clone()));
     model.modals.push(modal);
 }

@@ -93,7 +93,8 @@ impl std::fmt::Display for FieldId {
 pub enum FieldChange {
     LinkCopied(FieldId, bool),
     TabChanged(FieldId, TabMode),
-    ToggleCreateComment(FieldId, bool),
+    ToggleCommentForm(FieldId, bool),
+    EditComment(FieldId, i32),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -136,6 +137,10 @@ pub enum Msg {
     // issues
     AddIssue,
     DeleteIssue(IssueId),
+
+    // comments
+    SaveComment,
+    DeleteComment(CommentId),
 
     // modals
     ModalOpened(ModalType),
