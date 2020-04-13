@@ -1,3 +1,4 @@
+use chrono::NaiveDateTime;
 use seed::{prelude::*, *};
 
 use jirs_data::*;
@@ -241,15 +242,28 @@ fn project_board_lists(model: &Model) -> Node<Msg> {
 }
 
 fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg> {
+    let ids = if model.project_page.recently_updated_filter {
+        let mut v: Vec<(IssueId, NaiveDateTime)> = model
+            .issues
+            .iter()
+            .map(|issue| (issue.id, issue.updated_at.clone()))
+            .collect();
+        v.sort_by(|(_, a_time), (_, b_time)| a_time.cmp(b_time));
+        if v.len() > 10 { v[0..10].to_vec() } else { v }
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect()
+    } else {
+        model.issues.iter().map(|issue| issue.id).collect()
+    };
     let issues: Vec<Node<Msg>> = model
         .issues
         .iter()
         .filter(|issue| {
-            status == issue.status
-                && (model.project_page.text_filter.is_empty()
-                    || issue
-                        .title
-                        .contains(model.project_page.text_filter.as_str()))
+            issue_filter_status(issue, &status)
+                && issue_filter_with_text(issue, model.project_page.text_filter.as_str())
+                && issue_filter_with_only_my(issue, model.project_page.only_my_filter, &model.user)
+                && issue_filter_with_only_recent(issue, &ids)
         })
         .map(|issue| project_issue(model, issue))
         .collect();
@@ -281,6 +295,27 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
             issues
         ]
     ]
+}
+
+#[inline]
+fn issue_filter_status(issue: &Issue, status: &IssueStatus) -> bool {
+    &issue.status == status
+}
+
+#[inline]
+fn issue_filter_with_text(issue: &Issue, text: &str) -> bool {
+    text.is_empty() || issue.title.contains(text)
+}
+
+#[inline]
+fn issue_filter_with_only_my(issue: &Issue, only_my: bool, user: &Option<User>) -> bool {
+    let my_id = user.as_ref().map(|u| u.id).unwrap_or_default();
+    !only_my || issue.user_ids.contains(&my_id)
+}
+
+#[inline]
+fn issue_filter_with_only_recent(issue: &Issue, ids: &Vec<IssueId>) -> bool {
+    ids.is_empty() || ids.contains(&issue.id)
 }
 
 fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
