@@ -42,7 +42,7 @@ pub fn inner_layout(
 ) -> Node<Msg> {
     article![
         modal_node,
-        attrs![At::Class => "inner-layout"],
+        class!["inner-layout", "innerPage"],
         id![page_name],
         navbar_left::render(model),
         aside::render(model),

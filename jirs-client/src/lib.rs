@@ -50,6 +50,14 @@ pub enum AddIssueModalFieldId {
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum ProjectSettingsFieldId {
+    Name,
+    Url,
+    Description,
+    Category,
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum FieldId {
     // issue
     AddIssueModal(AddIssueModalFieldId),
@@ -57,6 +65,8 @@ pub enum FieldId {
     // project boards
     TextFilterBoard,
     CopyButtonLabel,
+
+    ProjectSettings(ProjectSettingsFieldId),
 }
 
 impl std::fmt::Display for FieldId {
@@ -85,6 +95,12 @@ impl std::fmt::Display for FieldId {
             },
             FieldId::TextFilterBoard => f.write_str("textFilterBoard"),
             FieldId::CopyButtonLabel => f.write_str("copyButtonLabel"),
+            FieldId::ProjectSettings(sub) => match sub {
+                ProjectSettingsFieldId::Name => f.write_str("projectSettings-name"),
+                ProjectSettingsFieldId::Url => f.write_str("projectSettings-url"),
+                ProjectSettingsFieldId::Description => f.write_str("projectSettings-description"),
+                ProjectSettingsFieldId::Category => f.write_str("projectSettings-category"),
+            },
         }
     }
 }

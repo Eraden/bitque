@@ -1,0 +1,3 @@
+.innerPage {
+    padding: 25px 32px 50px calc(var(--appNavBarLeftWidth) + var(--secondarySideBarWidth) + 40px);
+}
