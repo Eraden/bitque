@@ -36,5 +36,6 @@ export const SectionTitle = styled.div`
   text-transform: uppercase;
   color: ${color.textMedium};
   font-size: 12.5px
-  font-family: "CircularStdBold"; font-weight: normal
+  font-family: "CircularStdBold";
+  font-weight: normal;
 `;

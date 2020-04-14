@@ -8,7 +8,7 @@ use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_editor::StyledEditor;
 use crate::shared::styled_field::StyledField;
-use crate::shared::styled_icon::Icon;
+use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
 use crate::shared::styled_select_child::ToStyledSelectChild;
@@ -593,12 +593,86 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
+    let tracking = tracking_widget(model, modal);
+    let tracking_field = StyledField::build()
+        .label("TIME TRACKING")
+        .tip("")
+        .input(tracking)
+        .build()
+        .into_node();
+
     div![
         attrs![At::Class => "right"],
         status_field,
         assignees_field,
         reporter_field,
         priority_field,
-        estimate_field
+        estimate_field,
+        tracking_field,
     ]
+}
+
+fn tracking_widget(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
+    let EditIssueModal {
+        id,
+        payload:
+            UpdateIssuePayload {
+                estimate,
+                time_spent,
+                time_remaining,
+                ..
+            },
+        ..
+    } = modal;
+
+    let issue_id = *id;
+
+    let icon = StyledIcon::build(Icon::Stopwatch)
+        .add_class("watchIcon")
+        .size(32)
+        .build()
+        .into_node();
+
+    let bar_width = calc_bar_width(estimate, time_spent, time_remaining);
+    let handler = mouse_ev(Ev::Click, move |_| {
+        Msg::ModalOpened(ModalType::TimeTracking(issue_id))
+    });
+
+    div![
+        class!["trackingLink"],
+        handler,
+        div![
+            class!["trackingWidget"],
+            icon,
+            div![
+                class!["right"],
+                div![
+                    class!["barCounter"],
+                    div![
+                        class!["bar"],
+                        attrs![At::Style => format!("width: {}%", bar_width)]
+                    ]
+                ]
+            ]
+        ],
+    ]
+}
+
+#[inline]
+fn calc_bar_width(
+    estimate: &Option<i32>,
+    time_spent: &Option<i32>,
+    time_remaining: &Option<i32>,
+) -> f64 {
+    match (estimate, time_spent, time_remaining) {
+        (Some(estimate), Some(spent), _) => {
+            ((*spent as f64 / *estimate as f64) * 100f64).max(100f64)
+        }
+        (_, Some(spent), Some(remaining)) => {
+            (*spent as f64 / (*spent as f64 + *remaining as f64)) * 100f64
+        }
+        (None, None, _) => 100f64,
+        (None, _, _) => 0f64,
+        _ => 0f64,
+    }
 }

@@ -1,0 +1,20 @@
+.timeTrackingModal {
+    padding: 20px 25px 25px;
+}
+
+.timeTrackingModal > .modalTitle {
+    padding-bottom: 14px;
+    font-family: var(--font-medium);
+    font-weight: normal;
+    font-size: 20px
+}
+
+.timeTrackingModal > .inputs {
+    display: flex;
+    margin: 20px -5px 30px;
+}
+
+.timeTrackingModal > .inputs > .inputContainer {
+    margin: 0 5px;
+    width: 50%;
+}

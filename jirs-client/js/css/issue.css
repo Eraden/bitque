@@ -3,6 +3,9 @@
     padding: 0 30px 60px;
 }
 
+/*===================================================*/
+/*              LEFT                                 */
+/*===================================================*/
 .issueDetails > .content > .left {
     width: 65%;
     padding-right: 50px;
@@ -108,11 +111,56 @@
     margin-right: 6px;
 }
 
+/*===================================================*/
+/*              RIGHT                                */
+/*===================================================*/
 .issueDetails > .content > .right {
     width: 35%;
     padding-top: 5px;
 }
 
+.issueDetails > .content > .right > .styledField > .trackingLink {
+    padding: 4px 4px 2px 0;
+    border-radius: 4px;
+    transition: background 0.1s;
+    cursor: pointer;
+    user-select: none;
+}
+
+.issueDetails > .content > .right > .styledField > .trackingLink:hover {
+    background: var(--backgroundLight);
+}
+
+.issueDetails > .content > .right > .styledField > .trackingLink > .trackingWidget {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.issueDetails > .content > .right > .styledField > .trackingLink > .trackingWidget > .watchIcon {
+    color: var(--textMedium);
+}
+
+.issueDetails > .content > .right > .styledField > .trackingLink > .trackingWidget > .right {
+    width: 90%;
+}
+
+.issueDetails > .content > .right > .styledField > .trackingLink > .trackingWidget > .right > .barCounter {
+    height: 5px;
+    border-radius: 4px;
+    background: var(--backgroundMedium);
+}
+
+.issueDetails > .content > .right > .styledField > .trackingLink > .trackingWidget > .right > .barCounter > .bar {
+    height: 5px;
+    border-radius: 4px;
+    background: var(--primary);
+    transition: all 0.1s;
+}
+
+/*===================================================*/
+/*              TOP ACTIONS                          */
+/*===================================================*/
 .issueDetails > .topActions {
     display: flex;
     justify-content: space-between;

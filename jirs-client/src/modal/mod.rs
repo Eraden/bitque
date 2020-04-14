@@ -12,6 +12,7 @@ use crate::{model, FieldChange, FieldId, Msg};
 mod add_issue;
 mod confirm_delete_issue;
 mod issue_details;
+mod time_tracking;
 
 pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -88,6 +89,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                     .build()
                     .into_node()
             }
+            ModalType::TimeTracking(issue_id) => time_tracking::view(model, *issue_id),
         })
         .collect();
     section![id!["modals"], modals]

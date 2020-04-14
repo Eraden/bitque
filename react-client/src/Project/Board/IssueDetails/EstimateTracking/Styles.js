@@ -7,7 +7,7 @@ export const TrackingLink = styled.div`
   border-radius: 4px;
   transition: background 0.1s;
   cursor: pointer;
-    user-select: none;
+  user-select: none;
   &:hover {
     background: ${color.backgroundLight};
   }
@@ -19,7 +19,8 @@ export const ModalContents = styled.div`
 
 export const ModalTitle = styled.div`
   padding-bottom: 14px;
-  ${ font.medium };font-weight: normal;
+  ${ font.medium };
+  font-weight: normal;
   font-size: 20px
 `;
 

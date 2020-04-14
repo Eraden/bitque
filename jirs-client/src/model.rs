@@ -15,6 +15,7 @@ pub enum ModalType {
     EditIssue(IssueId, EditIssueModal),
     DeleteIssueConfirm(IssueId),
     DeleteCommentConfirm(CommentId),
+    TimeTracking(IssueId),
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
