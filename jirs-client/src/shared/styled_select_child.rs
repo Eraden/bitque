@@ -217,7 +217,7 @@ impl ToStyledSelectChild for jirs_data::IssueStatus {
 
         StyledSelectChild::build()
             .value(self.clone().into())
-            .add_class(text.clone())
+            .add_class(text)
             .text(text)
     }
 }
@@ -235,6 +235,17 @@ impl ToStyledSelectChild for jirs_data::IssueType {
             .add_class(name.as_str())
             .text(name)
             .icon(type_icon)
+            .value(self.clone().into())
+    }
+}
+
+impl ToStyledSelectChild for jirs_data::ProjectCategory {
+    fn to_select_child(&self) -> StyledSelectChildBuilder {
+        let name = self.to_string();
+
+        StyledSelectChild::build()
+            .add_class(name.as_str())
+            .text(name)
             .value(self.clone().into())
     }
 }

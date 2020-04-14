@@ -38,7 +38,7 @@ pub struct StyledConfirmModalBuilder {
     message: Option<String>,
     confirm_text: Option<String>,
     cancel_text: Option<String>,
-    on_confirm: Option<Option<EventHandler<Msg>>>,
+    on_confirm: Option<EventHandler<Msg>>,
 }
 
 impl StyledConfirmModalBuilder {
@@ -75,7 +75,7 @@ impl StyledConfirmModalBuilder {
     }
 
     pub fn on_confirm(mut self, on_confirm: EventHandler<Msg>) -> Self {
-        self.on_confirm = Some(Some(on_confirm));
+        self.on_confirm = Some(on_confirm);
         self
     }
 
@@ -87,7 +87,7 @@ impl StyledConfirmModalBuilder {
                 .confirm_text
                 .unwrap_or_else(|| CONFIRM_TEXT.to_string()),
             cancel_text: self.cancel_text.unwrap_or_else(|| CANCEL_TEXT.to_string()),
-            on_confirm: self.on_confirm.unwrap_or_default(),
+            on_confirm: self.on_confirm,
         }
     }
 }

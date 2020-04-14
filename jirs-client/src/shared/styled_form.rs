@@ -54,8 +54,8 @@ pub fn render(values: StyledForm) -> Node<Msg> {
     div![
         attrs![At::Class => "styledForm"],
         div![
-            attrs![At::Class => "formElement"],
-            div![attrs![At::Class => "formHeading"], heading],
+            class!["formElement"],
+            div![class!["formHeading"], heading],
             fields
         ],
     ]

@@ -30,6 +30,7 @@ import("../pkg/index.js").then(module => {
     buildWebSocket();
 
     window.send_bin_code = code => queue.push(code);
+    window.inspectQueue = () => queue;
 
     let wsCheckDelay = 100;
     const flush = () => {

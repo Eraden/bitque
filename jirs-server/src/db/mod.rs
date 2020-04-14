@@ -23,8 +23,8 @@ impl Actor for DbExecutor {
     type Context = SyncContext<Self>;
 }
 
-impl DbExecutor {
-    pub fn new() -> Self {
+impl Default for DbExecutor {
+    fn default() -> Self {
         Self(build_pool())
     }
 }
@@ -37,7 +37,7 @@ pub fn build_pool() -> DbPool {
     let manager = ConnectionManager::<PgConnection>::new(database_url.clone());
     #[cfg(debug_assertions)]
     let manager: ConnectionManager<VerboseConnection> =
-        ConnectionManager::<dev::VerboseConnection>::new(database_url.clone());
+        ConnectionManager::<dev::VerboseConnection>::new(database_url.as_str());
     r2d2::Pool::builder()
         .build(manager)
         .unwrap_or_else(|e| panic!("Failed to create pool. {}", e))

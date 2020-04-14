@@ -1,0 +1,13 @@
+#projectSettings > .formContainer {
+    display: flex;
+    justify-content: center;
+}
+
+#projectSettings > .formContainer .styledForm {
+    max-width: 720px;
+    width: 100%;
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .actionButton {
+    margin-top: 30px;
+}

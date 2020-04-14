@@ -2,6 +2,8 @@ use actix::{Handler, Message};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use jirs_data::ProjectCategory;
+
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 use crate::models::Project;
@@ -25,8 +27,14 @@ impl Handler<LoadCurrentProject> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
-        projects
-            .filter(id.eq(msg.project_id))
+        let query = projects.filter(id.eq(msg.project_id));
+
+        debug!(
+            "{}",
+            diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
+        );
+
+        query
             .first::<Project>(conn)
             .map_err(|_| ServiceErrors::RecordNotFound("Project".to_string()))
     }
@@ -38,7 +46,7 @@ pub struct UpdateProject {
     pub name: Option<String>,
     pub url: Option<String>,
     pub description: Option<String>,
-    pub category: Option<String>,
+    pub category: Option<ProjectCategory>,
 }
 
 impl Message for UpdateProject {

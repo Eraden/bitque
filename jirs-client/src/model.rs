@@ -7,7 +7,9 @@ use jirs_data::*;
 
 use crate::shared::styled_editor::Mode;
 use crate::shared::styled_select::StyledSelectState;
-use crate::{AddIssueModalFieldId, EditIssueModalFieldId, FieldId, HOST_URL};
+use crate::{
+    AddIssueModalFieldId, EditIssueModalFieldId, FieldId, ProjectSettingsFieldId, HOST_URL,
+};
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum ModalType {
@@ -52,14 +54,14 @@ impl EditIssueModal {
                 issue_type: issue.issue_type.clone(),
                 status: issue.status.clone(),
                 priority: issue.priority.clone(),
-                list_position: issue.list_position.clone(),
+                list_position: issue.list_position,
                 description: issue.description.clone(),
                 description_text: issue.description_text.clone(),
-                estimate: issue.estimate.clone(),
-                time_spent: issue.time_spent.clone(),
-                time_remaining: issue.time_remaining.clone(),
-                project_id: issue.project_id.clone(),
-                reporter_id: issue.reporter_id.clone(),
+                estimate: issue.estimate,
+                time_spent: issue.time_spent,
+                time_remaining: issue.time_remaining,
+                project_id: issue.project_id,
+                reporter_id: issue.reporter_id,
                 user_ids: issue.user_ids.clone(),
             },
             top_type_state: StyledSelectState::new(FieldId::EditIssueModal(
@@ -151,11 +153,11 @@ pub enum Page {
 }
 
 impl Page {
-    pub fn to_path(&self) -> String {
+    pub fn to_path(self) -> String {
         match self {
             Page::Project => "/board".to_string(),
             Page::EditIssue(id) => format!("/issues/{id}", id = id),
-            Page::AddIssue => format!("/add-issues"),
+            Page::AddIssue => "/add-issues".to_string(),
             Page::ProjectSettings => "/project-settings".to_string(),
             Page::Login => "/login".to_string(),
             Page::Register => "/register".to_string(),
@@ -193,7 +195,35 @@ pub struct ProjectPage {
 #[derive(Debug)]
 pub struct ProjectSettingsPage {
     pub payload: UpdateProjectPayload,
-    pub project_type_state: StyledSelectState,
+    pub project_category_state: StyledSelectState,
+    pub description_mode: crate::shared::styled_editor::Mode,
+}
+
+impl ProjectSettingsPage {
+    pub fn new(project: &Project) -> Self {
+        use crate::shared::styled_editor::Mode as EditorMode;
+        let jirs_data::Project {
+            id,
+            name,
+            url,
+            description,
+            category,
+            ..
+        } = project;
+        Self {
+            payload: UpdateProjectPayload {
+                id: *id,
+                name: Some(name.clone()),
+                url: Some(url.clone()),
+                description: Some(description.clone()),
+                category: Some(category.clone()),
+            },
+            description_mode: EditorMode::View,
+            project_category_state: StyledSelectState::new(FieldId::ProjectSettings(
+                ProjectSettingsFieldId::Category,
+            )),
+        }
+    }
 }
 
 #[derive(Debug)]

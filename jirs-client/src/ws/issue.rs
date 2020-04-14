@@ -150,7 +150,7 @@ pub fn change_status(status: IssueStatus, model: &mut Model) {
         model.issues.push(issue);
         return;
     }
-    issue.status = status.clone();
+    issue.status = status;
     issue.list_position = pos + 1;
     model.issues.push(issue);
 

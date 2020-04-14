@@ -14,7 +14,10 @@ pub fn render(model: &Model) -> Node<Msg> {
             div![
                 attrs![At::Class => "projectTexts";],
                 div![attrs![At::Class => "projectName";], project.name],
-                div![attrs![At::Class => "projectCategory";], project.category]
+                div![
+                    attrs![At::Class => "projectCategory";],
+                    project.category.to_string()
+                ]
             ],
         ],
         _ => li![
@@ -50,7 +53,7 @@ pub fn render(model: &Model) -> Node<Msg> {
 fn sidebar_link_item(model: &Model, name: &str, icon: Icon, page: Option<Page>) -> Node<Msg> {
     let path = page.map(|ref p| p.to_path()).unwrap_or_default();
     let mut class_list = vec!["linkItem".to_string(), icon.to_string()];
-    if let None = page {
+    if page.is_none() {
         class_list.push("notAllowed".to_string());
     };
     if Some(model.page) == page {

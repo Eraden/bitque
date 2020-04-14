@@ -112,8 +112,8 @@ impl StyledSelect {
 pub struct StyledSelectBuilder {
     id: FieldId,
     variant: Option<Variant>,
-    dropdown_width: Option<Option<usize>>,
-    name: Option<Option<String>>,
+    dropdown_width: Option<usize>,
+    name: Option<String>,
     valid: Option<bool>,
     is_multi: Option<bool>,
     allow_clear: Option<bool>,
@@ -128,8 +128,8 @@ impl StyledSelectBuilder {
         StyledSelect {
             id: self.id,
             variant: self.variant.unwrap_or_default(),
-            dropdown_width: self.dropdown_width.unwrap_or_default(),
-            name: self.name.unwrap_or_default(),
+            dropdown_width: self.dropdown_width,
+            name: self.name,
             valid: self.valid.unwrap_or(true),
             is_multi: self.is_multi.unwrap_or_default(),
             allow_clear: self.allow_clear.unwrap_or_default(),
@@ -141,7 +141,7 @@ impl StyledSelectBuilder {
     }
 
     pub fn dropdown_width(mut self, dropdown_width: usize) -> Self {
-        self.dropdown_width = Some(Some(dropdown_width));
+        self.dropdown_width = Some(dropdown_width);
         self
     }
 
@@ -149,7 +149,7 @@ impl StyledSelectBuilder {
     where
         S: Into<String>,
     {
-        self.name = Some(Some(name.into()));
+        self.name = Some(name.into());
         self
     }
 
@@ -224,19 +224,20 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
 
     let dropdown_style = dropdown_width
         .map(|n| format!("width: {}px;", n))
-        .unwrap_or_else(|| format!("width: 100%;"));
+        .unwrap_or_else(|| "width: 100%;".to_string());
 
     let mut select_class = vec!["styledSelect".to_string(), format!("{}", variant)];
     if !valid {
         select_class.push("invalid".to_string());
     }
 
-    let chevron_down = match (selected.is_empty() || !is_multi) && variant != Variant::Empty {
-        true => StyledIcon::build(Icon::ChevronDown)
+    let chevron_down = if (selected.is_empty() || !is_multi) && variant != Variant::Empty {
+        StyledIcon::build(Icon::ChevronDown)
             .add_class("chevronIcon")
             .build()
-            .into_node(),
-        _ => empty![],
+            .into_node()
+    } else {
+        empty![]
     };
 
     let children: Vec<Node<Msg>> = options
@@ -259,8 +260,8 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
         })
         .collect();
 
-    let text_input = match opened {
-        true => seed::input![
+    let text_input = if opened {
+        seed::input![
             attrs![
                 At::Name => name.unwrap_or_default(),
                 At::Class => "dropDownInput",
@@ -268,9 +269,10 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
                 At::Placeholder => "Search"
                 At::AutoFocus => "true",
             ],
-            on_text.clone(),
-        ],
-        _ => empty![],
+            on_text,
+        ]
+    } else {
+        empty![]
     };
 
     let clear_icon = match (opened, allow_clear) {

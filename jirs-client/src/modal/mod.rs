@@ -33,18 +33,18 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         }
 
         Msg::ModalOpened(modal_type) => {
-            model.modals.push(modal_type.clone());
+            model.modals.push(modal_type.as_ref().clone());
         }
 
-        Msg::WsMsg(jirs_data::WsMsg::ProjectIssuesLoaded(_issues)) => match model.page.clone() {
+        Msg::WsMsg(jirs_data::WsMsg::ProjectIssuesLoaded(_issues)) => match model.page {
             Page::EditIssue(issue_id) if model.modals.is_empty() => {
-                push_edit_modal(&issue_id, model)
+                push_edit_modal(issue_id, model)
             }
             _ => (),
         },
 
         Msg::ChangePage(Page::EditIssue(issue_id)) => {
-            push_edit_modal(issue_id, model);
+            push_edit_modal(*issue_id, model);
         }
 
         Msg::ChangePage(Page::AddIssue) => {
@@ -95,14 +95,14 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     section![id!["modals"], modals]
 }
 
-fn push_edit_modal(issue_id: &i32, model: &mut Model) {
+fn push_edit_modal(issue_id: i32, model: &mut Model) {
     let modal = {
-        let issue = match find_issue(model, *issue_id) {
+        let issue = match find_issue(model, issue_id) {
             Some(issue) => issue,
             _ => return,
         };
-        ModalType::EditIssue(*issue_id, EditIssueModal::new(issue))
+        ModalType::EditIssue(issue_id, EditIssueModal::new(issue))
     };
-    send_ws_msg(WsMsg::IssueCommentsRequest(issue_id.clone()));
+    send_ws_msg(WsMsg::IssueCommentsRequest(issue_id));
     model.modals.push(modal);
 }

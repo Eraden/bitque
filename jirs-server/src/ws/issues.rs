@@ -25,11 +25,11 @@ pub async fn update_issue(
             status: Some(payload.status),
             priority: Some(payload.priority),
             list_position: Some(payload.list_position),
-            description: Some(payload.description),
-            description_text: Some(payload.description_text),
-            estimate: Some(payload.estimate),
-            time_spent: Some(payload.time_spent),
-            time_remaining: Some(payload.time_remaining),
+            description: payload.description,
+            description_text: payload.description_text,
+            estimate: payload.estimate,
+            time_spent: payload.time_spent,
+            time_remaining: payload.time_remaining,
             project_id: Some(payload.project_id),
             user_ids: Some(payload.user_ids),
             reporter_id: Some(payload.reporter_id),
@@ -40,12 +40,7 @@ pub async fn update_issue(
         _ => return Ok(None),
     };
 
-    let assignees = match db
-        .send(LoadAssignees {
-            issue_id: issue.id.clone(),
-        })
-        .await
-    {
+    let assignees = match db.send(LoadAssignees { issue_id: issue.id }).await {
         Ok(Ok(v)) => v,
         _ => vec![],
     };
@@ -53,7 +48,7 @@ pub async fn update_issue(
         issue.user_ids.push(assignee.user_id);
     }
 
-    Ok(Some(WsMsg::IssueUpdated(issue.into())))
+    Ok(Some(WsMsg::IssueUpdated(issue)))
 }
 
 pub async fn add_issue(
@@ -109,22 +104,17 @@ pub async fn load_issues(db: &Data<Addr<DbExecutor>>, user: &Option<jirs_data::U
     let mut issue_map = HashMap::new();
     let mut queue = vec![];
     for issue in issues.into_iter() {
-        let f = db.send(LoadAssignees {
-            issue_id: issue.id.clone(),
-        });
+        let f = db.send(LoadAssignees { issue_id: issue.id });
         queue.push(f);
-        issue_map.insert(issue.id.clone(), issue);
+        issue_map.insert(issue.id, issue);
     }
     for f in queue {
-        match f.await {
-            Ok(Ok(assignees)) => {
-                for assignee in assignees {
-                    if let Some(issue) = issue_map.get_mut(&assignee.issue_id) {
-                        issue.user_ids.push(assignee.user_id);
-                    }
+        if let Ok(Ok(assignees)) = f.await {
+            for assignee in assignees {
+                if let Some(issue) = issue_map.get_mut(&assignee.issue_id) {
+                    issue.user_ids.push(assignee.user_id);
                 }
             }
-            _ => {}
         };
     }
     let mut issues = vec![];

@@ -25,7 +25,7 @@ async fn main() -> Result<(), String> {
     let bind = std::env::var("JIRS_SERVER_BIND").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = format!("{}:{}", bind, port);
 
-    let db_addr = actix::SyncArbiter::start(4, || crate::db::DbExecutor::new());
+    let db_addr = actix::SyncArbiter::start(4, crate::db::DbExecutor::default);
 
     HttpServer::new(move || {
         App::new()

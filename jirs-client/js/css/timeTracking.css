@@ -1,3 +1,50 @@
+.trackingLink {
+    padding: 4px 4px 2px 0;
+    border-radius: 4px;
+    transition: background 0.1s;
+    cursor: pointer;
+    user-select: none;
+}
+
+.trackingLink:hover {
+    background: var(--backgroundLight);
+}
+
+.trackingWidget {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.trackingWidget > .watchIcon {
+    color: var(--textMedium);
+}
+
+.trackingWidget > .right {
+    width: 90%;
+}
+
+.trackingWidget > .right > .barCounter {
+    height: 5px;
+    border-radius: 4px;
+    background: var(--backgroundMedium);
+}
+
+.trackingWidget > .right > .barCounter > .bar {
+    height: 5px;
+    border-radius: 4px;
+    background: var(--primary);
+    transition: all 0.1s;
+}
+
+.trackingWidget > .right > .values {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 3px;
+    font-size: 14.5px;
+}
+
+/*MODAL*/
 .timeTrackingModal {
     padding: 20px 25px 25px;
 }
@@ -6,7 +53,11 @@
     padding-bottom: 14px;
     font-family: var(--font-medium);
     font-weight: normal;
-    font-size: 20px
+    font-size: 20px;
+}
+
+.timeTrackingModal > .trackingWidget {
+    width: 100%;
 }
 
 .timeTrackingModal > .inputs {
@@ -17,4 +68,9 @@
 .timeTrackingModal > .inputs > .inputContainer {
     margin: 0 5px;
     width: 50%;
+}
+
+.timeTrackingModal > .actions {
+    display: flex;
+    justify-content: flex-end;
 }

@@ -12,6 +12,7 @@ pub struct StyledTextarea {
     class_list: Vec<String>,
     update_event: Ev,
     placeholder: Option<String>,
+    disable_auto_resize: bool,
 }
 
 impl ToNode for StyledTextarea {
@@ -35,6 +36,7 @@ pub struct StyledTextareaBuilder {
     class_list: Vec<String>,
     update_event: Option<Ev>,
     placeholder: Option<String>,
+    disable_auto_resize: bool,
 }
 
 impl StyledTextareaBuilder {
@@ -81,6 +83,11 @@ impl StyledTextareaBuilder {
         self
     }
 
+    pub fn disable_auto_resize(mut self) -> Self {
+        self.disable_auto_resize = true;
+        self
+    }
+
     #[inline]
     pub fn build(self, id: FieldId) -> StyledTextarea {
         StyledTextarea {
@@ -91,6 +98,7 @@ impl StyledTextareaBuilder {
             max_height: self.max_height.unwrap_or_default(),
             update_event: self.update_event.unwrap_or_else(|| Ev::KeyUp),
             placeholder: self.placeholder,
+            disable_auto_resize: self.disable_auto_resize,
         }
     }
 }
@@ -117,10 +125,11 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         mut class_list,
         update_event,
         placeholder,
+        disable_auto_resize,
     } = values;
     let mut style_list = vec![];
 
-    let min_height = get_min_height(value.as_str(), height as f64);
+    let min_height = get_min_height(value.as_str(), height as f64, disable_auto_resize);
     if min_height > 0f64 {
         style_list.push(format!("min-height: {}px", min_height));
     }
@@ -129,8 +138,13 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         style_list.push(format!("max-height: {}px", max_height));
     }
 
+    if disable_auto_resize {
+        style_list.push("resize: none".to_string());
+    }
+
     let mut handlers = vec![];
 
+    let handler_disable_auto_resize = disable_auto_resize;
     let resize_handler = ev(Ev::KeyUp, move |event| {
         use wasm_bindgen::JsCast;
 
@@ -140,7 +154,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         };
         let text_area = target.dyn_ref::<web_sys::HtmlTextAreaElement>().unwrap();
         let value: String = text_area.value();
-        let min_height = get_min_height(value.as_str(), height as f64);
+        let min_height = get_min_height(value.as_str(), height as f64, handler_disable_auto_resize);
 
         text_area
             .style()
@@ -148,11 +162,9 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         Msg::NoOp
     });
     handlers.push(resize_handler);
-    let text_input_handler = input_ev(update_event.clone(), move |value| {
-        Msg::InputChanged(id, value)
-    });
+    let text_input_handler = input_ev(update_event, move |value| Msg::InputChanged(id, value));
     handlers.push(text_input_handler);
-    handlers.push(keyboard_ev(Ev::KeyUp, |ev| {
+    handlers.push(keyboard_ev(Ev::Input, |ev| {
         ev.stop_propagation();
         Msg::NoOp
     }));
@@ -175,9 +187,12 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
     ]
 }
 
-fn get_min_height(value: &str, min_height: f64) -> f64 {
+fn get_min_height(value: &str, min_height: f64, disable_auto_resize: bool) -> f64 {
+    if disable_auto_resize {
+        return min_height;
+    }
     let len = value.lines().count() as f64;
-    if value.chars().last() == Some('\n') {}
+    // if value.chars().last() == Some('\n') {}
 
     let calc_height = (len * LETTER_HEIGHT) + ADDITIONAL_HEIGHT;
     if calc_height + ADDITIONAL_HEIGHT < min_height {

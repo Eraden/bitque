@@ -26,7 +26,6 @@ pub type TokenId = i32;
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
-#[serde(rename_all = "lowercase")]
 pub enum IssueType {
     Task,
     Bug,
@@ -248,6 +247,77 @@ impl Into<IssuePriority> for u32 {
     }
 }
 
+#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
+#[cfg_attr(feature = "backend", sql_type = "ProjectCategoryType")]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
+pub enum ProjectCategory {
+    Software,
+    Marketing,
+    Business,
+}
+
+impl ToVec for ProjectCategory {
+    type Item = ProjectCategory;
+
+    fn ordered() -> Vec<Self> {
+        vec![
+            ProjectCategory::Software,
+            ProjectCategory::Marketing,
+            ProjectCategory::Business,
+        ]
+    }
+}
+
+impl FromStr for ProjectCategory {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().trim() {
+            "software" => Ok(ProjectCategory::Software),
+            "marketing" => Ok(ProjectCategory::Marketing),
+            "business" => Ok(ProjectCategory::Business),
+            _ => Err(format!("Unknown project category {}", s)),
+        }
+    }
+}
+
+impl Default for ProjectCategory {
+    fn default() -> Self {
+        ProjectCategory::Software
+    }
+}
+
+impl std::fmt::Display for ProjectCategory {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProjectCategory::Software => f.write_str("software"),
+            ProjectCategory::Marketing => f.write_str("marketing"),
+            ProjectCategory::Business => f.write_str("business"),
+        }
+    }
+}
+
+impl Into<u32> for ProjectCategory {
+    fn into(self) -> u32 {
+        match self {
+            ProjectCategory::Software => 0,
+            ProjectCategory::Marketing => 1,
+            ProjectCategory::Business => 2,
+        }
+    }
+}
+
+impl Into<ProjectCategory> for u32 {
+    fn into(self) -> ProjectCategory {
+        match self {
+            0 => ProjectCategory::Software,
+            1 => ProjectCategory::Marketing,
+            2 => ProjectCategory::Business,
+            _ => ProjectCategory::Software,
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Debug, PartialEq)]
 pub struct ErrorResponse {
     pub errors: Vec<String>,
@@ -259,7 +329,7 @@ pub struct Project {
     pub name: String,
     pub url: String,
     pub description: String,
-    pub category: String,
+    pub category: ProjectCategory,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -382,12 +452,13 @@ pub struct CreateIssuePayload {
     pub reporter_id: UserId,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct UpdateProjectPayload {
+    pub id: ProjectId,
     pub name: Option<String>,
     pub url: Option<String>,
     pub description: Option<String>,
-    pub category: Option<String>,
+    pub category: Option<ProjectCategory>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -407,6 +478,7 @@ pub enum WsMsg {
     ProjectIssuesLoaded(Vec<Issue>),
     ProjectUsersRequest,
     ProjectUsersLoaded(Vec<User>),
+    ProjectUpdateRequest(UpdateProjectPayload),
 
     // issue
     IssueUpdateRequest(IssueId, UpdateIssuePayload),

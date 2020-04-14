@@ -21,6 +21,7 @@ pub mod styled_select;
 pub mod styled_select_child;
 pub mod styled_textarea;
 pub mod styled_tooltip;
+pub mod tracking_widget;
 
 pub fn find_issue(model: &Model, issue_id: IssueId) -> Option<&Issue> {
     model.issues.iter().find(|issue| issue.id == issue_id)

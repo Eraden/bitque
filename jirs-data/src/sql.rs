@@ -2,7 +2,7 @@ use std::io::Write;
 
 use diesel::{deserialize::*, pg::*, serialize::*, *};
 
-use crate::{IssuePriority, IssueStatus, IssueType};
+use crate::{IssuePriority, IssueStatus, IssueType, ProjectCategory};
 
 #[derive(SqlType)]
 #[postgres(type_name = "IssuePriorityType")]
@@ -117,6 +117,48 @@ impl ToSql<IssueStatusType, Pg> for IssueStatus {
             IssueStatus::Selected => out.write_all(b"selected")?,
             IssueStatus::InProgress => out.write_all(b"in_progress")?,
             IssueStatus::Done => out.write_all(b"done")?,
+        }
+        Ok(IsNull::No)
+    }
+}
+
+///////////
+
+#[derive(SqlType)]
+#[postgres(type_name = "ProjectCategoryType")]
+pub struct ProjectCategoryType;
+
+impl diesel::query_builder::QueryId for ProjectCategoryType {
+    type QueryId = IssueStatus;
+}
+
+fn project_category_from_sql(bytes: Option<&[u8]>) -> deserialize::Result<ProjectCategory> {
+    match not_none!(bytes) {
+        b"software" => Ok(ProjectCategory::Software),
+        b"marketing" => Ok(ProjectCategory::Marketing),
+        b"business" => Ok(ProjectCategory::Business),
+        _ => Ok(ProjectCategory::Software),
+    }
+}
+
+impl FromSql<ProjectCategoryType, Pg> for ProjectCategory {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        project_category_from_sql(bytes)
+    }
+}
+
+impl FromSql<sql_types::Text, Pg> for ProjectCategory {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        project_category_from_sql(bytes)
+    }
+}
+
+impl ToSql<ProjectCategoryType, Pg> for ProjectCategory {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        match *self {
+            ProjectCategory::Software => out.write_all(b"software")?,
+            ProjectCategory::Marketing => out.write_all(b"marketing")?,
+            ProjectCategory::Business => out.write_all(b"business")?,
         }
         Ok(IsNull::No)
     }

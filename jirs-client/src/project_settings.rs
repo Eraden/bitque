@@ -1,18 +1,92 @@
 use seed::{prelude::*, *};
 
+use jirs_data::{ProjectCategory, ToVec, WsMsg};
+
+use crate::api::send_ws_msg;
+use crate::model::{Model, Page, PageContent, ProjectSettingsPage};
+use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_editor::StyledEditor;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
-use crate::shared::styled_input::StyledInput;
+use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
+use crate::shared::styled_select_child::ToStyledSelectChild;
+use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::{inner_layout, ToNode};
+use crate::FieldChange::TabChanged;
 use crate::{model, FieldId, Msg, ProjectSettingsFieldId};
 
-pub fn update(_msg: Msg, _model: &mut model::Model, _orders: &mut impl Orders<Msg>) {}
+pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
+    if model.page != Page::ProjectSettings {
+        log!("not settings page");
+        return;
+    }
+
+    match msg {
+        Msg::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
+            send_ws_msg(WsMsg::ProjectRequest);
+        }
+        Msg::ChangePage(Page::ProjectSettings) => {
+            send_ws_msg(WsMsg::ProjectRequest);
+            build_page_content(model);
+        }
+        Msg::WsMsg(WsMsg::ProjectLoaded(..)) => {
+            build_page_content(model);
+        }
+        _ => (),
+    }
+
+    let page = match &mut model.page_content {
+        PageContent::ProjectSettings(page) => page,
+        _ => return,
+    };
+    page.project_category_state.update(&msg, orders);
+    match msg {
+        Msg::ProjectSaveChanges => send_ws_msg(WsMsg::ProjectUpdateRequest(page.payload.clone())),
+        Msg::InputChanged(FieldId::ProjectSettings(ProjectSettingsFieldId::Name), text) => {
+            page.payload.name = Some(text);
+        }
+        Msg::InputChanged(FieldId::ProjectSettings(ProjectSettingsFieldId::Url), text) => {
+            page.payload.url = Some(text);
+        }
+        Msg::InputChanged(FieldId::ProjectSettings(ProjectSettingsFieldId::Description), text) => {
+            page.payload.description = Some(text);
+        }
+        Msg::StyledSelectChanged(
+            FieldId::ProjectSettings(ProjectSettingsFieldId::Category),
+            StyledSelectChange::Changed(value),
+        ) => {
+            let category = value.into();
+            page.payload.category = Some(category);
+        }
+        Msg::ModalChanged(TabChanged(
+            FieldId::ProjectSettings(ProjectSettingsFieldId::Description),
+            mode,
+        )) => {
+            page.description_mode = mode;
+        }
+        _ => (),
+    }
+}
+
+fn build_page_content(model: &mut Model) {
+    let project = match &model.project {
+        Some(project) => project,
+        _ => return,
+    };
+    model.page_content = PageContent::ProjectSettings(ProjectSettingsPage::new(project));
+}
 
 pub fn view(model: &model::Model) -> Node<Msg> {
-    let name = StyledInput::build(FieldId::ProjectSettings(ProjectSettingsFieldId::Name))
-        .valid(true)
-        .build()
+    let page = match &model.page_content {
+        PageContent::ProjectSettings(page) => page,
+        _ => return empty![],
+    };
+    let name = StyledTextarea::build()
+        .value(page.payload.name.as_ref().cloned().unwrap_or_default())
+        .height(39)
+        .max_height(39)
+        .disable_auto_resize()
+        .build(FieldId::ProjectSettings(ProjectSettingsFieldId::Name))
         .into_node();
     let name_field = StyledField::build()
         .label("Name")
@@ -21,9 +95,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let url = StyledInput::build(FieldId::ProjectSettings(ProjectSettingsFieldId::Url))
-        .valid(true)
-        .build()
+    let url = StyledTextarea::build()
+        .height(39)
+        .max_height(39)
+        .disable_auto_resize()
+        .value(page.payload.url.as_ref().cloned().unwrap_or_default())
+        .build(FieldId::ProjectSettings(ProjectSettingsFieldId::Url))
         .into_node();
     let url_field = StyledField::build()
         .label("Url")
@@ -35,8 +112,15 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     let description = StyledEditor::build(FieldId::ProjectSettings(
         ProjectSettingsFieldId::Description,
     ))
-    .text("")
+    .text(
+        page.payload
+            .description
+            .as_ref()
+            .cloned()
+            .unwrap_or_default(),
+    )
     .update_on(Ev::Change)
+    .mode(page.description_mode.clone())
     .build()
     .into_node();
     let description_field = StyledField::build()
@@ -46,15 +130,50 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
+    let category = StyledSelect::build(FieldId::ProjectSettings(ProjectSettingsFieldId::Category))
+        .opened(page.project_category_state.opened)
+        .text_filter(page.project_category_state.text_filter.as_str())
+        .valid(true)
+        .normal()
+        .options(
+            ProjectCategory::ordered()
+                .into_iter()
+                .map(|c| c.to_select_child())
+                .collect(),
+        )
+        .selected(vec![page
+            .payload
+            .category
+            .as_ref()
+            .cloned()
+            .unwrap_or_default()
+            .to_select_child()])
+        .build()
+        .into_node();
+    let category_field = StyledField::build()
+        .label("Project Category")
+        .input(category)
+        .build()
+        .into_node();
+
+    let save_button = StyledButton::build()
+        .add_class("actionButton")
+        .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectSaveChanges))
+        .text("Save changes")
+        .build()
+        .into_node();
+
     let form = StyledForm::build()
         .heading("Project Details")
         .add_field(name_field)
         .add_field(url_field)
         .add_field(description_field)
+        .add_field(category_field)
+        .add_field(save_button)
         .build()
         .into_node();
 
-    let project_section = vec![form];
+    let project_section = vec![div![class!["formContainer"], form]];
 
     inner_layout(model, "projectSettings", project_section, empty![])
 }

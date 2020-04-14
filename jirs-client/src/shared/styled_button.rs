@@ -30,9 +30,9 @@ pub struct StyledButtonBuilder {
     variant: Option<Variant>,
     disabled: Option<bool>,
     active: Option<bool>,
-    text: Option<Option<String>>,
-    icon: Option<Option<Node<Msg>>>,
-    on_click: Option<Option<EventHandler<Msg>>>,
+    text: Option<String>,
+    icon: Option<Node<Msg>>,
+    on_click: Option<EventHandler<Msg>>,
     children: Option<Vec<Node<Msg>>>,
     class_list: Vec<String>,
 }
@@ -77,7 +77,7 @@ impl StyledButtonBuilder {
     where
         S: Into<String>,
     {
-        self.text = Some(Some(value.into()));
+        self.text = Some(value.into());
         self
     }
 
@@ -85,12 +85,12 @@ impl StyledButtonBuilder {
     where
         I: ToNode,
     {
-        self.icon = Some(Some(value.into_node()));
+        self.icon = Some(value.into_node());
         self
     }
 
     pub fn on_click(mut self, value: EventHandler<Msg>) -> Self {
-        self.on_click = Some(Some(value));
+        self.on_click = Some(value);
         self
     }
 
@@ -112,9 +112,9 @@ impl StyledButtonBuilder {
             variant: self.variant.unwrap_or_else(|| Variant::Primary),
             disabled: self.disabled.unwrap_or_else(|| false),
             active: self.active.unwrap_or_else(|| false),
-            text: self.text.unwrap_or_default(),
-            icon: self.icon.unwrap_or_else(|| None),
-            on_click: self.on_click.unwrap_or_else(|| None),
+            text: self.text,
+            icon: self.icon,
+            on_click: self.on_click,
             children: self.children.unwrap_or_default(),
             class_list: self.class_list,
         }
@@ -187,9 +187,10 @@ pub fn render(values: StyledButton) -> Node<Msg> {
             At::Class => class_list.join(" "),
         ],
         handler,
-        match disabled {
-            true => vec![attrs![At::Disabled => true]],
-            false => vec![],
+        if disabled {
+            vec![attrs![At::Disabled => true]]
+        } else {
+            vec![]
         },
         icon_node,
         content,

@@ -8,11 +8,12 @@ use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_editor::StyledEditor;
 use crate::shared::styled_field::StyledField;
-use crate::shared::styled_icon::{Icon, StyledIcon};
+use crate::shared::styled_icon::Icon;
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
 use crate::shared::styled_select_child::ToStyledSelectChild;
 use crate::shared::styled_textarea::StyledTextarea;
+use crate::shared::tracking_widget::tracking_link;
 use crate::shared::ToNode;
 use crate::{EditIssueModalFieldId, FieldChange, FieldId, Msg};
 
@@ -87,6 +88,14 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::InputChanged(FieldId::EditIssueModal(EditIssueModalFieldId::Description), value) => {
             modal.payload.description = Some(value.clone());
             modal.payload.description_text = Some(value.clone());
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
+        }
+        Msg::InputChanged(FieldId::EditIssueModal(EditIssueModalFieldId::TimeSpend), value) => {
+            modal.payload.time_spent = value.parse::<i32>().ok();
+            send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
+        }
+        Msg::InputChanged(FieldId::EditIssueModal(EditIssueModalFieldId::TimeRemaining), value) => {
+            modal.payload.time_remaining = value.parse::<i32>().ok();
             send_ws_msg(WsMsg::IssueUpdateRequest(modal.id, modal.payload.clone()));
         }
         Msg::ModalChanged(FieldChange::TabChanged(
@@ -197,7 +206,7 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         ..
     } = modal;
 
-    let issue_id = id.clone();
+    let issue_id = *id;
 
     let click_handler = mouse_ev(Ev::Click, move |_| {
         use wasm_bindgen::JsCast;
@@ -220,7 +229,7 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     });
     let close_handler = mouse_ev(Ev::Click, |_| Msg::ModalDropped);
     let delete_confirmation_handler = mouse_ev(Ev::Click, move |_| {
-        Msg::ModalOpened(ModalType::DeleteIssueConfirm(issue_id))
+        Msg::ModalOpened(Box::new(ModalType::DeleteIssueConfirm(issue_id)))
     });
 
     let copy_button = StyledButton::build()
@@ -261,7 +270,7 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
                     .collect(),
             )
             .selected(vec![{
-                let id = modal.id.clone();
+                let id = modal.id;
                 let issue_type = &payload.issue_type;
                 issue_type
                     .to_select_child()
@@ -424,7 +433,7 @@ fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Option<N
         let comment_id = comment.id;
         let delete_comment_handler = mouse_ev(Ev::Click, move |ev| {
             ev.stop_propagation();
-            Msg::ModalOpened(ModalType::DeleteCommentConfirm(comment_id))
+            Msg::ModalOpened(Box::new(ModalType::DeleteCommentConfirm(comment_id)))
         });
         let edit_button = StyledButton::build()
             .add_class("editButton")
@@ -582,7 +591,6 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
                 .estimate
                 .as_ref()
                 .map(|n| n.to_string())
-                .clone()
                 .unwrap_or_default(),
         )
         .build()
@@ -593,7 +601,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let tracking = tracking_widget(model, modal);
+    let tracking = tracking_link(model, modal);
     let tracking_field = StyledField::build()
         .label("TIME TRACKING")
         .tip("")
@@ -610,69 +618,4 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         estimate_field,
         tracking_field,
     ]
-}
-
-fn tracking_widget(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
-    let EditIssueModal {
-        id,
-        payload:
-            UpdateIssuePayload {
-                estimate,
-                time_spent,
-                time_remaining,
-                ..
-            },
-        ..
-    } = modal;
-
-    let issue_id = *id;
-
-    let icon = StyledIcon::build(Icon::Stopwatch)
-        .add_class("watchIcon")
-        .size(32)
-        .build()
-        .into_node();
-
-    let bar_width = calc_bar_width(estimate, time_spent, time_remaining);
-    let handler = mouse_ev(Ev::Click, move |_| {
-        Msg::ModalOpened(ModalType::TimeTracking(issue_id))
-    });
-
-    div![
-        class!["trackingLink"],
-        handler,
-        div![
-            class!["trackingWidget"],
-            icon,
-            div![
-                class!["right"],
-                div![
-                    class!["barCounter"],
-                    div![
-                        class!["bar"],
-                        attrs![At::Style => format!("width: {}%", bar_width)]
-                    ]
-                ]
-            ]
-        ],
-    ]
-}
-
-#[inline]
-fn calc_bar_width(
-    estimate: &Option<i32>,
-    time_spent: &Option<i32>,
-    time_remaining: &Option<i32>,
-) -> f64 {
-    match (estimate, time_spent, time_remaining) {
-        (Some(estimate), Some(spent), _) => {
-            ((*spent as f64 / *estimate as f64) * 100f64).max(100f64)
-        }
-        (_, Some(spent), Some(remaining)) => {
-            (*spent as f64 / (*spent as f64 + *remaining as f64)) * 100f64
-        }
-        (None, None, _) => 100f64,
-        (None, _, _) => 0f64,
-        _ => 0f64,
-    }
 }

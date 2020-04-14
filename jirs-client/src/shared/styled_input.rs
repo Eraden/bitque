@@ -88,26 +88,29 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         Some(icon) => StyledIcon::build(icon).build().into_node(),
         _ => empty![],
     };
-
-    let mut handlers = vec![];
-
-    handlers.push(input_ev(Ev::Change, move |value| {
-        Msg::InputChanged(id, value)
-    }));
+    let field_id = id.clone();
+    let change_handler = keyboard_ev(Ev::KeyUp, move |event| {
+        use wasm_bindgen::JsCast;
+        event.stop_propagation();
+        let value = event
+            .target()
+            .unwrap()
+            .dyn_ref::<web_sys::HtmlInputElement>()
+            .unwrap()
+            .value();
+        log!("asd");
+        Msg::InputChanged(field_id, value)
+    });
 
     div![
         attrs!(At::Class => wrapper_class_list.join(" ")),
         icon,
-        keyboard_ev(Ev::KeyUp, |ev| {
-            ev.stop_propagation();
-            Msg::NoOp
-        }),
         seed::input![
             attrs![
                 At::Class => input_class_list.join(" "),
                 At::Value => value.unwrap_or_default(),
             ],
-            handlers
+            change_handler,
         ],
     ]
 }

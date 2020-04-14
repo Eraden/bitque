@@ -13,6 +13,10 @@ crate-type = ["cdylib", "rlib"]
 name = "jirs_client"
 path = "./src/lib.rs"
 
+[profile.release]
+lto = true
+opt-level = 's'
+
 [dependencies]
 jirs-data = { path = "../jirs-data" }
 seed = { version = "*" }

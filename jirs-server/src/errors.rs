@@ -32,7 +32,7 @@ impl Into<HttpResponse> for ServiceErrors {
             }
             ServiceErrors::DatabaseQueryFailed(error) => {
                 HttpResponse::BadRequest().json(ErrorResponse {
-                    errors: vec![error.to_owned()],
+                    errors: vec![error],
                 })
             }
             ServiceErrors::RecordNotFound(resource_name) => {

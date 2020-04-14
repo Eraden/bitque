@@ -132,14 +132,14 @@ impl ToNode for Icon {
 
 pub struct StyledIconBuilder {
     icon: Icon,
-    size: Option<Option<i32>>,
+    size: Option<i32>,
     class_list: Vec<String>,
     style_list: Vec<String>,
 }
 
 impl StyledIconBuilder {
     pub fn size(mut self, size: i32) -> Self {
-        self.size = Some(Some(size));
+        self.size = Some(size);
         self
     }
 
@@ -162,7 +162,7 @@ impl StyledIconBuilder {
     pub fn build(self) -> StyledIcon {
         StyledIcon {
             icon: self.icon,
-            size: self.size.unwrap_or_default(),
+            size: self.size,
             class_list: self.class_list,
             style_list: self.style_list,
         }

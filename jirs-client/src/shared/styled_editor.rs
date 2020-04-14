@@ -88,24 +88,24 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
     let field_id = id.clone();
     let on_editor_clicked = mouse_ev(Ev::Click, move |ev| {
         ev.stop_propagation();
-        Msg::ModalChanged(FieldChange::TabChanged(field_id.clone(), Mode::Editor))
+        Msg::ModalChanged(FieldChange::TabChanged(field_id, Mode::Editor))
     });
 
     let field_id = id.clone();
     let on_view_clicked = mouse_ev(Ev::Click, move |ev| {
         ev.stop_propagation();
-        Msg::ModalChanged(FieldChange::TabChanged(field_id.clone(), Mode::View))
+        Msg::ModalChanged(FieldChange::TabChanged(field_id, Mode::View))
     });
 
-    let editor_id = format!("editor-{}", id.clone());
-    let view_id = format!("view-{}", id.clone());
-    let name = format!("styled-editor-{}", id.clone());
+    let editor_id = format!("editor-{}", id);
+    let view_id = format!("view-{}", id);
+    let name = format!("styled-editor-{}", id);
 
     let text_area = StyledTextarea::build()
         .height(40)
         .update_on(update_event)
         .value(text.as_str())
-        .build(id.clone())
+        .build(id)
         .into_node();
 
     let parsed = comrak::markdown_to_html(

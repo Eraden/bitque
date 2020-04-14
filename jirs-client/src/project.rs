@@ -4,7 +4,7 @@ use seed::{prelude::*, *};
 use jirs_data::*;
 
 use crate::api::send_ws_msg;
-use crate::model::{ModalType, Model, Page, PageContent};
+use crate::model::{ModalType, Model, Page, PageContent, ProjectPage};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
@@ -14,16 +14,23 @@ use crate::shared::{drag_ev, inner_layout, ToNode};
 use crate::{EditIssueModalFieldId, FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
+    match &model.page {
+        Page::Project | Page::AddIssue | Page::EditIssue(..) => {
+            model.page_content = PageContent::Project(ProjectPage::default());
+        }
+        _ => return,
+    }
+
     let project_page = match &mut model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return,
     };
 
     match msg {
-        Msg::ChangePage(Page::Project)
+        Msg::WsMsg(WsMsg::AuthorizeLoaded(..))
+        | Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
-        | Msg::ChangePage(Page::EditIssue(..))
-        | Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) => {
+        | Msg::ChangePage(Page::EditIssue(..)) => {
             send_ws_msg(jirs_data::WsMsg::ProjectRequest);
             send_ws_msg(jirs_data::WsMsg::ProjectIssuesRequest);
             send_ws_msg(jirs_data::WsMsg::ProjectUsersRequest);
@@ -68,19 +75,17 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         Msg::InputChanged(FieldId::TextFilterBoard, text) => {
             project_page.text_filter = text;
         }
-        Msg::ProjectAvatarFilterChanged(user_id, active) => match active {
-            true => {
+        Msg::ProjectAvatarFilterChanged(user_id, active) => {
+            if active {
                 project_page.active_avatar_filters = project_page
                     .active_avatar_filters
                     .iter()
-                    .filter(|id| **id != user_id)
-                    .map(|id| *id)
+                    .filter_map(|id| if *id != user_id { Some(*id) } else { None })
                     .collect();
-            }
-            false => {
+            } else {
                 project_page.active_avatar_filters.push(user_id);
             }
-        },
+        }
         Msg::ProjectToggleOnlyMy => {
             project_page.only_my_filter = !project_page.only_my_filter;
         }
@@ -184,16 +189,17 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let clear_all = match project_page.only_my_filter
+    let clear_all = if project_page.only_my_filter
         || project_page.recently_updated_filter
         || !project_page.active_avatar_filters.is_empty()
     {
-        true => seed::button![
+        seed::button![
             id!["clearAllFilters"],
             "Clear all",
             mouse_ev(Ev::Click, |_| Msg::ProjectClearFilters),
-        ],
-        false => empty![],
+        ]
+    } else {
+        empty![]
     };
 
     div![
@@ -252,11 +258,11 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
         PageContent::Project(project_page) => project_page,
         _ => return empty![],
     };
-    let ids = if project_page.recently_updated_filter {
+    let ids: Vec<IssueId> = if project_page.recently_updated_filter {
         let mut v: Vec<(IssueId, NaiveDateTime)> = model
             .issues
             .iter()
-            .map(|issue| (issue.id, issue.updated_at.clone()))
+            .map(|issue| (issue.id, issue.updated_at))
             .collect();
         v.sort_by(|(_, a_time), (_, b_time)| a_time.cmp(b_time));
         if v.len() > 10 { v[0..10].to_vec() } else { v }
@@ -273,7 +279,7 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
             issue_filter_status(issue, &status)
                 && issue_filter_with_text(issue, project_page.text_filter.as_str())
                 && issue_filter_with_only_my(issue, project_page.only_my_filter, &model.user)
-                && issue_filter_with_only_recent(issue, &ids)
+                && issue_filter_with_only_recent(issue, ids.as_slice())
         })
         .map(|issue| project_issue(model, issue))
         .collect();
@@ -324,7 +330,7 @@ fn issue_filter_with_only_my(issue: &Issue, only_my: bool, user: &Option<User>) 
 }
 
 #[inline]
-fn issue_filter_with_only_recent(issue: &Issue, ids: &Vec<IssueId>) -> bool {
+fn issue_filter_with_only_recent(issue: &Issue, ids: &[IssueId]) -> bool {
     ids.is_empty() || ids.contains(&issue.id)
 }
 

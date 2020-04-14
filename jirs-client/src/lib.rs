@@ -138,6 +138,7 @@ pub enum Msg {
     ProjectToggleOnlyMy,
     ProjectToggleRecentlyUpdated,
     ProjectClearFilters,
+    ProjectSaveChanges,
 
     // dragging
     IssueDragStarted(IssueId),
@@ -159,7 +160,7 @@ pub enum Msg {
     DeleteComment(CommentId),
 
     // modals
-    ModalOpened(ModalType),
+    ModalOpened(Box<ModalType>),
     ModalDropped,
     ModalChanged(FieldChange),
 
@@ -175,7 +176,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     }
     match &msg {
         Msg::ChangePage(page) => {
-            model.page = page.clone();
+            model.page = *page;
         }
         Msg::ToggleAboutTooltip => {
             model.about_tooltip_visible = !model.about_tooltip_visible;
@@ -185,8 +186,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     crate::ws::update(&msg, model, orders);
     crate::modal::update(&msg, model, orders);
     match model.page {
-        Page::Project | Page::AddIssue => project::update(msg, model, orders),
-        Page::EditIssue(_id) => project::update(msg, model, orders),
+        Page::Project | Page::AddIssue | Page::EditIssue(..) => project::update(msg, model, orders),
         Page::ProjectSettings => project_settings::update(msg, model, orders),
         Page::Login => login::update(msg, model, orders),
         Page::Register => register::update(msg, model, orders),
@@ -242,11 +242,8 @@ pub fn handle_ws_message(value: &wasm_bindgen::JsValue) {
     for idx in 0..a.length() {
         v.push(a.get_index(idx));
     }
-    match bincode::deserialize(v.as_slice()) {
-        Ok(msg) => {
-            ws::handle(msg);
-        }
-        _ => (),
+    if let Ok(msg) = bincode::deserialize(v.as_slice()) {
+        ws::handle(msg);
     };
 }
 
@@ -299,9 +296,8 @@ pub fn render() {
         .routes(routes)
         .build_and_start();
 
-    match crate::shared::read_auth_token() {
-        Ok(uuid) => send_ws_msg(WsMsg::AuthorizeRequest(uuid)),
-        _ => (),
+    if let Ok(uuid) = crate::shared::read_auth_token() {
+        send_ws_msg(WsMsg::AuthorizeRequest(uuid));
     };
 
     let cell_app = std::sync::RwLock::new(app);

@@ -1,10 +1,12 @@
-use crate::db::SyncQuery;
+use std::task::{Context, Poll};
+
 use actix_service::{Service, Transform};
 use actix_web::http::header::{self};
 use actix_web::http::HeaderMap;
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error};
 use futures::future::{ok, FutureExt, LocalBoxFuture, Ready};
-use std::task::{Context, Poll};
+
+use crate::db::SyncQuery;
 
 type Db = actix_web::web::Data<crate::db::DbPool>;
 
@@ -82,7 +84,7 @@ pub fn token_from_headers(
     headers: &HeaderMap,
 ) -> std::result::Result<uuid::Uuid, crate::errors::ServiceErrors> {
     headers
-        .get(&header::AUTHORIZATION)
+        .get(header::AUTHORIZATION)
         .ok_or_else(|| crate::errors::ServiceErrors::Unauthorized)
         .map(|h| h.to_str().unwrap_or_default())
         .and_then(|s| parse_bearer(s))

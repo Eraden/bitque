@@ -75,6 +75,12 @@ impl WebSocketActor {
                 block_on(projects::current_project(&self.db, &self.current_user))?
             }
 
+            WsMsg::ProjectUpdateRequest(payload) => block_on(projects::update_project(
+                &self.db,
+                &self.current_user,
+                payload,
+            ))?,
+
             // auth
             WsMsg::AuthorizeRequest(uuid) => block_on(self.authorize(uuid))?,
 
@@ -114,6 +120,9 @@ impl WebSocketActor {
                 None
             }
         };
+        if msg.is_some() && msg != Some(WsMsg::Pong) {
+            info!("sending message {:?}", msg);
+        }
         Ok(msg)
     }
 

@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use jirs_data::{IssuePriority, IssueStatus, IssueType};
+use jirs_data::{IssuePriority, IssueStatus, IssueType, ProjectCategory};
 
 use crate::schema::*;
 
@@ -127,7 +127,7 @@ pub struct Project {
     pub name: String,
     pub url: String,
     pub description: String,
-    pub category: String,
+    pub category: ProjectCategory,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -147,17 +147,15 @@ impl Into<jirs_data::Project> for Project {
 }
 
 #[derive(Debug, Serialize, Deserialize, Insertable)]
-#[serde(rename_all = "camelCase")]
 #[table_name = "projects"]
 pub struct UpdateProjectForm {
     pub name: Option<String>,
     pub url: Option<String>,
     pub description: Option<String>,
-    pub category: Option<String>,
+    pub category: Option<ProjectCategory>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable)]
-#[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: i32,
     pub name: String,
@@ -190,8 +188,8 @@ impl Into<jirs_data::User> for &User {
             email: self.email.clone(),
             avatar_url: self.avatar_url.clone(),
             project_id: self.project_id,
-            created_at: self.created_at.clone(),
-            updated_at: self.updated_at.clone(),
+            created_at: self.created_at,
+            updated_at: self.updated_at,
         }
     }
 }
