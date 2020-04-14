@@ -1,44 +1,44 @@
 :root {
-    --primary: #0052cc; /* Blue */
-    --success: #0B875B; /* green */
-    --danger: #E13C3C; /* red */
-    --warning: #F89C1C; /* orange */
-    --secondary: #F4F5F7; /* light grey */
-    --textDarkest: #172b4d;
-    --textDark: #42526E;
-    --textMedium: #5E6C84;
-    --textLight: #8993a4;
-    --textLink: #0052cc;
-    --backgroundDarkPrimary: #0747A6;
-    --backgroundMedium: #dfe1e6;
-    --backgroundLight: #ebecf0;
-    --backgroundLightest: #F4F5F7;
-    --backgroundLightPrimary: #D2E5FE;
-    --backgroundLightSuccess: #E4FCEF;
-    --borderLightest: #dfe1e6;
-    --borderLight: #C1C7D0;
-    --borderInputFocus: #4c9aff;
+    --primary: rgb(0, 82, 204); /* Blue */
+    --success: rgb(11, 135, 91); /* green */
+    --danger: rgb(225, 60, 60); /* red */
+    --warning: rgb(248, 156, 28); /* orange */
+    --secondary: rgb(244, 245, 247); /* light grey */
+    --textDarkest: rgb(23, 43, 77);
+    --textDark: rgb(66, 82, 110);
+    --textMedium: rgb(94, 108, 132);
+    --textLight: rgb(137, 147, 164);
+    --textLink: rgb(0, 82, 204);
+    --backgroundDarkPrimary: rgb(7, 71, 166);
+    --backgroundMedium: rgb(223, 225, 230);
+    --backgroundLight: rgb(235, 236, 240);
+    --backgroundLightest: rgb(244, 245, 247);
+    --backgroundLightPrimary: rgb(210, 229, 254);
+    --backgroundLightSuccess: rgb(228, 252, 239);
+    --borderLightest: rgb(223, 225, 230);
+    --borderLight: rgb(193, 199, 208);
+    --borderInputFocus: rgb(76, 154, 255);
 }
 
 :root {
-    --task: #4FADE6; /* blue */
-    --bug: #E44D42; /* red */
-    --story: #65BA43; /* green */
+    --task: rgb(79, 173, 230); /* blue */
+    --bug: rgb(228, 77, 66); /* red */
+    --story: rgb(101, 186, 67); /* green */
 }
 
 :root {
-    --highest: #CD1317; /* red */
-    --high: #E9494A; /* orange */
-    --medium: #E97F33; /* orange */
-    --low: #2D8738; /* green */
-    --lowest: #57A55A; /* green */
+    --highest: rgb(205, 19, 23); /* red */
+    --high: rgb(233, 73, 74); /* orange */
+    --medium: rgb(233, 127, 51); /* orange */
+    --low: rgb(45, 135, 56); /* green */
+    --lowest: rgb(87, 165, 90); /* green */
 }
 
 :root {
     --issue-color-backlog: var(--textDark);
-    --issue-color-inprogress: #fff;
+    --issue-color-inprogress: rgb(255, 255, 255);
     --issue-color-selected: var(--textDark);
-    --issue-color-done: #fff;
+    --issue-color-done: rgb(255, 255, 255);
     --issue-background-backlog: var(--backgroundMedium);
     --issue-background-inprogress: var(--primary);
     --issue-background-selected: var(--backgroundMedium);
@@ -65,12 +65,12 @@
 }
 
 :root {
-    --avatar-color-1: #DA7657;
-    --avatar-color-2: #6ADA57;
-    --avatar-color-3: #5784DA;
-    --avatar-color-4: #AA57DA;
-    --avatar-color-5: #DA5757;
-    --avatar-color-6: #DA5792;
-    --avatar-color-7: #57DACA;
-    --avatar-color-8: #57A5DA;
+    --avatar-color-1: rgb(218, 118, 87);
+    --avatar-color-2: rgb(106, 218, 87);
+    --avatar-color-3: rgb(87, 132, 218);
+    --avatar-color-4: rgb(170, 87, 218);
+    --avatar-color-5: rgb(218, 87, 87);
+    --avatar-color-6: rgb(218, 87, 146);
+    --avatar-color-7: rgb(87, 218, 202);
+    --avatar-color-8: rgb(87, 165, 218);
 }

@@ -16,6 +16,10 @@ use crate::FieldChange::TabChanged;
 use crate::{model, FieldId, Msg, ProjectSettingsFieldId};
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
+    if model.user.is_none() {
+        return;
+    }
+
     if model.page != Page::ProjectSettings {
         log!("not settings page");
         return;

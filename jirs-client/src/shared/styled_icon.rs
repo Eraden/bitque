@@ -170,10 +170,10 @@ impl StyledIconBuilder {
 }
 
 pub struct StyledIcon {
-    pub icon: Icon,
-    pub size: Option<i32>,
-    pub class_list: Vec<String>,
-    pub style_list: Vec<String>,
+    icon: Icon,
+    size: Option<i32>,
+    class_list: Vec<String>,
+    style_list: Vec<String>,
 }
 
 impl StyledIcon {

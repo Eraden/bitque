@@ -51,22 +51,33 @@ pub fn inner_layout(
     ]
 }
 
+pub fn outer_layout(_model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
+    article![
+        class!["outer-layout", "outerPage"],
+        id![page_name],
+        children
+    ]
+}
+
 pub fn write_auth_token(token: Option<uuid::Uuid>) -> Result<Msg, String> {
     let w = window();
     let store = match w.local_storage() {
         Ok(Some(store)) => store,
         _ => return Err("Local storage is not available".to_string()),
     };
-    store
-        .set_item(
-            "authToken",
-            token
-                .as_ref()
-                .map(|t| format!("{}", t))
-                .unwrap_or_default()
-                .as_str(),
-        )
-        .map_err(|_e| "Failed to read auth token".to_string())?;
+    match token {
+        Some(token) => {
+            store
+                .set_item("authToken", format!("{}", token).as_str())
+                .map_err(|_e| "Failed to read auth token".to_string())?;
+        }
+        _ => {
+            store
+                .remove_item("authToken")
+                .map_err(|_e| "Failed to read auth token".to_string())?;
+        }
+    }
+
     Ok(match token {
         Some(_) => Msg::AuthTokenStored,
         _ => Msg::AuthTokenErased,

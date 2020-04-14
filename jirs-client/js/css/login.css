@@ -1,0 +1,38 @@
+#login > .styledForm {
+    display: flex;
+    flex-direction: column;
+    margin: 124.5px auto 24px;
+    width: 400px;
+    /*padding: 32px 40px;*/
+    background: rgb(255, 255, 255) none repeat scroll 0 0;
+    border-radius: 3px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0 0 10px;
+    box-sizing: border-box;
+    color: var(--textMedium);
+}
+
+#login > .styledForm > .formElement > .formHeading {
+    color: var(--textMedium);
+    font-size: 1em;
+    line-height: 1.1428571428571428;
+    letter-spacing: -.003em;
+    font-family: var(--font-bold);
+    text-align: center;
+}
+
+#login > .styledForm > .formElement > .noPasswordSection {
+    line-height: 32px;
+    margin-top: 15px;
+    display: flex;
+    cursor: pointer;
+}
+
+#login > .styledForm > .formElement > .noPasswordSection > .styledIcon {
+    margin-right: 15px;
+    line-height: 32px;
+}
+
+#login > .styledForm > .formElement > .noPasswordSection > span {
+    display: block;
+    line-height: 32px;
+}

@@ -2,6 +2,7 @@ use seed::prelude::*;
 
 use jirs_data::WsMsg;
 
+use crate::shared::write_auth_token;
 use crate::{model, Msg, APP};
 
 pub mod issue;
@@ -23,6 +24,13 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         // auth
         Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(user))) => {
             model.user = Some(user.clone());
+        }
+        Msg::WsMsg(WsMsg::AuthorizeExpired) => {
+            use seed::*;
+            error!("Session expired");
+            if let Ok(msg) = write_auth_token(None) {
+                orders.skip().send_msg(msg);
+            }
         }
         // project
         Msg::WsMsg(WsMsg::ProjectLoaded(project)) => {

@@ -58,7 +58,13 @@ pub enum ProjectSettingsFieldId {
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum LoginFieldId {
+    Email,
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum FieldId {
+    Login(LoginFieldId),
     // issue
     AddIssueModal(AddIssueModalFieldId),
     EditIssueModal(EditIssueModalFieldId),
@@ -100,6 +106,9 @@ impl std::fmt::Display for FieldId {
                 ProjectSettingsFieldId::Url => f.write_str("projectSettings-url"),
                 ProjectSettingsFieldId::Description => f.write_str("projectSettings-description"),
                 ProjectSettingsFieldId::Category => f.write_str("projectSettings-category"),
+            },
+            FieldId::Login(sub) => match sub {
+                LoginFieldId::Email => f.write_str("login-email"),
             },
         }
     }
@@ -175,6 +184,14 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         log!(msg);
     }
     match &msg {
+        Msg::AuthTokenStored => {
+            seed::push_route(vec!["/dashboard"]);
+            return;
+        }
+        Msg::AuthTokenErased => {
+            seed::push_route(vec!["/login"]);
+            return;
+        }
         Msg::ChangePage(page) => {
             model.page = *page;
         }
@@ -249,9 +266,7 @@ pub fn handle_ws_message(value: &wasm_bindgen::JsValue) {
 
 #[wasm_bindgen]
 pub fn reconnected() {
-    if let Ok(uuid) = read_auth_token() {
-        send_ws_msg(WsMsg::AuthorizeRequest(uuid));
-    }
+    authorize_or_redirect();
 }
 
 #[wasm_bindgen]
@@ -296,12 +311,28 @@ pub fn render() {
         .routes(routes)
         .build_and_start();
 
-    if let Ok(uuid) = crate::shared::read_auth_token() {
-        send_ws_msg(WsMsg::AuthorizeRequest(uuid));
-    };
+    authorize_or_redirect();
 
     let cell_app = std::sync::RwLock::new(app);
     unsafe {
         APP = Some(cell_app);
+    };
+}
+
+#[inline]
+fn authorize_or_redirect() {
+    match crate::shared::read_auth_token() {
+        Ok(uuid) => {
+            send_ws_msg(WsMsg::AuthorizeRequest(uuid));
+        }
+        Err(..) => {
+            let pathname = seed::document().location().unwrap().pathname().unwrap();
+            match pathname.as_str() {
+                "/login" | "/register" => {}
+                _ => {
+                    seed::push_route(vec!["login"]);
+                }
+            };
+        }
     };
 }

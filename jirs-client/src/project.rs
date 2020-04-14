@@ -14,6 +14,10 @@ use crate::shared::{drag_ev, inner_layout, ToNode};
 use crate::{EditIssueModalFieldId, FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
+    if model.user.is_none() {
+        return;
+    }
+
     match &model.page {
         Page::Project | Page::AddIssue | Page::EditIssue(..) => {
             model.page_content = PageContent::Project(ProjectPage::default());
