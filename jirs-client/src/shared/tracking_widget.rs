@@ -78,10 +78,10 @@ fn calc_bar_width(
     time_remaining: Option<i32>,
 ) -> f64 {
     match (estimate, time_spent, time_remaining) {
-        (Some(estimate), Some(spent), _) => ((spent as f64 / estimate as f64) * 100f64).max(100f64),
         (_, Some(spent), Some(remaining)) => {
-            (spent as f64 / (spent as f64 + remaining as f64)) * 100f64
+            ((spent as f64 / (spent as f64 + remaining as f64)) * 100f64).min(100f64)
         }
+        (Some(estimate), Some(spent), _) => ((spent as f64 / estimate as f64) * 100f64).min(100f64),
         (None, None, _) => 100f64,
         (None, _, _) => 0f64,
         _ => 0f64,
