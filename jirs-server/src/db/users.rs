@@ -6,6 +6,36 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
+pub struct FindUser {
+    pub name: String,
+    pub email: String,
+}
+
+impl Message for FindUser {
+    type Result = Result<User, ServiceErrors>;
+}
+
+impl Handler<FindUser> for DbExecutor {
+    type Result = Result<User, ServiceErrors>;
+
+    fn handle(&mut self, msg: FindUser, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::users::dsl::*;
+
+        let conn = &self
+            .0
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let row: User = users
+            .distinct_on(id)
+            .filter(email.eq(msg.email.as_str()))
+            .filter(name.eq(msg.name.as_str()))
+            .first(conn)
+            .map_err(|_| ServiceErrors::RecordNotFound("project users".to_string()))?;
+        Ok(row)
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct LoadProjectUsers {
     pub project_id: i32,
 }

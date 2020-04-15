@@ -22,6 +22,8 @@ pub type ProjectId = i32;
 pub type UserId = i32;
 pub type CommentId = i32;
 pub type TokenId = i32;
+pub type EmailString = String;
+pub type UsernameString = String;
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
@@ -470,6 +472,8 @@ pub enum WsMsg {
     AuthorizeRequest(Uuid),
     AuthorizeLoaded(Result<User, String>),
     AuthorizeExpired,
+    AuthenticateRequest(EmailString, UsernameString),
+    AuthenticateSuccess,
 
     // project page
     ProjectRequest,

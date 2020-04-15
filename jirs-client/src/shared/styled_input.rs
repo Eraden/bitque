@@ -10,6 +10,7 @@ pub struct StyledInput {
     icon: Option<Icon>,
     valid: bool,
     value: Option<String>,
+    input_type: Option<String>,
 }
 
 impl StyledInput {
@@ -19,6 +20,7 @@ impl StyledInput {
             icon: None,
             valid: None,
             value: None,
+            input_type: None,
         }
     }
 }
@@ -29,6 +31,7 @@ pub struct StyledInputBuilder {
     icon: Option<Icon>,
     valid: Option<bool>,
     value: Option<String>,
+    input_type: Option<String>,
 }
 
 impl StyledInputBuilder {
@@ -50,12 +53,21 @@ impl StyledInputBuilder {
         self
     }
 
+    pub fn input_type<S>(mut self, input_type: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.input_type = Some(input_type.into());
+        self
+    }
+
     pub fn build(self) -> StyledInput {
         StyledInput {
             id: self.id,
             icon: self.icon,
             valid: self.valid.unwrap_or_default(),
             value: self.value,
+            input_type: self.input_type,
         }
     }
 }
@@ -72,6 +84,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         icon,
         valid,
         value,
+        input_type,
     } = values;
 
     let mut wrapper_class_list = vec!["styledInput".to_string(), format!("{}", id)];
@@ -98,7 +111,6 @@ pub fn render(values: StyledInput) -> Node<Msg> {
             .dyn_ref::<web_sys::HtmlInputElement>()
             .unwrap()
             .value();
-        log!("asd");
         Msg::InputChanged(field_id, value)
     });
 
@@ -109,6 +121,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
             attrs![
                 At::Class => input_class_list.join(" "),
                 At::Value => value.unwrap_or_default(),
+                At::Type => input_type.unwrap_or_else(|| "text".to_string()),
             ],
             change_handler,
         ],

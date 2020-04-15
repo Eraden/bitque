@@ -83,6 +83,9 @@ impl WebSocketActor {
 
             // auth
             WsMsg::AuthorizeRequest(uuid) => block_on(self.authorize(uuid))?,
+            WsMsg::AuthenticateRequest(email, name) => {
+                block_on(users::authenticate(&self.db, name, email))?
+            }
 
             // users
             WsMsg::ProjectUsersRequest => {

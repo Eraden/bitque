@@ -226,8 +226,17 @@ impl ProjectSettingsPage {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct LoginPage {
+    pub username: String,
+    pub email: String,
+    pub token: String,
+    pub login_success: bool,
+}
+
 #[derive(Debug)]
 pub enum PageContent {
+    Login(LoginPage),
     Project(ProjectPage),
     ProjectSettings(ProjectSettingsPage),
 }

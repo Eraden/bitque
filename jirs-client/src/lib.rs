@@ -6,7 +6,6 @@ use jirs_data::*;
 
 use crate::api::send_ws_msg;
 use crate::model::{ModalType, Model, Page};
-use crate::shared::read_auth_token;
 use crate::shared::styled_editor::Mode as TabMode;
 use crate::shared::styled_select::StyledSelectChange;
 
@@ -59,7 +58,9 @@ pub enum ProjectSettingsFieldId {
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum LoginFieldId {
+    Username,
     Email,
+    Token,
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
@@ -109,6 +110,8 @@ impl std::fmt::Display for FieldId {
             },
             FieldId::Login(sub) => match sub {
                 LoginFieldId::Email => f.write_str("login-email"),
+                LoginFieldId::Username => f.write_str("login-username"),
+                LoginFieldId::Token => f.write_str("login-token"),
             },
         }
     }
@@ -135,6 +138,7 @@ pub enum Msg {
     // Auth Token
     AuthTokenStored,
     AuthTokenErased,
+    SignInRequest,
 
     StyledSelectChanged(FieldId, StyledSelectChange),
 
