@@ -157,6 +157,7 @@ pub enum Msg {
     // dragging
     IssueDragStarted(IssueId),
     IssueDragStopped(IssueId),
+    DragLeave(IssueId),
     ExchangePosition(IssueId),
     IssueDragOverStatus(IssueStatus),
     IssueDropZone(IssueStatus),

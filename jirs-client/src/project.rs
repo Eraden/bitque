@@ -112,6 +112,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::IssueDragOverStatus(status) => crate::ws::issue::change_status(status, model),
         Msg::IssueDropZone(_status) => crate::ws::issue::sync(model),
+        Msg::DragLeave(_id) => project_page.last_drag_exchange_id = None,
         Msg::DeleteIssue(issue_id) => {
             send_ws_msg(jirs_data::WsMsg::IssueDeleteRequest(issue_id));
         }
@@ -383,6 +384,8 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
         ev.stop_propagation();
         Msg::ExchangePosition(issue_id)
     });
+    let issue_id = issue.id.clone();
+    let drag_out = drag_ev(Ev::DragLeave, move |_| Msg::DragLeave(issue_id));
 
     let class_list = vec!["issue"];
 
@@ -395,6 +398,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
             attrs![At::Class => class_list.join(" "), At::Draggable => true],
             drag_stopped,
             drag_over_handler,
+            drag_out,
             p![attrs![At::Class => "title"], issue.title,],
             div![
                 attrs![At::Class => "bottom"],

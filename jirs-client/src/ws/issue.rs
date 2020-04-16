@@ -80,9 +80,9 @@ pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
 }
 
 pub fn sync(model: &mut Model) {
-    log!("------------------------------------------------------------------");
-    log!("|                SYNC                                            |");
-    log!("------------------------------------------------------------------");
+    // log!("------------------------------------------------------------------");
+    // log!("|                SYNC                                            |");
+    // log!("------------------------------------------------------------------");
     let project_page = match &mut model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return,
