@@ -213,6 +213,7 @@ pub struct Token {
     pub refresh_token: Uuid,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub bind_token: Option<Uuid>,
 }
 
 impl Into<jirs_data::Token> for Token {
