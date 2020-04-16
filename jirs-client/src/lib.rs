@@ -192,11 +192,13 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         Msg::AuthTokenStored => {
             seed::push_route(vec!["dashboard"]);
             orders.skip().send_msg(Msg::ChangePage(Page::Project));
+            authorize_or_redirect();
             return;
         }
         Msg::AuthTokenErased => {
             seed::push_route(vec!["login"]);
             orders.skip().send_msg(Msg::ChangePage(Page::Login));
+            authorize_or_redirect();
             return;
         }
         Msg::ChangePage(page) => {

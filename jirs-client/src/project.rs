@@ -18,11 +18,13 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         return;
     }
 
-    match &model.page {
-        Page::Project | Page::AddIssue | Page::EditIssue(..) => {
+    match msg {
+        Msg::ChangePage(Page::Project)
+        | Msg::ChangePage(Page::AddIssue)
+        | Msg::ChangePage(Page::EditIssue(..)) => {
             model.page_content = PageContent::Project(ProjectPage::default());
         }
-        _ => return,
+        _ => (),
     }
 
     let project_page = match &mut model.page_content {
@@ -103,13 +105,13 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::IssueDragStarted(issue_id) => crate::ws::issue::drag_started(issue_id, model),
         Msg::IssueDragStopped(_) => {
-            project_page.dragged_issue_id = None;
+            crate::ws::issue::sync(model);
         }
         Msg::ExchangePosition(issue_bellow_id) => {
             crate::ws::issue::exchange_position(issue_bellow_id, model)
         }
         Msg::IssueDragOverStatus(status) => crate::ws::issue::change_status(status, model),
-        Msg::IssueDropZone(status) => crate::ws::issue::dropped(status, model),
+        Msg::IssueDropZone(_status) => crate::ws::issue::sync(model),
         Msg::DeleteIssue(issue_id) => {
             send_ws_msg(jirs_data::WsMsg::IssueDeleteRequest(issue_id));
         }

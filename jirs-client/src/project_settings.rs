@@ -21,7 +21,6 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     }
 
     if model.page != Page::ProjectSettings {
-        log!("not settings page");
         return;
     }
 

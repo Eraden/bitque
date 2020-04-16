@@ -1,3 +1,5 @@
+use seed::*;
+
 use jirs_data::*;
 
 use crate::api::send_ws_msg;
@@ -9,7 +11,6 @@ pub fn drag_started(issue_id: IssueId, model: &mut Model) {
         _ => return,
     };
     project_page.dragged_issue_id = Some(issue_id);
-
     mark_dirty(issue_id, project_page);
 }
 
@@ -23,9 +24,9 @@ pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
     {
         return;
     }
-    let dragged_id = match project_page.dragged_issue_id {
+    let dragged_id = match project_page.dragged_issue_id.as_ref().cloned() {
         Some(id) => id,
-        _ => return,
+        _ => return error!("Nothing is dragged"),
     };
 
     let mut below = None;
@@ -78,7 +79,10 @@ pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
     project_page.last_drag_exchange_id = Some(issue_bellow_id);
 }
 
-pub fn dropped(_status: IssueStatus, model: &mut Model) {
+pub fn sync(model: &mut Model) {
+    log!("------------------------------------------------------------------");
+    log!("|                SYNC                                            |");
+    log!("------------------------------------------------------------------");
     let project_page = match &mut model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return,
@@ -104,10 +108,12 @@ pub fn dropped(_status: IssueStatus, model: &mut Model) {
             reporter_id: issue.reporter_id,
             user_ids: issue.user_ids.clone(),
         };
-        project_page.dragged_issue_id = None;
+
         send_ws_msg(WsMsg::IssueUpdateRequest(issue.id, payload));
-        project_page.last_drag_exchange_id = None;
     }
+    project_page.dragged_issue_id = None;
+    project_page.last_drag_exchange_id = None;
+    project_page.dirty_issues.clear();
 }
 
 pub fn change_status(status: IssueStatus, model: &mut Model) {
@@ -118,7 +124,7 @@ pub fn change_status(status: IssueStatus, model: &mut Model) {
 
     let issue_id = match project_page.dragged_issue_id.as_ref().cloned() {
         Some(issue_id) => issue_id,
-        _ => return,
+        _ => return error!("Nothing is dragged"),
     };
 
     let mut old: Vec<Issue> = vec![];
@@ -129,7 +135,10 @@ pub fn change_status(status: IssueStatus, model: &mut Model) {
 
     for mut issue in old.into_iter() {
         if issue.status == status {
-            issue.list_position = pos;
+            if issue.list_position != pos {
+                issue.list_position = pos;
+                mark_dirty(issue.id, project_page);
+            }
             pos += 1;
         }
         if issue.id != issue_id {
@@ -149,12 +158,12 @@ pub fn change_status(status: IssueStatus, model: &mut Model) {
     if issue.status == status {
         model.issues.push(issue);
         return;
+    } else {
+        issue.status = status;
+        issue.list_position = pos + 1;
+        model.issues.push(issue);
+        mark_dirty(issue_id, project_page);
     }
-    issue.status = status;
-    issue.list_position = pos + 1;
-    model.issues.push(issue);
-
-    mark_dirty(issue_id, project_page);
 }
 
 #[inline]
