@@ -53,14 +53,6 @@ impl StyledInputBuilder {
         self
     }
 
-    pub fn input_type<S>(mut self, input_type: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.input_type = Some(input_type.into());
-        self
-    }
-
     pub fn build(self) -> StyledInput {
         StyledInput {
             id: self.id,

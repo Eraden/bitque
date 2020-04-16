@@ -474,6 +474,9 @@ pub enum WsMsg {
     AuthorizeExpired,
     AuthenticateRequest(EmailString, UsernameString),
     AuthenticateSuccess,
+    BindTokenCheck(Uuid),
+    BindTokenBad,
+    BindTokenOk(Uuid),
 
     // project page
     ProjectRequest,

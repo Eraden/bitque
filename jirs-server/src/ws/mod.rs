@@ -6,8 +6,10 @@ use actix_web_actors::ws;
 use jirs_data::WsMsg;
 
 use crate::db::authorize_user::AuthorizeUser;
+use crate::db::tokens::FindBindToken;
 use crate::db::DbExecutor;
 
+pub mod auth;
 pub mod comments;
 pub mod issues;
 pub mod projects;
@@ -82,9 +84,10 @@ impl WebSocketActor {
             ))?,
 
             // auth
-            WsMsg::AuthorizeRequest(uuid) => block_on(self.authorize(uuid))?,
+            WsMsg::AuthorizeRequest(uuid) => block_on(self.check_auth_token(uuid))?,
+            WsMsg::BindTokenCheck(uuid) => block_on(self.check_bind_token(uuid))?,
             WsMsg::AuthenticateRequest(email, name) => {
-                block_on(users::authenticate(&self.db, name, email))?
+                block_on(auth::authenticate(&self.db, name, email))?
             }
 
             // users
@@ -129,7 +132,7 @@ impl WebSocketActor {
         Ok(msg)
     }
 
-    async fn authorize(&mut self, token: uuid::Uuid) -> WsResult {
+    async fn check_auth_token(&mut self, token: uuid::Uuid) -> WsResult {
         let m = match self
             .db
             .send(AuthorizeUser {
@@ -148,6 +151,16 @@ impl WebSocketActor {
             _ => Some(WsMsg::AuthorizeExpired),
         };
         Ok(m)
+    }
+
+    async fn check_bind_token(&mut self, bind_token: uuid::Uuid) -> WsResult {
+        let token: crate::models::Token =
+            match self.db.send(FindBindToken { token: bind_token }).await {
+                Ok(Ok(token)) => token,
+                Ok(Err(_)) => return Ok(Some(WsMsg::BindTokenBad)),
+                _ => return Ok(None),
+            };
+        Ok(Some(WsMsg::BindTokenOk(token.access_token)))
     }
 }
 

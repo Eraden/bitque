@@ -5,7 +5,7 @@ use actix::{Handler, Message};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct FindUser {
     pub name: String,
     pub email: String,
@@ -30,7 +30,9 @@ impl Handler<FindUser> for DbExecutor {
             .filter(email.eq(msg.email.as_str()))
             .filter(name.eq(msg.name.as_str()))
             .first(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("project users".to_string()))?;
+            .map_err(|_| {
+                ServiceErrors::RecordNotFound(format!("user {} {}", msg.name, msg.email))
+            })?;
         Ok(row)
     }
 }

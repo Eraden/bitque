@@ -232,6 +232,7 @@ pub struct LoginPage {
     pub email: String,
     pub token: String,
     pub login_success: bool,
+    pub bad_token: String,
 }
 
 #[derive(Debug)]

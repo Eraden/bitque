@@ -139,6 +139,7 @@ pub enum Msg {
     AuthTokenStored,
     AuthTokenErased,
     SignInRequest,
+    BindClientRequest,
 
     StyledSelectChanged(FieldId, StyledSelectChange),
 
@@ -189,11 +190,13 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     }
     match &msg {
         Msg::AuthTokenStored => {
-            seed::push_route(vec!["/dashboard"]);
+            seed::push_route(vec!["dashboard"]);
+            orders.skip().send_msg(Msg::ChangePage(Page::Project));
             return;
         }
         Msg::AuthTokenErased => {
-            seed::push_route(vec!["/login"]);
+            seed::push_route(vec!["login"]);
+            orders.skip().send_msg(Msg::ChangePage(Page::Login));
             return;
         }
         Msg::ChangePage(page) => {

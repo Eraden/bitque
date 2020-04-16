@@ -32,7 +32,7 @@ bincode = "1.2.1"
 time = { version = "0.1" }
 url = { version = "2.1.0" }
 percent-encoding = { version = "2.1.0" }
-uuid = { version = ">=0.7.0, <0.9.0", features = ["serde"] }
+uuid = { version = ">=0.7.0, <0.9.0", features = ["serde", "v4", "v5"] }
 ipnetwork = { version = ">=0.12.2, <0.17.0" }
 num-bigint = { version = ">=0.1.41, <0.3" }
 num-traits = { version = "0.2" }

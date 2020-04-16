@@ -6,12 +6,14 @@ use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_icon::{Icon, StyledIcon};
-use crate::shared::styled_input::StyledInput;
-use crate::shared::{outer_layout, ToNode};
+use crate::shared::styled_textarea::StyledTextarea;
+use crate::shared::{outer_layout, write_auth_token, ToNode};
 use crate::{model, FieldId, LoginFieldId, Msg};
 use jirs_data::WsMsg;
+use std::str::FromStr;
+use uuid::Uuid;
 
-pub fn update(msg: Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>) {
+pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::Login {
         return;
     }
@@ -33,14 +35,37 @@ pub fn update(msg: Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>
         Msg::InputChanged(FieldId::Login(LoginFieldId::Email), value) => {
             page.email = value;
         }
+        Msg::InputChanged(FieldId::Login(LoginFieldId::Token), value) => {
+            page.token = value;
+        }
         Msg::SignInRequest => {
             send_ws_msg(WsMsg::AuthenticateRequest(
                 page.email.clone(),
                 page.username.clone(),
             ));
         }
+        Msg::BindClientRequest => {
+            let bind_token: uuid::Uuid = match Uuid::from_str(page.token.as_str()) {
+                Ok(token) => token,
+                Err(error) => {
+                    error!(error);
+                    return;
+                }
+            };
+            send_ws_msg(WsMsg::BindTokenCheck(bind_token));
+        }
         Msg::WsMsg(WsMsg::AuthenticateSuccess) => {
             page.login_success = true;
+        }
+        Msg::WsMsg(WsMsg::BindTokenOk(access_token)) => {
+            match write_auth_token(Some(access_token)) {
+                Ok(msg) => {
+                    orders.skip().send_msg(msg);
+                }
+                Err(e) => {
+                    error!(e);
+                }
+            }
         }
         _ => (),
     };
@@ -52,10 +77,11 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         _ => return empty![],
     };
 
-    let username = StyledInput::build(FieldId::Login(LoginFieldId::Username))
-        .valid(true)
+    let username = StyledTextarea::build()
+        .one_line()
+        .update_on(Ev::Change)
         .value(page.username.as_str())
-        .build()
+        .build(FieldId::Login(LoginFieldId::Username))
         .into_node();
     let username_field = StyledField::build()
         .label("Username")
@@ -63,11 +89,11 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let email = StyledInput::build(FieldId::Login(LoginFieldId::Email))
-        .valid(true)
+    let email = StyledTextarea::build()
+        .one_line()
+        .update_on(Ev::Change)
         .value(page.email.as_str())
-        .input_type("email")
-        .build()
+        .build(FieldId::Login(LoginFieldId::Email))
         .into_node();
     let email_field = StyledField::build()
         .label("E-Mail")
@@ -100,10 +126,11 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         span!["Why I don't see password?"]
     ];
 
-    let token = StyledInput::build(FieldId::Login(LoginFieldId::Token))
-        .valid(true)
+    let token = StyledTextarea::build()
+        .one_line()
+        .update_on(Ev::Input)
         .value(page.token.as_str())
-        .build()
+        .build(FieldId::Login(LoginFieldId::Token))
         .into_node();
     let token_field = StyledField::build()
         .label("Single use token")
@@ -113,7 +140,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     let submit_token = StyledButton::build()
         .primary()
         .text("Authorize")
-        .on_click(mouse_ev(Ev::Click, |_| Msg::SignInRequest))
+        .on_click(mouse_ev(Ev::Click, |_| Msg::BindClientRequest))
         .build()
         .into_node();
     let submit_token_field = StyledField::build().input(submit_token).build().into_node();

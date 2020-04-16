@@ -41,6 +41,11 @@ pub struct StyledTextareaBuilder {
 
 impl StyledTextareaBuilder {
     #[inline]
+    pub fn one_line(self) -> Self {
+        self.disable_auto_resize().height(39).max_height(39)
+    }
+
+    #[inline]
     pub fn height(mut self, height: usize) -> Self {
         self.height = Some(height);
         self
@@ -162,12 +167,12 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         Msg::NoOp
     });
     handlers.push(resize_handler);
-    let text_input_handler = input_ev(update_event, move |value| Msg::InputChanged(id, value));
+    let text_input_handler = ev(update_event, move |event| {
+        let target = event.target().unwrap();
+        let text = seed::to_textarea(&target).value();
+        Msg::InputChanged(id, text)
+    });
     handlers.push(text_input_handler);
-    handlers.push(keyboard_ev(Ev::Input, |ev| {
-        ev.stop_propagation();
-        Msg::NoOp
-    }));
 
     class_list.push("textAreaInput".to_string());
 

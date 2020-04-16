@@ -236,4 +236,5 @@ pub struct TokenForm {
     pub user_id: i32,
     pub access_token: Uuid,
     pub refresh_token: Uuid,
+    pub bind_token: Option<Uuid>,
 }
