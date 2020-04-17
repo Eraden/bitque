@@ -99,3 +99,49 @@ impl Handler<LoadIssueAssignees> for DbExecutor {
         Ok(vec)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Register {
+    pub name: String,
+    pub email: String,
+}
+
+impl Message for Register {
+    type Result = Result<(), ServiceErrors>;
+}
+
+impl Handler<Register> for DbExecutor {
+    type Result = Result<(), ServiceErrors>;
+
+    fn handle(&mut self, msg: Register, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::users::dsl::*;
+
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let query = users
+            .filter(
+                email
+                    .eq(msg.email.as_str())
+                    .and(name.ne(msg.name.as_str()))
+                    .or(email.ne(msg.email.as_str()).and(name.eq(msg.name.as_str())))
+                    .or(email.eq(msg.email.as_str()).and(name.eq(msg.name.as_str()))),
+            )
+            .count();
+
+        info!(
+            "{}",
+            diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
+        );
+
+        let matching: i64 = query.get_result(conn).unwrap_or(1);
+
+        if matching > 0 {
+            return Err(ServiceErrors::RegisterCollision);
+        }
+
+        Ok(())
+    }
+}

@@ -2,6 +2,7 @@ use seed::{prelude::*, *};
 
 use jirs_data::{SignUpFieldId, WsMsg};
 
+use crate::api::send_ws_msg;
 use crate::model::{Page, PageContent, SignUpPage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
@@ -37,8 +38,17 @@ pub fn update(msg: Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>
             page.email = value;
             page.email_touched = true;
         }
+        Msg::SignUpRequest => {
+            send_ws_msg(WsMsg::SignUpRequest(
+                page.email.clone(),
+                page.username.clone(),
+            ));
+        }
         Msg::WsMsg(WsMsg::SignUpSuccess) => {
             page.sign_up_success = true;
+        }
+        Msg::WsMsg(WsMsg::SignUpPairTaken) => {
+            page.error = "Pair you give is either taken or is not matching".to_string();
         }
         _ => (),
     }
@@ -80,7 +90,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         StyledButton::build()
             .primary()
             .text("Register")
-            .on_click(mouse_ev(Ev::Click, |_| Msg::SignInRequest))
+            .on_click(mouse_ev(Ev::Click, |_| Msg::SignUpRequest))
     }
     .build()
     .into_node();
@@ -88,6 +98,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     let sign_in_link = StyledLink::build()
         .text("Sign In")
         .href("/login")
+        .add_class("signInLink")
         .build()
         .into_node();
 
@@ -109,17 +120,24 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         span!["Why I don't see password?"]
     ];
 
+    let error_row = if page.error.is_empty() {
+        empty![]
+    } else {
+        div![class!["error"], p![page.error]]
+    };
+
     let sign_up_form = StyledForm::build()
         .heading("Sign In to your account")
         .on_submit(ev(Ev::Submit, |ev| {
             ev.stop_propagation();
             ev.prevent_default();
-            Msg::SignInRequest
+            Msg::SignUpRequest
         }))
         .add_field(username_field)
         .add_field(email_field)
         .add_field(submit_field)
         .add_field(no_pass_section)
+        .add_field(error_row)
         .build()
         .into_node();
     let children = vec![sign_up_form];

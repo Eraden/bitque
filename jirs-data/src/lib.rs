@@ -530,7 +530,11 @@ pub enum WsMsg {
     BindTokenCheck(Uuid),
     BindTokenBad,
     BindTokenOk(Uuid),
+
+    // Sign up
+    SignUpRequest(EmailString, UsernameString),
     SignUpSuccess,
+    SignUpPairTaken,
 
     // project page
     ProjectRequest,

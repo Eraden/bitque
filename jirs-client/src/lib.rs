@@ -142,6 +142,9 @@ pub enum Msg {
     SignInRequest,
     BindClientRequest,
 
+    // sign up
+    SignUpRequest,
+
     StyledSelectChanged(FieldId, StyledSelectChange),
 
     ChangePage(model::Page),

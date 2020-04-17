@@ -121,6 +121,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     let register_link = StyledLink::build()
         .text("Register")
         .href("/register")
+        .add_class("signUpLink")
         .build()
         .into_node();
     let submit_field = StyledField::build()

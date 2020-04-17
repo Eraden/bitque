@@ -11,6 +11,7 @@ pub enum ServiceErrors {
     DatabaseConnectionLost,
     DatabaseQueryFailed(String),
     RecordNotFound(String),
+    RegisterCollision,
 }
 
 impl ServiceErrors {
@@ -40,6 +41,9 @@ impl Into<HttpResponse> for ServiceErrors {
                     errors: vec![format!("Resource not found {}", resource_name)],
                 })
             }
+            ServiceErrors::RegisterCollision => HttpResponse::Unauthorized().json(ErrorResponse {
+                errors: vec!["Register collision".to_string()],
+            }),
         }
     }
 }

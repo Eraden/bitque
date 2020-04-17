@@ -90,6 +90,11 @@ impl WebSocketActor {
                     block_on(auth::authenticate(&self.db, &self.mail, name, email))?
                 }
 
+                // register
+                WsMsg::SignUpRequest(email, username) => {
+                    block_on(users::register(&self.db, &self.mail, username, email))?
+                }
+
                 // users
                 WsMsg::ProjectUsersRequest => {
                     block_on(users::load_project_users(&self.db, &self.current_user))?

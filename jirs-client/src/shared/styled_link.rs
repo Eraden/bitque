@@ -27,6 +27,7 @@ impl StyledLinkBuilder {
         self.children.push(child);
         self
     }
+
     pub fn add_class<S>(mut self, name: S) -> Self
     where
         S: Into<String>,
@@ -43,13 +44,12 @@ impl StyledLinkBuilder {
         self
     }
 
-    pub fn text<S>(mut self, s: S) -> Self
+    pub fn text<S>(self, s: S) -> Self
     where
         S: Into<String>,
     {
         let text: String = s.into();
-        self.children.push(span![text]);
-        self
+        self.add_child(span![text])
     }
 
     pub fn build(self) -> StyledLink {
