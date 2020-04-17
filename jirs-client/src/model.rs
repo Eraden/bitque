@@ -140,8 +140,8 @@ pub enum Page {
     EditIssue(IssueId),
     AddIssue,
     ProjectSettings,
-    Login,
-    Register,
+    SignIn,
+    SignUp,
 }
 
 impl Page {
@@ -151,8 +151,8 @@ impl Page {
             Page::EditIssue(id) => format!("/issues/{id}", id = id),
             Page::AddIssue => "/add-issues".to_string(),
             Page::ProjectSettings => "/project-settings".to_string(),
-            Page::Login => "/login".to_string(),
-            Page::Register => "/register".to_string(),
+            Page::SignIn => "/login".to_string(),
+            Page::SignUp => "/register".to_string(),
         }
     }
 }
@@ -219,7 +219,7 @@ impl ProjectSettingsPage {
 }
 
 #[derive(Debug, Default)]
-pub struct LoginPage {
+pub struct SignInPage {
     pub username: String,
     pub email: String,
     pub token: String,
@@ -231,9 +231,20 @@ pub struct LoginPage {
     pub token_touched: bool,
 }
 
+#[derive(Debug, Default)]
+pub struct SignUpPage {
+    pub username: String,
+    pub email: String,
+    pub sign_up_success: bool,
+    // touched
+    pub username_touched: bool,
+    pub email_touched: bool,
+}
+
 #[derive(Debug)]
 pub enum PageContent {
-    Login(LoginPage),
+    SignIn(SignInPage),
+    SignUp(SignUpPage),
     Project(ProjectPage),
     ProjectSettings(ProjectSettingsPage),
 }

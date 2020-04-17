@@ -18,9 +18,11 @@
 @import "./css/styledEditor.css";
 @import "./css/styledComment.css";
 @import "./css/styledPage.css";
+@import "./css/styledLink.css";
 @import "./css/app.css";
 @import "./css/issue.css";
 @import "./css/project.css";
 @import "./css/projectSettings.css";
 @import "./css/timeTracking.css";
 @import "./css/login.css";
+@import "./css/register.css";

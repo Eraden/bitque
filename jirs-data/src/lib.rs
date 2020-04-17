@@ -484,10 +484,16 @@ pub enum ProjectFieldId {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum LoginFieldId {
+pub enum SignInFieldId {
     Username,
     Email,
     Token,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum SignUpFieldId {
+    Username,
+    Email,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
@@ -524,6 +530,7 @@ pub enum WsMsg {
     BindTokenCheck(Uuid),
     BindTokenBad,
     BindTokenOk(Uuid),
+    SignUpSuccess,
 
     // project page
     ProjectRequest,

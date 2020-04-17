@@ -16,6 +16,7 @@ pub mod styled_field;
 pub mod styled_form;
 pub mod styled_icon;
 pub mod styled_input;
+pub mod styled_link;
 pub mod styled_modal;
 pub mod styled_select;
 pub mod styled_select_child;

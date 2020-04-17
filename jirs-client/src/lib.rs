@@ -10,13 +10,14 @@ use crate::shared::styled_editor::Mode as TabMode;
 use crate::shared::styled_select::StyledSelectChange;
 
 mod api;
-mod login;
 mod modal;
 mod model;
 mod project;
 mod project_settings;
-mod register;
 mod shared;
+mod sign_in;
+mod sign_up;
+mod validations;
 mod ws;
 
 pub type AvatarFilterActive = bool;
@@ -30,7 +31,8 @@ pub enum EditIssueModalSection {
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum FieldId {
-    Login(LoginFieldId),
+    SignIn(SignInFieldId),
+    SignUp(SignUpFieldId),
     // issue
     AddIssueModal(IssueFieldId),
     EditIssueModal(EditIssueModalSection),
@@ -103,10 +105,14 @@ impl std::fmt::Display for FieldId {
                 ProjectFieldId::Description => f.write_str("projectSettings-description"),
                 ProjectFieldId::Category => f.write_str("projectSettings-category"),
             },
-            FieldId::Login(sub) => match sub {
-                LoginFieldId::Email => f.write_str("login-email"),
-                LoginFieldId::Username => f.write_str("login-username"),
-                LoginFieldId::Token => f.write_str("login-token"),
+            FieldId::SignIn(sub) => match sub {
+                SignInFieldId::Email => f.write_str("login-email"),
+                SignInFieldId::Username => f.write_str("login-username"),
+                SignInFieldId::Token => f.write_str("login-token"),
+            },
+            FieldId::SignUp(sub) => match sub {
+                SignUpFieldId::Username => f.write_str("signUp-email"),
+                SignUpFieldId::Email => f.write_str("signUp-username"),
             },
         }
     }
@@ -193,7 +199,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::AuthTokenErased => {
             seed::push_route(vec!["login"]);
-            orders.skip().send_msg(Msg::ChangePage(Page::Login));
+            orders.skip().send_msg(Msg::ChangePage(Page::SignIn));
             authorize_or_redirect();
             return;
         }
@@ -210,8 +216,8 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match model.page {
         Page::Project | Page::AddIssue | Page::EditIssue(..) => project::update(msg, model, orders),
         Page::ProjectSettings => project_settings::update(msg, model, orders),
-        Page::Login => login::update(msg, model, orders),
-        Page::Register => register::update(msg, model, orders),
+        Page::SignIn => sign_in::update(msg, model, orders),
+        Page::SignUp => sign_up::update(msg, model, orders),
     }
     if cfg!(debug_assertions) {
         // debug!(model);
@@ -223,8 +229,8 @@ fn view(model: &model::Model) -> Node<Msg> {
         Page::Project | Page::AddIssue => project::view(model),
         Page::EditIssue(_id) => project::view(model),
         Page::ProjectSettings => project_settings::view(model),
-        Page::Login => login::view(model),
-        Page::Register => register::view(model),
+        Page::SignIn => sign_in::view(model),
+        Page::SignUp => sign_up::view(model),
     }
 }
 
@@ -241,8 +247,8 @@ fn routes(url: Url) -> Option<Msg> {
         },
         "add-issue" => Some(Msg::ChangePage(Page::AddIssue)),
         "project-settings" => Some(Msg::ChangePage(model::Page::ProjectSettings)),
-        "login" => Some(Msg::ChangePage(model::Page::Login)),
-        "register" => Some(Msg::ChangePage(model::Page::Register)),
+        "login" => Some(Msg::ChangePage(model::Page::SignIn)),
+        "register" => Some(Msg::ChangePage(model::Page::SignUp)),
         _ => Some(Msg::ChangePage(model::Page::Project)),
     }
 }

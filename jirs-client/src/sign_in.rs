@@ -6,40 +6,42 @@ use uuid::Uuid;
 use jirs_data::WsMsg;
 
 use crate::api::send_ws_msg;
-use crate::model::{LoginPage, Page, PageContent};
+use crate::model::{Page, PageContent, SignInPage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
+use crate::shared::styled_link::StyledLink;
 use crate::shared::{outer_layout, write_auth_token, ToNode};
-use crate::{model, FieldId, LoginFieldId, Msg};
+use crate::validations::{is_email, is_token};
+use crate::{model, FieldId, Msg, SignInFieldId};
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
-    if model.page != Page::Login {
+    if model.page != Page::SignIn {
         return;
     }
 
-    if msg == Msg::ChangePage(Page::Login) {
-        model.page_content = PageContent::Login(LoginPage::default());
+    if msg == Msg::ChangePage(Page::SignIn) {
+        model.page_content = PageContent::SignIn(SignInPage::default());
         return;
     }
 
     let page = match &mut model.page_content {
-        PageContent::Login(page) => page,
+        PageContent::SignIn(page) => page,
         _ => return,
     };
 
     match msg {
-        Msg::InputChanged(FieldId::Login(LoginFieldId::Username), value) => {
+        Msg::InputChanged(FieldId::SignIn(SignInFieldId::Username), value) => {
             page.username = value;
             page.username_touched = true;
         }
-        Msg::InputChanged(FieldId::Login(LoginFieldId::Email), value) => {
+        Msg::InputChanged(FieldId::SignIn(SignInFieldId::Email), value) => {
             page.email = value;
             page.email_touched = true;
         }
-        Msg::InputChanged(FieldId::Login(LoginFieldId::Token), value) => {
+        Msg::InputChanged(FieldId::SignIn(SignInFieldId::Token), value) => {
             page.token = value;
             page.token_touched = true;
         }
@@ -78,11 +80,11 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
 
 pub fn view(model: &model::Model) -> Node<Msg> {
     let page = match &model.page_content {
-        PageContent::Login(page) => page,
+        PageContent::SignIn(page) => page,
         _ => return empty![],
     };
 
-    let username = StyledInput::build(FieldId::Login(LoginFieldId::Username))
+    let username = StyledInput::build(FieldId::SignIn(SignInFieldId::Username))
         .value(page.username.as_str())
         .valid(!page.username_touched || page.username.len() > 1)
         .build()
@@ -93,7 +95,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let email = StyledInput::build(FieldId::Login(LoginFieldId::Email))
+    let email = StyledInput::build(FieldId::SignIn(SignInFieldId::Email))
         .value(page.email.as_str())
         .valid(!page.email_touched || is_email(page.email.as_str()))
         .build()
@@ -116,7 +118,15 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     }
     .build()
     .into_node();
-    let submit_field = StyledField::build().input(submit).build().into_node();
+    let register_link = StyledLink::build()
+        .text("Register")
+        .href("/register")
+        .build()
+        .into_node();
+    let submit_field = StyledField::build()
+        .input(div![class!["twoRow"], submit, register_link,])
+        .build()
+        .into_node();
 
     let help_icon = StyledIcon::build(Icon::Help)
         .add_class("noPasswordHelp")
@@ -145,7 +155,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let token = StyledInput::build(FieldId::Login(LoginFieldId::Token))
+    let token = StyledInput::build(FieldId::SignIn(SignInFieldId::Token))
         .value(page.token.as_str())
         .valid(!page.token_touched || is_token(page.token.as_str()))
         .build()
@@ -176,29 +186,4 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let children = vec![sign_in_form, bind_token_form];
     outer_layout(model, "login", children)
-}
-
-fn is_token(s: &str) -> bool {
-    uuid::Uuid::from_str(s).is_ok()
-}
-
-fn is_email(s: &str) -> bool {
-    let mut has_at = false;
-    let mut has_dot = false;
-
-    for c in s.chars() {
-        match c {
-            '\n' | ' ' | '\t' | '\r' => return false,
-            '@' if !has_at => {
-                has_at = true;
-            }
-            '@' if has_at => return false,
-            '.' if has_at => {
-                has_dot = true;
-            }
-            _ if has_dot => return true,
-            _ => (),
-        }
-    }
-    return false;
 }

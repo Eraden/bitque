@@ -1,0 +1,11 @@
+.styledLink {
+    color: var(--textDark);
+    font-family: var(--font-medium);
+    height: 32px;
+    vertical-align: middle;
+    line-height: 2;
+    appearance: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14.5px;
+}
