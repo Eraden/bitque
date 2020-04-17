@@ -168,7 +168,7 @@ impl IssueStatus {
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssuePriorityType")]
-#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Copy, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
 pub enum IssuePriority {
     Highest,
     High,
@@ -463,6 +463,53 @@ pub struct UpdateProjectPayload {
     pub category: Option<ProjectCategory>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum PayloadVariant {
+    OptionI32(Option<i32>),
+    VecI32(Vec<i32>),
+    I32(i32),
+    String(String),
+    IssueType(IssueType),
+    IssueStatus(IssueStatus),
+    IssuePriority(IssuePriority),
+    ProjectCategory(ProjectCategory),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum ProjectFieldId {
+    Name,
+    Url,
+    Description,
+    Category,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum LoginFieldId {
+    Username,
+    Email,
+    Token,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum CommentFieldId {
+    Body,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum IssueFieldId {
+    Type,
+    Title,
+    Description,
+    Status,
+    ListPosition,
+    Assignees,
+    Reporter,
+    Priority,
+    Estimate,
+    TimeSpend,
+    TimeRemaining,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum WsMsg {
     Ping,
@@ -488,7 +535,7 @@ pub enum WsMsg {
     ProjectUpdateRequest(UpdateProjectPayload),
 
     // issue
-    IssueUpdateRequest(IssueId, UpdateIssuePayload),
+    IssueUpdateRequest(IssueId, IssueFieldId, PayloadVariant),
     IssueUpdated(Issue),
     IssueDeleteRequest(IssueId),
     IssueDeleted(IssueId),

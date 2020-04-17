@@ -1,9 +1,10 @@
-use crate::db::DbExecutor;
-use crate::errors::ServiceErrors;
-use crate::models::{IssueAssignee, User};
 use actix::{Handler, Message};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+
+use crate::db::DbExecutor;
+use crate::errors::ServiceErrors;
+use crate::models::{IssueAssignee, User};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FindUser {
@@ -22,7 +23,7 @@ impl Handler<FindUser> for DbExecutor {
         use crate::schema::users::dsl::*;
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let row: User = users
@@ -53,7 +54,7 @@ impl Handler<LoadProjectUsers> for DbExecutor {
         use crate::schema::users::dsl::*;
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let rows: Vec<User> = users
@@ -82,7 +83,7 @@ impl Handler<LoadIssueAssignees> for DbExecutor {
         use crate::schema::users::dsl::*;
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let rows: Vec<(User, IssueAssignee)> = users

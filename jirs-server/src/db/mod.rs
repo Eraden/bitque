@@ -1,7 +1,10 @@
+use std::fs::*;
+
 use actix::{Actor, SyncContext};
 #[cfg(not(debug_assertions))]
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
+use serde::{Deserialize, Serialize};
 
 #[cfg(debug_assertions)]
 use crate::db::dev::VerboseConnection;
@@ -19,7 +22,10 @@ pub type DbPool = r2d2::Pool<ConnectionManager<dev::VerboseConnection>>;
 #[cfg(not(debug_assertions))]
 pub type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
-pub struct DbExecutor(pub DbPool);
+pub struct DbExecutor {
+    pub pool: DbPool,
+    pub config: Configuration,
+}
 
 impl Actor for DbExecutor {
     type Context = SyncContext<Self>;
@@ -27,7 +33,10 @@ impl Actor for DbExecutor {
 
 impl Default for DbExecutor {
     fn default() -> Self {
-        Self(build_pool())
+        Self {
+            pool: build_pool(),
+            config: Configuration::read(),
+        }
     }
 }
 
@@ -124,5 +133,44 @@ pub mod dev {
         fn transaction_manager(&self) -> &Self::TransactionManager {
             self.inner.transaction_manager()
         }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Configuration {
+    pub concurrency: usize,
+    pub database_url: String,
+}
+
+impl Default for Configuration {
+    fn default() -> Self {
+        Self {
+            concurrency: 2,
+            database_url: "postgres://postgres@localhost:5432/jirs".to_string(),
+        }
+    }
+}
+
+impl Configuration {
+    pub fn read() -> Self {
+        let contents: String = read_to_string(Self::config_file()).unwrap_or_default();
+        match toml::from_str(contents.as_str()) {
+            Ok(config) => config,
+            _ => {
+                let config = Configuration::default();
+                config.write().unwrap_or_else(|e| panic!(e));
+                config
+            }
+        }
+    }
+
+    pub fn write(&self) -> Result<(), String> {
+        let s = toml::to_string(self).map_err(|e| e.to_string())?;
+        write(Self::config_file(), s.as_str()).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    pub fn config_file() -> &'static str {
+        "db.toml"
     }
 }

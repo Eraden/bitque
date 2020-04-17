@@ -1,5 +1,6 @@
 use seed::{prelude::*, *};
 
+use jirs_data::IssueFieldId;
 use jirs_data::{IssuePriority, IssueType, ToVec};
 
 use crate::api::send_ws_msg;
@@ -14,7 +15,7 @@ use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::styled_select_child::ToStyledSelectChild;
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::ToNode;
-use crate::{AddIssueModalFieldId, FieldId, Msg};
+use crate::{FieldId, Msg};
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     let modal = model.modals.iter_mut().find(|modal| match modal {
@@ -57,16 +58,16 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             orders.skip().send_msg(Msg::ModalDropped);
         }
 
-        Msg::InputChanged(FieldId::AddIssueModal(AddIssueModalFieldId::Description), value) => {
+        Msg::InputChanged(FieldId::AddIssueModal(IssueFieldId::Description), value) => {
             modal.description = Some(value.clone());
         }
-        Msg::InputChanged(FieldId::AddIssueModal(AddIssueModalFieldId::Summary), value) => {
+        Msg::InputChanged(FieldId::AddIssueModal(IssueFieldId::Title), value) => {
             modal.title = value.clone();
         }
 
         // IssueTypeAddIssueModal
         Msg::StyledSelectChanged(
-            FieldId::AddIssueModal(AddIssueModalFieldId::IssueType),
+            FieldId::AddIssueModal(IssueFieldId::Type),
             StyledSelectChange::Changed(id),
         ) => {
             modal.issue_type = (*id).into();
@@ -74,7 +75,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
         // ReporterAddIssueModal
         Msg::StyledSelectChanged(
-            FieldId::AddIssueModal(AddIssueModalFieldId::Reporter),
+            FieldId::AddIssueModal(IssueFieldId::Reporter),
             StyledSelectChange::Changed(id),
         ) => {
             modal.reporter_id = Some(*id as i32);
@@ -82,7 +83,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
         // AssigneesAddIssueModal
         Msg::StyledSelectChanged(
-            FieldId::AddIssueModal(AddIssueModalFieldId::Assignees),
+            FieldId::AddIssueModal(IssueFieldId::Assignees),
             StyledSelectChange::Changed(id),
         ) => {
             let id = *id as i32;
@@ -91,7 +92,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             }
         }
         Msg::StyledSelectChanged(
-            FieldId::AddIssueModal(AddIssueModalFieldId::Assignees),
+            FieldId::AddIssueModal(IssueFieldId::Assignees),
             StyledSelectChange::RemoveMulti(id),
         ) => {
             let id = *id as i32;
@@ -106,7 +107,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
         // IssuePriorityAddIssueModal
         Msg::StyledSelectChanged(
-            FieldId::AddIssueModal(AddIssueModalFieldId::Priority),
+            FieldId::AddIssueModal(IssueFieldId::Priority),
             StyledSelectChange::Changed(id),
         ) => {
             modal.priority = (*id).into();
@@ -117,7 +118,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 }
 
 pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
-    let select_type = StyledSelect::build(FieldId::AddIssueModal(AddIssueModalFieldId::IssueType))
+    let select_type = StyledSelect::build(FieldId::AddIssueModal(IssueFieldId::Type))
         .name("type")
         .normal()
         .text_filter(modal.type_state.text_filter.as_str())
@@ -139,7 +140,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let short_summary = StyledInput::build(FieldId::AddIssueModal(AddIssueModalFieldId::Summary))
+    let short_summary = StyledInput::build(FieldId::AddIssueModal(IssueFieldId::Title))
         .valid(true)
         .build()
         .into_node();
@@ -152,7 +153,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
 
     let description = StyledTextarea::build()
         .height(110)
-        .build(FieldId::AddIssueModal(AddIssueModalFieldId::Description))
+        .build(FieldId::AddIssueModal(IssueFieldId::Description))
         .into_node();
     let description_field = StyledField::build()
         .label("Description")
@@ -165,7 +166,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .reporter_id
         .or_else(|| model.user.as_ref().map(|u| u.id))
         .unwrap_or_default();
-    let reporter = StyledSelect::build(FieldId::AddIssueModal(AddIssueModalFieldId::Reporter))
+    let reporter = StyledSelect::build(FieldId::AddIssueModal(IssueFieldId::Reporter))
         .normal()
         .text_filter(modal.reporter_state.text_filter.as_str())
         .opened(modal.reporter_state.opened)
@@ -199,7 +200,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let assignees = StyledSelect::build(FieldId::AddIssueModal(AddIssueModalFieldId::Assignees))
+    let assignees = StyledSelect::build(FieldId::AddIssueModal(IssueFieldId::Assignees))
         .normal()
         .multi()
         .text_filter(modal.assignees_state.text_filter.as_str())
@@ -234,22 +235,21 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let select_priority =
-        StyledSelect::build(FieldId::AddIssueModal(AddIssueModalFieldId::Priority))
-            .name("priority")
-            .normal()
-            .text_filter(modal.priority_state.text_filter.as_str())
-            .opened(modal.priority_state.opened)
-            .valid(true)
-            .options(
-                IssuePriority::ordered()
-                    .iter()
-                    .map(|p| p.to_select_child().name("priority"))
-                    .collect(),
-            )
-            .selected(vec![modal.priority.to_select_child().name("priority")])
-            .build()
-            .into_node();
+    let select_priority = StyledSelect::build(FieldId::AddIssueModal(IssueFieldId::Priority))
+        .name("priority")
+        .normal()
+        .text_filter(modal.priority_state.text_filter.as_str())
+        .opened(modal.priority_state.opened)
+        .valid(true)
+        .options(
+            IssuePriority::ordered()
+                .iter()
+                .map(|p| p.to_select_child().name("priority"))
+                .collect(),
+        )
+        .selected(vec![modal.priority.to_select_child().name("priority")])
+        .build()
+        .into_node();
     let issue_priority_field = StyledField::build()
         .label("Issue Type")
         .tip("Priority in relation to other issues.")

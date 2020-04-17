@@ -13,7 +13,7 @@ use crate::shared::styled_select_child::ToStyledSelectChild;
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::{inner_layout, ToNode};
 use crate::FieldChange::TabChanged;
-use crate::{model, FieldId, Msg, ProjectSettingsFieldId};
+use crate::{model, FieldId, Msg, ProjectFieldId};
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.user.is_none() {
@@ -45,24 +45,24 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     page.project_category_state.update(&msg, orders);
     match msg {
         Msg::ProjectSaveChanges => send_ws_msg(WsMsg::ProjectUpdateRequest(page.payload.clone())),
-        Msg::InputChanged(FieldId::ProjectSettings(ProjectSettingsFieldId::Name), text) => {
+        Msg::InputChanged(FieldId::ProjectSettings(ProjectFieldId::Name), text) => {
             page.payload.name = Some(text);
         }
-        Msg::InputChanged(FieldId::ProjectSettings(ProjectSettingsFieldId::Url), text) => {
+        Msg::InputChanged(FieldId::ProjectSettings(ProjectFieldId::Url), text) => {
             page.payload.url = Some(text);
         }
-        Msg::InputChanged(FieldId::ProjectSettings(ProjectSettingsFieldId::Description), text) => {
+        Msg::InputChanged(FieldId::ProjectSettings(ProjectFieldId::Description), text) => {
             page.payload.description = Some(text);
         }
         Msg::StyledSelectChanged(
-            FieldId::ProjectSettings(ProjectSettingsFieldId::Category),
+            FieldId::ProjectSettings(ProjectFieldId::Category),
             StyledSelectChange::Changed(value),
         ) => {
             let category = value.into();
             page.payload.category = Some(category);
         }
         Msg::ModalChanged(TabChanged(
-            FieldId::ProjectSettings(ProjectSettingsFieldId::Description),
+            FieldId::ProjectSettings(ProjectFieldId::Description),
             mode,
         )) => {
             page.description_mode = mode;
@@ -89,7 +89,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .height(39)
         .max_height(39)
         .disable_auto_resize()
-        .build(FieldId::ProjectSettings(ProjectSettingsFieldId::Name))
+        .build(FieldId::ProjectSettings(ProjectFieldId::Name))
         .into_node();
     let name_field = StyledField::build()
         .label("Name")
@@ -103,7 +103,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .max_height(39)
         .disable_auto_resize()
         .value(page.payload.url.as_ref().cloned().unwrap_or_default())
-        .build(FieldId::ProjectSettings(ProjectSettingsFieldId::Url))
+        .build(FieldId::ProjectSettings(ProjectFieldId::Url))
         .into_node();
     let url_field = StyledField::build()
         .label("Url")
@@ -112,20 +112,18 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let description = StyledEditor::build(FieldId::ProjectSettings(
-        ProjectSettingsFieldId::Description,
-    ))
-    .text(
-        page.payload
-            .description
-            .as_ref()
-            .cloned()
-            .unwrap_or_default(),
-    )
-    .update_on(Ev::Change)
-    .mode(page.description_mode.clone())
-    .build()
-    .into_node();
+    let description = StyledEditor::build(FieldId::ProjectSettings(ProjectFieldId::Description))
+        .text(
+            page.payload
+                .description
+                .as_ref()
+                .cloned()
+                .unwrap_or_default(),
+        )
+        .update_on(Ev::Change)
+        .mode(page.description_mode.clone())
+        .build()
+        .into_node();
     let description_field = StyledField::build()
         .input(description)
         .label("Description")
@@ -133,7 +131,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let category = StyledSelect::build(FieldId::ProjectSettings(ProjectSettingsFieldId::Category))
+    let category = StyledSelect::build(FieldId::ProjectSettings(ProjectFieldId::Category))
         .opened(page.project_category_state.opened)
         .text_filter(page.project_category_state.text_filter.as_str())
         .valid(true)

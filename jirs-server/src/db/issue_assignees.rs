@@ -22,7 +22,7 @@ impl Handler<LoadAssignees> for DbExecutor {
         use crate::schema::issue_assignees::dsl::*;
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         issue_assignees

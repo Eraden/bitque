@@ -1,6 +1,6 @@
 use seed::{prelude::*, *};
 
-use jirs_data::IssueId;
+use jirs_data::{IssueFieldId, IssueId};
 
 use crate::model::{ModalType, Model};
 use crate::shared::styled_button::StyledButton;
@@ -9,7 +9,7 @@ use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_modal::StyledModal;
 use crate::shared::tracking_widget::tracking_widget;
 use crate::shared::{find_issue, ToNode};
-use crate::{EditIssueModalFieldId, FieldId, Msg};
+use crate::{EditIssueModalSection, FieldId, Msg};
 
 pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
     let _issue = match find_issue(model, issue_id) {
@@ -26,26 +26,28 @@ pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
 
     let tracking = tracking_widget(model, edit_issue_modal);
 
-    let time_spent = StyledInput::build(FieldId::EditIssueModal(EditIssueModalFieldId::TimeSpend))
-        .value(
-            edit_issue_modal
-                .payload
-                .time_spent
-                .as_ref()
-                .map(|n| n.to_string())
-                .unwrap_or_default(),
-        )
-        .valid(true)
-        .build()
-        .into_node();
+    let time_spent = StyledInput::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+        IssueFieldId::TimeSpend,
+    )))
+    .value(
+        edit_issue_modal
+            .payload
+            .time_spent
+            .as_ref()
+            .map(|n| n.to_string())
+            .unwrap_or_default(),
+    )
+    .valid(true)
+    .build()
+    .into_node();
     let time_spent_field = StyledField::build()
         .input(time_spent)
         .label("Time spent")
         .build()
         .into_node();
-    let time_remaining = StyledInput::build(FieldId::EditIssueModal(
-        EditIssueModalFieldId::TimeRemaining,
-    ))
+    let time_remaining = StyledInput::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+        IssueFieldId::TimeRemaining,
+    )))
     .value(
         edit_issue_modal
             .payload

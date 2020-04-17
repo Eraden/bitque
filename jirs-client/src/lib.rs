@@ -23,90 +23,85 @@ pub type AvatarFilterActive = bool;
 pub type AppType = App<Msg, Model, Node<Msg>>;
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum EditIssueModalFieldId {
-    IssueType,
-    Title,
-    Description,
-    Status,
-    Assignees,
-    Reporter,
-    Priority,
-    Estimate,
-    TimeSpend,
-    TimeRemaining,
-    // comment
-    CommentBody,
-}
-
-#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum AddIssueModalFieldId {
-    IssueType,
-    Summary,
-    Description,
-    Reporter,
-    Assignees,
-    Priority,
-}
-
-#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum ProjectSettingsFieldId {
-    Name,
-    Url,
-    Description,
-    Category,
-}
-
-#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum LoginFieldId {
-    Username,
-    Email,
-    Token,
+pub enum EditIssueModalSection {
+    Issue(IssueFieldId),
+    Comment(CommentFieldId),
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum FieldId {
     Login(LoginFieldId),
     // issue
-    AddIssueModal(AddIssueModalFieldId),
-    EditIssueModal(EditIssueModalFieldId),
+    AddIssueModal(IssueFieldId),
+    EditIssueModal(EditIssueModalSection),
     // project boards
     TextFilterBoard,
     CopyButtonLabel,
 
-    ProjectSettings(ProjectSettingsFieldId),
+    ProjectSettings(ProjectFieldId),
 }
 
 impl std::fmt::Display for FieldId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FieldId::EditIssueModal(sub) => match sub {
-                EditIssueModalFieldId::IssueType => f.write_str("issueTypeEditModalTop"),
-                EditIssueModalFieldId::Title => f.write_str("titleIssueEditModal"),
-                EditIssueModalFieldId::Description => f.write_str("descriptionIssueEditModal"),
-                EditIssueModalFieldId::Status => f.write_str("statusIssueEditModal"),
-                EditIssueModalFieldId::Assignees => f.write_str("assigneesIssueEditModal"),
-                EditIssueModalFieldId::Reporter => f.write_str("reporterIssueEditModal"),
-                EditIssueModalFieldId::Priority => f.write_str("priorityIssueEditModal"),
-                EditIssueModalFieldId::Estimate => f.write_str("estimateIssueEditModal"),
-                EditIssueModalFieldId::TimeSpend => f.write_str("timeSpendIssueEditModal"),
-                EditIssueModalFieldId::TimeRemaining => f.write_str("timeRemainingIssueEditModal"),
-                EditIssueModalFieldId::CommentBody => f.write_str("editIssue-commentBody"),
+                EditIssueModalSection::Issue(IssueFieldId::Type) => {
+                    f.write_str("issueTypeEditModalTop")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::Title) => {
+                    f.write_str("titleIssueEditModal")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::Description) => {
+                    f.write_str("descriptionIssueEditModal")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::Status) => {
+                    f.write_str("statusIssueEditModal")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::Assignees) => {
+                    f.write_str("assigneesIssueEditModal")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::Reporter) => {
+                    f.write_str("reporterIssueEditModal")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::Priority) => {
+                    f.write_str("priorityIssueEditModal")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::Estimate) => {
+                    f.write_str("estimateIssueEditModal")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::TimeSpend) => {
+                    f.write_str("timeSpendIssueEditModal")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::TimeRemaining) => {
+                    f.write_str("timeRemainingIssueEditModal")
+                }
+                EditIssueModalSection::Comment(CommentFieldId::Body) => {
+                    f.write_str("editIssue-commentBody")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::ListPosition) => {
+                    f.write_str("editIssue-listPosition")
+                }
             },
             FieldId::AddIssueModal(sub) => match sub {
-                AddIssueModalFieldId::IssueType => f.write_str("issueTypeAddIssueModal"),
-                AddIssueModalFieldId::Summary => f.write_str("summaryAddIssueModal"),
-                AddIssueModalFieldId::Description => f.write_str("descriptionAddIssueModal"),
-                AddIssueModalFieldId::Reporter => f.write_str("reporterAddIssueModal"),
-                AddIssueModalFieldId::Assignees => f.write_str("assigneesAddIssueModal"),
-                AddIssueModalFieldId::Priority => f.write_str("issuePriorityAddIssueModal"),
+                IssueFieldId::Type => f.write_str("issueTypeAddIssueModal"),
+                IssueFieldId::Title => f.write_str("summaryAddIssueModal"),
+                IssueFieldId::Description => f.write_str("descriptionAddIssueModal"),
+                IssueFieldId::Reporter => f.write_str("reporterAddIssueModal"),
+                IssueFieldId::Assignees => f.write_str("assigneesAddIssueModal"),
+                IssueFieldId::Priority => f.write_str("issuePriorityAddIssueModal"),
+                IssueFieldId::Status => f.write_str("addIssueModal-status"),
+                IssueFieldId::Estimate => f.write_str("addIssueModal-estimate"),
+                IssueFieldId::TimeSpend => f.write_str("addIssueModal-timeSpend"),
+                IssueFieldId::TimeRemaining => f.write_str("addIssueModal-timeRemaining"),
+                IssueFieldId::ListPosition => f.write_str("addIssueModal-listPosition"),
             },
             FieldId::TextFilterBoard => f.write_str("textFilterBoard"),
             FieldId::CopyButtonLabel => f.write_str("copyButtonLabel"),
             FieldId::ProjectSettings(sub) => match sub {
-                ProjectSettingsFieldId::Name => f.write_str("projectSettings-name"),
-                ProjectSettingsFieldId::Url => f.write_str("projectSettings-url"),
-                ProjectSettingsFieldId::Description => f.write_str("projectSettings-description"),
-                ProjectSettingsFieldId::Category => f.write_str("projectSettings-category"),
+                ProjectFieldId::Name => f.write_str("projectSettings-name"),
+                ProjectFieldId::Url => f.write_str("projectSettings-url"),
+                ProjectFieldId::Description => f.write_str("projectSettings-description"),
+                ProjectFieldId::Category => f.write_str("projectSettings-category"),
             },
             FieldId::Login(sub) => match sub {
                 LoginFieldId::Email => f.write_str("login-email"),
@@ -332,8 +327,8 @@ pub fn render() {
 #[inline]
 fn authorize_or_redirect() {
     match crate::shared::read_auth_token() {
-        Ok(uuid) => {
-            send_ws_msg(WsMsg::AuthorizeRequest(uuid));
+        Ok(token) => {
+            send_ws_msg(WsMsg::AuthorizeRequest(token));
         }
         Err(..) => {
             let pathname = seed::document().location().unwrap().pathname().unwrap();

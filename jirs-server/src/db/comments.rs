@@ -22,7 +22,7 @@ impl Handler<LoadIssueComments> for DbExecutor {
         use crate::schema::comments::dsl::*;
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let rows: Vec<Comment> = comments
@@ -59,7 +59,7 @@ impl Handler<CreateComment> for DbExecutor {
         };
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let row: Comment = diesel::insert_into(comments)
@@ -88,7 +88,7 @@ impl Handler<UpdateComment> for DbExecutor {
         use crate::schema::comments::dsl::*;
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let query = diesel::update(
@@ -122,7 +122,7 @@ impl Handler<DeleteComment> for DbExecutor {
         use crate::schema::comments::dsl::*;
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         diesel::delete(

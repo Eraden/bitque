@@ -27,7 +27,7 @@ impl Handler<LoadIssue> for DbExecutor {
     fn handle(&mut self, msg: LoadIssue, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issues::dsl::{id, issues};
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let record = issues
@@ -54,7 +54,7 @@ impl Handler<LoadProjectIssues> for DbExecutor {
     fn handle(&mut self, msg: LoadProjectIssues, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issues::dsl::{issues, project_id};
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let chain = issues.filter(project_id.eq(msg.project_id)).distinct();
@@ -69,7 +69,7 @@ impl Handler<LoadProjectIssues> for DbExecutor {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct UpdateIssue {
     pub issue_id: i32,
     pub title: Option<String>,
@@ -97,7 +97,7 @@ impl Handler<UpdateIssue> for DbExecutor {
     fn handle(&mut self, msg: UpdateIssue, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issues::dsl::{self, issues};
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
@@ -187,7 +187,7 @@ impl Handler<DeleteIssue> for DbExecutor {
         use crate::schema::issues::dsl::issues;
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
@@ -229,7 +229,7 @@ impl Handler<CreateIssue> for DbExecutor {
         use crate::schema::issues::dsl::{issues, status};
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 

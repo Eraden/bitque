@@ -11,7 +11,7 @@ use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{drag_ev, inner_layout, ToNode};
-use crate::{EditIssueModalFieldId, FieldId, Msg};
+use crate::{EditIssueModalSection, FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     if model.user.is_none() {
@@ -63,7 +63,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             orders.skip().send_msg(Msg::ModalDropped);
         }
         Msg::StyledSelectChanged(
-            FieldId::EditIssueModal(EditIssueModalFieldId::IssueType),
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
             StyledSelectChange::Text(text),
         ) => {
             let modal = model

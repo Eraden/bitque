@@ -24,7 +24,7 @@ impl Handler<FindBindToken> for DbExecutor {
     fn handle(&mut self, msg: FindBindToken, _: &mut Self::Context) -> Self::Result {
         use crate::schema::tokens::dsl::{bind_token, tokens};
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
@@ -58,7 +58,7 @@ impl Handler<CreateBindToken> for DbExecutor {
     fn handle(&mut self, msg: CreateBindToken, _: &mut Self::Context) -> Self::Result {
         use crate::schema::tokens::dsl::tokens;
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 

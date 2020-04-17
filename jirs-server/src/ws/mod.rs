@@ -8,6 +8,7 @@ use jirs_data::WsMsg;
 use crate::db::authorize_user::AuthorizeUser;
 use crate::db::tokens::FindBindToken;
 use crate::db::DbExecutor;
+use crate::mail::MailExecutor;
 
 pub mod auth;
 pub mod comments;
@@ -30,6 +31,7 @@ trait WsMessageSender {
 
 struct WebSocketActor {
     db: Data<Addr<DbExecutor>>,
+    mail: Data<Addr<MailExecutor>>,
     current_user: Option<jirs_data::User>,
 }
 
@@ -51,81 +53,79 @@ impl WebSocketActor {
             info!("incoming message: {:?}", msg);
         }
 
-        let msg = match msg {
-            WsMsg::Ping => Some(WsMsg::Pong),
-            WsMsg::Pong => Some(WsMsg::Ping),
+        let msg =
+            match msg {
+                WsMsg::Ping => Some(WsMsg::Pong),
+                WsMsg::Pong => Some(WsMsg::Ping),
 
-            // Issues
-            WsMsg::IssueUpdateRequest(id, payload) => block_on(issues::update_issue(
-                &self.db,
-                &self.current_user,
-                id,
-                payload,
-            ))?,
-            WsMsg::IssueCreateRequest(payload) => {
-                block_on(issues::add_issue(&self.db, &self.current_user, payload))?
-            }
-            WsMsg::IssueDeleteRequest(id) => {
-                block_on(issues::delete_issue(&self.db, &self.current_user, id))?
-            }
-            WsMsg::ProjectIssuesRequest => {
-                block_on(issues::load_issues(&self.db, &self.current_user))?
-            }
+                // Issues
+                WsMsg::IssueUpdateRequest(id, field_id, payload) => block_on(
+                    issues::update_issue(&self.db, &self.current_user, id, field_id, payload),
+                )?,
+                WsMsg::IssueCreateRequest(payload) => {
+                    block_on(issues::add_issue(&self.db, &self.current_user, payload))?
+                }
+                WsMsg::IssueDeleteRequest(id) => {
+                    block_on(issues::delete_issue(&self.db, &self.current_user, id))?
+                }
+                WsMsg::ProjectIssuesRequest => {
+                    block_on(issues::load_issues(&self.db, &self.current_user))?
+                }
 
-            // projects
-            WsMsg::ProjectRequest => {
-                block_on(projects::current_project(&self.db, &self.current_user))?
-            }
+                // projects
+                WsMsg::ProjectRequest => {
+                    block_on(projects::current_project(&self.db, &self.current_user))?
+                }
 
-            WsMsg::ProjectUpdateRequest(payload) => block_on(projects::update_project(
-                &self.db,
-                &self.current_user,
-                payload,
-            ))?,
+                WsMsg::ProjectUpdateRequest(payload) => block_on(projects::update_project(
+                    &self.db,
+                    &self.current_user,
+                    payload,
+                ))?,
 
-            // auth
-            WsMsg::AuthorizeRequest(uuid) => block_on(self.check_auth_token(uuid))?,
-            WsMsg::BindTokenCheck(uuid) => block_on(self.check_bind_token(uuid))?,
-            WsMsg::AuthenticateRequest(email, name) => {
-                block_on(auth::authenticate(&self.db, name, email))?
-            }
+                // auth
+                WsMsg::AuthorizeRequest(uuid) => block_on(self.check_auth_token(uuid))?,
+                WsMsg::BindTokenCheck(uuid) => block_on(self.check_bind_token(uuid))?,
+                WsMsg::AuthenticateRequest(email, name) => {
+                    block_on(auth::authenticate(&self.db, &self.mail, name, email))?
+                }
 
-            // users
-            WsMsg::ProjectUsersRequest => {
-                block_on(users::load_project_users(&self.db, &self.current_user))?
-            }
+                // users
+                WsMsg::ProjectUsersRequest => {
+                    block_on(users::load_project_users(&self.db, &self.current_user))?
+                }
 
-            // comments
-            WsMsg::IssueCommentsRequest(issue_id) => block_on(comments::load_issues(
-                &self.db,
-                &self.current_user,
-                issue_id,
-            ))?,
+                // comments
+                WsMsg::IssueCommentsRequest(issue_id) => block_on(comments::load_issues(
+                    &self.db,
+                    &self.current_user,
+                    issue_id,
+                ))?,
 
-            WsMsg::CreateComment(payload) => block_on(comments::create_comment(
-                &self.db,
-                &self.current_user,
-                payload,
-            ))?,
+                WsMsg::CreateComment(payload) => block_on(comments::create_comment(
+                    &self.db,
+                    &self.current_user,
+                    payload,
+                ))?,
 
-            WsMsg::UpdateComment(payload) => block_on(comments::update_comment(
-                &self.db,
-                &self.current_user,
-                payload,
-            ))?,
+                WsMsg::UpdateComment(payload) => block_on(comments::update_comment(
+                    &self.db,
+                    &self.current_user,
+                    payload,
+                ))?,
 
-            WsMsg::CommentDeleteRequest(comment_id) => block_on(comments::delete_comment(
-                &self.db,
-                &self.current_user,
-                comment_id,
-            ))?,
+                WsMsg::CommentDeleteRequest(comment_id) => block_on(comments::delete_comment(
+                    &self.db,
+                    &self.current_user,
+                    comment_id,
+                ))?,
 
-            // else fail
-            _ => {
-                error!("No handle for {:?} specified", msg);
-                None
-            }
-        };
+                // else fail
+                _ => {
+                    error!("No handle for {:?} specified", msg);
+                    None
+                }
+            };
         if msg.is_some() && msg != Some(WsMsg::Pong) {
             info!("sending message {:?}", msg);
         }
@@ -193,10 +193,12 @@ pub async fn index(
     req: HttpRequest,
     stream: web::Payload,
     db: Data<Addr<DbExecutor>>,
+    mail: Data<Addr<MailExecutor>>,
 ) -> Result<HttpResponse, Error> {
     ws::start(
         WebSocketActor {
             db,
+            mail,
             current_user: None,
         },
         &req,

@@ -23,7 +23,7 @@ impl Handler<AuthorizeUser> for DbExecutor {
         use crate::schema::users::dsl::{id, users};
 
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let token = tokens

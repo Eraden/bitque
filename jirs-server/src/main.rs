@@ -6,14 +6,15 @@ extern crate diesel;
 extern crate log;
 
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer};
 
 pub mod db;
 pub mod errors;
+pub mod mail;
 pub mod middleware;
 pub mod models;
-pub mod routes;
 pub mod schema;
+pub mod web;
 pub mod ws;
 
 #[actix_rt::main]
@@ -21,28 +22,28 @@ async fn main() -> Result<(), String> {
     dotenv::dotenv().ok();
     pretty_env_logger::init();
 
-    let port = std::env::var("JIRS_SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
-    let bind = std::env::var("JIRS_SERVER_BIND").unwrap_or_else(|_| "0.0.0.0".to_string());
-    let addr = format!("{}:{}", bind, port);
+    let web_config = web::Configuration::read();
 
-    let db_addr = actix::SyncArbiter::start(4, crate::db::DbExecutor::default);
+    let db_addr = actix::SyncArbiter::start(
+        crate::db::Configuration::read().concurrency,
+        crate::db::DbExecutor::default,
+    );
+    let mail_addr = actix::SyncArbiter::start(
+        crate::mail::Configuration::read().concurrency,
+        crate::mail::MailExecutor::default,
+    );
 
     HttpServer::new(move || {
         App::new()
             .wrap(actix_web::middleware::Logger::default())
             .wrap(Cors::default())
             .data(db_addr.clone())
+            .data(mail_addr.clone())
             .data(crate::db::build_pool())
             .service(crate::ws::index)
-            .service(
-                web::scope("/comments")
-                    .service(crate::routes::comments::create)
-                    .service(crate::routes::comments::update)
-                    .service(crate::routes::comments::delete),
-            )
-            .service(web::scope("/currentUser").service(crate::routes::users::current_user))
     })
-    .bind(addr)
+    .workers(web_config.concurrency)
+    .bind(web_config.addr())
     .map_err(|e| format!("{}", e))?
     .run()
     .await

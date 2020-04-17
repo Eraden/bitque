@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use actix::Addr;
 use actix_web::web::Data;
 
-use jirs_data::WsMsg;
+use jirs_data::{IssueFieldId, PayloadVariant, WsMsg};
 
 use crate::db::issue_assignees::LoadAssignees;
 use crate::db::issues::{LoadProjectIssues, UpdateIssue};
@@ -14,28 +14,51 @@ pub async fn update_issue(
     db: &Data<Addr<DbExecutor>>,
     user: &Option<jirs_data::User>,
     issue_id: i32,
-    payload: jirs_data::UpdateIssuePayload,
+    issue_field_id: IssueFieldId,
+    payload: PayloadVariant,
 ) -> WsResult {
     current_user(user)?;
-    let mut issue: jirs_data::Issue = match db
-        .send(UpdateIssue {
-            issue_id,
-            title: Some(payload.title),
-            issue_type: Some(payload.issue_type),
-            status: Some(payload.status),
-            priority: Some(payload.priority),
-            list_position: Some(payload.list_position),
-            description: payload.description,
-            description_text: payload.description_text,
-            estimate: payload.estimate,
-            time_spent: payload.time_spent,
-            time_remaining: payload.time_remaining,
-            project_id: Some(payload.project_id),
-            user_ids: Some(payload.user_ids),
-            reporter_id: Some(payload.reporter_id),
-        })
-        .await
-    {
+
+    let mut msg = UpdateIssue::default();
+    msg.issue_id = issue_id;
+    match (issue_field_id, payload) {
+        (IssueFieldId::Type, PayloadVariant::IssueType(t)) => {
+            msg.issue_type = Some(t);
+        }
+        (IssueFieldId::Title, PayloadVariant::String(s)) => {
+            msg.title = Some(s);
+        }
+        (IssueFieldId::Description, PayloadVariant::String(s)) => {
+            msg.description = Some(s);
+        }
+        (IssueFieldId::Status, PayloadVariant::IssueStatus(s)) => {
+            msg.status = Some(s);
+        }
+        (IssueFieldId::ListPosition, PayloadVariant::I32(i)) => {
+            msg.list_position = Some(i);
+        }
+        (IssueFieldId::Assignees, PayloadVariant::VecI32(v)) => {
+            msg.user_ids = Some(v);
+        }
+        (IssueFieldId::Reporter, PayloadVariant::I32(i)) => {
+            msg.reporter_id = Some(i);
+        }
+        (IssueFieldId::Priority, PayloadVariant::IssuePriority(p)) => {
+            msg.priority = Some(p);
+        }
+        (IssueFieldId::Estimate, PayloadVariant::OptionI32(o)) => {
+            msg.estimate = o;
+        }
+        (IssueFieldId::TimeSpend, PayloadVariant::OptionI32(o)) => {
+            msg.time_spent = o;
+        }
+        (IssueFieldId::TimeRemaining, PayloadVariant::OptionI32(o)) => {
+            msg.time_remaining = o;
+        }
+        _ => (),
+    };
+
+    let mut issue: jirs_data::Issue = match db.send(msg).await {
         Ok(Ok(issue)) => issue.into(),
         _ => return Ok(None),
     };

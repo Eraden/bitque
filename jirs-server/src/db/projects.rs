@@ -23,7 +23,7 @@ impl Handler<LoadCurrentProject> for DbExecutor {
     fn handle(&mut self, msg: LoadCurrentProject, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::projects::dsl::{id, projects};
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
@@ -59,7 +59,7 @@ impl Handler<UpdateProject> for DbExecutor {
     fn handle(&mut self, msg: UpdateProject, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::projects::dsl::*;
         let conn = &self
-            .0
+            .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 

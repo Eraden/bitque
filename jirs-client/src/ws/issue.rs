@@ -93,23 +93,16 @@ pub fn sync(model: &mut Model) {
             continue;
         }
 
-        let payload = UpdateIssuePayload {
-            title: issue.title.clone(),
-            issue_type: issue.issue_type.clone(),
-            status: issue.status.clone(),
-            priority: issue.priority.clone(),
-            list_position: issue.list_position,
-            description: issue.description.clone(),
-            description_text: issue.description_text.clone(),
-            estimate: issue.estimate,
-            time_spent: issue.time_spent,
-            time_remaining: issue.time_remaining,
-            project_id: issue.project_id,
-            reporter_id: issue.reporter_id,
-            user_ids: issue.user_ids.clone(),
-        };
-
-        send_ws_msg(WsMsg::IssueUpdateRequest(issue.id, payload));
+        send_ws_msg(WsMsg::IssueUpdateRequest(
+            issue.id,
+            IssueFieldId::Status,
+            PayloadVariant::IssueStatus(issue.status.clone()),
+        ));
+        send_ws_msg(WsMsg::IssueUpdateRequest(
+            issue.id,
+            IssueFieldId::ListPosition,
+            PayloadVariant::I32(issue.list_position),
+        ));
     }
     project_page.dragged_issue_id = None;
     project_page.last_drag_exchange_id = None;
