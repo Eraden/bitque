@@ -101,11 +101,11 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
     let view_id = format!("view-{}", id);
     let name = format!("styled-editor-{}", id);
 
-    let text_area = StyledTextarea::build()
+    let text_area = StyledTextarea::build(id)
         .height(40)
         .update_on(update_event)
         .value(text.as_str())
-        .build(id)
+        .build()
         .into_node();
 
     let parsed = comrak::markdown_to_html(

@@ -372,15 +372,15 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         ..
     } = modal;
 
-    let title = StyledTextarea::build()
-        .value(payload.title.as_str())
-        .add_class("textarea")
-        .max_height(48)
-        .height(0)
-        .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-            IssueFieldId::Title,
-        )))
-        .into_node();
+    let title = StyledTextarea::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+        IssueFieldId::Title,
+    )))
+    .value(payload.title.as_str())
+    .add_class("textarea")
+    .max_height(48)
+    .height(0)
+    .build()
+    .into_node();
 
     let description_text = payload.description.as_ref().cloned().unwrap_or_default();
     let description = StyledEditor::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
@@ -468,13 +468,13 @@ fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
         ))
     });
 
-    let text_area = StyledTextarea::build()
-        .value(form.body.as_str())
-        .placeholder("Add a comment...")
-        .build(FieldId::EditIssueModal(EditIssueModalSection::Comment(
-            CommentFieldId::Body,
-        )))
-        .into_node();
+    let text_area = StyledTextarea::build(FieldId::EditIssueModal(EditIssueModalSection::Comment(
+        CommentFieldId::Body,
+    )))
+    .value(form.body.as_str())
+    .placeholder("Add a comment...")
+    .build()
+    .into_node();
 
     let submit = StyledButton::build()
         .variant(ButtonVariant::Primary)

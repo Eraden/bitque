@@ -7,6 +7,7 @@ use crate::Msg;
 pub struct StyledForm {
     heading: String,
     fields: Vec<Node<Msg>>,
+    on_submit: Option<EventHandler<Msg>>,
 }
 
 impl StyledForm {
@@ -25,6 +26,7 @@ impl ToNode for StyledForm {
 pub struct StyledFormBuilder {
     fields: Vec<Node<Msg>>,
     heading: String,
+    on_submit: Option<EventHandler<Msg>>,
 }
 
 impl StyledFormBuilder {
@@ -41,17 +43,32 @@ impl StyledFormBuilder {
         self
     }
 
+    pub fn on_submit(mut self, on_submit: EventHandler<Msg>) -> Self {
+        self.on_submit = Some(on_submit);
+        self
+    }
+
     pub fn build(self) -> StyledForm {
         StyledForm {
             heading: self.heading,
             fields: self.fields,
+            on_submit: self.on_submit,
         }
     }
 }
 
 pub fn render(values: StyledForm) -> Node<Msg> {
-    let StyledForm { heading, fields } = values;
-    div![
+    let StyledForm {
+        heading,
+        fields,
+        on_submit,
+    } = values;
+    let handlers = match on_submit {
+        Some(handler) => vec![handler],
+        _ => vec![],
+    };
+    seed::form![
+        handlers,
         attrs![At::Class => "styledForm"],
         div![
             class!["formElement"],

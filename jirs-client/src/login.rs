@@ -1,4 +1,9 @@
+use std::str::FromStr;
+
 use seed::{prelude::*, *};
+use uuid::Uuid;
+
+use jirs_data::WsMsg;
 
 use crate::api::send_ws_msg;
 use crate::model::{LoginPage, Page, PageContent};
@@ -6,12 +11,9 @@ use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_icon::{Icon, StyledIcon};
-use crate::shared::styled_textarea::StyledTextarea;
+use crate::shared::styled_input::StyledInput;
 use crate::shared::{outer_layout, write_auth_token, ToNode};
 use crate::{model, FieldId, LoginFieldId, Msg};
-use jirs_data::WsMsg;
-use std::str::FromStr;
-use uuid::Uuid;
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::Login {
@@ -31,12 +33,15 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     match msg {
         Msg::InputChanged(FieldId::Login(LoginFieldId::Username), value) => {
             page.username = value;
+            page.username_touched = true;
         }
         Msg::InputChanged(FieldId::Login(LoginFieldId::Email), value) => {
             page.email = value;
+            page.email_touched = true;
         }
         Msg::InputChanged(FieldId::Login(LoginFieldId::Token), value) => {
             page.token = value;
+            page.token_touched = true;
         }
         Msg::SignInRequest => {
             send_ws_msg(WsMsg::AuthenticateRequest(
@@ -77,11 +82,10 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         _ => return empty![],
     };
 
-    let username = StyledTextarea::build()
-        .one_line()
-        .update_on(Ev::Change)
+    let username = StyledInput::build(FieldId::Login(LoginFieldId::Username))
         .value(page.username.as_str())
-        .build(FieldId::Login(LoginFieldId::Username))
+        .valid(!page.username_touched || page.username.len() > 1)
+        .build()
         .into_node();
     let username_field = StyledField::build()
         .label("Username")
@@ -89,11 +93,10 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let email = StyledTextarea::build()
-        .one_line()
-        .update_on(Ev::Change)
+    let email = StyledInput::build(FieldId::Login(LoginFieldId::Email))
         .value(page.email.as_str())
-        .build(FieldId::Login(LoginFieldId::Email))
+        .valid(!page.email_touched || is_email(page.email.as_str()))
+        .build()
         .into_node();
     let email_field = StyledField::build()
         .label("E-Mail")
@@ -102,7 +105,9 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .into_node();
 
     let submit = if page.login_success {
-        StyledButton::build().success().text("✓")
+        StyledButton::build()
+            .success()
+            .text("✓ Please check your mail")
     } else {
         StyledButton::build()
             .primary()
@@ -126,11 +131,24 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         span!["Why I don't see password?"]
     ];
 
-    let token = StyledTextarea::build()
-        .one_line()
-        .update_on(Ev::Input)
+    let sign_in_form = StyledForm::build()
+        .heading("Sign In to your account")
+        .on_submit(ev(Ev::Submit, |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::SignInRequest
+        }))
+        .add_field(username_field)
+        .add_field(email_field)
+        .add_field(submit_field)
+        .add_field(no_pass_section)
+        .build()
+        .into_node();
+
+    let token = StyledInput::build(FieldId::Login(LoginFieldId::Token))
         .value(page.token.as_str())
-        .build(FieldId::Login(LoginFieldId::Token))
+        .valid(!page.token_touched || is_token(page.token.as_str()))
+        .build()
         .into_node();
     let token_field = StyledField::build()
         .label("Single use token")
@@ -145,17 +163,42 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .into_node();
     let submit_token_field = StyledField::build().input(submit_token).build().into_node();
 
-    let form = StyledForm::build()
-        .heading("Sign In to your account")
-        .add_field(username_field)
-        .add_field(email_field)
-        .add_field(submit_field)
-        .add_field(no_pass_section)
+    let bind_token_form = StyledForm::build()
+        .on_submit(ev(Ev::Submit, |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::BindClientRequest
+        }))
         .add_field(token_field)
         .add_field(submit_token_field)
         .build()
         .into_node();
 
-    let children = vec![form];
+    let children = vec![sign_in_form, bind_token_form];
     outer_layout(model, "login", children)
+}
+
+fn is_token(s: &str) -> bool {
+    uuid::Uuid::from_str(s).is_ok()
+}
+
+fn is_email(s: &str) -> bool {
+    let mut has_at = false;
+    let mut has_dot = false;
+
+    for c in s.chars() {
+        match c {
+            '\n' | ' ' | '\t' | '\r' => return false,
+            '@' if !has_at => {
+                has_at = true;
+            }
+            '@' if has_at => return false,
+            '.' if has_at => {
+                has_dot = true;
+            }
+            _ if has_dot => return true,
+            _ => (),
+        }
+    }
+    return false;
 }

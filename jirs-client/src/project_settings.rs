@@ -84,12 +84,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         PageContent::ProjectSettings(page) => page,
         _ => return empty![],
     };
-    let name = StyledTextarea::build()
+    let name = StyledTextarea::build(FieldId::ProjectSettings(ProjectFieldId::Name))
         .value(page.payload.name.as_ref().cloned().unwrap_or_default())
         .height(39)
         .max_height(39)
         .disable_auto_resize()
-        .build(FieldId::ProjectSettings(ProjectFieldId::Name))
+        .build()
         .into_node();
     let name_field = StyledField::build()
         .label("Name")
@@ -98,12 +98,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let url = StyledTextarea::build()
+    let url = StyledTextarea::build(FieldId::ProjectSettings(ProjectFieldId::Url))
         .height(39)
         .max_height(39)
         .disable_auto_resize()
         .value(page.payload.url.as_ref().cloned().unwrap_or_default())
-        .build(FieldId::ProjectSettings(ProjectFieldId::Url))
+        .build()
         .into_node();
     let url_field = StyledField::build()
         .label("Url")

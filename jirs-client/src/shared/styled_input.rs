@@ -94,16 +94,16 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         _ => empty![],
     };
     let field_id = id.clone();
-    let change_handler = keyboard_ev(Ev::KeyUp, move |event| {
-        use wasm_bindgen::JsCast;
+    let change_handler = ev(Ev::Input, move |event| {
         event.stop_propagation();
-        let value = event
-            .target()
-            .unwrap()
-            .dyn_ref::<web_sys::HtmlInputElement>()
-            .unwrap()
-            .value();
+        let target = event.target().unwrap();
+        let input = seed::to_input(&target);
+        let value = input.value();
         Msg::InputChanged(field_id, value)
+    });
+    let key_handler = ev(Ev::KeyUp, move |event| {
+        event.stop_propagation();
+        Msg::NoOp
     });
 
     div![
@@ -116,6 +116,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
                 At::Type => input_type.unwrap_or_else(|| "text".to_string()),
             ],
             change_handler,
+            key_handler,
         ],
     ]
 }

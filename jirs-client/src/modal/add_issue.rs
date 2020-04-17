@@ -151,9 +151,9 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let description = StyledTextarea::build()
+    let description = StyledTextarea::build(FieldId::AddIssueModal(IssueFieldId::Description))
         .height(110)
-        .build(FieldId::AddIssueModal(IssueFieldId::Description))
+        .build()
         .into_node();
     let description_field = StyledField::build()
         .label("Description")

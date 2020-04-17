@@ -22,13 +22,24 @@ impl ToNode for StyledTextarea {
 }
 
 impl StyledTextarea {
-    pub fn build() -> StyledTextareaBuilder {
-        StyledTextareaBuilder::default()
+    pub fn build(field_id: FieldId) -> StyledTextareaBuilder {
+        StyledTextareaBuilder {
+            id: field_id,
+            height: None,
+            max_height: None,
+            on_change: None,
+            value: "".to_string(),
+            class_list: vec![],
+            update_event: None,
+            placeholder: None,
+            disable_auto_resize: false,
+        }
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct StyledTextareaBuilder {
+    id: FieldId,
     height: Option<usize>,
     max_height: Option<usize>,
     on_change: Option<EventHandler<Msg>>,
@@ -40,11 +51,6 @@ pub struct StyledTextareaBuilder {
 }
 
 impl StyledTextareaBuilder {
-    #[inline]
-    pub fn one_line(self) -> Self {
-        self.disable_auto_resize().height(39).max_height(39)
-    }
-
     #[inline]
     pub fn height(mut self, height: usize) -> Self {
         self.height = Some(height);
@@ -94,9 +100,9 @@ impl StyledTextareaBuilder {
     }
 
     #[inline]
-    pub fn build(self, id: FieldId) -> StyledTextarea {
+    pub fn build(self) -> StyledTextarea {
         StyledTextarea {
-            id,
+            id: self.id,
             value: self.value,
             height: self.height.unwrap_or(110),
             class_list: self.class_list,
@@ -145,34 +151,51 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
 
     if disable_auto_resize {
         style_list.push("resize: none".to_string());
+        style_list.push(format!(
+            "height: {h}px; max-height: {h}px; min-height: {h}px",
+            h = max_height
+        ));
     }
-
-    let mut handlers = vec![];
 
     let handler_disable_auto_resize = disable_auto_resize;
     let resize_handler = ev(Ev::KeyUp, move |event| {
-        use wasm_bindgen::JsCast;
+        event.stop_propagation();
+        if handler_disable_auto_resize {
+            return Msg::NoOp;
+        }
 
-        let target = match event.target() {
-            Some(el) => el,
-            _ => return Msg::NoOp,
-        };
-        let text_area = target.dyn_ref::<web_sys::HtmlTextAreaElement>().unwrap();
-        let value: String = text_area.value();
+        let target = event.target().unwrap();
+        let textarea = seed::to_textarea(&target);
+        let value = textarea.value();
         let min_height = get_min_height(value.as_str(), height as f64, handler_disable_auto_resize);
 
-        text_area
+        textarea
             .style()
             .set_css_text(format!("height: {min_height}px", min_height = min_height).as_str());
         Msg::NoOp
     });
-    handlers.push(resize_handler);
+
+    let handler_disable_auto_resize = disable_auto_resize;
     let text_input_handler = ev(update_event, move |event| {
+        event.stop_propagation();
+
         let target = event.target().unwrap();
-        let text = seed::to_textarea(&target).value();
-        Msg::InputChanged(id, text)
+        let textarea = seed::to_textarea(&target);
+        let value = textarea.value();
+
+        if handler_disable_auto_resize && value.contains("\n") {
+            event.prevent_default();
+        }
+
+        Msg::InputChanged(
+            id,
+            if handler_disable_auto_resize {
+                value.trim().to_string()
+            } else {
+                value
+            },
+        )
     });
-    handlers.push(text_input_handler);
 
     class_list.push("textAreaInput".to_string());
 
@@ -185,9 +208,11 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
                 At::AutoFocus => "true";
                 At::Style => style_list.join(";");
                 At::Placeholder => placeholder.unwrap_or_default();
+                At::Rows => if disable_auto_resize { "1" } else { "auto" }
             ],
             value,
-            handlers,
+            resize_handler,
+            text_input_handler,
         ]
     ]
 }
