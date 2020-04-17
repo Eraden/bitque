@@ -6,6 +6,7 @@ use jirs_data::WsMsg;
 use crate::db::users::{LoadProjectUsers, Register};
 use crate::db::DbExecutor;
 use crate::mail::MailExecutor;
+use crate::ws::auth::authenticate;
 use crate::ws::{current_user, WsResult};
 
 pub async fn load_project_users(
@@ -24,14 +25,26 @@ pub async fn load_project_users(
 
 pub async fn register(
     db: &Data<Addr<DbExecutor>>,
-    _mail: &Data<Addr<MailExecutor>>,
+    mail: &Data<Addr<MailExecutor>>,
     name: String,
     email: String,
 ) -> WsResult {
-    let msg = match db.send(Register { name, email }).await {
+    let msg = match db
+        .send(Register {
+            name: name.clone(),
+            email: email.clone(),
+        })
+        .await
+    {
         Ok(Ok(_)) => Some(WsMsg::SignUpSuccess),
         Ok(Err(_)) => Some(WsMsg::SignUpPairTaken),
         _ => None,
     };
+
+    match authenticate(db, mail, name, email).await {
+        Ok(_) => (),
+        Err(e) => return Ok(Some(e)),
+    };
+
     Ok(msg)
 }

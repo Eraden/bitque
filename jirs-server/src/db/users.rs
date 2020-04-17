@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
-use crate::models::{IssueAssignee, User};
+use crate::models::{IssueAssignee, User, UserForm};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FindUser {
@@ -141,6 +141,18 @@ impl Handler<Register> for DbExecutor {
         if matching > 0 {
             return Err(ServiceErrors::RegisterCollision);
         }
+
+        let form = UserForm {
+            name: msg.name,
+            email: msg.email,
+            avatar_url: None,
+            project_id: None,
+        };
+
+        match diesel::insert_into(users).values(form).execute(conn) {
+            Ok(_) => (),
+            _ => return Err(ServiceErrors::RegisterCollision),
+        };
 
         Ok(())
     }
