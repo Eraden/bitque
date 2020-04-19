@@ -155,6 +155,15 @@ pub struct UpdateProjectForm {
     pub category: Option<ProjectCategory>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Insertable)]
+#[table_name = "projects"]
+pub struct CreateProjectForm {
+    pub name: String,
+    pub url: String,
+    pub description: String,
+    pub category: ProjectCategory,
+}
+
 #[derive(Debug, Serialize, Deserialize, Queryable)]
 pub struct User {
     pub id: i32,
@@ -201,7 +210,7 @@ pub struct UserForm {
     pub name: String,
     pub email: String,
     pub avatar_url: Option<String>,
-    pub project_id: Option<i32>,
+    pub project_id: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable)]

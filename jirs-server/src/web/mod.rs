@@ -73,7 +73,13 @@ impl Configuration {
         Ok(())
     }
 
+    #[cfg(not(test))]
     pub fn config_file() -> &'static str {
         "web.toml"
+    }
+
+    #[cfg(test)]
+    pub fn config_file() -> &'static str {
+        "web.test.toml"
     }
 }

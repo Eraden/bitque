@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use actix::Addr;
+use actix::*;
 use actix_web::web::Data;
 
 use jirs_data::{IssueFieldId, PayloadVariant, WsMsg};
@@ -9,6 +9,110 @@ use crate::db::issue_assignees::LoadAssignees;
 use crate::db::issues::{LoadProjectIssues, UpdateIssue};
 use crate::db::DbExecutor;
 use crate::ws::{current_user, WsResult};
+
+/*
+pub struct UpdateIssueHandler {
+    id: i32,
+    field_id: IssueFieldId,
+    payload: PayloadVariant,
+}
+
+impl Message for UpdateIssueHandler {
+    type Result = WsResult;
+}
+
+impl Actor for UpdateIssueHandler {
+    type Context = Context<Self>;
+}
+
+impl Handler<UpdateIssueHandler> for WebSocketActor {
+    type Result = WsResult;
+
+    fn handle(&mut self, msg: UpdateIssueHandler, ctx: &mut Self::Context) -> Self::Result {
+        self.require_user()?;
+
+        let UpdateIssueHandler {
+            id,
+            field_id,
+            payload,
+        } = msg;
+
+        let mut msg = UpdateIssue::default();
+        msg.issue_id = id;
+        match (field_id, payload) {
+            (IssueFieldId::Type, PayloadVariant::IssueType(t)) => {
+                msg.issue_type = Some(t);
+            }
+            (IssueFieldId::Title, PayloadVariant::String(s)) => {
+                msg.title = Some(s);
+            }
+            (IssueFieldId::Description, PayloadVariant::String(s)) => {
+                msg.description = Some(s);
+            }
+            (IssueFieldId::Status, PayloadVariant::IssueStatus(s)) => {
+                msg.status = Some(s);
+            }
+            (IssueFieldId::ListPosition, PayloadVariant::I32(i)) => {
+                msg.list_position = Some(i);
+            }
+            (IssueFieldId::Assignees, PayloadVariant::VecI32(v)) => {
+                msg.user_ids = Some(v);
+            }
+            (IssueFieldId::Reporter, PayloadVariant::I32(i)) => {
+                msg.reporter_id = Some(i);
+            }
+            (IssueFieldId::Priority, PayloadVariant::IssuePriority(p)) => {
+                msg.priority = Some(p);
+            }
+            (IssueFieldId::Estimate, PayloadVariant::OptionI32(o)) => {
+                msg.estimate = o;
+            }
+            (IssueFieldId::TimeSpend, PayloadVariant::OptionI32(o)) => {
+                msg.time_spent = o;
+            }
+            (IssueFieldId::TimeRemaining, PayloadVariant::OptionI32(o)) => {
+                msg.time_remaining = o;
+            }
+            _ => (),
+        };
+
+        let mut updated: Option<jirs_data::Issue> = None;
+
+        self.db
+            .send(msg)
+            .into_actor(self)
+            .then(move |res, _act, _ctx| {
+                updated = res.ok().and_then(|r| r.ok()).map(|i| i.into());
+                fut::ready(())
+            })
+            .wait(ctx);
+
+        let mut issue = match updated {
+            Some(issue) => issue,
+            _ => return Ok(None),
+        };
+
+        let mut assignees = vec![];
+
+        self.db
+            .send(LoadAssignees { issue_id: issue.id })
+            .into_actor(self)
+            .then(|res, _act, _ctx| {
+                if let Ok(Ok(v)) = res {
+                    assignees = v;
+                }
+                fut::ready(())
+            })
+            .wait(ctx);
+
+        for assignee in assignees {
+            issue.user_ids.push(assignee.user_id);
+        }
+
+        Ok(Some(WsMsg::IssueUpdated(issue)))
+    }
+}
+*/
 
 pub async fn update_issue(
     db: &Data<Addr<DbExecutor>>,

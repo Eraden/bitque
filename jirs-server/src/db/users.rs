@@ -2,9 +2,9 @@ use actix::{Handler, Message};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::db::DbExecutor;
+use crate::db::{DbExecutor, DbPooledConn};
 use crate::errors::ServiceErrors;
-use crate::models::{IssueAssignee, User, UserForm};
+use crate::models::{CreateProjectForm, IssueAssignee, Project, User, UserForm};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FindUser {
@@ -114,6 +114,7 @@ impl Handler<Register> for DbExecutor {
     type Result = Result<(), ServiceErrors>;
 
     fn handle(&mut self, msg: Register, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::projects::dsl::projects;
         use crate::schema::users::dsl::*;
 
         let conn = &self
@@ -121,32 +122,33 @@ impl Handler<Register> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
-        let query = users
-            .filter(
-                email
-                    .eq(msg.email.as_str())
-                    .and(name.ne(msg.name.as_str()))
-                    .or(email.ne(msg.email.as_str()).and(name.eq(msg.name.as_str())))
-                    .or(email.eq(msg.email.as_str()).and(name.eq(msg.name.as_str()))),
-            )
-            .count();
-
-        info!(
-            "{}",
-            diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
-        );
-
-        let matching: i64 = query.get_result(conn).unwrap_or(1);
+        let matching = count_matching_users(msg.name.as_str(), msg.email.as_str(), conn);
 
         if matching > 0 {
             return Err(ServiceErrors::RegisterCollision);
         }
 
+        let project: Project = match projects.first(conn) {
+            Ok(project) => project,
+            _ => {
+                let form = CreateProjectForm {
+                    name: "initial".to_string(),
+                    url: "".to_string(),
+                    description: "".to_string(),
+                    category: Default::default(),
+                };
+                diesel::insert_into(projects)
+                    .values(form)
+                    .get_result(conn)
+                    .map_err(|_| ServiceErrors::RegisterCollision)?
+            }
+        };
+
         let form = UserForm {
             name: msg.name,
             email: msg.email,
             avatar_url: None,
-            project_id: None,
+            project_id: project.id,
         };
 
         match diesel::insert_into(users).values(form).execute(conn) {
@@ -155,5 +157,68 @@ impl Handler<Register> for DbExecutor {
         };
 
         Ok(())
+    }
+}
+
+fn count_matching_users(name: &str, email: &str, conn: &DbPooledConn) -> i64 {
+    use crate::schema::users::dsl;
+
+    let query = dsl::users
+        .filter(dsl::email.eq(email).and(dsl::name.ne(name)))
+        .or_filter(dsl::email.ne(email).and(dsl::name.eq(name)))
+        .or_filter(dsl::email.eq(email).and(dsl::name.eq(name)))
+        .count();
+
+    info!(
+        "{}",
+        diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
+    );
+
+    query.get_result::<i64>(conn).unwrap_or(1)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::db::build_pool;
+    use crate::models::{CreateProjectForm, Project};
+
+    use super::*;
+
+    #[test]
+    fn check_collision() {
+        use crate::schema::projects::dsl::projects;
+        use crate::schema::users::dsl::users;
+
+        let pool = build_pool();
+        let conn = &pool.get().unwrap();
+
+        diesel::delete(users).execute(conn).unwrap();
+        diesel::delete(projects).execute(conn).unwrap();
+
+        let project_form = CreateProjectForm {
+            name: "baz".to_string(),
+            url: "/uz".to_string(),
+            description: "None".to_string(),
+            category: Default::default(),
+        };
+        let project: Project = diesel::insert_into(projects)
+            .values(project_form)
+            .get_result(conn)
+            .unwrap();
+
+        let user_form = UserForm {
+            name: "Foo".to_string(),
+            email: "foo@example.com".to_string(),
+            avatar_url: None,
+            project_id: project.id,
+        };
+        diesel::insert_into(users)
+            .values(user_form)
+            .execute(conn)
+            .unwrap();
+
+        assert_eq!(count_matching_users("Foo", "bar@example.com", conn), 1);
+        assert_eq!(count_matching_users("Bar", "foo@example.com", conn), 1);
+        assert_eq!(count_matching_users("Foo", "foo@example.com", conn), 1);
     }
 }

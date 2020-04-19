@@ -5,8 +5,11 @@ extern crate diesel;
 #[macro_use]
 extern crate log;
 
+use actix::Actor;
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
+
+use crate::ws::WsServer;
 
 pub mod db;
 pub mod errors;
@@ -14,6 +17,7 @@ pub mod mail;
 pub mod middleware;
 pub mod models;
 pub mod schema;
+pub mod utils;
 pub mod web;
 pub mod ws;
 
@@ -33,10 +37,13 @@ async fn main() -> Result<(), String> {
         crate::mail::MailExecutor::default,
     );
 
+    let ws_server = WsServer::default().start();
+
     HttpServer::new(move || {
         App::new()
             .wrap(actix_web::middleware::Logger::default())
             .wrap(Cors::default())
+            .data(ws_server.clone())
             .data(db_addr.clone())
             .data(mail_addr.clone())
             .data(crate::db::build_pool())

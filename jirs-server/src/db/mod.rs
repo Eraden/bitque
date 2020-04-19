@@ -19,8 +19,12 @@ pub mod users;
 
 #[cfg(debug_assertions)]
 pub type DbPool = r2d2::Pool<ConnectionManager<dev::VerboseConnection>>;
+#[cfg(debug_assertions)]
+pub type DbPooledConn = r2d2::PooledConnection<ConnectionManager<dev::VerboseConnection>>;
 #[cfg(not(debug_assertions))]
 pub type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
+#[cfg(not(debug_assertions))]
+pub type DbPooledConn = r2d2::PooledConnection<ConnectionManager<dev::PgConnection>>;
 
 pub struct DbExecutor {
     pub pool: DbPool,
@@ -42,13 +46,13 @@ impl Default for DbExecutor {
 
 pub fn build_pool() -> DbPool {
     dotenv::dotenv().ok();
+    let config = Configuration::read();
 
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
     #[cfg(not(debug_assertions))]
-    let manager = ConnectionManager::<PgConnection>::new(database_url.clone());
+    let manager = ConnectionManager::<PgConnection>::new(config.database_url.clone());
     #[cfg(debug_assertions)]
     let manager: ConnectionManager<VerboseConnection> =
-        ConnectionManager::<dev::VerboseConnection>::new(database_url.as_str());
+        ConnectionManager::<dev::VerboseConnection>::new(config.database_url.as_str());
     r2d2::Pool::builder()
         .build(manager)
         .unwrap_or_else(|e| panic!("Failed to create pool. {}", e))
@@ -144,9 +148,15 @@ pub struct Configuration {
 
 impl Default for Configuration {
     fn default() -> Self {
+        let database_url = if cfg!(test) {
+            "postgres://postgres@localhost:5432/jirs_test"
+        } else {
+            "postgres://postgres@localhost:5432/jirs"
+        }
+        .to_string();
         Self {
             concurrency: 2,
-            database_url: "postgres://postgres@localhost:5432/jirs".to_string(),
+            database_url,
         }
     }
 }
@@ -170,7 +180,13 @@ impl Configuration {
         Ok(())
     }
 
+    #[cfg(not(test))]
     pub fn config_file() -> &'static str {
         "db.toml"
+    }
+
+    #[cfg(test)]
+    pub fn config_file() -> &'static str {
+        "db.test.toml"
     }
 }

@@ -1,4 +1,7 @@
 /target
 mail.toml
+mail.test.toml
 web.toml
+web.test.toml
 db.toml
+db.test.toml

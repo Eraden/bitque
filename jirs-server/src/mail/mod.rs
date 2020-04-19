@@ -86,7 +86,13 @@ impl Configuration {
         Ok(())
     }
 
+    #[cfg(not(test))]
     fn config_file() -> &'static str {
         "mail.toml"
+    }
+
+    #[cfg(test)]
+    fn config_file() -> &'static str {
+        "mail.test.toml"
     }
 }

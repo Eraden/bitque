@@ -2,8 +2,9 @@ use seed::prelude::*;
 
 use jirs_data::WsMsg;
 
+use crate::model::*;
 use crate::shared::write_auth_token;
-use crate::{model, Msg, APP};
+use crate::{Msg, APP};
 
 pub mod issue;
 
@@ -19,7 +20,7 @@ pub fn handle(msg: WsMsg) {
     }
 }
 
-pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
+pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         // auth
         Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(user))) => {
@@ -46,6 +47,13 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         }
         // comments
         Msg::WsMsg(WsMsg::IssueCommentsLoaded(comments)) => {
+            let issue_id = match model.modals.get(0) {
+                Some(ModalType::EditIssue(issue_id, _)) => *issue_id,
+                _ => return,
+            };
+            if comments.iter().any(|c| c.issue_id != issue_id) {
+                return;
+            }
             let mut v = comments.clone();
             v.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
             model.comments = v;
