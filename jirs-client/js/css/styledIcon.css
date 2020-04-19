@@ -78,11 +78,14 @@ i.styledIcon.board:before {
 }
 
 i.styledIcon.help:before {
-    content: "\e905";
+    font-family: 'IcoFont';
+    content: "\efca";
 }
 
 i.styledIcon.link:before {
-    content: "\e90c";
+    font-family: 'IcoFont';
+    content: "\ef71";
+
 }
 
 i.styledIcon.menu:before {
@@ -117,7 +120,8 @@ i.styledIcon.settings:before {
 }
 
 i.styledIcon.close:before {
-    content: "\e913";
+    font-family: 'IcoFont';
+    content: "\eee4";
 }
 
 i.styledIcon.feedback:before {
@@ -125,7 +129,8 @@ i.styledIcon.feedback:before {
 }
 
 i.styledIcon.trash:before {
-    content: "\e912";
+    font-family: 'IcoFont';
+    content: "\ee09";
 }
 
 i.styledIcon.github:before {
