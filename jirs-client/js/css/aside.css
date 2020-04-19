@@ -52,6 +52,8 @@ aside#navbar-left .item:hover {
 aside#navbar-left .item > .styledIcon {
     position: absolute;
     left: 18px;
+    height: 42px;
+    line-height: 42px;
 }
 
 aside#navbar-left > .item > .styledIcon.search {
@@ -79,6 +81,7 @@ aside#navbar-left .item > .itemText {
     font-family: var(--font-bold);
     font-size: 12px;
     transition-property: right, visibility, opacity;
+    display: block;
 }
 
 aside#navbar-left > .bottom {

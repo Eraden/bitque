@@ -25,20 +25,23 @@ i.styledIcon:before {
     -moz-osx-font-smoothing: grayscale;
 }
 
-i.styledIcon.bug:before {
-    content: "\e90f";
-}
-
 i.styledIcon.stopwatch:before {
     content: "\e914";
 }
 
+i.styledIcon.bug:before {
+    font-family: 'IcoFont';
+    content: "\eec7";
+}
+
 i.styledIcon.task:before {
-    content: "\e910";
+    font-family: 'IcoFont';
+    content: "\ef27";
 }
 
 i.styledIcon.story:before {
-    content: "\e911";
+    font-family: 'IcoFont';
+    content: "\ef2d";
 }
 
 i.styledIcon.arrowDown:before {
@@ -70,7 +73,8 @@ i.styledIcon.chevronUp:before {
 }
 
 i.styledIcon.board:before {
-    content: "\e904";
+    font-family: 'IcoFont';
+    content: "\ead0";
 }
 
 i.styledIcon.help:before {
@@ -94,11 +98,13 @@ i.styledIcon.attach:before {
 }
 
 i.styledIcon.plus:before {
-    content: "\e906";
+    font-family: 'IcoFont';
+    content: "\efc2";
 }
 
 i.styledIcon.search:before {
-    content: "\e907";
+    font-family: 'IcoFont';
+    content: "\ec82";
 }
 
 i.styledIcon.issues:before {
@@ -106,7 +112,8 @@ i.styledIcon.issues:before {
 }
 
 i.styledIcon.settings:before {
-    content: "\e909";
+    font-family: 'IcoFont';
+    content: "\efe2";
 }
 
 i.styledIcon.close:before {

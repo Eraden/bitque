@@ -2,19 +2,19 @@ use std::collections::HashMap;
 
 use actix::*;
 use actix_web::web::Data;
+use futures::executor::block_on;
 
 use jirs_data::{IssueFieldId, PayloadVariant, WsMsg};
 
 use crate::db::issue_assignees::LoadAssignees;
 use crate::db::issues::{LoadProjectIssues, UpdateIssue};
 use crate::db::DbExecutor;
-use crate::ws::{current_user, WsResult};
+use crate::ws::{current_user, WebSocketActor, WsResult};
 
-/*
 pub struct UpdateIssueHandler {
-    id: i32,
-    field_id: IssueFieldId,
-    payload: PayloadVariant,
+    pub id: i32,
+    pub field_id: IssueFieldId,
+    pub payload: PayloadVariant,
 }
 
 impl Message for UpdateIssueHandler {
@@ -28,7 +28,7 @@ impl Actor for UpdateIssueHandler {
 impl Handler<UpdateIssueHandler> for WebSocketActor {
     type Result = WsResult;
 
-    fn handle(&mut self, msg: UpdateIssueHandler, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: UpdateIssueHandler, _ctx: &mut Self::Context) -> Self::Result {
         self.require_user()?;
 
         let UpdateIssueHandler {
@@ -76,34 +76,17 @@ impl Handler<UpdateIssueHandler> for WebSocketActor {
             _ => (),
         };
 
-        let mut updated: Option<jirs_data::Issue> = None;
-
-        self.db
-            .send(msg)
-            .into_actor(self)
-            .then(move |res, _act, _ctx| {
-                updated = res.ok().and_then(|r| r.ok()).map(|i| i.into());
-                fut::ready(())
-            })
-            .wait(ctx);
-
-        let mut issue = match updated {
-            Some(issue) => issue,
+        let mut issue: jirs_data::Issue = match block_on(self.db.send(msg)) {
+            Ok(Ok(issue)) => issue.into(),
             _ => return Ok(None),
         };
 
-        let mut assignees = vec![];
-
-        self.db
-            .send(LoadAssignees { issue_id: issue.id })
-            .into_actor(self)
-            .then(|res, _act, _ctx| {
-                if let Ok(Ok(v)) = res {
-                    assignees = v;
-                }
-                fut::ready(())
-            })
-            .wait(ctx);
+        use crate::models::IssueAssignee;
+        let assignees: Vec<IssueAssignee> =
+            match block_on(self.db.send(LoadAssignees { issue_id: issue.id })) {
+                Ok(Ok(v)) => v,
+                _ => return Ok(None),
+            };
 
         for assignee in assignees {
             issue.user_ids.push(assignee.user_id);
@@ -112,7 +95,6 @@ impl Handler<UpdateIssueHandler> for WebSocketActor {
         Ok(Some(WsMsg::IssueUpdated(issue)))
     }
 }
-*/
 
 pub async fn update_issue(
     db: &Data<Addr<DbExecutor>>,

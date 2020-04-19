@@ -229,9 +229,9 @@ impl WebSocketActor {
         };
     }
 
-    // fn require_user(&self) -> Result<&jirs_data::User, WsMsg> {
-    //     current_user(&self.current_user)
-    // }
+    fn require_user(&self) -> Result<&jirs_data::User, WsMsg> {
+        current_user(&self.current_user)
+    }
 }
 
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
