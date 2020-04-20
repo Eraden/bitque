@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use jirs_data::{IssuePriority, IssueStatus, IssueType, ProjectCategory};
+use jirs_data::{IssuePriority, IssueStatus, IssueType, ProjectCategory, UserRole};
 
 use crate::schema::*;
 
@@ -173,6 +173,7 @@ pub struct User {
     pub project_id: i32,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub user_role: UserRole,
 }
 
 impl Into<jirs_data::User> for User {
@@ -185,6 +186,7 @@ impl Into<jirs_data::User> for User {
             project_id: self.project_id,
             created_at: self.created_at,
             updated_at: self.updated_at,
+            user_role: self.user_role,
         }
     }
 }
@@ -199,6 +201,7 @@ impl Into<jirs_data::User> for &User {
             project_id: self.project_id,
             created_at: self.created_at,
             updated_at: self.updated_at,
+            user_role: self.user_role,
         }
     }
 }

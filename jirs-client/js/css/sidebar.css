@@ -67,6 +67,10 @@ nav#sidebar .linkItem {
     user-select: none;
 }
 
+nav#sidebar .linkItem > a {
+    width: 100%;
+}
+
 nav#sidebar .linkItem.notAllowed, nav#sidebar .linkItem.notAllowed > a {
     cursor: not-allowed;
 }

@@ -372,13 +372,14 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         ..
     } = modal;
 
-    let title = StyledTextarea::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+    let title = StyledInput::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
         IssueFieldId::Title,
     )))
+    .add_input_class("issueSummary")
+    .add_wrapper_class("issueSummary")
+    .add_wrapper_class("textarea")
     .value(payload.title.as_str())
-    .add_class("textarea")
-    .max_height(48)
-    .height(0)
+    .valid(payload.title.len() >= 3)
     .build()
     .into_node();
 

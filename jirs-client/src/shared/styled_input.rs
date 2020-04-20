@@ -11,6 +11,8 @@ pub struct StyledInput {
     valid: bool,
     value: Option<String>,
     input_type: Option<String>,
+    input_class_list: Vec<String>,
+    wrapper_class_list: Vec<String>,
 }
 
 impl StyledInput {
@@ -21,6 +23,8 @@ impl StyledInput {
             valid: None,
             value: None,
             input_type: None,
+            input_class_list: vec![],
+            wrapper_class_list: vec![],
         }
     }
 }
@@ -32,6 +36,8 @@ pub struct StyledInputBuilder {
     valid: Option<bool>,
     value: Option<String>,
     input_type: Option<String>,
+    input_class_list: Vec<String>,
+    wrapper_class_list: Vec<String>,
 }
 
 impl StyledInputBuilder {
@@ -53,6 +59,22 @@ impl StyledInputBuilder {
         self
     }
 
+    pub fn add_input_class<S>(mut self, name: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.input_class_list.push(name.into());
+        self
+    }
+
+    pub fn add_wrapper_class<S>(mut self, name: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.wrapper_class_list.push(name.into());
+        self
+    }
+
     pub fn build(self) -> StyledInput {
         StyledInput {
             id: self.id,
@@ -60,6 +82,8 @@ impl StyledInputBuilder {
             valid: self.valid.unwrap_or_default(),
             value: self.value,
             input_type: self.input_type,
+            input_class_list: self.input_class_list,
+            wrapper_class_list: self.wrapper_class_list,
         }
     }
 }
@@ -77,14 +101,17 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         valid,
         value,
         input_type,
+        mut input_class_list,
+        mut wrapper_class_list,
     } = values;
 
-    let mut wrapper_class_list = vec!["styledInput".to_string(), format!("{}", id)];
+    wrapper_class_list.push("styledInput".to_string());
+    wrapper_class_list.push(format!("{}", id));
     if !valid {
         wrapper_class_list.push("invalid".to_string());
     }
 
-    let mut input_class_list = vec!["inputElement".to_string()];
+    input_class_list.push("inputElement".to_string());
     if icon.is_some() {
         input_class_list.push("withIcon".to_string());
     }
@@ -111,6 +138,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         icon,
         seed::input![
             attrs![
+                At::Id => format!("{}", id),
                 At::Class => input_class_list.join(" "),
                 At::Value => value.unwrap_or_default(),
                 At::Type => input_type.unwrap_or_else(|| "text".to_string()),

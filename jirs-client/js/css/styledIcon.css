@@ -14,7 +14,7 @@ i.styledIcon.top {
 }
 
 i.styledIcon:before {
-    font-family: "jira";
+    font-family: 'IcoFont';
     speak: none;
     font-style: normal;
     font-weight: normal;
@@ -26,141 +26,145 @@ i.styledIcon:before {
 }
 
 i.styledIcon.stopwatch:before {
-    content: "\e914";
+    content: "\ec89";
 }
 
 i.styledIcon.bug:before {
-    font-family: 'IcoFont';
     content: "\eec7";
 }
 
 i.styledIcon.task:before {
-    font-family: 'IcoFont';
     content: "\ef27";
 }
 
 i.styledIcon.story:before {
-    font-family: 'IcoFont';
     content: "\ef2d";
 }
 
 i.styledIcon.arrowDown:before {
-    content: "\e90a";
-}
-
-i.styledIcon.arrowLeftCircle:before {
-    content: "\e917";
+    content: "\ea92";
 }
 
 i.styledIcon.arrowUp:before {
-    content: "\e90b";
+    content: "\ea95";
+}
+
+i.styledIcon.arrowLeftCircle:before {
+    font-family: "jira";
+    content: "\e917";
 }
 
 i.styledIcon.chevronDown:before {
+    font-family: "jira";
     content: "\e900";
 }
 
 i.styledIcon.chevronLeft:before {
+    font-family: "jira";
     content: "\e901";
 }
 
 i.styledIcon.chevronRight:before {
+    font-family: "jira";
     content: "\e902";
 }
 
 i.styledIcon.chevronUp:before {
+    font-family: "jira";
     content: "\e903";
 }
 
 i.styledIcon.board:before {
-    font-family: 'IcoFont';
     content: "\ead0";
 }
 
 i.styledIcon.help:before {
-    font-family: 'IcoFont';
     content: "\efca";
 }
 
 i.styledIcon.link:before {
-    font-family: 'IcoFont';
     content: "\ef71";
 
 }
 
 i.styledIcon.menu:before {
+    font-family: "jira";
     content: "\e916";
 }
 
 i.styledIcon.more:before {
+    font-family: "jira";
     content: "\e90e";
 }
 
 i.styledIcon.attach:before {
+    font-family: "jira";
     content: "\e90d";
 }
 
 i.styledIcon.plus:before {
-    font-family: 'IcoFont';
     content: "\efc2";
 }
 
 i.styledIcon.search:before {
-    font-family: 'IcoFont';
     content: "\ec82";
 }
 
 i.styledIcon.issues:before {
-    content: "\e908";
+    content: "\ed19";
 }
 
 i.styledIcon.settings:before {
-    font-family: 'IcoFont';
     content: "\efe2";
 }
 
 i.styledIcon.close:before {
-    font-family: 'IcoFont';
     content: "\eee4";
 }
 
 i.styledIcon.feedback:before {
+    font-family: "jira";
     content: "\e918";
 }
 
 i.styledIcon.trash:before {
-    font-family: 'IcoFont';
-    content: "\ee09";
+    content: "\eebb";
 }
 
 i.styledIcon.github:before {
-    content: "\e915";
+    content: "\ed3e";
 }
 
 i.styledIcon.shipping:before {
-    content: "\e91c";
+    content: "\efbe";
 }
 
 i.styledIcon.component:before {
-    content: "\e91a";
+    content: "\eef8";
 }
 
 i.styledIcon.reports:before {
-    content: "\e91b";
+    content: "\eeaf";
 }
 
 i.styledIcon.page:before {
-    content: "\e919";
+    content: "\efb2";
 }
 
 i.styledIcon.calendar:before {
-    content: "\e91d";
+    content: "\ec45";
+}
+
+i.styledIcon.cop:before {
+    content: "\ebb4";
 }
 
 i.styledIcon.arrowLeft:before {
+    font-family: "jira";
     content: "\e91e";
 }
 
 i.styledIcon.arrowRight:before {
+    font-family: "jira";
     content: "\e91f";
 }

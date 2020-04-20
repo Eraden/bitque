@@ -249,3 +249,14 @@ impl ToStyledSelectChild for jirs_data::ProjectCategory {
             .value(self.clone().into())
     }
 }
+
+impl ToStyledSelectChild for jirs_data::UserRole {
+    fn to_select_child(&self) -> StyledSelectChildBuilder {
+        let name = self.to_string();
+
+        StyledSelectChild::build()
+            .add_class(name.as_str())
+            .text(name)
+            .value(self.clone().into())
+    }
+}

@@ -11,12 +11,14 @@
     padding-right: 50px;
 }
 
+.issueDetails > .content > .left > .styledInput,
 .issueDetails > .content > .left > .styledTextArea {
     margin: 18px 0 0 -8px;
     height: 44px;
     width: 100%;
 }
 
+.issueDetails > .content > .left > .styledInput > input,
 .issueDetails > .content > .left > .styledTextArea > textarea {
     padding: 7px 7px 8px;
     line-height: 1.28;
@@ -27,7 +29,8 @@
     font-weight: normal;
 }
 
-.issueDetails > .content > .left > .styledTextArea > textarea:not(:focus) {
+.issueDetails > .content > .left > .styledTextArea > textarea:not(:focus),
+.issueDetails > .content > .left > .styledInput > input:not(:focus) {
     background: #fff;
     border: 1px solid transparent;
     box-shadow: 0 0 0 1px transparent;

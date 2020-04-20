@@ -2,7 +2,7 @@ use std::io::Write;
 
 use diesel::{deserialize::*, pg::*, serialize::*, *};
 
-use crate::{IssuePriority, IssueStatus, IssueType, ProjectCategory};
+use crate::{IssuePriority, IssueStatus, IssueType, ProjectCategory, UserRole};
 
 #[derive(SqlType)]
 #[postgres(type_name = "IssuePriorityType")]
@@ -122,14 +122,12 @@ impl ToSql<IssueStatusType, Pg> for IssueStatus {
     }
 }
 
-///////////
-
 #[derive(SqlType)]
 #[postgres(type_name = "ProjectCategoryType")]
 pub struct ProjectCategoryType;
 
 impl diesel::query_builder::QueryId for ProjectCategoryType {
-    type QueryId = IssueStatus;
+    type QueryId = ProjectCategory;
 }
 
 fn project_category_from_sql(bytes: Option<&[u8]>) -> deserialize::Result<ProjectCategory> {
@@ -159,6 +157,46 @@ impl ToSql<ProjectCategoryType, Pg> for ProjectCategory {
             ProjectCategory::Software => out.write_all(b"software")?,
             ProjectCategory::Marketing => out.write_all(b"marketing")?,
             ProjectCategory::Business => out.write_all(b"business")?,
+        }
+        Ok(IsNull::No)
+    }
+}
+
+#[derive(SqlType)]
+#[postgres(type_name = "UserRoleType")]
+pub struct UserRoleType;
+
+impl diesel::query_builder::QueryId for UserRoleType {
+    type QueryId = UserRole;
+}
+
+fn user_role_from_sql(bytes: Option<&[u8]>) -> deserialize::Result<UserRole> {
+    match not_none!(bytes) {
+        b"user" => Ok(UserRole::User),
+        b"manager" => Ok(UserRole::Manager),
+        b"owner" => Ok(UserRole::Owner),
+        _ => Ok(UserRole::User),
+    }
+}
+
+impl FromSql<UserRoleType, Pg> for UserRole {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        user_role_from_sql(bytes)
+    }
+}
+
+impl FromSql<sql_types::Text, Pg> for UserRole {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        user_role_from_sql(bytes)
+    }
+}
+
+impl ToSql<UserRoleType, Pg> for UserRole {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        match *self {
+            UserRole::User => out.write_all(b"user")?,
+            UserRole::Manager => out.write_all(b"manager")?,
+            UserRole::Owner => out.write_all(b"owner")?,
         }
         Ok(IsNull::No)
     }

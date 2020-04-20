@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::str::FromStr;
 
 use chrono::NaiveDateTime;
@@ -250,6 +251,88 @@ impl Into<IssuePriority> for u32 {
 }
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
+#[cfg_attr(feature = "backend", sql_type = "UserRoleType")]
+#[derive(Clone, Copy, Deserialize, Serialize, Debug, PartialEq, Hash)]
+pub enum UserRole {
+    User,
+    Manager,
+    Owner,
+}
+
+impl PartialOrd for UserRole {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        use UserRole::*;
+
+        if self == other {
+            return Some(Ordering::Equal);
+        }
+        let order = match (self, other) {
+            (User, Manager) | (User, Owner) | (Manager, Owner) => Ordering::Less,
+            _ => Ordering::Greater,
+        };
+        Some(order)
+    }
+}
+
+impl ToVec for UserRole {
+    type Item = UserRole;
+
+    fn ordered() -> Vec<Self::Item> {
+        vec![UserRole::User, UserRole::Manager, UserRole::Owner]
+    }
+}
+
+impl FromStr for UserRole {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().trim() {
+            "user" => Ok(UserRole::User),
+            "manager" => Ok(UserRole::Manager),
+            "owner" => Ok(UserRole::Owner),
+            _ => Err(format!("Unknown user role {}", s)),
+        }
+    }
+}
+
+impl Default for UserRole {
+    fn default() -> Self {
+        UserRole::User
+    }
+}
+
+impl std::fmt::Display for UserRole {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UserRole::User => f.write_str("user"),
+            UserRole::Manager => f.write_str("manager"),
+            UserRole::Owner => f.write_str("owner"),
+        }
+    }
+}
+
+impl Into<u32> for UserRole {
+    fn into(self) -> u32 {
+        match self {
+            UserRole::User => 0,
+            UserRole::Manager => 1,
+            UserRole::Owner => 2,
+        }
+    }
+}
+
+impl Into<UserRole> for u32 {
+    fn into(self) -> UserRole {
+        match self {
+            0 => UserRole::User,
+            1 => UserRole::Manager,
+            2 => UserRole::Owner,
+            _ => UserRole::User,
+        }
+    }
+}
+
+#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "ProjectCategoryType")]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
 pub enum ProjectCategory {
@@ -376,6 +459,7 @@ pub struct User {
     pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub user_role: UserRole,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -494,6 +578,18 @@ pub enum SignInFieldId {
 pub enum SignUpFieldId {
     Username,
     Email,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum UsersFieldId {
+    Username,
+    Email,
+    UserRole,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum InviteFieldId {
+    Token,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]

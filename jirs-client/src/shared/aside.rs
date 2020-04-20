@@ -1,5 +1,7 @@
 use seed::{prelude::*, *};
 
+use jirs_data::UserRole;
+
 use crate::model::{Model, Page};
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::{divider, ToNode};
@@ -29,6 +31,23 @@ pub fn render(model: &Model) -> Node<Msg> {
             ],
         ],
     };
+    let mut links = vec![
+        sidebar_link_item(model, "Releases", Icon::Shipping, None),
+        sidebar_link_item(model, "Issue and Filters", Icon::Issues, None),
+        sidebar_link_item(model, "Pages", Icon::Page, None),
+        sidebar_link_item(model, "Reports", Icon::Reports, None),
+        sidebar_link_item(model, "Components", Icon::Component, None),
+    ];
+
+    if model.user.as_ref().map(|u| u.user_role).unwrap_or_default() > UserRole::User {
+        links.push(sidebar_link_item(
+            model,
+            "Users",
+            Icon::Cop,
+            Some(Page::Users),
+        ));
+    }
+
     nav![
         id!["sidebar"],
         ul![
@@ -41,11 +60,7 @@ pub fn render(model: &Model) -> Node<Msg> {
                 Some(Page::ProjectSettings)
             ),
             li![divider()],
-            sidebar_link_item(model, "Releases", Icon::Shipping, None),
-            sidebar_link_item(model, "Issue and Filters", Icon::Issues, None),
-            sidebar_link_item(model, "Pages", Icon::Page, None),
-            sidebar_link_item(model, "Reports", Icon::Reports, None),
-            sidebar_link_item(model, "Components", Icon::Component, None),
+            links,
         ]
     ]
 }

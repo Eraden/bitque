@@ -40,6 +40,7 @@ pub enum Icon {
     Calendar,
     ArrowLeft,
     ArrowRight,
+    Cop,
 }
 
 impl Icon {
@@ -90,6 +91,7 @@ impl std::fmt::Display for Icon {
             Icon::Calendar => "calendar",
             Icon::ArrowLeft => "arrowLeft",
             Icon::ArrowRight => "arrowRight",
+            Icon::Cop => "cop",
         };
         f.write_str(code)
     }

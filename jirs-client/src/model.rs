@@ -142,6 +142,8 @@ pub enum Page {
     ProjectSettings,
     SignIn,
     SignUp,
+    Invite,
+    Users,
 }
 
 impl Page {
@@ -153,6 +155,8 @@ impl Page {
             Page::ProjectSettings => "/project-settings".to_string(),
             Page::SignIn => "/login".to_string(),
             Page::SignUp => "/register".to_string(),
+            Page::Invite => "/invite".to_string(),
+            Page::Users => "/users".to_string(),
         }
     }
 }
@@ -182,6 +186,12 @@ pub struct ProjectPage {
     pub dragged_issue_id: Option<IssueId>,
     pub last_drag_exchange_id: Option<IssueId>,
     pub dirty_issues: Vec<IssueId>,
+}
+
+#[derive(Debug, Default)]
+pub struct InvitePage {
+    pub token: String,
+    pub token_touched: bool,
 }
 
 #[derive(Debug)]
@@ -243,11 +253,41 @@ pub struct SignUpPage {
 }
 
 #[derive(Debug)]
+pub struct UsersPage {
+    pub name: String,
+    pub name_touched: bool,
+    pub email: String,
+    pub email_touched: bool,
+    pub user_role: UserRole,
+
+    pub user_role_state: StyledSelectState,
+    pub pending_invitations: Vec<String>,
+    pub error: String,
+}
+
+impl Default for UsersPage {
+    fn default() -> Self {
+        Self {
+            name: "".to_string(),
+            name_touched: false,
+            email: "".to_string(),
+            email_touched: false,
+            user_role: Default::default(),
+            user_role_state: StyledSelectState::new(FieldId::Users(UsersFieldId::UserRole)),
+            pending_invitations: vec![],
+            error: "".to_string(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum PageContent {
     SignIn(SignInPage),
     SignUp(SignUpPage),
     Project(ProjectPage),
     ProjectSettings(ProjectSettingsPage),
+    Invite(InvitePage),
+    Users(UsersPage),
 }
 
 #[derive(Debug)]

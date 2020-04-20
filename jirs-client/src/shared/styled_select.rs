@@ -140,6 +140,11 @@ impl StyledSelectBuilder {
         }
     }
 
+    pub fn with_state(self, state: &StyledSelectState) -> Self {
+        self.opened(state.opened)
+            .text_filter(state.text_filter.as_str())
+    }
+
     pub fn dropdown_width(mut self, dropdown_width: usize) -> Self {
         self.dropdown_width = Some(dropdown_width);
         self

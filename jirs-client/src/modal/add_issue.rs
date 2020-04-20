@@ -153,6 +153,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
 
     let description = StyledTextarea::build(FieldId::AddIssueModal(IssueFieldId::Description))
         .height(110)
+        .add_class("textarea")
         .build()
         .into_node();
     let description_field = StyledField::build()

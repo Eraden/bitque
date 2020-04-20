@@ -10,6 +10,7 @@ use crate::shared::styled_editor::Mode as TabMode;
 use crate::shared::styled_select::StyledSelectChange;
 
 mod api;
+mod invite;
 mod modal;
 mod model;
 mod project;
@@ -17,6 +18,7 @@ mod project_settings;
 mod shared;
 mod sign_in;
 mod sign_up;
+mod users;
 mod validations;
 mod ws;
 
@@ -33,6 +35,8 @@ pub enum EditIssueModalSection {
 pub enum FieldId {
     SignIn(SignInFieldId),
     SignUp(SignUpFieldId),
+    Invite(InviteFieldId),
+    Users(UsersFieldId),
     // issue
     AddIssueModal(IssueFieldId),
     EditIssueModal(EditIssueModalSection),
@@ -113,6 +117,14 @@ impl std::fmt::Display for FieldId {
             FieldId::SignUp(sub) => match sub {
                 SignUpFieldId::Username => f.write_str("signUp-email"),
                 SignUpFieldId::Email => f.write_str("signUp-username"),
+            },
+            FieldId::Invite(sub) => match sub {
+                InviteFieldId::Token => f.write_str("invite-token"),
+            },
+            FieldId::Users(sub) => match sub {
+                UsersFieldId::Username => f.write_str("users-username"),
+                UsersFieldId::Email => f.write_str("users-email"),
+                UsersFieldId::UserRole => f.write_str("users-userRole"),
             },
         }
     }
@@ -221,6 +233,8 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         Page::ProjectSettings => project_settings::update(msg, model, orders),
         Page::SignIn => sign_in::update(msg, model, orders),
         Page::SignUp => sign_up::update(msg, model, orders),
+        Page::Invite => invite::update(msg, model, orders),
+        Page::Users => users::update(msg, model, orders),
     }
     if cfg!(debug_assertions) {
         // debug!(model);
@@ -234,6 +248,8 @@ fn view(model: &model::Model) -> Node<Msg> {
         Page::ProjectSettings => project_settings::view(model),
         Page::SignIn => sign_in::view(model),
         Page::SignUp => sign_up::view(model),
+        Page::Invite => invite::view(model),
+        Page::Users => users::view(model),
     }
 }
 
@@ -252,6 +268,8 @@ fn routes(url: Url) -> Option<Msg> {
         "project-settings" => Some(Msg::ChangePage(model::Page::ProjectSettings)),
         "login" => Some(Msg::ChangePage(model::Page::SignIn)),
         "register" => Some(Msg::ChangePage(model::Page::SignUp)),
+        "invite" => Some(Msg::ChangePage(model::Page::Invite)),
+        "users" => Some(Msg::ChangePage(model::Page::Users)),
         _ => Some(Msg::ChangePage(model::Page::Project)),
     }
 }
