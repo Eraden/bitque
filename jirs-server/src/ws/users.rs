@@ -48,3 +48,11 @@ impl WsHandler<Register> for WebSocketActor {
         Ok(msg)
     }
 }
+
+pub struct LoadInvitedUsers;
+
+impl WsHandler<LoadInvitedUsers> for WebSockerActor {
+    fn handle_msg(&mut self, msg: LoadInvitedUsers, _ctx: &mut _) -> WsResult {
+        let user_id = self.require_user()?.id;
+    }
+}
