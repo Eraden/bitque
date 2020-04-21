@@ -1,8 +1,9 @@
 use seed::{prelude::*, *};
 
-use jirs_data::UserRole;
 use jirs_data::{ToVec, UsersFieldId};
+use jirs_data::{UserRole, WsMsg};
 
+use crate::api::send_ws_msg;
 use crate::model::{Model, Page, PageContent, UsersPage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
@@ -50,6 +51,10 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 }
 
 pub fn view(model: &Model) -> Node<Msg> {
+    if model.user.is_none() {
+        return empty![];
+    }
+
     let page = match &model.page_content {
         PageContent::Users(page) => page,
         _ => return empty![],

@@ -2,6 +2,11 @@
     padding: 4px 8px;
 }
 
+.selectItem.capitalize,
+.optionItem.capitalize {
+    text-transform: capitalize;
+}
+
 .selectItem.priority.highest > .styledIcon,
 .optionItem.priority.highest > .styledIcon {
     color: var(--highest);

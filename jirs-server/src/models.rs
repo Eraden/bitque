@@ -2,7 +2,10 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use jirs_data::{IssuePriority, IssueStatus, IssueType, ProjectCategory, UserRole};
+use jirs_data::{
+    InvitationState, InvitationStateType, IssuePriority, IssueStatus, IssueType, ProjectCategory,
+    UserRole,
+};
 
 use crate::schema::*;
 
@@ -217,7 +220,6 @@ pub struct UserForm {
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable)]
-#[serde(rename_all = "camelCase")]
 pub struct Token {
     pub id: i32,
     pub user_id: i32,
@@ -242,11 +244,32 @@ impl Into<jirs_data::Token> for Token {
 }
 
 #[derive(Debug, Serialize, Deserialize, Insertable)]
-#[serde(rename_all = "camelCase")]
 #[table_name = "tokens"]
 pub struct TokenForm {
     pub user_id: i32,
     pub access_token: Uuid,
     pub refresh_token: Uuid,
     pub bind_token: Option<Uuid>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Queryable)]
+pub struct Invitation {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub state: InvitationState,
+    pub project_id: i32,
+    pub invited_by_id: i32,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+#[derive(Debug, Serialize, Deserialize, Insertable)]
+#[table_name = "invitations"]
+pub struct InvitationForm {
+    pub name: String,
+    pub email: String,
+    pub state: InvitationState,
+    pub project_id: i32,
+    pub invited_by_id: i32,
 }

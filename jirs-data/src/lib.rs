@@ -23,6 +23,7 @@ pub type ProjectId = i32;
 pub type UserId = i32;
 pub type CommentId = i32;
 pub type TokenId = i32;
+pub type InvitationId = i32;
 pub type EmailString = String;
 pub type UsernameString = String;
 
@@ -403,6 +404,31 @@ impl Into<ProjectCategory> for u32 {
     }
 }
 
+#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
+#[cfg_attr(feature = "backend", sql_type = "InvitationStateType")]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
+pub enum InvitationState {
+    Sent,
+    Accepted,
+    Revoked,
+}
+
+impl Default for InvitationState {
+    fn default() -> Self {
+        InvitationState::Sent
+    }
+}
+
+impl std::fmt::Display for InvitationState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InvitationState::Sent => f.write_str("sent"),
+            InvitationState::Accepted => f.write_str("accepted"),
+            InvitationState::Revoked => f.write_str("revoked"),
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Debug, PartialEq)]
 pub struct ErrorResponse {
     pub errors: Vec<String>,
@@ -631,6 +657,24 @@ pub enum WsMsg {
     SignUpRequest(EmailString, UsernameString),
     SignUpSuccess,
     SignUpPairTaken,
+
+    // invitations
+    InvitationListRequest,
+    InvitationListLoaded(Vec<Invitation>),
+    InvitedUsersRequest,
+    InvitedUsersLoaded(Vec<User>),
+    InvitationSendRequest {
+        name: UsernameString,
+        email: EmailString,
+    },
+    InvitationSendSuccess,
+    InvitationSendFailure,
+    //
+    InvitationRevokeRequest(InvitationId),
+    InvitationRevokeSuccess(InvitationId),
+    //
+    InvitationAcceptRequest(InvitationId),
+    InvitationAcceptSuccess(InvitationId),
 
     // project page
     ProjectRequest,

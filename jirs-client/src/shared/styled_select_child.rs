@@ -256,6 +256,7 @@ impl ToStyledSelectChild for jirs_data::UserRole {
 
         StyledSelectChild::build()
             .add_class(name.as_str())
+            .add_class("capitalize")
             .text(name)
             .value(self.clone().into())
     }

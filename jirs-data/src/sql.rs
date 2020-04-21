@@ -2,7 +2,7 @@ use std::io::Write;
 
 use diesel::{deserialize::*, pg::*, serialize::*, *};
 
-use crate::{IssuePriority, IssueStatus, IssueType, ProjectCategory, UserRole};
+use crate::{InvitationState, IssuePriority, IssueStatus, IssueType, ProjectCategory, UserRole};
 
 #[derive(SqlType)]
 #[postgres(type_name = "IssuePriorityType")]
@@ -197,6 +197,46 @@ impl ToSql<UserRoleType, Pg> for UserRole {
             UserRole::User => out.write_all(b"user")?,
             UserRole::Manager => out.write_all(b"manager")?,
             UserRole::Owner => out.write_all(b"owner")?,
+        }
+        Ok(IsNull::No)
+    }
+}
+
+#[derive(SqlType)]
+#[postgres(type_name = "InvitationStateType")]
+pub struct InvitationStateType;
+
+impl diesel::query_builder::QueryId for InvitationState {
+    type QueryId = InvitationState;
+}
+
+fn invitation_state_from_sql(bytes: Option<&[u8]>) -> deserialize::Result<InvitationState> {
+    match not_none!(bytes) {
+        b"sent" => Ok(InvitationState::Sent),
+        b"accepted" => Ok(InvitationState::Accepted),
+        b"revoked" => Ok(InvitationState::Revoked),
+        _ => Ok(InvitationState::Sent),
+    }
+}
+
+impl FromSql<InvitationStateType, Pg> for InvitationState {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        invitation_state_from_sql(bytes)
+    }
+}
+
+impl FromSql<sql_types::Text, Pg> for InvitationState {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        invitation_state_from_sql(bytes)
+    }
+}
+
+impl ToSql<InvitationStateType, Pg> for InvitationState {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        match *self {
+            InvitationState::Sent => out.write_all(b"sent")?,
+            InvitationState::Accepted => out.write_all(b"accepted")?,
+            InvitationState::Revoked => out.write_all(b"revoked")?,
         }
         Ok(IsNull::No)
     }
