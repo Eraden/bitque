@@ -4,7 +4,7 @@ use jirs_data::WsMsg;
 
 use crate::db::users::Register as DbRegister;
 use crate::ws::auth::Authenticate;
-use crate::ws::{current_user, WebSocketActor, WsHandler, WsResult};
+use crate::ws::{WebSocketActor, WsHandler, WsResult};
 
 pub struct LoadProjectUsers;
 
@@ -12,7 +12,7 @@ impl WsHandler<LoadProjectUsers> for WebSocketActor {
     fn handle_msg(&mut self, _msg: LoadProjectUsers, _ctx: &mut Self::Context) -> WsResult {
         use crate::db::users::LoadProjectUsers as Msg;
 
-        let project_id = current_user(&self.current_user).map(|u| u.project_id)?;
+        let project_id = self.require_user()?.project_id;
         let m = match block_on(self.db.send(Msg { project_id })) {
             Ok(Ok(v)) => Some(WsMsg::ProjectUsersLoaded(
                 v.into_iter().map(|i| i.into()).collect(),

@@ -4,7 +4,6 @@ use actix::{Actor, ActorContext, Addr, Context, Handler, Message, Recipient, Str
 use actix_web::web::Data;
 use actix_web::{get, web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
-use futures::executor::block_on;
 
 use jirs_data::{ProjectId, UserId, WsMsg};
 
@@ -22,13 +21,6 @@ pub mod projects;
 pub mod users;
 
 pub type WsResult = std::result::Result<Option<WsMsg>, WsMsg>;
-
-pub fn current_user(current_user: &Option<jirs_data::User>) -> Result<&jirs_data::User, WsMsg> {
-    current_user
-        .as_ref()
-        .map(|u| u)
-        .ok_or_else(|| WsMsg::AuthorizeExpired)
-}
 
 trait WsMessageSender {
     fn send_msg(&mut self, msg: &jirs_data::WsMsg);
@@ -180,7 +172,10 @@ impl WebSocketActor {
     }
 
     fn require_user(&self) -> Result<&jirs_data::User, WsMsg> {
-        current_user(&self.current_user)
+        self.current_user
+            .as_ref()
+            .map(|u| u)
+            .ok_or_else(|| WsMsg::AuthorizeExpired)
     }
 }
 

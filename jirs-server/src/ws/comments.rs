@@ -1,18 +1,15 @@
-use actix::Addr;
-use actix_web::web::Data;
 use futures::executor::block_on;
 
 use jirs_data::{CommentId, CreateCommentPayload, IssueId, UpdateCommentPayload, WsMsg};
 
-use crate::db::DbExecutor;
-use crate::ws::{current_user, WebSocketActor, WsHandler, WsResult};
+use crate::ws::{WebSocketActor, WsHandler, WsResult};
 
 pub struct LoadIssueComments {
     pub issue_id: IssueId,
 }
 
 impl WsHandler<LoadIssueComments> for WebSocketActor {
-    fn handle_msg(&mut self, msg: LoadIssueComments, _ctx: Self::Context) -> WsResult {
+    fn handle_msg(&mut self, msg: LoadIssueComments, _ctx: &mut Self::Context) -> WsResult {
         self.require_user()?;
 
         let comments = match block_on(self.db.send(crate::db::comments::LoadIssueComments {
@@ -27,7 +24,7 @@ impl WsHandler<LoadIssueComments> for WebSocketActor {
 }
 
 impl WsHandler<CreateCommentPayload> for WebSocketActor {
-    fn handle_msg(&mut self, mut msg: CreateCommentPayload, _ctx: Self::Context) -> WsResult {
+    fn handle_msg(&mut self, mut msg: CreateCommentPayload, ctx: &mut Self::Context) -> WsResult {
         use crate::db::comments::CreateComment;
 
         let user_id = self.require_user()?.id;
@@ -43,12 +40,12 @@ impl WsHandler<CreateCommentPayload> for WebSocketActor {
             Ok(Ok(_)) => (),
             _ => return Ok(None),
         };
-        self.handle_msg(LoadIssueComments { issue_id })
+        self.handle_msg(LoadIssueComments { issue_id }, ctx)
     }
 }
 
 impl WsHandler<UpdateCommentPayload> for WebSocketActor {
-    fn handle_msg(&mut self, msg: UpdateCommentPayload, _ctx: Self::Context) -> WsResult {
+    fn handle_msg(&mut self, msg: UpdateCommentPayload, ctx: &mut Self::Context) -> WsResult {
         use crate::db::comments::UpdateComment;
 
         info!("{:?}", msg);
@@ -67,7 +64,7 @@ impl WsHandler<UpdateCommentPayload> for WebSocketActor {
             Ok(Ok(comment)) => comment.issue_id,
             _ => return Ok(None),
         };
-        if let Some(v) = self.handle_msg(LoadIssueComments { issue_id })? {
+        if let Some(v) = self.handle_msg(LoadIssueComments { issue_id }, ctx)? {
             self.broadcast(&v);
         }
         Ok(None)
@@ -79,7 +76,7 @@ pub struct DeleteComment {
 }
 
 impl WsHandler<DeleteComment> for WebSocketActor {
-    fn handle_msg(&mut self, msg: DeleteComment, _ctx: Self::Context) -> WsResult {
+    fn handle_msg(&mut self, msg: DeleteComment, _ctx: &mut Self::Context) -> WsResult {
         use crate::db::comments::DeleteComment;
 
         let user_id = self.require_user()?.id;
