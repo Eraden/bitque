@@ -689,8 +689,10 @@ pub enum WsMsg {
     // invitations
     InvitationListRequest,
     InvitationListLoaded(Vec<Invitation>),
+    //
     InvitedUsersRequest,
     InvitedUsersLoaded(Vec<User>),
+    //
     InvitationSendRequest {
         name: UsernameString,
         email: EmailString,

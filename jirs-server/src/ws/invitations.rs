@@ -102,3 +102,25 @@ impl Handler<RevokeInvitation> for WebSocketActor {
         Ok(res)
     }
 }
+
+pub struct AcceptInvitation {
+    pub id: InvitationId,
+}
+
+impl Message for AcceptInvitation {
+    type Result = WsResult;
+}
+
+impl Handler<AcceptInvitation> for WebSocketActor {
+    type Result = WsResult;
+
+    fn handle(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> Self::Result {
+        self.require_user()?;
+        let AcceptInvitation { id } = msg;
+        let res = match block_on(self.db.send(invitations::AcceptInvitation { id })) {
+            Ok(Ok(_)) => Some(WsMsg::InvitationAcceptSuccess(id)),
+            _ => None,
+        };
+        Ok(res)
+    }
+}

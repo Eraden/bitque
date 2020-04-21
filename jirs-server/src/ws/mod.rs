@@ -266,6 +266,38 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
     }
 }
 
+trait MessageHandler {
+    fn try_message<M>(&self) -> Option<M>
+    where
+        M: Message<Result = WsResult>;
+}
+
+impl WebSocketActor {
+    fn try_handle_message(
+        &mut self,
+        msg: WsMsg,
+        ctx: <WebSocketActor as Actor>::Context,
+    ) -> WsResult {
+        use invitations::*;
+
+        Ok(None)
+        // match msg {
+        //     WsMsg::InvitationSendRequest { name, email } => self.handle(
+        //         CreateInvitation {
+        //             name: name.clone(),
+        //             email: email.clone(),
+        //         },
+        //         ctx,
+        //     ),
+        //     WsMsg::InvitationListRequest => self.handle(ListInvitation, ctx),
+        //     WsMsg::InvitationAcceptRequest(id) => Ok(None),
+        //     WsMsg::InvitationRevokeRequest(id) => self.handle(RevokeInvitation { id: *id }, ctx),
+        //     WsMsg::InvitedUsersRequest => Ok(None),
+        //     _ => Ok(None),
+        // }
+    }
+}
+
 #[derive(Message, Debug)]
 #[rtype(result = "()")]
 pub enum InnerMsg {

@@ -3,12 +3,12 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 
 use jirs_data::{
-    EmailString, Invitation, InvitationId, InvitationState, ProjectId, UserId, UsernameString,
+    EmailString, Invitation, InvitationId, InvitationState, ProjectId, User, UserId, UsernameString,
 };
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
-use crate::models::InvitationForm;
+use crate::models::{InvitationForm, UserForm};
 
 pub struct ListInvitation {
     pub user_id: UserId,
@@ -127,5 +127,55 @@ impl Handler<RevokeInvitation> for DbExecutor {
             .execute(conn)
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         Ok(())
+    }
+}
+
+pub struct AcceptInvitation {
+    pub id: InvitationId,
+}
+
+impl Message for AcceptInvitation {
+    type Result = Result<User, ServiceErrors>;
+}
+
+impl Handler<AcceptInvitation> for DbExecutor {
+    type Result = Result<User, ServiceErrors>;
+
+    fn handle(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::invitations::dsl::*;
+        use crate::schema::users::dsl::users;
+
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let query = invitations.find(msg.id);
+        debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
+        let invitation: Invitation = query
+            .first(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let query = diesel::update(invitations)
+            .set(state.eq(InvitationState::Accepted))
+            .filter(id.eq(invitation.id));
+        debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
+        query
+            .execute(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let form = UserForm {
+            name: invitation.name,
+            email: invitation.email,
+            avatar_url: None,
+            project_id: invitation.project_id,
+        };
+        let query = diesel::insert_into(users).values(form);
+        debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
+        let user: User = query
+            .get_result(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        Ok(user)
     }
 }
