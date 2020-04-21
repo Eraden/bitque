@@ -1,20 +1,18 @@
 use std::collections::{HashMap, HashSet};
 
-use actix::{
-    Actor, ActorContext, Addr, AsyncContext, Context, Handler, Message, Recipient, StreamHandler,
-};
+use actix::{Actor, ActorContext, Addr, Context, Handler, Message, Recipient, StreamHandler};
 use actix_web::web::Data;
 use actix_web::{get, web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use futures::executor::block_on;
-use futures::SinkExt;
 
-use jirs_data::{ProjectId, Token, UserId, WsMsg};
+use jirs_data::{ProjectId, UserId, WsMsg};
 
-use crate::db::authorize_user::AuthorizeUser;
-use crate::db::tokens::FindBindToken;
 use crate::db::DbExecutor;
 use crate::mail::MailExecutor;
+use crate::ws::auth::{Authenticate, CheckAuthToken, CheckBindToken};
+use crate::ws::invitations::*;
+use crate::ws::issues::UpdateIssueHandler;
 
 pub mod auth;
 pub mod comments;
@@ -88,83 +86,69 @@ impl WebSocketActor {
             WsMsg::Pong => Some(WsMsg::Ping),
 
             // Issues
-            WsMsg::IssueUpdateRequest(id, field_id, payload) => match block_on(
-                issues::update_issue(&self.db, &self.current_user, id, field_id, payload),
-            ) {
-                Ok(Some(msg)) => {
-                    self.broadcast(&msg);
-                    None
-                }
-                _ => None,
-            },
-            WsMsg::IssueCreateRequest(payload) => {
-                block_on(issues::add_issue(&self.db, &self.current_user, payload))?
-            }
-            WsMsg::IssueDeleteRequest(id) => {
-                block_on(issues::delete_issue(&self.db, &self.current_user, id))?
-            }
-            WsMsg::ProjectIssuesRequest => {
-                block_on(issues::load_issues(&self.db, &self.current_user))?
-            }
+            WsMsg::IssueUpdateRequest(id, field_id, payload) => self.handle_msg(
+                UpdateIssueHandler {
+                    id,
+                    field_id,
+                    payload,
+                },
+                ctx,
+            )?,
+            WsMsg::IssueCreateRequest(payload) => self.handle_msg(payload, ctx)?,
+            WsMsg::IssueDeleteRequest(id) => self.handle_msg(issues::DeleteIssue { id }, ctx)?,
+            WsMsg::ProjectIssuesRequest => self.handle_msg(issues::LoadIssues, ctx)?,
 
             // projects
-            WsMsg::ProjectRequest => {
-                block_on(projects::current_project(&self.db, &self.current_user))?
-            }
-
-            WsMsg::ProjectUpdateRequest(payload) => block_on(projects::update_project(
-                &self.db,
-                &self.current_user,
-                payload,
-            ))?,
+            WsMsg::ProjectRequest => self.handle_msg(projects::CurrentProject, ctx)?,
+            WsMsg::ProjectUpdateRequest(payload) => self.handle_msg(payload, ctx)?,
 
             // auth
-            WsMsg::AuthorizeRequest(uuid) => block_on(self.check_auth_token(uuid, ctx))?,
-            WsMsg::BindTokenCheck(uuid) => block_on(self.check_bind_token(uuid))?,
+            WsMsg::AuthorizeRequest(uuid) => {
+                self.handle_msg(CheckAuthToken { token: uuid }, ctx)?
+            }
+            WsMsg::BindTokenCheck(uuid) => {
+                self.handle_msg(CheckBindToken { bind_token: uuid }, ctx)?
+            }
             WsMsg::AuthenticateRequest(email, name) => {
-                block_on(auth::authenticate(&self.db, &self.mail, name, email))?
+                self.handle_msg(Authenticate { name, email }, ctx)?
             }
 
             // register
-            WsMsg::SignUpRequest(email, username) => {
-                block_on(users::register(&self.db, &self.mail, username, email))?
-            }
+            WsMsg::SignUpRequest(email, username) => self.handle_msg(
+                users::Register {
+                    name: username,
+                    email,
+                },
+                ctx,
+            )?,
 
             // users
-            WsMsg::ProjectUsersRequest => {
-                block_on(users::load_project_users(&self.db, &self.current_user))?
-            }
+            WsMsg::ProjectUsersRequest => self.handle_msg(users::LoadProjectUsers, ctx)?,
 
             // comments
-            WsMsg::IssueCommentsRequest(issue_id) => block_on(comments::load_issues(
-                &self.db,
-                &self.current_user,
-                issue_id,
-            ))?,
+            WsMsg::IssueCommentsRequest(issue_id) => {
+                self.handle_msg(comments::LoadIssueComments { issue_id }, ctx)?
+            }
+            WsMsg::CreateComment(payload) => self.handle_msg(payload, ctx)?,
+            WsMsg::UpdateComment(payload) => self.handle_msg(payload, ctx)?,
+            WsMsg::CommentDeleteRequest(comment_id) => {
+                self.handle_msg(comments::DeleteComment { comment_id }, ctx)?
+            }
 
-            WsMsg::CreateComment(payload) => block_on(comments::create_comment(
-                &self.db,
-                &self.current_user,
-                payload,
-            ))?,
+            // invitations
+            WsMsg::InvitationSendRequest { name, email } => self.handle_msg(
+                CreateInvitation {
+                    name: name.clone(),
+                    email: email.clone(),
+                },
+                ctx,
+            )?,
+            WsMsg::InvitationListRequest => self.handle_msg(ListInvitation, ctx)?,
+            WsMsg::InvitationAcceptRequest(id) => self.handle_msg(AcceptInvitation { id }, ctx)?,
 
-            WsMsg::UpdateComment(payload) => match block_on(comments::update_comment(
-                &self.db,
-                &self.current_user,
-                payload,
-            )) {
-                Ok(Some(msg)) => {
-                    self.broadcast(&msg);
-                    None
-                }
-                _ => None,
-            },
+            WsMsg::InvitationRevokeRequest(id) => self.handle_msg(RevokeInvitation { id }, ctx)?,
 
-            WsMsg::CommentDeleteRequest(comment_id) => block_on(comments::delete_comment(
-                &self.db,
-                &self.current_user,
-                comment_id,
-            ))?,
+            WsMsg::InvitedUsersRequest => None,
 
             // else fail
             _ => {
@@ -176,41 +160,6 @@ impl WebSocketActor {
             info!("sending message {:?}", msg);
         }
         Ok(msg)
-    }
-
-    async fn check_auth_token(
-        &mut self,
-        token: uuid::Uuid,
-        ctx: &mut <WebSocketActor as Actor>::Context,
-    ) -> WsResult {
-        let m = match self
-            .db
-            .send(AuthorizeUser {
-                access_token: token,
-            })
-            .await
-        {
-            Ok(Ok(u)) => {
-                let user: jirs_data::User = u.into();
-                self.current_user = Some(user.clone());
-                self.join_channel(ctx.address().recipient()).await;
-                Some(WsMsg::AuthorizeLoaded(Ok(user)))
-            }
-            Ok(Err(_)) => Some(WsMsg::AuthorizeLoaded(
-                Err("Invalid auth token".to_string()),
-            )),
-            _ => Some(WsMsg::AuthorizeExpired),
-        };
-        Ok(m)
-    }
-
-    async fn check_bind_token(&mut self, bind_token: uuid::Uuid) -> WsResult {
-        let token: Token = match self.db.send(FindBindToken { token: bind_token }).await {
-            Ok(Ok(token)) => token,
-            Ok(Err(_)) => return Ok(Some(WsMsg::BindTokenBad)),
-            _ => return Ok(None),
-        };
-        Ok(Some(WsMsg::BindTokenOk(token.access_token)))
     }
 
     async fn join_channel(&self, addr: Recipient<InnerMsg>) {
@@ -267,35 +216,11 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
     }
 }
 
-impl WebSocketActor {
-    fn try_handle_message(
-        &mut self,
-        msg: WsMsg,
-        _ctx: &mut <WebSocketActor as Actor>::Context,
-    ) -> WsResult
-    where
-        Self: Actor,
-    {
-        match msg {
-            WsMsg::InvitationSendRequest { name, email } => {
-                use invitations::*;
-
-                let m = CreateInvitation {
-                    name: name.clone(),
-                    email: email.clone(),
-                };
-                // Handler::handle(&mut self, m, _ctx);
-                Ok(None)
-                // Handler::<CreateInvitation>::handle(&mut self, m, _ctx)
-                // <self as Handler<CreateInvitation>>.handle(m, ctx)
-            }
-            //     WsMsg::InvitationListRequest => self.handle(ListInvitation, ctx),
-            //     WsMsg::InvitationAcceptRequest(id) => Ok(None),
-            //     WsMsg::InvitationRevokeRequest(id) => self.handle(RevokeInvitation { id: *id }, ctx),
-            //     WsMsg::InvitedUsersRequest => Ok(None),
-            _ => Ok(None),
-        }
-    }
+pub trait WsHandler<Message>
+where
+    Self: Actor,
+{
+    fn handle_msg(&mut self, msg: Message, _ctx: &mut <Self as Actor>::Context) -> WsResult;
 }
 
 #[derive(Message, Debug)]

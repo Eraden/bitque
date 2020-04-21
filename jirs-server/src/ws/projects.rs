@@ -1,50 +1,44 @@
-use actix::Addr;
-use actix_web::web::Data;
+use futures::executor::block_on;
 
 use jirs_data::{UpdateProjectPayload, WsMsg};
 
 use crate::db::projects::LoadCurrentProject;
-use crate::db::DbExecutor;
-use crate::ws::{current_user, WsResult};
+use crate::ws::{WebSocketActor, WsHandler, WsResult};
 
-pub async fn current_project(
-    db: &Data<Addr<DbExecutor>>,
-    user: &Option<jirs_data::User>,
-) -> WsResult {
-    let project_id = current_user(user).map(|u| u.project_id)?;
+pub struct CurrentProject;
 
-    let m = match db.send(LoadCurrentProject { project_id }).await {
-        Ok(Ok(project)) => Some(WsMsg::ProjectLoaded(project.into())),
-        Ok(Err(e)) => {
-            error!("{:?}", e);
-            None
-        }
-        Err(e) => {
-            error!("{:?}", e);
-            None
-        }
-    };
-    Ok(m)
+impl WsHandler<CurrentProject> for WebSocketActor {
+    fn handle_msg(&mut self, _msg: CurrentProject, _ctx: &mut Self::Context) -> WsResult {
+        let project_id = self.require_user()?.project_id;
+
+        let m = match block_on(self.db.send(LoadCurrentProject { project_id })) {
+            Ok(Ok(project)) => Some(WsMsg::ProjectLoaded(project.into())),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                None
+            }
+            Err(e) => {
+                error!("{:?}", e);
+                None
+            }
+        };
+        Ok(m)
+    }
 }
 
-pub async fn update_project(
-    db: &Data<Addr<DbExecutor>>,
-    user: &Option<jirs_data::User>,
-    payload: UpdateProjectPayload,
-) -> WsResult {
-    let project_id = current_user(user).map(|u| u.project_id)?;
-    let project = match db
-        .send(crate::db::projects::UpdateProject {
+impl WsHandler<UpdateProjectPayload> for WebSocketActor {
+    fn handle_msg(&mut self, msg: UpdateProjectPayload, _ctx: &mut Self::Context) -> WsResult {
+        let project_id = self.require_user()?.project_id;
+        let project = match block_on(self.db.send(crate::db::projects::UpdateProject {
             project_id,
-            name: payload.name,
-            url: payload.url,
-            description: payload.description,
-            category: payload.category,
-        })
-        .await
-    {
-        Ok(Ok(project)) => project,
-        _ => return Ok(None),
-    };
-    Ok(Some(WsMsg::ProjectLoaded(project.into())))
+            name: msg.name,
+            url: msg.url,
+            description: msg.description,
+            category: msg.category,
+        })) {
+            Ok(Ok(project)) => project,
+            _ => return Ok(None),
+        };
+        Ok(Some(WsMsg::ProjectLoaded(project.into())))
+    }
 }

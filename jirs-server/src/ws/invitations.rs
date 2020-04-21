@@ -1,21 +1,14 @@
-use actix::{Handler, Message};
 use futures::executor::block_on;
 
 use jirs_data::{EmailString, InvitationId, UsernameString, WsMsg};
 
 use crate::db::invitations;
-use crate::ws::{WebSocketActor, WsResult};
+use crate::ws::{WebSocketActor, WsHandler, WsResult};
 
 pub struct ListInvitation;
 
-impl Message for ListInvitation {
-    type Result = WsResult;
-}
-
-impl Handler<ListInvitation> for WebSocketActor {
-    type Result = WsResult;
-
-    fn handle(&mut self, _msg: ListInvitation, _ctx: &mut Self::Context) -> Self::Result {
+impl WsHandler<ListInvitation> for WebSocketActor {
+    fn handle_msg(&mut self, _msg: ListInvitation, _ctx: &mut Self::Context) -> WsResult {
         let user_id = match self.current_user.as_ref().map(|u| u.id) {
             Some(id) => id,
             _ => return Ok(None),
@@ -33,14 +26,8 @@ pub struct CreateInvitation {
     pub name: UsernameString,
 }
 
-impl Message for CreateInvitation {
-    type Result = WsResult;
-}
-
-impl Handler<CreateInvitation> for WebSocketActor {
-    type Result = WsResult;
-
-    fn handle(&mut self, msg: CreateInvitation, _ctx: &mut Self::Context) -> Self::Result {
+impl WsHandler<CreateInvitation> for WebSocketActor {
+    fn handle_msg(&mut self, msg: CreateInvitation, _ctx: &mut Self::Context) -> WsResult {
         let (user_id, project_id) = match self.current_user.as_ref().map(|u| (u.id, u.project_id)) {
             Some(id) => id,
             _ => return Ok(None),
@@ -63,14 +50,8 @@ pub struct DeleteInvitation {
     pub id: InvitationId,
 }
 
-impl Message for DeleteInvitation {
-    type Result = WsResult;
-}
-
-impl Handler<DeleteInvitation> for WebSocketActor {
-    type Result = WsResult;
-
-    fn handle(&mut self, msg: DeleteInvitation, _ctx: &mut Self::Context) -> Self::Result {
+impl WsHandler<DeleteInvitation> for WebSocketActor {
+    fn handle_msg(&mut self, msg: DeleteInvitation, _ctx: &mut Self::Context) -> WsResult {
         self.require_user()?;
         let DeleteInvitation { id } = msg;
         let res = match block_on(self.db.send(invitations::DeleteInvitation { id })) {
@@ -85,14 +66,8 @@ pub struct RevokeInvitation {
     pub id: InvitationId,
 }
 
-impl Message for RevokeInvitation {
-    type Result = WsResult;
-}
-
-impl Handler<RevokeInvitation> for WebSocketActor {
-    type Result = WsResult;
-
-    fn handle(&mut self, msg: RevokeInvitation, _ctx: &mut Self::Context) -> Self::Result {
+impl WsHandler<RevokeInvitation> for WebSocketActor {
+    fn handle_msg(&mut self, msg: RevokeInvitation, _ctx: &mut Self::Context) -> WsResult {
         self.require_user()?;
         let RevokeInvitation { id } = msg;
         let res = match block_on(self.db.send(invitations::RevokeInvitation { id })) {
@@ -107,14 +82,8 @@ pub struct AcceptInvitation {
     pub id: InvitationId,
 }
 
-impl Message for AcceptInvitation {
-    type Result = WsResult;
-}
-
-impl Handler<AcceptInvitation> for WebSocketActor {
-    type Result = WsResult;
-
-    fn handle(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> Self::Result {
+impl WsHandler<AcceptInvitation> for WebSocketActor {
+    fn handle_msg(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> WsResult {
         self.require_user()?;
         let AcceptInvitation { id } = msg;
         let res = match block_on(self.db.send(invitations::AcceptInvitation { id })) {

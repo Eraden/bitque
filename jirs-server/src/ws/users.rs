@@ -1,50 +1,50 @@
-use actix::Addr;
-use actix_web::web::Data;
+use futures::executor::block_on;
 
 use jirs_data::WsMsg;
 
-use crate::db::users::{LoadProjectUsers, Register};
-use crate::db::DbExecutor;
-use crate::mail::MailExecutor;
-use crate::ws::auth::authenticate;
-use crate::ws::{current_user, WsResult};
+use crate::db::users::Register as DbRegister;
+use crate::ws::auth::Authenticate;
+use crate::ws::{current_user, WebSocketActor, WsHandler, WsResult};
 
-pub async fn load_project_users(
-    db: &Data<Addr<DbExecutor>>,
-    user: &Option<jirs_data::User>,
-) -> WsResult {
-    let project_id = current_user(user).map(|u| u.project_id)?;
-    let m = match db.send(LoadProjectUsers { project_id }).await {
-        Ok(Ok(v)) => Some(WsMsg::ProjectUsersLoaded(
-            v.into_iter().map(|i| i.into()).collect(),
-        )),
-        _ => None,
-    };
-    Ok(m)
+pub struct LoadProjectUsers;
+
+impl WsHandler<LoadProjectUsers> for WebSocketActor {
+    fn handle_msg(&mut self, _msg: LoadProjectUsers, _ctx: &mut Self::Context) -> WsResult {
+        use crate::db::users::LoadProjectUsers as Msg;
+
+        let project_id = current_user(&self.current_user).map(|u| u.project_id)?;
+        let m = match block_on(self.db.send(Msg { project_id })) {
+            Ok(Ok(v)) => Some(WsMsg::ProjectUsersLoaded(
+                v.into_iter().map(|i| i.into()).collect(),
+            )),
+            _ => None,
+        };
+        Ok(m)
+    }
 }
 
-pub async fn register(
-    db: &Data<Addr<DbExecutor>>,
-    mail: &Data<Addr<MailExecutor>>,
-    name: String,
-    email: String,
-) -> WsResult {
-    let msg = match db
-        .send(Register {
+pub struct Register {
+    pub name: String,
+    pub email: String,
+}
+
+impl WsHandler<Register> for WebSocketActor {
+    fn handle_msg(&mut self, msg: Register, ctx: &mut Self::Context) -> WsResult {
+        let Register { name, email } = msg;
+        let msg = match block_on(self.db.send(DbRegister {
             name: name.clone(),
             email: email.clone(),
-        })
-        .await
-    {
-        Ok(Ok(_)) => Some(WsMsg::SignUpSuccess),
-        Ok(Err(_)) => Some(WsMsg::SignUpPairTaken),
-        _ => None,
-    };
+        })) {
+            Ok(Ok(_)) => Some(WsMsg::SignUpSuccess),
+            Ok(Err(_)) => Some(WsMsg::SignUpPairTaken),
+            _ => None,
+        };
 
-    match authenticate(db, mail, name, email).await {
-        Ok(_) => (),
-        Err(e) => return Ok(Some(e)),
-    };
+        match self.handle_msg(Authenticate { name, email }, ctx) {
+            Ok(_) => (),
+            Err(e) => return Ok(Some(e)),
+        };
 
-    Ok(msg)
+        Ok(msg)
+    }
 }

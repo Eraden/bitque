@@ -1,98 +1,98 @@
 use actix::Addr;
 use actix_web::web::Data;
+use futures::executor::block_on;
 
 use jirs_data::{CommentId, CreateCommentPayload, IssueId, UpdateCommentPayload, WsMsg};
 
-use crate::db::comments::LoadIssueComments;
 use crate::db::DbExecutor;
-use crate::ws::{current_user, WsResult};
+use crate::ws::{current_user, WebSocketActor, WsHandler, WsResult};
 
-pub async fn load_issues(
-    db: &Data<Addr<DbExecutor>>,
-    user: &Option<jirs_data::User>,
-    issue_id: IssueId,
-) -> WsResult {
-    current_user(user)?;
-    let comments = match db.send(LoadIssueComments { issue_id }).await {
-        Ok(Ok(comments)) => comments.into_iter().map(|c| c.into()).collect(),
-        _ => return Ok(None),
-    };
-
-    Ok(Some(WsMsg::IssueCommentsLoaded(comments)))
+pub struct LoadIssueComments {
+    pub issue_id: IssueId,
 }
 
-pub async fn create_comment(
-    db: &Data<Addr<DbExecutor>>,
-    user: &Option<jirs_data::User>,
-    mut payload: CreateCommentPayload,
-) -> WsResult {
-    use crate::db::comments::CreateComment;
+impl WsHandler<LoadIssueComments> for WebSocketActor {
+    fn handle_msg(&mut self, msg: LoadIssueComments, _ctx: Self::Context) -> WsResult {
+        self.require_user()?;
 
-    let user_id = current_user(user)?.id;
-    if payload.user_id.is_none() {
-        payload.user_id = Some(user_id);
+        let comments = match block_on(self.db.send(crate::db::comments::LoadIssueComments {
+            issue_id: msg.issue_id,
+        })) {
+            Ok(Ok(comments)) => comments.into_iter().map(|c| c.into()).collect(),
+            _ => return Ok(None),
+        };
+
+        Ok(Some(WsMsg::IssueCommentsLoaded(comments)))
     }
-    let issue_id = payload.issue_id;
-    match db
-        .send(CreateComment {
+}
+
+impl WsHandler<CreateCommentPayload> for WebSocketActor {
+    fn handle_msg(&mut self, mut msg: CreateCommentPayload, _ctx: Self::Context) -> WsResult {
+        use crate::db::comments::CreateComment;
+
+        let user_id = self.require_user()?.id;
+        if msg.user_id.is_none() {
+            msg.user_id = Some(user_id);
+        }
+        let issue_id = msg.issue_id;
+        match block_on(self.db.send(CreateComment {
             user_id,
             issue_id,
-            body: payload.body,
-        })
-        .await
-    {
-        Ok(Ok(_)) => (),
-        _ => return Ok(None),
-    };
-    load_issues(db, user, issue_id).await
+            body: msg.body,
+        })) {
+            Ok(Ok(_)) => (),
+            _ => return Ok(None),
+        };
+        self.handle_msg(LoadIssueComments { issue_id })
+    }
 }
 
-pub async fn update_comment(
-    db: &Data<Addr<DbExecutor>>,
-    user: &Option<jirs_data::User>,
-    payload: UpdateCommentPayload,
-) -> WsResult {
-    use crate::db::comments::UpdateComment;
+impl WsHandler<UpdateCommentPayload> for WebSocketActor {
+    fn handle_msg(&mut self, msg: UpdateCommentPayload, _ctx: Self::Context) -> WsResult {
+        use crate::db::comments::UpdateComment;
 
-    info!("{:?}", payload);
-    let user_id = current_user(user)?.id;
+        info!("{:?}", msg);
+        let user_id = self.require_user()?.id;
 
-    let UpdateCommentPayload {
-        id: comment_id,
-        body,
-    } = payload;
+        let UpdateCommentPayload {
+            id: comment_id,
+            body,
+        } = msg;
 
-    let issue_id = match db
-        .send(UpdateComment {
+        let issue_id = match block_on(self.db.send(UpdateComment {
             comment_id,
             user_id,
             body,
-        })
-        .await
-    {
-        Ok(Ok(comment)) => comment.issue_id,
-        _ => return Ok(None),
-    };
-    load_issues(db, user, issue_id).await
+        })) {
+            Ok(Ok(comment)) => comment.issue_id,
+            _ => return Ok(None),
+        };
+        if let Some(v) = self.handle_msg(LoadIssueComments { issue_id })? {
+            self.broadcast(&v);
+        }
+        Ok(None)
+    }
 }
 
-pub async fn delete_comment(
-    db: &Data<Addr<DbExecutor>>,
-    user: &Option<jirs_data::User>,
-    comment_id: CommentId,
-) -> WsResult {
-    use crate::db::comments::DeleteComment;
+pub struct DeleteComment {
+    pub comment_id: CommentId,
+}
 
-    let user_id = current_user(user)?.id;
+impl WsHandler<DeleteComment> for WebSocketActor {
+    fn handle_msg(&mut self, msg: DeleteComment, _ctx: Self::Context) -> WsResult {
+        use crate::db::comments::DeleteComment;
 
-    let msg = DeleteComment {
-        comment_id,
-        user_id,
-    };
-    match db.send(msg).await {
-        Ok(Ok(_)) => (),
-        _ => return Ok(None),
-    };
+        let user_id = self.require_user()?.id;
 
-    Ok(Some(WsMsg::CommentDeleted(comment_id)))
+        let m = DeleteComment {
+            comment_id: msg.comment_id,
+            user_id,
+        };
+        match block_on(self.db.send(m)) {
+            Ok(Ok(_)) => (),
+            _ => return Ok(None),
+        };
+
+        Ok(Some(WsMsg::CommentDeleted(msg.comment_id)))
+    }
 }
