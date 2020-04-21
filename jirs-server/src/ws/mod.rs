@@ -17,6 +17,7 @@ use crate::mail::MailExecutor;
 
 pub mod auth;
 pub mod comments;
+pub mod invitations;
 pub mod issues;
 pub mod projects;
 pub mod users;
