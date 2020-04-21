@@ -7,6 +7,7 @@ use actix_web::web::Data;
 use actix_web::{get, web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use futures::executor::block_on;
+use futures::SinkExt;
 
 use jirs_data::{ProjectId, Token, UserId, WsMsg};
 
@@ -266,35 +267,34 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
     }
 }
 
-trait MessageHandler {
-    fn try_message<M>(&self) -> Option<M>
-    where
-        M: Message<Result = WsResult>;
-}
-
 impl WebSocketActor {
     fn try_handle_message(
         &mut self,
         msg: WsMsg,
-        ctx: <WebSocketActor as Actor>::Context,
-    ) -> WsResult {
-        use invitations::*;
+        _ctx: &mut <WebSocketActor as Actor>::Context,
+    ) -> WsResult
+    where
+        Self: Actor,
+    {
+        match msg {
+            WsMsg::InvitationSendRequest { name, email } => {
+                use invitations::*;
 
-        Ok(None)
-        // match msg {
-        //     WsMsg::InvitationSendRequest { name, email } => self.handle(
-        //         CreateInvitation {
-        //             name: name.clone(),
-        //             email: email.clone(),
-        //         },
-        //         ctx,
-        //     ),
-        //     WsMsg::InvitationListRequest => self.handle(ListInvitation, ctx),
-        //     WsMsg::InvitationAcceptRequest(id) => Ok(None),
-        //     WsMsg::InvitationRevokeRequest(id) => self.handle(RevokeInvitation { id: *id }, ctx),
-        //     WsMsg::InvitedUsersRequest => Ok(None),
-        //     _ => Ok(None),
-        // }
+                let m = CreateInvitation {
+                    name: name.clone(),
+                    email: email.clone(),
+                };
+                // Handler::handle(&mut self, m, _ctx);
+                Ok(None)
+                // Handler::<CreateInvitation>::handle(&mut self, m, _ctx)
+                // <self as Handler<CreateInvitation>>.handle(m, ctx)
+            }
+            //     WsMsg::InvitationListRequest => self.handle(ListInvitation, ctx),
+            //     WsMsg::InvitationAcceptRequest(id) => Ok(None),
+            //     WsMsg::InvitationRevokeRequest(id) => self.handle(RevokeInvitation { id: *id }, ctx),
+            //     WsMsg::InvitedUsersRequest => Ok(None),
+            _ => Ok(None),
+        }
     }
 }
 
