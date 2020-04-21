@@ -3,11 +3,11 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use jirs_data::UserId;
+use jirs_data::{Token, UserId};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
-use crate::models::{Token, TokenForm};
+use crate::models::TokenForm;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FindBindToken {
@@ -15,11 +15,11 @@ pub struct FindBindToken {
 }
 
 impl Message for FindBindToken {
-    type Result = Result<crate::models::Token, ServiceErrors>;
+    type Result = Result<Token, ServiceErrors>;
 }
 
 impl Handler<FindBindToken> for DbExecutor {
-    type Result = Result<crate::models::Token, ServiceErrors>;
+    type Result = Result<Token, ServiceErrors>;
 
     fn handle(&mut self, msg: FindBindToken, _: &mut Self::Context) -> Self::Result {
         use crate::schema::tokens::dsl::{bind_token, tokens};
@@ -28,7 +28,7 @@ impl Handler<FindBindToken> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
-        let token: crate::models::Token = tokens
+        let token: Token = tokens
             .filter(bind_token.eq(Some(msg.token)))
             .first(conn)
             .map_err(|_e| ServiceErrors::RecordNotFound(format!("token for {}", msg.token)))?;
@@ -49,11 +49,11 @@ pub struct CreateBindToken {
 }
 
 impl Message for CreateBindToken {
-    type Result = Result<crate::models::Token, ServiceErrors>;
+    type Result = Result<Token, ServiceErrors>;
 }
 
 impl Handler<CreateBindToken> for DbExecutor {
-    type Result = Result<crate::models::Token, ServiceErrors>;
+    type Result = Result<Token, ServiceErrors>;
 
     fn handle(&mut self, msg: CreateBindToken, _: &mut Self::Context) -> Self::Result {
         use crate::schema::tokens::dsl::tokens;

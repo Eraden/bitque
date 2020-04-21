@@ -6,6 +6,8 @@ use actix_web::http::HeaderMap;
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error};
 use futures::future::{ok, FutureExt, LocalBoxFuture, Ready};
 
+use jirs_data::User;
+
 use crate::db::SyncQuery;
 
 type Db = actix_web::web::Data<crate::db::DbPool>;
@@ -93,7 +95,7 @@ pub fn token_from_headers(
 fn check_token(
     headers: &HeaderMap,
     pool: Db,
-) -> std::result::Result<crate::models::User, crate::errors::ServiceErrors> {
+) -> std::result::Result<User, crate::errors::ServiceErrors> {
     token_from_headers(headers).and_then(|access_token| {
         use crate::db::authorize_user::AuthorizeUser;
         AuthorizeUser { access_token }.handle(&pool)

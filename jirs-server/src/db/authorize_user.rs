@@ -2,9 +2,10 @@ use actix::{Handler, Message};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use jirs_data::{Token, User};
+
 use crate::db::{DbExecutor, DbPool, SyncQuery};
 use crate::errors::ServiceErrors;
-use crate::models::{Token, User};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AuthorizeUser {
@@ -12,11 +13,11 @@ pub struct AuthorizeUser {
 }
 
 impl Message for AuthorizeUser {
-    type Result = Result<crate::models::User, ServiceErrors>;
+    type Result = Result<User, ServiceErrors>;
 }
 
 impl Handler<AuthorizeUser> for DbExecutor {
-    type Result = Result<crate::models::User, ServiceErrors>;
+    type Result = Result<User, ServiceErrors>;
 
     fn handle(&mut self, msg: AuthorizeUser, _: &mut Self::Context) -> Self::Result {
         use crate::schema::tokens::dsl::{access_token, tokens};
@@ -41,7 +42,7 @@ impl Handler<AuthorizeUser> for DbExecutor {
 }
 
 impl SyncQuery for AuthorizeUser {
-    type Result = std::result::Result<crate::models::User, crate::errors::ServiceErrors>;
+    type Result = std::result::Result<User, crate::errors::ServiceErrors>;
 
     fn handle(&self, pool: &DbPool) -> Self::Result {
         use crate::schema::tokens::dsl::{access_token, tokens};

@@ -2,9 +2,11 @@ use actix::{Handler, Message};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use jirs_data::{IssueAssignee, Project, User};
+
 use crate::db::{DbExecutor, DbPooledConn};
 use crate::errors::ServiceErrors;
-use crate::models::{CreateProjectForm, IssueAssignee, Project, User, UserForm};
+use crate::models::{CreateProjectForm, UserForm};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FindUser {
@@ -180,7 +182,7 @@ fn count_matching_users(name: &str, email: &str, conn: &DbPooledConn) -> i64 {
 #[cfg(test)]
 mod tests {
     use crate::db::build_pool;
-    use crate::models::{CreateProjectForm, Project};
+    use crate::models::CreateProjectForm;
 
     use super::*;
 

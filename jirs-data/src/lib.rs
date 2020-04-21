@@ -434,6 +434,7 @@ pub struct ErrorResponse {
     pub errors: Vec<String>,
 }
 
+#[cfg_attr(feature = "backend", derive(Queryable))]
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Project {
     pub id: ProjectId,
@@ -466,6 +467,20 @@ pub struct Issue {
     pub user_ids: Vec<i32>,
 }
 
+#[cfg_attr(feature = "backend", derive(Queryable))]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Invitation {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub state: InvitationState,
+    pub project_id: i32,
+    pub invited_by_id: i32,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+#[cfg_attr(feature = "backend", derive(Queryable))]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Comment {
     pub id: CommentId,
@@ -476,6 +491,7 @@ pub struct Comment {
     pub updated_at: NaiveDateTime,
 }
 
+#[cfg_attr(feature = "backend", derive(Queryable))]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct User {
     pub id: UserId,
@@ -488,6 +504,7 @@ pub struct User {
     pub user_role: UserRole,
 }
 
+#[cfg_attr(feature = "backend", derive(Queryable))]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Token {
     pub id: TokenId,
@@ -496,6 +513,7 @@ pub struct Token {
     pub refresh_token: Uuid,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub bind_token: Option<Uuid>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
@@ -513,6 +531,16 @@ pub struct UpdateIssuePayload {
     pub project_id: ProjectId,
     pub reporter_id: UserId,
     pub user_ids: Vec<UserId>,
+}
+
+#[cfg_attr(feature = "backend", derive(Queryable))]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct IssueAssignee {
+    pub id: i32,
+    pub issue_id: i32,
+    pub user_id: i32,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 impl From<Issue> for UpdateIssuePayload {

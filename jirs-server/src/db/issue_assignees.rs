@@ -2,9 +2,10 @@ use actix::{Handler, Message};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use jirs_data::IssueAssignee;
+
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
-use crate::models::IssueAssignee;
 
 #[derive(Serialize, Deserialize)]
 pub struct LoadAssignees {

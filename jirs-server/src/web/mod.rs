@@ -5,11 +5,12 @@ use actix_web::web::Data;
 use actix_web::{HttpRequest, HttpResponse};
 use serde::{Deserialize, Serialize};
 
+use jirs_data::User;
+
 use crate::db::authorize_user::AuthorizeUser;
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 use crate::middleware::authorize::token_from_headers;
-use crate::models::User;
 
 pub async fn user_from_request(
     req: HttpRequest,

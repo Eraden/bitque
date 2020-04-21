@@ -4,7 +4,7 @@ use actix::*;
 use actix_web::web::Data;
 use futures::executor::block_on;
 
-use jirs_data::{IssueFieldId, PayloadVariant, WsMsg};
+use jirs_data::{IssueAssignee, IssueFieldId, PayloadVariant, WsMsg};
 
 use crate::db::issue_assignees::LoadAssignees;
 use crate::db::issues::{LoadProjectIssues, UpdateIssue};
@@ -81,7 +81,6 @@ impl Handler<UpdateIssueHandler> for WebSocketActor {
             _ => return Ok(None),
         };
 
-        use crate::models::IssueAssignee;
         let assignees: Vec<IssueAssignee> =
             match block_on(self.db.send(LoadAssignees { issue_id: issue.id })) {
                 Ok(Ok(v)) => v,

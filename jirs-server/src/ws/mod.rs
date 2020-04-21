@@ -8,7 +8,7 @@ use actix_web::{get, web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use futures::executor::block_on;
 
-use jirs_data::{ProjectId, UserId, WsMsg};
+use jirs_data::{ProjectId, Token, UserId, WsMsg};
 
 use crate::db::authorize_user::AuthorizeUser;
 use crate::db::tokens::FindBindToken;
@@ -203,12 +203,11 @@ impl WebSocketActor {
     }
 
     async fn check_bind_token(&mut self, bind_token: uuid::Uuid) -> WsResult {
-        let token: crate::models::Token =
-            match self.db.send(FindBindToken { token: bind_token }).await {
-                Ok(Ok(token)) => token,
-                Ok(Err(_)) => return Ok(Some(WsMsg::BindTokenBad)),
-                _ => return Ok(None),
-            };
+        let token: Token = match self.db.send(FindBindToken { token: bind_token }).await {
+            Ok(Ok(token)) => token,
+            Ok(Err(_)) => return Ok(Some(WsMsg::BindTokenBad)),
+            _ => return Ok(None),
+        };
         Ok(Some(WsMsg::BindTokenOk(token.access_token)))
     }
 

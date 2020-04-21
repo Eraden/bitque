@@ -1,9 +1,8 @@
 use seed::{prelude::*, *};
 
+use jirs_data::UserRole;
 use jirs_data::{ToVec, UsersFieldId};
-use jirs_data::{UserRole, WsMsg};
 
-use crate::api::send_ws_msg;
 use crate::model::{Model, Page, PageContent, UsersPage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
