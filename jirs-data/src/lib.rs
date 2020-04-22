@@ -706,6 +706,8 @@ pub enum WsMsg {
     //
     InvitationAcceptRequest(InvitationId),
     InvitationAcceptSuccess(InvitationId),
+    InvitedUserRemoveRequest(EmailString),
+    InvitedUserRemoveSuccess(EmailString),
 
     // project page
     ProjectRequest,

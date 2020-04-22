@@ -153,7 +153,12 @@ pub enum Msg {
     AuthTokenErased,
     SignInRequest,
     BindClientRequest,
+
+    // users
     InviteRequest,
+    InviteRevokeRequest(InvitationId),
+    InviteApproveRequest(InvitationId),
+    InvitedUserRemove(EmailString),
 
     // sign up
     SignUpRequest,

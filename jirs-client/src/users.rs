@@ -17,7 +17,7 @@ use crate::{FieldId, Msg};
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     if let Msg::ChangePage(Page::Users) = msg {
         model.page_content = PageContent::Users(Box::new(UsersPage::default()));
-        return;
+        // return;
     }
 
     let page = match &mut model.page_content {
@@ -28,7 +28,9 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     page.user_role_state.update(&msg, orders);
 
     match msg {
-        Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) | Msg::ChangePage(Page::Users) => {
+        Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) | Msg::ChangePage(Page::Users)
+            if model.user.is_some() =>
+        {
             send_ws_msg(WsMsg::InvitationListRequest);
             send_ws_msg(WsMsg::InvitedUsersRequest);
         }
@@ -58,6 +60,30 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 name: page.name.clone(),
                 email: page.email.clone(),
             })
+        }
+        Msg::WsMsg(WsMsg::InvitationRevokeSuccess(id)) => {
+            let mut old = vec![];
+            std::mem::swap(&mut page.invitations, &mut old);
+            for invitation in old {
+                if invitation.id != id {
+                    page.invitations.push(invitation);
+                }
+            }
+        }
+        Msg::InviteRevokeRequest(invitation_id) => {
+            send_ws_msg(WsMsg::InvitationRevokeRequest(invitation_id));
+        }
+        Msg::InvitedUserRemove(email) => {
+            send_ws_msg(WsMsg::InvitedUserRemoveRequest(email));
+        }
+        Msg::WsMsg(WsMsg::InvitedUserRemoveSuccess(email)) => {
+            let mut old = vec![];
+            std::mem::swap(&mut page.invited_users, &mut old);
+            for user in old {
+                if user.email != email {
+                    page.invited_users.push(user);
+                }
+            }
         }
         Msg::WsMsg(WsMsg::InvitationSendSuccess) => {
             send_ws_msg(WsMsg::InvitationListRequest);
@@ -163,7 +189,12 @@ pub fn view(model: &Model) -> Node<Msg> {
         .invited_users
         .iter()
         .map(|user| {
-            let remove = StyledButton::build().text("Remove").build().into_node();
+            let email = user.email.clone();
+            let remove = StyledButton::build()
+                .text("Remove")
+                .on_click(mouse_ev(Ev::Click, move |_| Msg::InvitedUserRemove(email)))
+                .build()
+                .into_node();
             li![
                 class!["user"],
                 span![user.name],
@@ -184,7 +215,12 @@ pub fn view(model: &Model) -> Node<Msg> {
         .invitations
         .iter()
         .map(|invitation| {
-            let revoke = StyledButton::build().text("Revoke").build().into_node();
+            let id = invitation.id;
+            let revoke = StyledButton::build()
+                .text("Revoke")
+                .on_click(mouse_ev(Ev::Click, move |_| Msg::InviteRevokeRequest(id)))
+                .build()
+                .into_node();
             li![
                 class!["invitation"],
                 span![invitation.name],
