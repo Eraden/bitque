@@ -478,6 +478,7 @@ pub struct Invitation {
     pub invited_by_id: i32,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub bind_token: Uuid,
 }
 
 #[cfg_attr(feature = "backend", derive(Queryable))]

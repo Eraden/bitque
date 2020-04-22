@@ -4,6 +4,7 @@ use actix::{Actor, SyncContext};
 use lettre;
 use serde::{Deserialize, Serialize};
 
+pub mod invite;
 pub mod welcome;
 
 pub type MailTransport = lettre::SmtpTransport;

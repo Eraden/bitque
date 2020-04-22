@@ -28,21 +28,35 @@ pub struct CreateInvitation {
 
 impl WsHandler<CreateInvitation> for WebSocketActor {
     fn handle_msg(&mut self, msg: CreateInvitation, _ctx: &mut Self::Context) -> WsResult {
-        let (user_id, project_id) = match self.current_user.as_ref().map(|u| (u.id, u.project_id)) {
+        let (user_id, inviter_name, project_id) = match self
+            .current_user
+            .as_ref()
+            .map(|u| (u.id, u.name.clone(), u.project_id))
+        {
             Some(id) => id,
             _ => return Ok(None),
         };
+
         let CreateInvitation { email, name } = msg;
-        let res = match block_on(self.db.send(invitations::CreateInvitation {
+        let invitation = match block_on(self.db.send(invitations::CreateInvitation {
             user_id,
             project_id,
             email,
             name,
         })) {
-            Ok(Ok(_invitation)) => Some(WsMsg::InvitationSendSuccess),
-            _ => Some(WsMsg::InvitationSendFailure),
+            Ok(Ok(invitation)) => invitation,
+            _ => return Ok(Some(WsMsg::InvitationSendFailure)),
         };
-        Ok(res)
+        match block_on(self.mail.send(crate::mail::invite::Invite {
+            bind_token: invitation.bind_token.clone(),
+            email: invitation.email.clone(),
+            inviter_name,
+        })) {
+            Ok(Ok(_)) => (),
+            _ => return Ok(Some(WsMsg::InvitationSendFailure)),
+        }
+
+        Ok(Some(WsMsg::InvitationSendSuccess))
     }
 }
 

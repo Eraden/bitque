@@ -51,8 +51,15 @@ impl WsHandler<Register> for WebSocketActor {
 
 pub struct LoadInvitedUsers;
 
-impl WsHandler<LoadInvitedUsers> for WebSockerActor {
-    fn handle_msg(&mut self, msg: LoadInvitedUsers, _ctx: &mut _) -> WsResult {
+impl WsHandler<LoadInvitedUsers> for WebSocketActor {
+    fn handle_msg(&mut self, _msg: LoadInvitedUsers, _ctx: &mut Self::Context) -> WsResult {
         let user_id = self.require_user()?.id;
+
+        let users = match block_on(self.db.send(crate::db::users::LoadInvitedUsers { user_id })) {
+            Ok(Ok(users)) => users,
+            _ => return Ok(None),
+        };
+
+        Ok(Some(WsMsg::InvitedUsersLoaded(users)))
     }
 }

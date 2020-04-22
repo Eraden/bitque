@@ -1,8 +1,9 @@
 use actix::{Handler, Message};
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use jirs_data::{IssueAssignee, Project, User};
+use jirs_data::{IssueAssignee, Project, User, UserId};
 
 use crate::db::{DbExecutor, DbPooledConn};
 use crate::errors::ServiceErrors;
@@ -159,6 +160,40 @@ impl Handler<Register> for DbExecutor {
         };
 
         Ok(())
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LoadInvitedUsers {
+    pub user_id: UserId,
+}
+
+impl Message for LoadInvitedUsers {
+    type Result = Result<Vec<User>, ServiceErrors>;
+}
+
+impl Handler<LoadInvitedUsers> for DbExecutor {
+    type Result = Result<Vec<User>, ServiceErrors>;
+
+    fn handle(&mut self, msg: LoadInvitedUsers, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::invitations::dsl as idsl;
+        use crate::schema::users::dsl as udsl;
+
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let query = udsl::users
+            .inner_join(idsl::invitations.on(idsl::email.eq(udsl::email)))
+            .filter(idsl::invited_by_id.eq(msg.user_id))
+            .select(udsl::users::all_columns());
+        debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
+
+        let res: Vec<User> = query
+            .load(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        Ok(res)
     }
 }
 
