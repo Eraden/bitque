@@ -176,23 +176,23 @@ impl Handler<LoadInvitedUsers> for DbExecutor {
     type Result = Result<Vec<User>, ServiceErrors>;
 
     fn handle(&mut self, msg: LoadInvitedUsers, _ctx: &mut Self::Context) -> Self::Result {
-        use crate::schema::invitations::dsl as idsl;
-        use crate::schema::users::dsl as udsl;
+        use crate::schema::invitations::dsl::{email as i_email, invitations, invited_by_id};
+        use crate::schema::users::dsl::{email as u_email, users};
 
         let conn = &self
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
-        let query = udsl::users
-            .inner_join(idsl::invitations.on(idsl::email.eq(udsl::email)))
-            .filter(idsl::invited_by_id.eq(msg.user_id))
-            .select(udsl::users::all_columns());
+        let query = users
+            .inner_join(invitations.on(i_email.eq(u_email)))
+            .filter(invited_by_id.eq(msg.user_id))
+            .select(users::all_columns());
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
 
         let res: Vec<User> = query
             .load(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
         Ok(res)
     }
 }

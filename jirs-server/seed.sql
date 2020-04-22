@@ -15,6 +15,52 @@ insert into users (project_id, email, name, avatar_url) values (
     'Mike Keningham',
     'https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman1-512.png'
 );
+insert into invitations ( email, name, state, project_id, invited_by_id) values (
+    'foo1@example.com',
+    'Foo1',
+    'sent',
+    1,
+    1
+), (
+    'foo1+revoked@example.com',
+    'Foo1 Revoked',
+    'revoked',
+    1,
+    1
+), (
+    'foo1+accepted@example.com',
+    'Foo1 Accepted',
+    'accepted',
+    1,
+    1
+), (
+    'foo2@example.com',
+    'Foo2',
+    'sent',
+    2,
+    2
+), (
+    'foo2+accepted@example.com',
+    'Foo2 Accepted',
+    'accepted',
+    2,
+    2
+), (
+    'foo2+revoked@example.com',
+    'Foo2 Revoked',
+    'revoked',
+    2,
+    2
+);
+insert into users (project_id, email, name) values (
+    2,
+    'foo2+accepted@example.com',
+    'Foo2 Accepted'
+), (
+    1,
+    'foo1+accepted@example.com',
+    'Foo1 Accepted'
+);
 insert into tokens (user_id, access_token, refresh_token) values (1, uuid_generate_v4(), uuid_generate_v4() );
 insert into issues(
     title,
@@ -57,7 +103,6 @@ insert into issues(
     2,
     1
 );
-
 insert into comments (user_id, issue_id, body) values (
     1, 1, 'Vestibulum non neque at dui maximus porttitor fermentum consectetur eros.'
     ),
