@@ -1,9 +1,9 @@
 use seed::{prelude::*, *};
 
-use jirs_data::UserRole;
-use jirs_data::{ToVec, UsersFieldId};
+use jirs_data::{ToVec, UserRole, UsersFieldId, WsMsg};
 
-use crate::model::{Model, Page, PageContent, UsersPage};
+use crate::api::send_ws_msg;
+use crate::model::{InvitationFormState, Model, Page, PageContent, UsersPage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
@@ -15,12 +15,9 @@ use crate::validations::is_email;
 use crate::{FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
-    match msg {
-        Msg::ChangePage(Page::Users) => {
-            model.page_content = PageContent::Users(UsersPage::default());
-            return;
-        }
-        _ => (),
+    if let Msg::ChangePage(Page::Users) = msg {
+        model.page_content = PageContent::Users(Box::new(UsersPage::default()));
+        return;
     }
 
     let page = match &mut model.page_content {
@@ -31,6 +28,16 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     page.user_role_state.update(&msg, orders);
 
     match msg {
+        Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) | Msg::ChangePage(Page::Users) => {
+            send_ws_msg(WsMsg::InvitationListRequest);
+            send_ws_msg(WsMsg::InvitedUsersRequest);
+        }
+        Msg::WsMsg(WsMsg::InvitedUsersLoaded(users)) => {
+            page.invited_users = users;
+        }
+        Msg::WsMsg(WsMsg::InvitationListLoaded(invitations)) => {
+            page.invitations = invitations;
+        }
         Msg::StyledSelectChanged(
             FieldId::Users(UsersFieldId::UserRole),
             StyledSelectChange::Changed(role),
@@ -44,6 +51,20 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::InputChanged(FieldId::Users(UsersFieldId::Email), email) => {
             page.email = email;
             page.email_touched = true;
+        }
+        Msg::InviteRequest => {
+            page.form_state = InvitationFormState::Sent;
+            send_ws_msg(WsMsg::InvitationSendRequest {
+                name: page.name.clone(),
+                email: page.email.clone(),
+            })
+        }
+        Msg::WsMsg(WsMsg::InvitationSendSuccess) => {
+            send_ws_msg(WsMsg::InvitationListRequest);
+            page.form_state = InvitationFormState::Succeed;
+        }
+        Msg::WsMsg(WsMsg::InvitationSendFailure) => {
+            page.form_state = InvitationFormState::Failed;
         }
         _ => (),
     }
@@ -103,12 +124,27 @@ pub fn view(model: &Model) -> Node<Msg> {
 
     let submit = StyledButton::build()
         .add_class("submitUserInvite")
-        .active(true)
+        .active(page.form_state != InvitationFormState::Sent)
         .primary()
         .text("Invite user")
         .build()
         .into_node();
-    let submit_field = StyledField::build().input(submit).build().into_node();
+    let submit_supplement = match page.form_state {
+        InvitationFormState::Succeed => StyledButton::build()
+            .add_class("resetUserInvite")
+            .active(true)
+            .empty()
+            .set_type_reset()
+            .text("Reset")
+            .build()
+            .into_node(),
+        InvitationFormState::Failed => div![class!["error"], "There was an error"],
+        _ => empty![],
+    };
+    let submit_field = StyledField::build()
+        .input(div![class!["invitationActions"], submit, submit_supplement])
+        .build()
+        .into_node();
 
     let form = StyledForm::build()
         .heading("Invite new user")
@@ -116,8 +152,59 @@ pub fn view(model: &Model) -> Node<Msg> {
         .add_field(email_field)
         .add_field(user_role_field)
         .add_field(submit_field)
+        .on_submit(ev(Ev::Submit, |ev| {
+            ev.prevent_default();
+            Msg::InviteRequest
+        }))
         .build()
         .into_node();
 
-    inner_layout(model, "users", vec![form], empty![])
+    let users: Vec<Node<Msg>> = page
+        .invited_users
+        .iter()
+        .map(|user| {
+            let remove = StyledButton::build().text("Remove").build().into_node();
+            li![
+                class!["user"],
+                span![user.name],
+                span![user.email],
+                span![format!("{}", user.user_role)],
+                remove,
+            ]
+        })
+        .collect();
+
+    let users_section = section![
+        class!["usersSection"],
+        h1![class!["heading"], "Users"],
+        ul![class!["usersList"], users],
+    ];
+
+    let invitations: Vec<Node<Msg>> = page
+        .invitations
+        .iter()
+        .map(|invitation| {
+            let revoke = StyledButton::build().text("Revoke").build().into_node();
+            li![
+                class!["invitation"],
+                span![invitation.name],
+                span![invitation.email],
+                span![format!("{}", invitation.state)],
+                revoke,
+            ]
+        })
+        .collect();
+
+    let invitations_section = section![
+        class!["invitationsSection"],
+        h1![class!["heading"], "Invitations"],
+        ul![class!["invitationsList"], invitations],
+    ];
+
+    inner_layout(
+        model,
+        "users",
+        vec![form, users_section, invitations_section],
+        empty![],
+    )
 }

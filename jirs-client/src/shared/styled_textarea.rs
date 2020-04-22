@@ -183,7 +183,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         let textarea = seed::to_textarea(&target);
         let value = textarea.value();
 
-        if handler_disable_auto_resize && value.contains("\n") {
+        if handler_disable_auto_resize && value.contains('\n') {
             event.prevent_default();
         }
 

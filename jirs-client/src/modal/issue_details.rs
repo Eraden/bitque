@@ -40,7 +40,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
                 IssueFieldId::Type,
-                PayloadVariant::IssueType(modal.payload.issue_type.clone()),
+                PayloadVariant::IssueType(modal.payload.issue_type),
             ));
         }
         Msg::StyledSelectChanged(
@@ -51,7 +51,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
                 IssueFieldId::Status,
-                PayloadVariant::IssueStatus(modal.payload.status.clone()),
+                PayloadVariant::IssueStatus(modal.payload.status),
             ));
         }
         Msg::StyledSelectChanged(
@@ -143,7 +143,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
                 IssueFieldId::TimeSpend,
-                PayloadVariant::OptionI32(modal.payload.time_spent.clone()),
+                PayloadVariant::OptionI32(modal.payload.time_spent),
             ));
         }
         Msg::InputChanged(
@@ -154,7 +154,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
                 IssueFieldId::TimeRemaining,
-                PayloadVariant::OptionI32(modal.payload.time_remaining.clone()),
+                PayloadVariant::OptionI32(modal.payload.time_remaining),
             ));
         }
         Msg::ModalChanged(FieldChange::TabChanged(
@@ -189,7 +189,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 send_ws_msg(WsMsg::IssueUpdateRequest(
                     modal.id,
                     IssueFieldId::TimeRemaining,
-                    PayloadVariant::OptionI32(modal.payload.estimate.clone()),
+                    PayloadVariant::OptionI32(modal.payload.estimate),
                 ));
             }
             _ if value.is_empty() => {
@@ -197,7 +197,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 send_ws_msg(WsMsg::IssueUpdateRequest(
                     modal.id,
                     IssueFieldId::TimeRemaining,
-                    PayloadVariant::OptionI32(modal.payload.estimate.clone()),
+                    PayloadVariant::OptionI32(modal.payload.estimate),
                 ));
             }
             _ => {}

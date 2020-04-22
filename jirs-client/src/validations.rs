@@ -18,7 +18,7 @@ pub fn is_email(s: &str) -> bool {
             _ => (),
         }
     }
-    return false;
+    false
 }
 
 pub fn is_token(s: &str) -> bool {

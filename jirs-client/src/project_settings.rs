@@ -76,7 +76,7 @@ fn build_page_content(model: &mut Model) {
         Some(project) => project,
         _ => return,
     };
-    model.page_content = PageContent::ProjectSettings(ProjectSettingsPage::new(project));
+    model.page_content = PageContent::ProjectSettings(Box::new(ProjectSettingsPage::new(project)));
 }
 
 pub fn view(model: &model::Model) -> Node<Msg> {

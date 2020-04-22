@@ -11,8 +11,8 @@ use crate::{EditIssueModalSection, FieldId, ProjectFieldId, HOST_URL};
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum ModalType {
-    AddIssue(AddIssueModal),
-    EditIssue(IssueId, EditIssueModal),
+    AddIssue(Box<AddIssueModal>),
+    EditIssue(IssueId, Box<EditIssueModal>),
     DeleteIssueConfirm(IssueId),
     DeleteCommentConfirm(CommentId),
     TimeTracking(IssueId),
@@ -49,9 +49,9 @@ impl EditIssueModal {
             link_copied: false,
             payload: UpdateIssuePayload {
                 title: issue.title.clone(),
-                issue_type: issue.issue_type.clone(),
-                status: issue.status.clone(),
-                priority: issue.priority.clone(),
+                issue_type: issue.issue_type,
+                status: issue.status,
+                priority: issue.priority,
                 list_position: issue.list_position,
                 description: issue.description.clone(),
                 description_text: issue.description_text.clone(),
@@ -252,6 +252,20 @@ pub struct SignUpPage {
     pub email_touched: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
+pub enum InvitationFormState {
+    Initial = 1,
+    Sent = 2,
+    Succeed = 3,
+    Failed = 4,
+}
+
+impl Default for InvitationFormState {
+    fn default() -> Self {
+        InvitationFormState::Initial
+    }
+}
+
 #[derive(Debug)]
 pub struct UsersPage {
     pub name: String,
@@ -263,6 +277,10 @@ pub struct UsersPage {
     pub user_role_state: StyledSelectState,
     pub pending_invitations: Vec<String>,
     pub error: String,
+    pub form_state: InvitationFormState,
+
+    pub invited_users: Vec<User>,
+    pub invitations: Vec<Invitation>,
 }
 
 impl Default for UsersPage {
@@ -276,18 +294,21 @@ impl Default for UsersPage {
             user_role_state: StyledSelectState::new(FieldId::Users(UsersFieldId::UserRole)),
             pending_invitations: vec![],
             error: "".to_string(),
+            form_state: Default::default(),
+            invited_users: vec![],
+            invitations: vec![],
         }
     }
 }
 
 #[derive(Debug)]
 pub enum PageContent {
-    SignIn(SignInPage),
-    SignUp(SignUpPage),
-    Project(ProjectPage),
-    ProjectSettings(ProjectSettingsPage),
-    Invite(InvitePage),
-    Users(UsersPage),
+    SignIn(Box<SignInPage>),
+    SignUp(Box<SignUpPage>),
+    Project(Box<ProjectPage>),
+    ProjectSettings(Box<ProjectSettingsPage>),
+    Invite(Box<InvitePage>),
+    Users(Box<UsersPage>),
 }
 
 #[derive(Debug)]
@@ -332,7 +353,7 @@ impl Default for Model {
             comments_by_project_id: Default::default(),
             page: Page::Project,
             host_url,
-            page_content: PageContent::Project(ProjectPage::default()),
+            page_content: PageContent::Project(Box::new(ProjectPage::default())),
             modals: vec![],
             project: None,
             comments: vec![],

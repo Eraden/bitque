@@ -35,6 +35,7 @@ pub struct StyledButtonBuilder {
     on_click: Option<EventHandler<Msg>>,
     children: Option<Vec<Node<Msg>>>,
     class_list: Vec<String>,
+    button_type: Option<String>,
 }
 
 impl StyledButtonBuilder {
@@ -107,6 +108,11 @@ impl StyledButtonBuilder {
         self
     }
 
+    pub fn set_type_reset(mut self) -> Self {
+        self.button_type = Some("reset".to_string());
+        self
+    }
+
     pub fn build(self) -> StyledButton {
         StyledButton {
             variant: self.variant.unwrap_or_else(|| Variant::Primary),
@@ -117,6 +123,7 @@ impl StyledButtonBuilder {
             on_click: self.on_click,
             children: self.children.unwrap_or_default(),
             class_list: self.class_list,
+            button_type: self.button_type.unwrap_or_else(|| "submit".to_string()),
         }
     }
 }
@@ -130,6 +137,7 @@ pub struct StyledButton {
     on_click: Option<EventHandler<Msg>>,
     children: Vec<Node<Msg>>,
     class_list: Vec<String>,
+    button_type: String,
 }
 
 impl StyledButton {
@@ -154,6 +162,7 @@ pub fn render(values: StyledButton) -> Node<Msg> {
         on_click,
         children,
         mut class_list,
+        button_type,
     } = values;
     class_list.push("styledButton".to_string());
     class_list.push(variant.to_string());
@@ -185,6 +194,7 @@ pub fn render(values: StyledButton) -> Node<Msg> {
     seed::button![
         attrs![
             At::Class => class_list.join(" "),
+            At::Type => button_type,
         ],
         handler,
         if disabled {

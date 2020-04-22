@@ -11,12 +11,9 @@ use crate::validations::is_token;
 use crate::{FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut Model, _orders: &mut impl Orders<Msg>) {
-    match msg {
-        Msg::ChangePage(Page::Project) => {
-            model.page_content = PageContent::Invite(InvitePage::default());
-            return;
-        }
-        _ => (),
+    if let Msg::ChangePage(Page::Project) = msg {
+        model.page_content = PageContent::Invite(Box::new(InvitePage::default()));
+        return;
     }
 
     let page = match &mut model.page_content {
@@ -24,12 +21,9 @@ pub fn update(msg: Msg, model: &mut Model, _orders: &mut impl Orders<Msg>) {
         _ => return,
     };
 
-    match msg {
-        Msg::InputChanged(FieldId::Invite(InviteFieldId::Token), text) => {
-            page.token_touched = true;
-            page.token = text.clone();
-        }
-        _ => (),
+    if let Msg::InputChanged(FieldId::Invite(InviteFieldId::Token), text) = msg {
+        page.token_touched = true;
+        page.token = text;
     }
 }
 

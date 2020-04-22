@@ -1,6 +1,6 @@
 use actix::{Handler, Message};
-use lettre;
-use lettre_email;
+// use lettre;
+// use lettre_email;
 use uuid::Uuid;
 
 use crate::mail::MailExecutor;
@@ -45,7 +45,7 @@ impl Handler<Welcome> for MailExecutor {
         );
 
         let email = lettre_email::Email::builder()
-            .from(from.clone())
+            .from(from)
             .to(msg.email.as_str())
             .html(html.as_str())
             .subject("Welcome to JIRS")

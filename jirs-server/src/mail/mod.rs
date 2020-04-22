@@ -1,7 +1,7 @@
 use std::fs::*;
 
 use actix::{Actor, SyncContext};
-use lettre;
+// use lettre;
 use serde::{Deserialize, Serialize};
 
 pub mod invite;

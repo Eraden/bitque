@@ -153,6 +153,7 @@ pub enum Msg {
     AuthTokenErased,
     SignInRequest,
     BindClientRequest,
+    InviteRequest,
 
     // sign up
     SignUpRequest,
@@ -360,7 +361,7 @@ fn authorize_or_redirect() {
         Err(..) => {
             let pathname = seed::document().location().unwrap().pathname().unwrap();
             match pathname.as_str() {
-                "/login" | "/register" => {}
+                "/login" | "/register" | "/invite" => {}
                 _ => {
                     seed::push_route(vec!["login"]);
                 }

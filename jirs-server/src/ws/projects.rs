@@ -12,7 +12,7 @@ impl WsHandler<CurrentProject> for WebSocketActor {
         let project_id = self.require_user()?.project_id;
 
         let m = match block_on(self.db.send(LoadCurrentProject { project_id })) {
-            Ok(Ok(project)) => Some(WsMsg::ProjectLoaded(project.into())),
+            Ok(Ok(project)) => Some(WsMsg::ProjectLoaded(project)),
             Ok(Err(e)) => {
                 error!("{:?}", e);
                 None
@@ -39,6 +39,6 @@ impl WsHandler<UpdateProjectPayload> for WebSocketActor {
             Ok(Ok(project)) => project,
             _ => return Ok(None),
         };
-        Ok(Some(WsMsg::ProjectLoaded(project.into())))
+        Ok(Some(WsMsg::ProjectLoaded(project)))
     }
 }

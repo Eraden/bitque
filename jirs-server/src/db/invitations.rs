@@ -57,7 +57,7 @@ impl Handler<CreateInvitation> for DbExecutor {
         let conn = &self
             .pool
             .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
 
         let form = InvitationForm {
             name: msg.name,
@@ -70,7 +70,7 @@ impl Handler<CreateInvitation> for DbExecutor {
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         query
             .get_result(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))
     }
 }
 
@@ -96,7 +96,7 @@ impl Handler<DeleteInvitation> for DbExecutor {
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         query
             .execute(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
         Ok(())
     }
 }
@@ -125,7 +125,7 @@ impl Handler<RevokeInvitation> for DbExecutor {
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         query
             .execute(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
         Ok(())
     }
 }
@@ -154,15 +154,22 @@ impl Handler<AcceptInvitation> for DbExecutor {
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         let invitation: Invitation = query
             .first(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+
+        if invitation.state == InvitationState::Revoked {
+            return Err(ServiceErrors::DatabaseQueryFailed(
+                "This invitation is no longer valid".to_string(),
+            ));
+        }
 
         let query = diesel::update(invitations)
             .set(state.eq(InvitationState::Accepted))
-            .filter(id.eq(invitation.id));
+            .filter(id.eq(invitation.id))
+            .filter(state.eq(InvitationState::Sent));
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         query
             .execute(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
 
         let form = UserForm {
             name: invitation.name,
@@ -174,7 +181,7 @@ impl Handler<AcceptInvitation> for DbExecutor {
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         let user: User = query
             .get_result(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
 
         Ok(user)
     }

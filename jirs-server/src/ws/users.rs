@@ -14,9 +14,7 @@ impl WsHandler<LoadProjectUsers> for WebSocketActor {
 
         let project_id = self.require_user()?.project_id;
         let m = match block_on(self.db.send(Msg { project_id })) {
-            Ok(Ok(v)) => Some(WsMsg::ProjectUsersLoaded(
-                v.into_iter().map(|i| i.into()).collect(),
-            )),
+            Ok(Ok(v)) => Some(WsMsg::ProjectUsersLoaded(v)),
             _ => None,
         };
         Ok(m)

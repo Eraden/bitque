@@ -50,7 +50,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         Msg::ChangePage(Page::AddIssue) => {
             let mut modal = AddIssueModal::default();
             modal.project_id = model.project.as_ref().map(|p| p.id);
-            model.modals.push(ModalType::AddIssue(modal));
+            model.modals.push(ModalType::AddIssue(Box::new(modal)));
         }
 
         _ => (),
@@ -101,7 +101,7 @@ fn push_edit_modal(issue_id: i32, model: &mut Model) {
             Some(issue) => issue,
             _ => return,
         };
-        ModalType::EditIssue(issue_id, EditIssueModal::new(issue))
+        ModalType::EditIssue(issue_id, Box::new(EditIssueModal::new(issue)))
     };
     send_ws_msg(WsMsg::IssueCommentsRequest(issue_id));
     model.modals.push(modal);

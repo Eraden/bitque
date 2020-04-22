@@ -1,0 +1,30 @@
+#users > .usersSection,
+#users > .invitationsSection {
+    padding: 25px 40px 35px;
+}
+
+#users > .usersSection > .usersList,
+#users > .invitationsSection > .invitationsList {
+    list-style: none;
+}
+
+#users > .usersSection > .usersList > .user,
+#users > .invitationsSection > .invitationsList > .invitation {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+#users > .invitationsSection > .invitationsList > .invitation > * {
+    width: 25%;
+}
+
+#users .invitationActions {
+    display: flex;
+    justify-content: space-between;
+}
+
+#users .invitationActions > .error {
+    color: var(--danger);
+}

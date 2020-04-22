@@ -39,9 +39,9 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
             let payload = jirs_data::CreateIssuePayload {
                 title: modal.title.clone(),
-                issue_type: modal.issue_type.clone(),
-                status: modal.status.clone(),
-                priority: modal.priority.clone(),
+                issue_type: modal.issue_type,
+                status: modal.status,
+                priority: modal.priority,
                 description: modal.description.clone(),
                 description_text: modal.description_text.clone(),
                 estimate: modal.estimate,

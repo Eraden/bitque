@@ -43,7 +43,7 @@ impl WsHandler<Authenticate> for WebSocketActor {
         if let Some(bind_token) = token.bind_token.as_ref().cloned() {
             match block_on(self.mail.send(Welcome {
                 bind_token,
-                email: user.email.clone(),
+                email: user.email,
             })) {
                 Ok(Ok(_)) => (),
                 Ok(Err(e)) => {
@@ -69,7 +69,7 @@ impl WsHandler<CheckAuthToken> for WebSocketActor {
         let user: jirs_data::User = match block_on(self.db.send(AuthorizeUser {
             access_token: msg.token,
         })) {
-            Ok(Ok(u)) => u.into(),
+            Ok(Ok(u)) => u,
             Ok(Err(_)) => {
                 return Ok(Some(WsMsg::AuthorizeLoaded(Err(
                     "Invalid auth token".to_string()

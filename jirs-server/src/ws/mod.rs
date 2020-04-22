@@ -9,9 +9,12 @@ use jirs_data::{ProjectId, UserId, WsMsg};
 
 use crate::db::DbExecutor;
 use crate::mail::MailExecutor;
-use crate::ws::auth::{Authenticate, CheckAuthToken, CheckBindToken};
+use crate::ws::auth::*;
+use crate::ws::comments::*;
 use crate::ws::invitations::*;
-use crate::ws::issues::UpdateIssueHandler;
+use crate::ws::issues::*;
+use crate::ws::projects::*;
+use crate::ws::users::*;
 
 pub mod auth;
 pub mod comments;
@@ -47,9 +50,8 @@ impl Handler<InnerMsg> for WebSocketActor {
     type Result = ();
 
     fn handle(&mut self, msg: InnerMsg, ctx: &mut Self::Context) -> Self::Result {
-        match msg {
-            InnerMsg::Transfer(msg) => ctx.send_msg(&msg),
-            _ => {}
+        if let InnerMsg::Transfer(msg) = msg {
+            ctx.send_msg(&msg)
         };
     }
 }
@@ -87,11 +89,11 @@ impl WebSocketActor {
                 ctx,
             )?,
             WsMsg::IssueCreateRequest(payload) => self.handle_msg(payload, ctx)?,
-            WsMsg::IssueDeleteRequest(id) => self.handle_msg(issues::DeleteIssue { id }, ctx)?,
-            WsMsg::ProjectIssuesRequest => self.handle_msg(issues::LoadIssues, ctx)?,
+            WsMsg::IssueDeleteRequest(id) => self.handle_msg(DeleteIssue { id }, ctx)?,
+            WsMsg::ProjectIssuesRequest => self.handle_msg(LoadIssues, ctx)?,
 
             // projects
-            WsMsg::ProjectRequest => self.handle_msg(projects::CurrentProject, ctx)?,
+            WsMsg::ProjectRequest => self.handle_msg(CurrentProject, ctx)?,
             WsMsg::ProjectUpdateRequest(payload) => self.handle_msg(payload, ctx)?,
 
             // auth
@@ -107,7 +109,7 @@ impl WebSocketActor {
 
             // register
             WsMsg::SignUpRequest(email, username) => self.handle_msg(
-                users::Register {
+                Register {
                     name: username,
                     email,
                 },
@@ -115,32 +117,26 @@ impl WebSocketActor {
             )?,
 
             // users
-            WsMsg::ProjectUsersRequest => self.handle_msg(users::LoadProjectUsers, ctx)?,
+            WsMsg::ProjectUsersRequest => self.handle_msg(LoadProjectUsers, ctx)?,
 
             // comments
             WsMsg::IssueCommentsRequest(issue_id) => {
-                self.handle_msg(comments::LoadIssueComments { issue_id }, ctx)?
+                self.handle_msg(LoadIssueComments { issue_id }, ctx)?
             }
             WsMsg::CreateComment(payload) => self.handle_msg(payload, ctx)?,
             WsMsg::UpdateComment(payload) => self.handle_msg(payload, ctx)?,
             WsMsg::CommentDeleteRequest(comment_id) => {
-                self.handle_msg(comments::DeleteComment { comment_id }, ctx)?
+                self.handle_msg(DeleteComment { comment_id }, ctx)?
             }
 
             // invitations
-            WsMsg::InvitationSendRequest { name, email } => self.handle_msg(
-                CreateInvitation {
-                    name: name.clone(),
-                    email: email.clone(),
-                },
-                ctx,
-            )?,
+            WsMsg::InvitationSendRequest { name, email } => {
+                self.handle_msg(CreateInvitation { name, email }, ctx)?
+            }
             WsMsg::InvitationListRequest => self.handle_msg(ListInvitation, ctx)?,
             WsMsg::InvitationAcceptRequest(id) => self.handle_msg(AcceptInvitation { id }, ctx)?,
-
             WsMsg::InvitationRevokeRequest(id) => self.handle_msg(RevokeInvitation { id }, ctx)?,
-
-            WsMsg::InvitedUsersRequest => None,
+            WsMsg::InvitedUsersRequest => self.handle_msg(LoadInvitedUsers, ctx)?,
 
             // else fail
             _ => {
@@ -296,9 +292,7 @@ impl Handler<InnerMsg> for WsServer {
 
 impl WsServer {
     pub fn ensure_room(&mut self, room: i32) {
-        if !self.rooms.contains_key(&room) {
-            self.rooms.insert(room, HashSet::new());
-        }
+        self.rooms.entry(room).or_insert_with(HashSet::new);
     }
 }
 

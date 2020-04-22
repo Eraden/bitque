@@ -22,7 +22,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
         | Msg::ChangePage(Page::EditIssue(..)) => {
-            model.page_content = PageContent::Project(ProjectPage::default());
+            model.page_content = PageContent::Project(Box::new(ProjectPage::default()));
         }
         _ => (),
     }
@@ -283,7 +283,7 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
         .issues
         .iter()
         .filter(|issue| {
-            issue_filter_status(issue, &status)
+            issue_filter_status(issue, status)
                 && issue_filter_with_text(issue, project_page.text_filter.as_str())
                 && issue_filter_with_only_my(issue, project_page.only_my_filter, &model.user)
                 && issue_filter_with_only_recent(issue, ids.as_slice())
@@ -292,13 +292,13 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
         .collect();
     let label = status.to_label();
 
-    let send_status = status.clone();
+    let send_status = status;
     let drop_handler = drag_ev(Ev::Drop, move |ev| {
         ev.prevent_default();
         Msg::IssueDropZone(send_status)
     });
 
-    let send_status = status.clone();
+    let send_status = status;
     let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
         ev.prevent_default();
         Msg::IssueDragOverStatus(send_status)
@@ -321,8 +321,8 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
 }
 
 #[inline]
-fn issue_filter_status(issue: &Issue, status: &IssueStatus) -> bool {
-    &issue.status == status
+fn issue_filter_status(issue: &Issue, status: IssueStatus) -> bool {
+    issue.status == status
 }
 
 #[inline]
@@ -384,7 +384,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
         ev.stop_propagation();
         Msg::ExchangePosition(issue_id)
     });
-    let issue_id = issue.id.clone();
+    let issue_id = issue.id;
     let drag_out = drag_ev(Ev::DragLeave, move |_| Msg::DragLeave(issue_id));
 
     let class_list = vec!["issue"];

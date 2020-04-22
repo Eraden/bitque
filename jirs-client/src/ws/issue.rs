@@ -64,7 +64,7 @@ pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
             model.issues.push(c);
         }
         dragged.list_position = below.list_position + 1;
-        dragged.status = below.status.clone();
+        dragged.status = below.status;
     }
     std::mem::swap(&mut dragged.list_position, &mut below.list_position);
 
@@ -96,7 +96,7 @@ pub fn sync(model: &mut Model) {
         send_ws_msg(WsMsg::IssueUpdateRequest(
             issue.id,
             IssueFieldId::Status,
-            PayloadVariant::IssueStatus(issue.status.clone()),
+            PayloadVariant::IssueStatus(issue.status),
         ));
         send_ws_msg(WsMsg::IssueUpdateRequest(
             issue.id,
@@ -150,7 +150,6 @@ pub fn change_status(status: IssueStatus, model: &mut Model) {
 
     if issue.status == status {
         model.issues.push(issue);
-        return;
     } else {
         issue.status = status;
         issue.list_position = pos + 1;

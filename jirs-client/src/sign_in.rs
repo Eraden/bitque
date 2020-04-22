@@ -23,7 +23,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     }
 
     if msg == Msg::ChangePage(Page::SignIn) {
-        model.page_content = PageContent::SignIn(SignInPage::default());
+        model.page_content = PageContent::SignIn(Box::new(SignInPage::default()));
         return;
     }
 

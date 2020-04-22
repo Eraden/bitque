@@ -1,6 +1,6 @@
 use actix::{Handler, Message};
-use lettre;
-use lettre_email;
+// use lettre;
+// use lettre_email;
 use uuid::Uuid;
 
 use crate::mail::MailExecutor;
@@ -35,7 +35,7 @@ impl Handler<Invite> for MailExecutor {
             <p>
             </p>
             <p>
-                Please click this link: <a href="{addr}/invite?token={bind_token}"></a>
+                Please click this link: <a href="{addr}/invite?token={bind_token}">{addr}/invite?token={bind_token}</a>
             </p>
             </body>
             </html>
@@ -46,7 +46,7 @@ impl Handler<Invite> for MailExecutor {
         );
 
         let email = lettre_email::Email::builder()
-            .from(from.clone())
+            .from(from)
             .to(msg.email.as_str())
             .html(html.as_str())
             .subject("Invitation to JIRS project")

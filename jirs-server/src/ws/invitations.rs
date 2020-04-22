@@ -45,15 +45,29 @@ impl WsHandler<CreateInvitation> for WebSocketActor {
             name,
         })) {
             Ok(Ok(invitation)) => invitation,
-            _ => return Ok(Some(WsMsg::InvitationSendFailure)),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(Some(WsMsg::InvitationSendFailure));
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(Some(WsMsg::InvitationSendFailure));
+            }
         };
         match block_on(self.mail.send(crate::mail::invite::Invite {
-            bind_token: invitation.bind_token.clone(),
-            email: invitation.email.clone(),
+            bind_token: invitation.bind_token,
+            email: invitation.email,
             inviter_name,
         })) {
             Ok(Ok(_)) => (),
-            _ => return Ok(Some(WsMsg::InvitationSendFailure)),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(Some(WsMsg::InvitationSendFailure));
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(Some(WsMsg::InvitationSendFailure));
+            }
         }
 
         Ok(Some(WsMsg::InvitationSendSuccess))

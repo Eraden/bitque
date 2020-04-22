@@ -15,7 +15,7 @@ impl WsHandler<LoadIssueComments> for WebSocketActor {
         let comments = match block_on(self.db.send(crate::db::comments::LoadIssueComments {
             issue_id: msg.issue_id,
         })) {
-            Ok(Ok(comments)) => comments.into_iter().map(|c| c.into()).collect(),
+            Ok(Ok(comments)) => comments,
             _ => return Ok(None),
         };
 
