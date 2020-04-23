@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::fs::*;
 use std::path::Path;
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Sender};
 use std::sync::{Arc, RwLock, RwLockWriteGuard};
 use std::time::Duration;
 use std::time::SystemTime;
@@ -18,7 +18,7 @@ enum Partial {
     File(Css),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 enum FileState {
     Clean,
     Dirty,
@@ -42,10 +42,36 @@ impl CssFile {
             state: FileState::Clean,
         }
     }
+
+    pub fn drop_dead(&mut self) {
+        let mut old = vec![];
+        std::mem::swap(&mut self.lines, &mut old);
+
+        for child in old {
+            match child {
+                Partial::String(_) => {
+                    self.lines.push(child);
+                }
+                Partial::File(file) => {
+                    let state = file.read().map(|f| f.state).unwrap();
+
+                    if state != FileState::Dead {
+                        if let Ok(mut css) = file.write() {
+                            css.drop_dead();
+                        }
+                        self.lines.push(Partial::File(file));
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl std::fmt::Display for CssFile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.state == FileState::Dead {
+            return Ok(());
+        }
         f.write_str(format!("\n/* -- {} --- */\n\n", self.path).as_str())?;
         for line in self.lines.iter() {
             match line {
@@ -74,6 +100,7 @@ struct Application {
     files_map: HashMap<String, HashSet<String>>,
     fm: HashMap<String, Css>,
     root_file: Option<Css>,
+    sender: Option<Sender<DebouncedEvent>>,
 }
 
 impl Application {
@@ -119,11 +146,19 @@ impl Application {
             .clone()
             .parent()
             .ok_or_else(|| format!("Not a valid path {:?}", input))?;
-        let file = self
-            .fm
-            .entry(file_path.clone())
-            .or_insert_with(|| Arc::new(RwLock::new(CssFile::new(file_path.clone()))))
-            .clone();
+
+        let file = if self.fm.contains_key(&file_path) {
+            self.fm.get(&file_path).unwrap().clone()
+        } else {
+            let css = Arc::new(RwLock::new(CssFile::new(file_path.clone())));
+            self.fm.insert(file_path.clone(), css.clone());
+            if let Some(ref tx) = self.sender {
+                let path = Path::new(&file_path);
+                tx.send(DebouncedEvent::Create(path.to_path_buf()))
+                    .map_err(|e| format!("{}", e))?;
+            }
+            css
+        };
 
         if let Ok(mut css) = file.write() {
             css.last_changed = Self::read_timestamp(input)?;
@@ -183,6 +218,28 @@ impl Application {
             .and_then(|css| css.write().or(Err(false)))
     }
 
+    fn refresh(&mut self) {
+        if let Ok(mut root) = self
+            .root_file
+            .as_mut()
+            .ok_or_else(|| false)
+            .and_then(|f| f.write().map_err(|_| false))
+        {
+            root.drop_dead();
+        }
+        let mut old = HashMap::new();
+        std::mem::swap(&mut old, &mut self.fm);
+        for (key, file) in old.into_iter() {
+            if file
+                .read()
+                .map(|f| f.state != FileState::Dead)
+                .unwrap_or_default()
+            {
+                self.fm.insert(key, file);
+            }
+        }
+    }
+
     fn print(&self) {
         let css = match self.root_file.as_ref().unwrap().read() {
             Ok(css) => css,
@@ -196,6 +253,10 @@ impl Application {
             }
             _ => println!("{}", css),
         }
+    }
+
+    pub fn pipe(&mut self, tx: Sender<DebouncedEvent>) {
+        self.sender = Some(tx);
     }
 }
 
@@ -224,6 +285,7 @@ fn main() -> Result<(), String> {
         files_map: Default::default(),
         fm: Default::default(),
         root_file: None,
+        sender: None,
     };
     let root_path = app.input.to_string();
     let root = std::path::Path::new(&root_path);
@@ -240,17 +302,12 @@ fn main() -> Result<(), String> {
         return Ok(());
     }
 
+    let (tx, rx) = channel();
+    app.pipe(tx.clone());
+    let mut watcher = watcher(tx.clone(), Duration::from_secs(1)).unwrap();
+
     app.parse()?;
     app.print();
-
-    let (tx, rx) = channel();
-    let mut watcher = watcher(tx, Duration::from_secs(1)).unwrap();
-
-    for file in app.fm.keys() {
-        watcher
-            .watch(file.to_string(), RecursiveMode::NonRecursive)
-            .unwrap();
-    }
 
     loop {
         match rx.recv() {
@@ -264,9 +321,16 @@ fn main() -> Result<(), String> {
             Ok(DebouncedEvent::NoticeRemove(path)) => {
                 app.mark_dead(path.as_path());
                 watcher.unwatch(path).unwrap();
+                app.refresh();
+                app.print();
             }
-            Ok(event) => println!("{:?}", event),
-            Err(e) => println!("watch error: {:?}", e),
+            Ok(DebouncedEvent::Create(path)) => {
+                if let Err(e) = watcher.watch(path, RecursiveMode::NonRecursive) {
+                    eprintln!("{}", e);
+                }
+            }
+            Ok(_event) => (),
+            Err(e) => eprintln!("watch error: {:?}", e),
         }
     }
 }
