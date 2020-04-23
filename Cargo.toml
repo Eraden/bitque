@@ -14,5 +14,6 @@ members = [
     "./jirs-server",
     "./jirs-client",
     "./jirs-data",
+    "./jirs-css",
 ]
 
