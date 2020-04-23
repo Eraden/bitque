@@ -9,6 +9,7 @@ pub struct StyledAvatar {
     name: String,
     on_click: Option<EventHandler<Msg>>,
     class_list: Vec<String>,
+    user_index: usize,
 }
 
 impl Default for StyledAvatar {
@@ -19,6 +20,7 @@ impl Default for StyledAvatar {
             name: "".to_string(),
             on_click: None,
             class_list: vec![],
+            user_index: 0,
         }
     }
 }
@@ -31,6 +33,7 @@ impl StyledAvatar {
             name: "".to_string(),
             on_click: None,
             class_list: vec![],
+            user_index: 0,
         }
     }
 }
@@ -47,6 +50,7 @@ pub struct StyledAvatarBuilder {
     name: String,
     on_click: Option<EventHandler<Msg>>,
     class_list: Vec<String>,
+    user_index: usize,
 }
 
 impl StyledAvatarBuilder {
@@ -87,6 +91,11 @@ impl StyledAvatarBuilder {
         self
     }
 
+    pub fn user_index(mut self, user_index: usize) -> Self {
+        self.user_index = user_index;
+        self
+    }
+
     pub fn build(self) -> StyledAvatar {
         StyledAvatar {
             avatar_url: self.avatar_url,
@@ -94,6 +103,7 @@ impl StyledAvatarBuilder {
             name: self.name,
             on_click: self.on_click,
             class_list: self.class_list,
+            user_index: self.user_index,
         }
     }
 }
@@ -105,7 +115,10 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
         name,
         on_click,
         mut class_list,
+        user_index,
     } = values;
+
+    let index = user_index % 8;
 
     class_list.push("styledAvatar".to_string());
     match avatar_url {
@@ -118,15 +131,37 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
         None => vec![],
         Some(h) => vec![h],
     };
+    let letter = name
+        .chars()
+        .rev()
+        .last()
+        .map(|c| c.to_string())
+        .unwrap_or_default();
     match avatar_url {
-        Some(url) => div![
-            attrs![At::Class => class_list.join(" "), At::Style => format!("{shared}; background-image: url({url});", shared = shared_style, url = url)],
-            handler,
-        ],
-        _ => div![
-            attrs![At::Class => class_list.join(" "), At::Style => shared_style],
-            span![name],
-            handler
-        ],
+        Some(url) => {
+            let style = format!(
+                "{shared}; background-image: url({url});",
+                shared = shared_style,
+                url = url
+            );
+            div![
+                attrs![At::Class => class_list.join(" "), At::Style => style],
+                handler,
+            ]
+        }
+        _ => {
+            let style = format!(
+                "{shared}; width: {size}px; height: {size}px; font-size: calc({size}px / 1.7);",
+                shared = shared_style,
+                size = size
+            );
+            class_list.push("letter".to_string());
+            class_list.push(format!("avatarColor{}", index + 1));
+            div![
+                attrs![At::Class => class_list.join(" "), At::Style => style],
+                span![letter],
+                handler,
+            ]
+        }
     }
 }

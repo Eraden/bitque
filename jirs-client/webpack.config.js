@@ -3,10 +3,14 @@ const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const dotenv = require('dotenv');
 const webpack = require('webpack');
+const { execSync, exec } = require('child_process');
 
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 process.env.RUST_LOG = 'info';
+
+execSync('cd .. && cargo build --bin jirs-css');
+exec('cd .. && ./target/debug/jirs-css -O ./jirs-client/tmp/styles.css');
 
 dotenv.config();
 

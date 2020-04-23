@@ -148,12 +148,6 @@
     width: 90px;
 }
 
-@media (max-width: 1100px) {
-    #projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue {
-        padding: 10px 8px;
-    }
-}
-
 #projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue:hover {
     background: var(--backgroundLight);
 }
@@ -164,6 +158,10 @@
 }
 
 @media (max-width: 1100px) {
+    #projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue {
+        padding: 10px 8px;
+    }
+
     #projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .title {
         font-size: 14.5px
     }

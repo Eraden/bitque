@@ -228,7 +228,8 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
     let avatars: Vec<Node<Msg>> = model
         .users
         .iter()
-        .map(|user| {
+        .enumerate()
+        .map(|(idx, user)| {
             let mut class_list = vec!["avatarIsActiveBorder"];
             let user_id = user.id;
             let active = active_avatar_filters.contains(&user_id);
@@ -241,6 +242,7 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
                     Msg::ProjectAvatarFilterChanged(user_id, active)
                 }))
                 .name(user.name.as_str())
+                .user_index(idx)
                 .build()
                 .into_node();
             div![attrs![At::Class => class_list.join(" ")], styled_avatar]
@@ -345,12 +347,14 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
     let avatars: Vec<Node<Msg>> = model
         .users
         .iter()
-        .filter(|user| issue.user_ids.contains(&user.id))
-        .map(|user| {
+        .enumerate()
+        .filter(|(_, user)| issue.user_ids.contains(&user.id))
+        .map(|(idx, user)| {
             StyledAvatar::build()
                 .size(24)
                 .name(user.name.as_str())
                 .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
+                .user_index(idx)
                 .build()
                 .into_node()
         })

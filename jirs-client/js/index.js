@@ -1,4 +1,4 @@
-import "./styles.css";
+import "../tmp/styles.css";
 
 const getWsHostName = () => process.env.JIRS_SERVER_BIND === "0.0.0.0" ? 'localhost' : process.env.JIRS_SERVER_BIND;
 const getProtocol = () => window.location.protocol.replace(/^http/, 'ws');
