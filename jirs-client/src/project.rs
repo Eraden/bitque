@@ -170,16 +170,17 @@ fn header() -> Node<Msg> {
 }
 
 fn project_board_filters(model: &Model) -> Node<Msg> {
-    let search_input = StyledInput::build(FieldId::TextFilterBoard)
-        .icon(Icon::Search)
-        .valid(true)
-        .build()
-        .into_node();
-
     let project_page = match &model.page_content {
         PageContent::Project(page_content) => page_content,
         _ => return empty![],
     };
+
+    let search_input = StyledInput::build(FieldId::TextFilterBoard)
+        .icon(Icon::Search)
+        .valid(true)
+        .value(project_page.text_filter.as_str())
+        .build()
+        .into_node();
 
     let only_my = StyledButton::build()
         .empty()
