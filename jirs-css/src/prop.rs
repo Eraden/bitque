@@ -333,7 +333,11 @@ impl CssParser {
                 Property::BackfaceVisibility(p)
             }
             //     "background" => Property::Background,
-            //     "background-attachment" => Property::BackgroundAttachment,
+            "background-attachment" => {
+                let p = self.parse_expected_prop_value()?;
+                self.consume_expected(";")?;
+                Property::BackgroundAttachment(p)
+            }
             "background-blend-mode" => {
                 let p = self.parse_expected_prop_value()?;
                 self.consume_expected(";")?;
@@ -1315,6 +1319,40 @@ impl FromStr for BackgroundBlendModeProperty {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum BackgroundDirectionProperty {
+    ToRight,
+    ToLeft,
+    ToTop,
+    ToBottom,
+    Angle(PropertyValue<usize>),
+}
+
+#[derive(Debug, PartialEq)]
+pub enum BackgroundAttachmentProperty {
+    Scroll,
+    Fixed,
+    Local,
+    Initial,
+    Inherit,
+}
+
+impl FromStr for BackgroundAttachmentProperty {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let p = match s {
+            "scroll" => BackgroundAttachmentProperty::Scroll,
+            "fixed" => BackgroundAttachmentProperty::Fixed,
+            "local" => BackgroundAttachmentProperty::Local,
+            "initial" => BackgroundAttachmentProperty::Initial,
+            "inherit" => BackgroundAttachmentProperty::Inherit,
+            _ => return Err(format!("invalid background attachment {:?}", s)),
+        };
+        Ok(p)
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum PropertyValue<T> {
     Variable(String),
     Other(T),
@@ -1337,7 +1375,7 @@ pub enum Property {
     AnimationTimingFunction(PropertyValue<AnimationTimingFunction>),
     BackfaceVisibility(PropertyValue<BackfaceVisibilityProperty>),
     Background(String),
-    BackgroundAttachment(String),
+    BackgroundAttachment(PropertyValue<BackgroundAttachmentProperty>),
     BackgroundBlendMode(PropertyValue<BackgroundBlendModeProperty>),
     BackgroundClip(PropertyValue<BackgroundClipProperty>),
     BackgroundColor(PropertyValue<ColorProperty>),
