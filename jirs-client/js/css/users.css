@@ -16,6 +16,10 @@
     margin-top: 20px;
 }
 
+#users > .invitationsSection > .invitationsList > .invitation.revoked {
+    color: var(--textLight);
+}
+
 #users > .invitationsSection > .invitationsList > .invitation > * {
     width: 25%;
 }

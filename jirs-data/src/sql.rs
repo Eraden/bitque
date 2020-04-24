@@ -206,7 +206,7 @@ impl ToSql<UserRoleType, Pg> for UserRole {
 #[postgres(type_name = "InvitationStateType")]
 pub struct InvitationStateType;
 
-impl diesel::query_builder::QueryId for InvitationState {
+impl diesel::query_builder::QueryId for InvitationStateType {
     type QueryId = InvitationState;
 }
 

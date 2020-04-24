@@ -39,6 +39,15 @@ pub struct StyledSelectState {
     pub field_id: FieldId,
     pub opened: bool,
     pub text_filter: String,
+    pub values: Vec<u32>,
+}
+
+impl StyledSelectState {
+    pub fn reset(&mut self) {
+        self.text_filter.clear();
+        self.opened = false;
+        self.values = vec![];
+    }
 }
 
 impl StyledSelectState {
@@ -47,6 +56,7 @@ impl StyledSelectState {
             field_id,
             opened: false,
             text_filter: String::new(),
+            values: vec![],
         }
     }
 
@@ -64,6 +74,23 @@ impl StyledSelectState {
                 if *field_id == self.field_id =>
             {
                 self.text_filter = text.clone();
+            }
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(v))
+                if field_id == &self.field_id =>
+            {
+                self.values = vec![*v];
+            }
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::RemoveMulti(v))
+                if field_id == &self.field_id =>
+            {
+                let mut old = vec![];
+                std::mem::swap(&mut old, &mut self.values);
+
+                for u in old {
+                    if u != *v {
+                        self.values.push(u);
+                    }
+                }
             }
             _ => (),
         }

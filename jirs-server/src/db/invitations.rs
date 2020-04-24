@@ -29,7 +29,11 @@ impl Handler<ListInvitation> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
-        let query = invitations.filter(invited_by_id.eq(msg.user_id));
+        let query = invitations
+            .filter(invited_by_id.eq(msg.user_id))
+            .filter(state.ne(InvitationState::Accepted))
+            .order_by(state.asc())
+            .then_order_by(updated_at.desc());
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         query
             .load(conn)
@@ -120,7 +124,10 @@ impl Handler<RevokeInvitation> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let query = diesel::update(invitations)
-            .set(state.eq(InvitationState::Revoked))
+            .set((
+                state.eq(InvitationState::Revoked),
+                updated_at.eq(chrono::Utc::now().naive_utc()),
+            ))
             .filter(id.eq(msg.id));
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         query
@@ -163,7 +170,10 @@ impl Handler<AcceptInvitation> for DbExecutor {
         }
 
         let query = diesel::update(invitations)
-            .set(state.eq(InvitationState::Accepted))
+            .set((
+                state.eq(InvitationState::Accepted),
+                updated_at.eq(chrono::Utc::now().naive_utc()),
+            ))
             .filter(id.eq(invitation.id))
             .filter(state.eq(InvitationState::Sent));
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());

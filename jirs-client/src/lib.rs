@@ -139,6 +139,16 @@ pub enum FieldChange {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum UsersPageChange {
+    ResetForm,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum PageChanged {
+    Users(UsersPageChange),
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum Msg {
     NoOp,
     GlobalKeyDown {
@@ -147,6 +157,7 @@ pub enum Msg {
         ctrl: bool,
         alt: bool,
     },
+    PageChanged(PageChanged),
 
     // Auth Token
     AuthTokenStored,

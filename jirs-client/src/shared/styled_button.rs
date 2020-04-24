@@ -64,10 +64,10 @@ impl StyledButtonBuilder {
         self.variant(Variant::Empty)
     }
 
-    // pub fn disabled(mut self, value: bool) -> Self {
-    //     self.disabled = Some(value);
-    //     self
-    // }
+    pub fn disabled(mut self, value: bool) -> Self {
+        self.disabled = Some(value);
+        self
+    }
 
     pub fn active(mut self, value: bool) -> Self {
         self.active = Some(value);

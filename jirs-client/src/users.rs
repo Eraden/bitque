@@ -1,9 +1,9 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{ToVec, UserRole, UsersFieldId, WsMsg};
+use jirs_data::{InvitationState, ToVec, UserRole, UsersFieldId, WsMsg};
 
 use crate::api::send_ws_msg;
-use crate::model::{InvitationFormState, Model, Page, PageContent, UsersPage};
+use crate::model::*;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
@@ -12,7 +12,7 @@ use crate::shared::styled_select::*;
 use crate::shared::styled_select_child::ToStyledSelectChild;
 use crate::shared::{inner_layout, ToNode};
 use crate::validations::is_email;
-use crate::{FieldId, Msg};
+use crate::{FieldId, Msg, PageChanged, UsersPageChange};
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     if let Msg::ChangePage(Page::Users) = msg {
@@ -40,6 +40,15 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::WsMsg(WsMsg::InvitationListLoaded(invitations)) => {
             page.invitations = invitations;
         }
+        Msg::PageChanged(PageChanged::Users(UsersPageChange::ResetForm)) => {
+            page.name.clear();
+            page.name_touched = false;
+            page.email.clear();
+            page.email_touched = false;
+            page.user_role = UserRole::User;
+            page.user_role_state.reset();
+            page.form_state = InvitationFormState::Initial;
+        }
         Msg::StyledSelectChanged(
             FieldId::Users(UsersFieldId::UserRole),
             StyledSelectChange::Changed(role),
@@ -64,11 +73,13 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::WsMsg(WsMsg::InvitationRevokeSuccess(id)) => {
             let mut old = vec![];
             std::mem::swap(&mut page.invitations, &mut old);
-            for invitation in old {
-                if invitation.id != id {
-                    page.invitations.push(invitation);
+            for mut invitation in old {
+                if id == invitation.id {
+                    invitation.state = InvitationState::Revoked;
                 }
+                page.invitations.push(invitation);
             }
+            send_ws_msg(WsMsg::InvitationListRequest);
         }
         Msg::InviteRevokeRequest(invitation_id) => {
             send_ws_msg(WsMsg::InvitationRevokeRequest(invitation_id));
@@ -161,6 +172,9 @@ pub fn view(model: &Model) -> Node<Msg> {
             .active(true)
             .empty()
             .set_type_reset()
+            .on_click(mouse_ev(Ev::Click, |_| {
+                Msg::PageChanged(PageChanged::Users(UsersPageChange::ResetForm))
+            }))
             .text("Reset")
             .build()
             .into_node(),
@@ -218,11 +232,13 @@ pub fn view(model: &Model) -> Node<Msg> {
             let id = invitation.id;
             let revoke = StyledButton::build()
                 .text("Revoke")
+                .disabled(invitation.state == InvitationState::Revoked)
                 .on_click(mouse_ev(Ev::Click, move |_| Msg::InviteRevokeRequest(id)))
                 .build()
                 .into_node();
             li![
                 class!["invitation"],
+                attrs![At::Class => format!("{}", invitation.state)],
                 span![invitation.name],
                 span![invitation.email],
                 span![format!("{}", invitation.state)],
