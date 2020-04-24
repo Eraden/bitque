@@ -157,7 +157,7 @@ impl CssParser {
                 self.skip_white();
                 self.consume_expected(":")?;
                 self.skip_white();
-                let p = self.parse_expected::<AlignContentProperty>()?;
+                let p = self.parse_expected_prop_value::<AlignContentProperty>()?;
                 self.consume_expected(";")?;
                 Property::AlignContent(p)
             }
@@ -165,7 +165,7 @@ impl CssParser {
                 self.skip_white();
                 self.consume_expected(":")?;
                 self.skip_white();
-                let p = self.parse_expected::<AlignItemsProperty>()?;
+                let p = self.parse_expected_prop_value::<AlignItemsProperty>()?;
                 self.consume_expected(";")?;
                 Property::AlignItems(p)
             }
@@ -173,7 +173,7 @@ impl CssParser {
                 self.skip_white();
                 self.consume_expected(":")?;
                 self.skip_white();
-                let p = self.parse_expected::<AlignSelfProperty>()?;
+                let p = self.parse_expected_prop_value::<AlignSelfProperty>()?;
                 self.consume_expected(";")?;
                 Property::AlignSelf(p)
             }
@@ -181,7 +181,7 @@ impl CssParser {
                 self.skip_white();
                 self.consume_expected(":")?;
                 self.skip_white();
-                let p = self.parse_expected::<AllProperty>()?;
+                let p = self.parse_expected_prop_value::<AllProperty>()?;
                 self.consume_expected(";")?;
                 Property::All(p)
             }
@@ -191,35 +191,38 @@ impl CssParser {
                 self.skip_white();
                 let def = self.expect_consume()?;
                 let p = match def.as_str() {
-                    "initial" => AnimationProperty::Initial,
-                    "inherit" => AnimationProperty::Inherit,
+                    "initial" => PropertyValue::Other(AnimationProperty::Initial),
+                    "inherit" => PropertyValue::Other(AnimationProperty::Inherit),
+                    _ if def.starts_with("--") => PropertyValue::Variable(def[2..].to_string()),
                     _ => {
                         let name = def;
                         self.skip_white();
 
                         let duration = if self.current_is_semicolon() {
-                            TimeProperty::Seconds(0)
+                            PropertyValue::Other(TimeProperty::Seconds(0))
                         } else {
-                            let v = self.expect_consume()?.parse::<TimeProperty>()?;
+                            let v = self.parse_expected_prop_value::<TimeProperty>()?;
                             self.skip_white();
                             v
                         };
                         let timing = if self.current_is_semicolon() {
-                            AnimationTimingFunction::Ease
+                            PropertyValue::Other(AnimationTimingFunction::Ease)
                         } else {
-                            let v = self.expect_consume()?.parse::<AnimationTimingFunction>()?;
+                            let v = self.parse_expected_prop_value::<AnimationTimingFunction>()?;
                             self.skip_white();
                             v
                         };
                         let delay = if self.current_is_semicolon() {
-                            AnimationDelayProperty::Time(TimeProperty::Seconds(0))
+                            PropertyValue::Other(AnimationDelayProperty::Time(
+                                TimeProperty::Seconds(0),
+                            ))
                         } else {
-                            let v = self.expect_consume()?.parse::<AnimationDelayProperty>()?;
+                            let v = self.parse_expected_prop_value::<AnimationDelayProperty>()?;
                             self.skip_white();
                             v
                         };
                         let iteration_count = if self.current_is_semicolon() {
-                            1
+                            PropertyValue::Other(1)
                         } else {
                             let count = self.expect_consume()?;
                             let v = count.parse::<usize>().map_err(|_| {
@@ -229,37 +232,34 @@ impl CssParser {
                                 )
                             })?;
                             self.skip_white();
-                            v
+                            PropertyValue::Other(v)
                         };
                         let direction = if self.current_is_semicolon() {
-                            AnimationDirectionProperty::Normal
+                            PropertyValue::Other(AnimationDirectionProperty::Normal)
                         } else {
-                            let v = self
-                                .expect_consume()?
-                                .parse::<AnimationDirectionProperty>()?;
+                            let v =
+                                self.parse_expected_prop_value::<AnimationDirectionProperty>()?;
                             self.skip_white();
                             v
                         };
                         let fill_mode = if self.current_is_semicolon() {
-                            AnimationFillModeProperty::None
+                            PropertyValue::Other(AnimationFillModeProperty::None)
                         } else {
-                            let v = self
-                                .expect_consume()?
-                                .parse::<AnimationFillModeProperty>()?;
+                            let v =
+                                self.parse_expected_prop_value::<AnimationFillModeProperty>()?;
                             self.skip_white();
                             v
                         };
                         let play_state = if self.current_is_semicolon() {
-                            AnimationPlayStateProperty::Running
+                            PropertyValue::Other(AnimationPlayStateProperty::Running)
                         } else {
-                            let v = self
-                                .expect_consume()?
-                                .parse::<AnimationPlayStateProperty>()?;
+                            let v =
+                                self.parse_expected_prop_value::<AnimationPlayStateProperty>()?;
                             self.skip_white();
                             v
                         };
 
-                        AnimationProperty::Custom(
+                        PropertyValue::Other(AnimationProperty::Custom(
                             name,
                             duration,
                             timing,
@@ -268,63 +268,87 @@ impl CssParser {
                             direction,
                             fill_mode,
                             play_state,
-                        )
+                        ))
                     }
                 };
                 self.consume_expected(";")?;
                 Property::Animation(p)
             }
             "animation-delay" => {
-                let d = s.parse::<TimeProperty>()?;
+                let d = self.parse_expected_prop_value::<TimeProperty>()?;
                 self.consume_expected(";")?;
                 Property::AnimationDelay(d)
             }
             "animation-direction" => {
-                let p = s.parse::<AnimationDirectionProperty>()?;
+                let p = self.parse_expected_prop_value::<AnimationDirectionProperty>()?;
                 self.consume_expected(";")?;
                 Property::AnimationDirection(p)
             }
             "animation-duration" => {
-                let p = s.parse::<AnimationDirectionProperty>()?;
+                let p = self.parse_expected_prop_value::<AnimationDirectionProperty>()?;
                 self.consume_expected(";")?;
                 Property::AnimationDuration(p)
             }
             "animation-fill-mode" => {
-                let p = s.parse()?;
+                let p = self.parse_expected_prop_value()?;
                 self.consume_expected(";")?;
                 Property::AnimationFillMode(p)
             }
             "animation-iteration-count" => {
-                let p = s
-                    .parse()
-                    .map_err(|_| format!("invalid iteration count, expect number got {:?}", s))?;
+                let count = self.expect_consume()?;
+                let p = if count.starts_with("--") {
+                    PropertyValue::Variable(count[2..].to_string())
+                } else {
+                    PropertyValue::Other(count.parse::<usize>().map_err(|_| {
+                        format!("invalid iteration count, expect number got {:?}", count)
+                    })?)
+                };
+
                 self.consume_expected(";")?;
                 Property::AnimationIterationCount(p)
             }
             "animation-name" => {
                 self.consume_expected(";")?;
-                Property::AnimationName(s.to_string())
+                let name = match self.expect_consume()?.as_str() {
+                    name @ _ if name.starts_with("--") => {
+                        PropertyValue::Variable(name[2..].to_string())
+                    }
+                    name @ _ => PropertyValue::Other(name.to_string()),
+                };
+                Property::AnimationName(name)
             }
             "animation-play-state" => {
-                let p = s.parse()?;
+                let p = self.parse_expected_prop_value()?;
                 self.consume_expected(";")?;
                 Property::AnimationPlayState(p)
             }
             "animation-timing-function" => {
-                let p = s.parse()?;
+                let p = self.parse_expected_prop_value()?;
                 self.consume_expected(";")?;
                 Property::AnimationTimingFunction(p)
             }
             "backface-visibility" => {
-                let p = s.parse()?;
+                let p = self.parse_expected_prop_value()?;
                 self.consume_expected(";")?;
                 Property::BackfaceVisibility(p)
             }
             //     "background" => Property::Background,
             //     "background-attachment" => Property::BackgroundAttachment,
-            //     "background-blend-mode" => Property::BackgroundBlendMode,
-            //     "background-clip" => Property::BackgroundClip,
-            //     "background-color" => Property::BackgroundColor,
+            "background-blend-mode" => {
+                let p = self.parse_expected_prop_value()?;
+                self.consume_expected(";")?;
+                Property::BackgroundBlendMode(p)
+            }
+            "background-clip" => {
+                let p = self.parse_expected_prop_value()?;
+                self.consume_expected(";")?;
+                Property::BackgroundClip(p)
+            }
+            "background-color" => {
+                let p = self.parse_expected_prop_value()?;
+                self.consume_expected(";")?;
+                Property::BackgroundColor(p)
+            }
             //     "background-image" => Property::BackgroundImage,
             //     "background-origin" => Property::BackgroundOrigin,
             //     "background-position" => Property::BackgroundPosition,
@@ -449,7 +473,7 @@ impl CssParser {
                 self.skip_white();
                 self.consume_expected(":")?;
                 self.skip_white();
-                let p = self.parse_expected::<JustifyContentProperty>()?;
+                let p = self.parse_expected_prop_value::<JustifyContentProperty>()?;
                 self.consume_expected(";")?;
                 Property::JustifyContent(p)
             }
@@ -533,8 +557,8 @@ impl CssParser {
             //     "word-wrap" => Property::WordWrap,
             //     "writing-mode" => Property::WritingMode,
             "z-index" => {
-                let p = s
-                    .parse()
+                let p = self
+                    .parse_expected_prop_value()
                     .map_err(|_| format!("invalid z-index, expect number got {:?}", s))?;
                 self.consume_expected(";")?;
                 Property::ZIndex(p)
@@ -604,6 +628,20 @@ impl CssParser {
     {
         let s = self.expect_consume()?;
         s.parse::<ExpectedType>()
+    }
+
+    fn parse_expected_prop_value<ExpectedType>(
+        &mut self,
+    ) -> Result<PropertyValue<ExpectedType>, String>
+    where
+        ExpectedType: FromStr<Err = String>,
+    {
+        let s = self.expect_consume()?;
+        if s.starts_with("--") {
+            Ok(PropertyValue::Variable(s[2..].to_string()))
+        } else {
+            s.parse::<ExpectedType>().map(|v| PropertyValue::Other(v))
+        }
     }
 
     fn current_is_semicolon(&mut self) -> bool {
@@ -997,7 +1035,7 @@ impl FromStr for AnimationTimingFunction {
                 let n_start = "steps(".len();
                 let (n_end, _) = s
                     .char_indices()
-                    .find(|(idx, c)| *c == ',')
+                    .find(|(_idx, c)| *c == ',')
                     .ok_or_else(|| format!("invalid animation timing function {:?}", s))?;
                 let b = s[n_start..n_end]
                     .trim()
@@ -1057,13 +1095,13 @@ pub enum AnimationProperty {
     Inherit,
     Custom(
         String,
-        TimeProperty,
-        AnimationTimingFunction,
-        AnimationDelayProperty,
-        usize,
-        AnimationDirectionProperty,
-        AnimationFillModeProperty,
-        AnimationPlayStateProperty,
+        PropertyValue<TimeProperty>,
+        PropertyValue<AnimationTimingFunction>,
+        PropertyValue<AnimationDelayProperty>,
+        PropertyValue<usize>,
+        PropertyValue<AnimationDirectionProperty>,
+        PropertyValue<AnimationFillModeProperty>,
+        PropertyValue<AnimationPlayStateProperty>,
     ),
 }
 
@@ -1217,26 +1255,92 @@ impl FromStr for ColorProperty {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum BackgroundClipProperty {
+    BorderBox,
+    PaddingBox,
+    ContentBox,
+    Initial,
+    Inherit,
+}
+
+impl FromStr for BackgroundClipProperty {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let p = match s {
+            "border-box" => BackgroundClipProperty::BorderBox,
+            "padding-box" => BackgroundClipProperty::PaddingBox,
+            "content-box" => BackgroundClipProperty::ContentBox,
+            "initial" => BackgroundClipProperty::Initial,
+            "inherit" => BackgroundClipProperty::Inherit,
+            _ => return Err(format!("invalid background clip {:?}", s)),
+        };
+        Ok(p)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum BackgroundBlendModeProperty {
+    Normal,
+    Multiply,
+    Screen,
+    Overlay,
+    Darken,
+    Lighten,
+    ColorDodge,
+    Saturation,
+    Color,
+    Luminosity,
+}
+
+impl FromStr for BackgroundBlendModeProperty {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let p = match s {
+            "normal" => BackgroundBlendModeProperty::Normal,
+            "multiply" => BackgroundBlendModeProperty::Multiply,
+            "screen" => BackgroundBlendModeProperty::Screen,
+            "overlay" => BackgroundBlendModeProperty::Overlay,
+            "darken" => BackgroundBlendModeProperty::Darken,
+            "lighten" => BackgroundBlendModeProperty::Lighten,
+            "color-dodge" => BackgroundBlendModeProperty::ColorDodge,
+            "saturation" => BackgroundBlendModeProperty::Saturation,
+            "color" => BackgroundBlendModeProperty::Color,
+            "luminosity" => BackgroundBlendModeProperty::Luminosity,
+            _ => return Err(format!("invalid background blend mode {:?}", s)),
+        };
+        Ok(p)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum PropertyValue<T> {
+    Variable(String),
+    Other(T),
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Property {
-    AlignContent(AlignContentProperty),
-    AlignItems(AlignItemsProperty),
-    AlignSelf(AlignSelfProperty),
-    All(AllProperty),
-    Animation(AnimationProperty),
-    AnimationDelay(TimeProperty),
-    AnimationDirection(AnimationDirectionProperty),
-    AnimationDuration(AnimationDirectionProperty),
-    AnimationFillMode(AnimationFillModeProperty),
-    AnimationIterationCount(usize),
-    AnimationName(String),
-    AnimationPlayState(AnimationPlayStateProperty),
-    AnimationTimingFunction(AnimationTimingFunction),
-    BackfaceVisibility(BackfaceVisibilityProperty),
+    AlignContent(PropertyValue<AlignContentProperty>),
+    AlignItems(PropertyValue<AlignItemsProperty>),
+    AlignSelf(PropertyValue<AlignSelfProperty>),
+    All(PropertyValue<AllProperty>),
+    Animation(PropertyValue<AnimationProperty>),
+    AnimationDelay(PropertyValue<TimeProperty>),
+    AnimationDirection(PropertyValue<AnimationDirectionProperty>),
+    AnimationDuration(PropertyValue<AnimationDirectionProperty>),
+    AnimationFillMode(PropertyValue<AnimationFillModeProperty>),
+    AnimationIterationCount(PropertyValue<usize>),
+    AnimationName(PropertyValue<String>),
+    AnimationPlayState(PropertyValue<AnimationPlayStateProperty>),
+    AnimationTimingFunction(PropertyValue<AnimationTimingFunction>),
+    BackfaceVisibility(PropertyValue<BackfaceVisibilityProperty>),
     Background(String),
     BackgroundAttachment(String),
-    BackgroundBlendMode(String),
-    BackgroundClip(String),
-    BackgroundColor(String),
+    BackgroundBlendMode(PropertyValue<BackgroundBlendModeProperty>),
+    BackgroundClip(PropertyValue<BackgroundClipProperty>),
+    BackgroundColor(PropertyValue<ColorProperty>),
     BackgroundImage(String),
     BackgroundOrigin(String),
     BackgroundPosition(String),
@@ -1350,7 +1454,7 @@ pub enum Property {
     Hyphens(String),
     AtImport(String),
     Isolation(String),
-    JustifyContent(JustifyContentProperty),
+    JustifyContent(PropertyValue<JustifyContentProperty>),
     AtKeyframes(String),
     Left(String),
     LetterSpacing(String),
@@ -1430,7 +1534,7 @@ pub enum Property {
     WordSpacing(String),
     WordWrap(String),
     WritingMode(String),
-    ZIndex(ZIndexProperty),
+    ZIndex(PropertyValue<ZIndexProperty>),
     Variable(String, String),
 }
 
@@ -1679,7 +1783,9 @@ mod tests {
             Ok(vec![Selector {
                 path: vec![SelectorPart::TagName("p".to_string())],
                 block: Block {
-                    properties: vec![Property::AlignContent(AlignContentProperty::FlexStart),]
+                    properties: vec![Property::AlignContent(PropertyValue::Other(
+                        AlignContentProperty::FlexStart
+                    )),]
                 },
             }]),
         )
@@ -1784,7 +1890,9 @@ mod tests {
                 block: Block {
                     properties: vec![
                         Property::Display(DisplayProperty::Block),
-                        Property::JustifyContent(JustifyContentProperty::Initial),
+                        Property::JustifyContent(PropertyValue::Other(
+                            JustifyContentProperty::Initial
+                        )),
                     ]
                 },
             }]),
@@ -1801,7 +1909,9 @@ mod tests {
             Ok(vec![Selector {
                 path: vec![SelectorPart::TagName("p".to_string())],
                 block: Block {
-                    properties: vec![Property::Animation(AnimationProperty::Initial),]
+                    properties: vec![Property::Animation(PropertyValue::Other(
+                        AnimationProperty::Initial
+                    ))]
                 },
             }]),
         );
@@ -1813,28 +1923,31 @@ mod tests {
             Ok(vec![Selector {
                 path: vec![SelectorPart::TagName("p".to_string())],
                 block: Block {
-                    properties: vec![Property::Animation(AnimationProperty::Inherit),]
+                    properties: vec![Property::Animation(PropertyValue::Other(
+                        AnimationProperty::Inherit
+                    )),]
                 },
             }]),
         );
         let source = r#"p { animation: some; }"#;
         let tokens = CssTokenizer::new(source).tokenize();
         let result = CssParser::new(tokens).parse();
+        let animation = Property::Animation(PropertyValue::Other(AnimationProperty::Custom(
+            "some".to_string(),
+            PropertyValue::Other(TimeProperty::Seconds(0)),
+            PropertyValue::Other(AnimationTimingFunction::Ease),
+            PropertyValue::Other(AnimationDelayProperty::Time(TimeProperty::Seconds(0))),
+            PropertyValue::Other(1),
+            PropertyValue::Other(AnimationDirectionProperty::Normal),
+            PropertyValue::Other(AnimationFillModeProperty::None),
+            PropertyValue::Other(AnimationPlayStateProperty::Running),
+        )));
         assert_eq!(
             result,
             Ok(vec![Selector {
                 path: vec![SelectorPart::TagName("p".to_string())],
                 block: Block {
-                    properties: vec![Property::Animation(AnimationProperty::Custom(
-                        "some".to_string(),
-                        TimeProperty::Seconds(0),
-                        AnimationTimingFunction::Ease,
-                        AnimationDelayProperty::Time(TimeProperty::Seconds(0)),
-                        1,
-                        AnimationDirectionProperty::Normal,
-                        AnimationFillModeProperty::None,
-                        AnimationPlayStateProperty::Running,
-                    )),]
+                    properties: vec![animation]
                 },
             }]),
         );
