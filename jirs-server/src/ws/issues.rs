@@ -51,13 +51,13 @@ impl WsHandler<UpdateIssueHandler> for WebSocketActor {
             (IssueFieldId::Priority, PayloadVariant::IssuePriority(p)) => {
                 msg.priority = Some(p);
             }
-            (IssueFieldId::Estimate, PayloadVariant::OptionI32(o)) => {
+            (IssueFieldId::Estimate, PayloadVariant::OptionF64(o)) => {
                 msg.estimate = o;
             }
-            (IssueFieldId::TimeSpend, PayloadVariant::OptionI32(o)) => {
+            (IssueFieldId::TimeSpend, PayloadVariant::OptionF64(o)) => {
                 msg.time_spent = o;
             }
-            (IssueFieldId::TimeRemaining, PayloadVariant::OptionI32(o)) => {
+            (IssueFieldId::TimeRemaining, PayloadVariant::OptionF64(o)) => {
                 msg.time_remaining = o;
             }
             _ => (),

@@ -73,15 +73,13 @@ pub fn tracking_widget(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
 
 #[inline]
 fn calc_bar_width(
-    estimate: Option<i32>,
-    time_spent: Option<i32>,
-    time_remaining: Option<i32>,
+    estimate: Option<f64>,
+    time_spent: Option<f64>,
+    time_remaining: Option<f64>,
 ) -> f64 {
     match (estimate, time_spent, time_remaining) {
-        (_, Some(spent), Some(remaining)) => {
-            ((spent as f64 / (spent as f64 + remaining as f64)) * 100f64).min(100f64)
-        }
-        (Some(estimate), Some(spent), _) => ((spent as f64 / estimate as f64) * 100f64).min(100f64),
+        (_, Some(spent), Some(remaining)) => ((spent / (spent + remaining)) * 100f64).min(100f64),
+        (Some(estimate), Some(spent), _) => ((spent / estimate) * 100f64).min(100f64),
         (None, None, _) => 100f64,
         (None, _, _) => 0f64,
         _ => 0f64,

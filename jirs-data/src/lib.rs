@@ -429,6 +429,15 @@ impl std::fmt::Display for InvitationState {
     }
 }
 
+#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
+#[cfg_attr(feature = "backend", sql_type = "TimeTrackingType")]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
+pub enum TimeTracking {
+    Untracked,
+    Fibonacci,
+    Hourly,
+}
+
 #[derive(Clone, Serialize, Debug, PartialEq)]
 pub struct ErrorResponse {
     pub errors: Vec<String>,
@@ -444,6 +453,7 @@ pub struct Project {
     pub category: ProjectCategory,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub time_tracking: TimeTracking,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
@@ -456,9 +466,9 @@ pub struct Issue {
     pub list_position: i32,
     pub description: Option<String>,
     pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
+    pub estimate: Option<f64>,
+    pub time_spent: Option<f64>,
+    pub time_remaining: Option<f64>,
     pub reporter_id: UserId,
     pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
@@ -517,7 +527,7 @@ pub struct Token {
     pub bind_token: Option<Uuid>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Hash)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct UpdateIssuePayload {
     pub title: String,
     pub issue_type: IssueType,
@@ -526,9 +536,9 @@ pub struct UpdateIssuePayload {
     pub list_position: i32,
     pub description: Option<String>,
     pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
+    pub estimate: Option<f64>,
+    pub time_spent: Option<f64>,
+    pub time_remaining: Option<f64>,
     pub project_id: ProjectId,
     pub reporter_id: UserId,
     pub user_ids: Vec<UserId>,
@@ -585,9 +595,9 @@ pub struct CreateIssuePayload {
     pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
+    pub estimate: Option<f64>,
+    pub time_spent: Option<f64>,
+    pub time_remaining: Option<f64>,
     pub project_id: ProjectId,
     pub user_ids: Vec<UserId>,
     pub reporter_id: UserId,
@@ -605,6 +615,7 @@ pub struct UpdateProjectPayload {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum PayloadVariant {
     OptionI32(Option<i32>),
+    OptionF64(Option<f64>),
     VecI32(Vec<i32>),
     I32(i32),
     String(String),

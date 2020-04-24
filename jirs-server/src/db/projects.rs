@@ -2,7 +2,7 @@ use actix::{Handler, Message};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use jirs_data::{Project, ProjectCategory};
+use jirs_data::{Project, ProjectCategory, TimeTracking};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
@@ -46,6 +46,7 @@ pub struct UpdateProject {
     pub url: Option<String>,
     pub description: Option<String>,
     pub category: Option<ProjectCategory>,
+    pub time_tracking: Option<TimeTracking>,
 }
 
 impl Message for UpdateProject {
@@ -68,9 +69,10 @@ impl Handler<UpdateProject> for DbExecutor {
                 msg.url.map(|v| url.eq(v)),
                 msg.description.map(|v| description.eq(v)),
                 msg.category.map(|v| category.eq(v)),
+                msg.time_tracking.map(|v| time_tracking.eq(v)),
             ))
             .execute(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
 
         projects
             .filter(id.eq(msg.project_id))

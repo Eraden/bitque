@@ -35,6 +35,7 @@ impl WsHandler<UpdateProjectPayload> for WebSocketActor {
             url: msg.url,
             description: msg.description,
             category: msg.category,
+            time_tracking: None,
         })) {
             Ok(Ok(project)) => project,
             _ => return Ok(None),

@@ -2,7 +2,9 @@ use std::io::Write;
 
 use diesel::{deserialize::*, pg::*, serialize::*, *};
 
-use crate::{InvitationState, IssuePriority, IssueStatus, IssueType, ProjectCategory, UserRole};
+use crate::{
+    InvitationState, IssuePriority, IssueStatus, IssueType, ProjectCategory, TimeTracking, UserRole,
+};
 
 #[derive(SqlType)]
 #[postgres(type_name = "IssuePriorityType")]
@@ -237,6 +239,46 @@ impl ToSql<InvitationStateType, Pg> for InvitationState {
             InvitationState::Sent => out.write_all(b"sent")?,
             InvitationState::Accepted => out.write_all(b"accepted")?,
             InvitationState::Revoked => out.write_all(b"revoked")?,
+        }
+        Ok(IsNull::No)
+    }
+}
+
+#[derive(SqlType)]
+#[postgres(type_name = "TimeTrackingType")]
+pub struct TimeTrackingType;
+
+impl diesel::query_builder::QueryId for TimeTrackingType {
+    type QueryId = TimeTracking;
+}
+
+fn time_tracking_from_sql(bytes: Option<&[u8]>) -> deserialize::Result<TimeTracking> {
+    match not_none!(bytes) {
+        b"untracked" => Ok(TimeTracking::Untracked),
+        b"fibnachi" => Ok(TimeTracking::Fibonacci),
+        b"hourly" => Ok(TimeTracking::Hourly),
+        _ => Ok(TimeTracking::Untracked),
+    }
+}
+
+impl FromSql<TimeTrackingType, Pg> for TimeTracking {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<TimeTracking> {
+        time_tracking_from_sql(bytes)
+    }
+}
+
+impl FromSql<sql_types::Text, Pg> for TimeTracking {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<TimeTracking> {
+        time_tracking_from_sql(bytes)
+    }
+}
+
+impl ToSql<TimeTrackingType, Pg> for TimeTracking {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        match *self {
+            TimeTracking::Untracked => out.write_all(b"untracked")?,
+            TimeTracking::Fibonacci => out.write_all(b"fibnacci")?,
+            TimeTracking::Hourly => out.write_all(b"hourly")?,
         }
         Ok(IsNull::No)
     }

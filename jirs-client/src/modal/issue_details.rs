@@ -139,22 +139,22 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpend)),
             value,
         ) => {
-            modal.payload.time_spent = value.parse::<i32>().ok();
+            modal.payload.time_spent = value.parse::<f64>().ok();
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
                 IssueFieldId::TimeSpend,
-                PayloadVariant::OptionI32(modal.payload.time_spent),
+                PayloadVariant::OptionF64(modal.payload.time_spent),
             ));
         }
         Msg::InputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
             value,
         ) => {
-            modal.payload.time_remaining = value.parse::<i32>().ok();
+            modal.payload.time_remaining = value.parse::<f64>().ok();
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
                 IssueFieldId::TimeRemaining,
-                PayloadVariant::OptionI32(modal.payload.time_remaining),
+                PayloadVariant::OptionF64(modal.payload.time_remaining),
             ));
         }
         Msg::ModalChanged(FieldChange::TabChanged(
@@ -183,13 +183,13 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::InputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
             value,
-        ) => match value.parse::<i32>() {
+        ) => match value.parse::<f64>() {
             Ok(n) if !value.is_empty() => {
                 modal.payload.estimate = Some(n);
                 send_ws_msg(WsMsg::IssueUpdateRequest(
                     modal.id,
                     IssueFieldId::TimeRemaining,
-                    PayloadVariant::OptionI32(modal.payload.estimate),
+                    PayloadVariant::OptionF64(modal.payload.estimate),
                 ));
             }
             _ if value.is_empty() => {
@@ -197,7 +197,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 send_ws_msg(WsMsg::IssueUpdateRequest(
                     modal.id,
                     IssueFieldId::TimeRemaining,
-                    PayloadVariant::OptionI32(modal.payload.estimate),
+                    PayloadVariant::OptionF64(modal.payload.estimate),
                 ));
             }
             _ => {}

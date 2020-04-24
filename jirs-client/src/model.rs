@@ -9,7 +9,7 @@ use crate::shared::styled_editor::Mode;
 use crate::shared::styled_select::StyledSelectState;
 use crate::{EditIssueModalSection, FieldId, ProjectFieldId, HOST_URL};
 
-#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
     AddIssue(Box<AddIssueModal>),
     EditIssue(IssueId, Box<EditIssueModal>),
@@ -18,14 +18,14 @@ pub enum ModalType {
     TimeTracking(IssueId),
 }
 
-#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct CommentForm {
     pub id: Option<CommentId>,
     pub body: String,
     pub creating: bool,
 }
 
-#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct EditIssueModal {
     pub id: i32,
     pub link_copied: bool,
@@ -87,7 +87,7 @@ impl EditIssueModal {
     }
 }
 
-#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct AddIssueModal {
     pub title: String,
     pub issue_type: IssueType,
@@ -95,9 +95,9 @@ pub struct AddIssueModal {
     pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
+    pub estimate: Option<f64>,
+    pub time_spent: Option<f64>,
+    pub time_remaining: Option<f64>,
     pub project_id: Option<i32>,
     pub user_ids: Vec<i32>,
     pub reporter_id: Option<i32>,

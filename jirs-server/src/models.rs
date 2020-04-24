@@ -2,7 +2,9 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use jirs_data::{InvitationState, IssuePriority, IssueStatus, IssueType, ProjectCategory};
+use jirs_data::{
+    InvitationState, IssuePriority, IssueStatus, IssueType, ProjectCategory, TimeTracking,
+};
 
 use crate::schema::*;
 
@@ -24,9 +26,9 @@ pub struct Issue {
     pub list_position: i32,
     pub description: Option<String>,
     pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
+    pub estimate: Option<f64>,
+    pub time_spent: Option<f64>,
+    pub time_remaining: Option<f64>,
     pub reporter_id: i32,
     pub project_id: i32,
     pub created_at: NaiveDateTime,
@@ -67,9 +69,9 @@ pub struct CreateIssueForm {
     pub list_position: i32,
     pub description: Option<String>,
     pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
+    pub estimate: Option<f64>,
+    pub time_spent: Option<f64>,
+    pub time_remaining: Option<f64>,
     pub reporter_id: i32,
     pub project_id: i32,
 }
@@ -88,6 +90,7 @@ pub struct UpdateProjectForm {
     pub url: Option<String>,
     pub description: Option<String>,
     pub category: Option<ProjectCategory>,
+    pub time_tracking: Option<TimeTracking>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Insertable)]

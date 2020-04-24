@@ -117,7 +117,6 @@ impl Application {
         output_timestamp: SystemTime,
     ) -> Result<bool, String> {
         let input_dir = input
-            .clone()
             .parent()
             .ok_or_else(|| format!("Not a valid path {:?}", input))?;
 
@@ -143,7 +142,6 @@ impl Application {
     fn parse_file(&mut self, input: &Path) -> Result<Css, String> {
         let file_path = input.display().to_string();
         let input_dir = input
-            .clone()
             .parent()
             .ok_or_else(|| format!("Not a valid path {:?}", input))?;
 
@@ -179,7 +177,6 @@ impl Application {
                         .replace(";", "")
                         .to_string();
                     let child = input_dir
-                        .clone()
                         .join(imported.as_str())
                         .canonicalize()
                         .map_err(|e| format!("{}", e))?;
@@ -292,11 +289,11 @@ fn main() -> Result<(), String> {
 
     let output_timestamp = matches
         .value_of("output")
-        .ok_or(std::io::Error::from_raw_os_error(0))
-        .and_then(|path| File::open(path))
+        .ok_or_else(|| std::io::Error::from_raw_os_error(0))
+        .and_then(File::open)
         .and_then(|file| file.metadata())
         .and_then(|meta| meta.modified())
-        .unwrap_or_else(|_| SystemTime::UNIX_EPOCH.clone());
+        .unwrap_or_else(|_| SystemTime::UNIX_EPOCH);
 
     if app.check_timestamps(root, output_timestamp)? {
         return Ok(());
@@ -304,7 +301,7 @@ fn main() -> Result<(), String> {
 
     let (tx, rx) = channel();
     app.pipe(tx.clone());
-    let mut watcher = watcher(tx.clone(), Duration::from_secs(1)).unwrap();
+    let mut watcher = watcher(tx, Duration::from_secs(1)).unwrap();
 
     app.parse()?;
     app.print();
