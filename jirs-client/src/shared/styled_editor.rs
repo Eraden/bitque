@@ -158,16 +158,6 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
     div![
         attrs![At::Class => "styledEditor"],
         label![
-            if mode == Mode::Editor {
-                class!["navbar editorTab activeTab"]
-            } else {
-                class!["navbar editorTab"]
-            },
-            attrs![At::For => editor_id.as_str()],
-            "Editor",
-            on_editor_clicked
-        ],
-        label![
             if mode == Mode::View {
                 class!["navbar viewTab activeTab"]
             } else {
@@ -176,6 +166,16 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
             attrs![At::For => view_id.as_str()],
             "View",
             on_view_clicked
+        ],
+        label![
+            if mode == Mode::Editor {
+                class!["navbar editorTab activeTab"]
+            } else {
+                class!["navbar editorTab"]
+            },
+            attrs![At::For => editor_id.as_str()],
+            "Editor",
+            on_editor_clicked
         ],
         editor_radio_node,
         text_area,
