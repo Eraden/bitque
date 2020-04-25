@@ -5,3 +5,5 @@ web.toml
 web.test.toml
 db.toml
 db.test.toml
+pkg
+jirs-client/pkg
