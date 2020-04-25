@@ -78,7 +78,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 m.top_type_state.text_filter = text;
             }
         }
-        Msg::InputChanged(FieldId::TextFilterBoard, text) => {
+        Msg::StrInputChanged(FieldId::TextFilterBoard, text) => {
             project_page.text_filter = text;
         }
         Msg::ProjectAvatarFilterChanged(user_id, active) => {

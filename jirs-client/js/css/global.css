@@ -63,19 +63,24 @@ select::-ms-value {
 [role="button"], button, input, select, textarea {
     outline: none;
 }
+
 [role="button"]:disabled, button:disabled, input:disabled, select:disabled, textarea:disabled {
-     opacity: 1;
+    opacity: 1;
 }
+
 [role="button"], button, input, textarea {
     appearance: none;
 }
+
 select:-moz-focusring {
     color: transparent;
     text-shadow: 0 0 0 #000;
 }
+
 select::-ms-expand {
     display: none;
 }
+
 select option {
     color: var(--textDark)
 }
@@ -88,14 +93,17 @@ p a::-webkit-input-placeholder {
     color: var(--textLight);
     opacity: 1 !important;
 }
+
 p a:-moz-placeholder {
     color: var(--textLight);
     opacity: 1 !important;
 }
+
 p a::-moz-placeholder {
     color: var(--textLight);
     opacity: 1 !important;
 }
+
 p a:-ms-input-placeholder {
     color: var(--textLight);
     opacity: 1 !important;

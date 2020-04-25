@@ -21,7 +21,7 @@ pub fn update(msg: Msg, model: &mut Model, _orders: &mut impl Orders<Msg>) {
         _ => return,
     };
 
-    if let Msg::InputChanged(FieldId::Invite(InviteFieldId::Token), text) = msg {
+    if let Msg::StrInputChanged(FieldId::Invite(InviteFieldId::Token), text) = msg {
         page.token_touched = true;
         page.token = text;
     }

@@ -30,11 +30,11 @@ pub fn update(msg: Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>
     };
 
     match msg {
-        Msg::InputChanged(FieldId::SignUp(SignUpFieldId::Username), value) => {
+        Msg::StrInputChanged(FieldId::SignUp(SignUpFieldId::Username), value) => {
             page.username = value;
             page.username_touched = true;
         }
-        Msg::InputChanged(FieldId::SignUp(SignUpFieldId::Email), value) => {
+        Msg::StrInputChanged(FieldId::SignUp(SignUpFieldId::Email), value) => {
             page.email = value;
             page.email_touched = true;
         }

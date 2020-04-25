@@ -108,6 +108,7 @@ impl std::fmt::Display for FieldId {
                 ProjectFieldId::Url => f.write_str("projectSettings-url"),
                 ProjectFieldId::Description => f.write_str("projectSettings-description"),
                 ProjectFieldId::Category => f.write_str("projectSettings-category"),
+                ProjectFieldId::TimeTracking => f.write_str("projectSettings-timeTracking"),
             },
             FieldId::SignIn(sub) => match sub {
                 SignInFieldId::Email => f.write_str("login-email"),
@@ -197,7 +198,8 @@ pub enum Msg {
     UnlockDragOver,
 
     // inputs
-    InputChanged(FieldId, String),
+    StrInputChanged(FieldId, String),
+    U32InputChanged(FieldId, u32),
 
     // issues
     AddIssue,

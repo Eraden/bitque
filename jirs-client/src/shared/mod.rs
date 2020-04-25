@@ -10,6 +10,7 @@ pub mod aside;
 pub mod navbar_left;
 pub mod styled_avatar;
 pub mod styled_button;
+pub mod styled_checkbox;
 pub mod styled_confirm_modal;
 pub mod styled_editor;
 pub mod styled_field;
@@ -23,6 +24,12 @@ pub mod styled_select_child;
 pub mod styled_textarea;
 pub mod styled_tooltip;
 pub mod tracking_widget;
+
+pub trait ToChild {
+    type Builder;
+
+    fn to_child(&self) -> Self::Builder;
+}
 
 pub fn find_issue(model: &Model, issue_id: IssueId) -> Option<&Issue> {
     model.issues.iter().find(|issue| issue.id == issue_id)

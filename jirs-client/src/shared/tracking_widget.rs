@@ -1,6 +1,6 @@
 use seed::{prelude::*, *};
 
-use jirs_data::UpdateIssuePayload;
+use jirs_data::{TimeTracking, UpdateIssuePayload};
 
 use crate::model::{EditIssueModal, ModalType, Model};
 use crate::shared::styled_icon::{Icon, StyledIcon};
@@ -23,7 +23,15 @@ pub fn tracking_link(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     ]
 }
 
-pub fn tracking_widget(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
+pub fn tracking_widget(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
+    let time_tracking_type = model
+        .project
+        .as_ref()
+        .map(|p| p.time_tracking)
+        .unwrap_or_else(|| TimeTracking::Untracked);
+    if time_tracking_type == TimeTracking::Untracked {
+        return empty![];
+    }
     let EditIssueModal {
         payload:
             UpdateIssuePayload {
@@ -42,15 +50,17 @@ pub fn tracking_widget(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .into_node();
     let bar_width = calc_bar_width(*estimate, *time_spent, *time_remaining);
 
-    let spent_text = if let Some(time) = time_spent {
-        format!("{}h logged", time)
-    } else {
-        "No time logged".to_string()
+    let spent_text = match (time_spent, time_tracking_type) {
+        (Some(time), TimeTracking::Hourly) => format!("{}h logged", time),
+        (Some(time), TimeTracking::Fibonacci) => format!("{} point logged", time),
+        _ => "No time logged".to_string(),
     };
 
-    let remaining_node: Node<Msg> = match (time_remaining, estimate) {
-        (Some(n), _) => div![format!("{}h remaining", n)],
-        (_, Some(n)) => div![format!("{}h estimated", n)],
+    let remaining_node: Node<Msg> = match (time_remaining, estimate, time_tracking_type) {
+        (Some(n), _, TimeTracking::Hourly) => div![format!("{}h remaining", n)],
+        (_, Some(n), TimeTracking::Hourly) => div![format!("{}h estimated", n)],
+        (Some(n), _, TimeTracking::Fibonacci) => div![format!("{} remaining", n)],
+        (_, Some(n), TimeTracking::Fibonacci) => div![format!("{} estimated", n)],
         _ => empty![],
     };
 

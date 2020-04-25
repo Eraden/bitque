@@ -126,7 +126,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         let target = event.target().unwrap();
         let input = seed::to_input(&target);
         let value = input.value();
-        Msg::InputChanged(field_id, value)
+        Msg::StrInputChanged(field_id, value)
     });
     let key_handler = ev(Ev::KeyUp, move |event| {
         event.stop_propagation();

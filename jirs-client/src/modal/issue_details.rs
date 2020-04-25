@@ -105,7 +105,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 PayloadVariant::IssuePriority(modal.payload.priority),
             ));
         }
-        Msg::InputChanged(
+        Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Title)),
             value,
         ) => {
@@ -116,7 +116,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 PayloadVariant::String(modal.payload.title.clone()),
             ));
         }
-        Msg::InputChanged(
+        Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Description)),
             value,
         ) => {
@@ -135,7 +135,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 ),
             ));
         }
-        Msg::InputChanged(
+        Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpend)),
             value,
         ) => {
@@ -146,7 +146,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 PayloadVariant::OptionF64(modal.payload.time_spent),
             ));
         }
-        Msg::InputChanged(
+        Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
             value,
         ) => {
@@ -174,13 +174,13 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             }
         }
         // comments
-        Msg::InputChanged(
+        Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Comment(CommentFieldId::Body)),
             text,
         ) => {
             modal.comment_form.body = text.clone();
         }
-        Msg::InputChanged(
+        Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
             value,
         ) => match value.parse::<f64>() {
@@ -670,32 +670,47 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let estimate = StyledInput::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-        IssueFieldId::Estimate,
-    )))
-    .valid(true)
-    .value(
-        payload
-            .estimate
-            .as_ref()
-            .map(|n| n.to_string())
-            .unwrap_or_default(),
-    )
-    .build()
-    .into_node();
-    let estimate_field = StyledField::build()
-        .input(estimate)
-        .label("Original Estimate (hours)")
-        .build()
-        .into_node();
+    let time_tracking_type = model
+        .project
+        .as_ref()
+        .map(|p| p.time_tracking)
+        .unwrap_or_else(|| TimeTracking::Untracked);
 
-    let tracking = tracking_link(model, modal);
-    let tracking_field = StyledField::build()
-        .label("TIME TRACKING")
-        .tip("")
-        .input(tracking)
+    let (estimate_field, tracking_field) = if time_tracking_type != TimeTracking::Untracked {
+        let estimate = StyledInput::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+            IssueFieldId::Estimate,
+        )))
+        .valid(true)
+        .value(
+            payload
+                .estimate
+                .as_ref()
+                .map(|n| match time_tracking_type {
+                    TimeTracking::Fibonacci => format!("{}", n),
+                    TimeTracking::Hourly => format!("{:.1}", n),
+                    _ => "".to_string(),
+                })
+                .unwrap_or_default(),
+        )
         .build()
         .into_node();
+        let estimate_field = StyledField::build()
+            .input(estimate)
+            .label("Original Estimate (hours)")
+            .build()
+            .into_node();
+
+        let tracking = tracking_link(model, modal);
+        let tracking_field = StyledField::build()
+            .label("TIME TRACKING")
+            .tip("")
+            .input(tracking)
+            .build()
+            .into_node();
+        (estimate_field, tracking_field)
+    } else {
+        (empty![], empty![])
+    };
 
     div![
         attrs![At::Class => "right"],

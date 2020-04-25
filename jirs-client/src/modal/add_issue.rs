@@ -58,10 +58,10 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             orders.skip().send_msg(Msg::ModalDropped);
         }
 
-        Msg::InputChanged(FieldId::AddIssueModal(IssueFieldId::Description), value) => {
+        Msg::StrInputChanged(FieldId::AddIssueModal(IssueFieldId::Description), value) => {
             modal.description = Some(value.clone());
         }
-        Msg::InputChanged(FieldId::AddIssueModal(IssueFieldId::Title), value) => {
+        Msg::StrInputChanged(FieldId::AddIssueModal(IssueFieldId::Title), value) => {
             modal.title = value.clone();
         }
 

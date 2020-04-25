@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 use jirs_data::*;
 
+use crate::shared::styled_checkbox::StyledCheckboxState;
 use crate::shared::styled_editor::Mode;
 use crate::shared::styled_select::StyledSelectState;
 use crate::{EditIssueModalSection, FieldId, ProjectFieldId, HOST_URL};
@@ -199,6 +200,7 @@ pub struct ProjectSettingsPage {
     pub payload: UpdateProjectPayload,
     pub project_category_state: StyledSelectState,
     pub description_mode: crate::shared::styled_editor::Mode,
+    pub time_tracking: StyledCheckboxState,
 }
 
 impl ProjectSettingsPage {
@@ -224,6 +226,10 @@ impl ProjectSettingsPage {
             project_category_state: StyledSelectState::new(FieldId::ProjectSettings(
                 ProjectFieldId::Category,
             )),
+            time_tracking: StyledCheckboxState::new(
+                FieldId::ProjectSettings(ProjectFieldId::TimeTracking),
+                0,
+            ),
         }
     }
 }

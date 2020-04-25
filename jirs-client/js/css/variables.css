@@ -45,19 +45,22 @@
     --issue-background-done: var(--success);
 }
 
-:root /* sizes */ {
+:root /* sizes */
+{
     --appNavBarLeftWidth: 64px;
     --secondarySideBarWidth: 230px;
     --minViewportWidth: 1000px;
 }
 
-:root /* z-index */ {
+:root /* z-index */
+{
     --modal: 20;
     --dropdown: 11;
     --navLeft: 10;
 }
 
-:root /* font */ {
+:root /* font */
+{
     --font-regular: "CircularStdBook";
     --font-medium: "CircularStdMedium";
     --font-bold: "CircularStdBold";

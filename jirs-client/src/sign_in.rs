@@ -33,15 +33,15 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     };
 
     match msg {
-        Msg::InputChanged(FieldId::SignIn(SignInFieldId::Username), value) => {
+        Msg::StrInputChanged(FieldId::SignIn(SignInFieldId::Username), value) => {
             page.username = value;
             page.username_touched = true;
         }
-        Msg::InputChanged(FieldId::SignIn(SignInFieldId::Email), value) => {
+        Msg::StrInputChanged(FieldId::SignIn(SignInFieldId::Email), value) => {
             page.email = value;
             page.email_touched = true;
         }
-        Msg::InputChanged(FieldId::SignIn(SignInFieldId::Token), value) => {
+        Msg::StrInputChanged(FieldId::SignIn(SignInFieldId::Token), value) => {
             page.token = value;
             page.token_touched = true;
         }

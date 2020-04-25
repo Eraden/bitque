@@ -431,11 +431,32 @@ impl std::fmt::Display for InvitationState {
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "TimeTrackingType")]
-#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Copy, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
 pub enum TimeTracking {
     Untracked,
     Fibonacci,
     Hourly,
+}
+
+impl Into<u32> for TimeTracking {
+    fn into(self) -> u32 {
+        match self {
+            TimeTracking::Untracked => 0,
+            TimeTracking::Fibonacci => 1,
+            TimeTracking::Hourly => 2,
+        }
+    }
+}
+
+impl Into<TimeTracking> for u32 {
+    fn into(self) -> TimeTracking {
+        match self {
+            0 => TimeTracking::Untracked,
+            1 => TimeTracking::Fibonacci,
+            2 => TimeTracking::Hourly,
+            _ => TimeTracking::Untracked,
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Debug, PartialEq)]
@@ -631,6 +652,7 @@ pub enum ProjectFieldId {
     Url,
     Description,
     Category,
+    TimeTracking,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]

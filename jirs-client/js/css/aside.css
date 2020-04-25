@@ -91,7 +91,8 @@ aside#navbar-left > .bottom {
     width: 100%;
 }
 
-aside#navbar-left > .bottom > .aboutTooltip {}
+aside#navbar-left > .bottom > .aboutTooltip {
+}
 
 aside#navbar-left:hover .item > .itemText {
     right: 0;

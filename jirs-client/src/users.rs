@@ -55,11 +55,11 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             page.user_role = role.into();
         }
-        Msg::InputChanged(FieldId::Users(UsersFieldId::Username), name) => {
+        Msg::StrInputChanged(FieldId::Users(UsersFieldId::Username), name) => {
             page.name = name;
             page.name_touched = true;
         }
-        Msg::InputChanged(FieldId::Users(UsersFieldId::Email), email) => {
+        Msg::StrInputChanged(FieldId::Users(UsersFieldId::Email), email) => {
             page.email = email;
             page.email_touched = true;
         }

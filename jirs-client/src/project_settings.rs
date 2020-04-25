@@ -1,17 +1,18 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{ProjectCategory, ToVec, WsMsg};
+use jirs_data::{ProjectCategory, TimeTracking, ToVec, WsMsg};
 
 use crate::api::send_ws_msg;
 use crate::model::{Model, Page, PageContent, ProjectSettingsPage};
 use crate::shared::styled_button::StyledButton;
+use crate::shared::styled_checkbox::StyledCheckbox;
 use crate::shared::styled_editor::StyledEditor;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
 use crate::shared::styled_select_child::ToStyledSelectChild;
 use crate::shared::styled_textarea::StyledTextarea;
-use crate::shared::{inner_layout, ToNode};
+use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::FieldChange::TabChanged;
 use crate::{model, FieldId, Msg, ProjectFieldId};
 
@@ -43,15 +44,17 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         _ => return,
     };
     page.project_category_state.update(&msg, orders);
+    page.time_tracking.update(&msg);
+
     match msg {
         Msg::ProjectSaveChanges => send_ws_msg(WsMsg::ProjectUpdateRequest(page.payload.clone())),
-        Msg::InputChanged(FieldId::ProjectSettings(ProjectFieldId::Name), text) => {
+        Msg::StrInputChanged(FieldId::ProjectSettings(ProjectFieldId::Name), text) => {
             page.payload.name = Some(text);
         }
-        Msg::InputChanged(FieldId::ProjectSettings(ProjectFieldId::Url), text) => {
+        Msg::StrInputChanged(FieldId::ProjectSettings(ProjectFieldId::Url), text) => {
             page.payload.url = Some(text);
         }
-        Msg::InputChanged(FieldId::ProjectSettings(ProjectFieldId::Description), text) => {
+        Msg::StrInputChanged(FieldId::ProjectSettings(ProjectFieldId::Description), text) => {
             page.payload.description = Some(text);
         }
         Msg::StyledSelectChanged(
@@ -157,6 +160,28 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
+    let time_tracking =
+        StyledCheckbox::build(FieldId::ProjectSettings(ProjectFieldId::TimeTracking))
+            .options(vec![
+                TimeTracking::Untracked.to_child(),
+                TimeTracking::Fibonacci.to_child(),
+                TimeTracking::Hourly.to_child(),
+            ])
+            .state(&page.time_tracking)
+            .add_class("timeTracking")
+            .build()
+            .into_node();
+    let time_tracking_type: TimeTracking = page.time_tracking.value.into();
+    let time_tracking_field = StyledField::build()
+        .input(time_tracking)
+        .tip(if time_tracking_type == TimeTracking::Hourly {
+            "Employees may feel intimidated by demands to track their time. Or they could feel that they’re constantly being watched and evaluated. And for overly ambitious managers, employee time tracking may open the doors to excessive micromanaging."
+        } else {
+            ""
+        })
+        .build()
+        .into_node();
+
     let save_button = StyledButton::build()
         .add_class("actionButton")
         .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectSaveChanges))
@@ -170,6 +195,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .add_field(url_field)
         .add_field(description_field)
         .add_field(category_field)
+        .add_field(time_tracking_field)
         .add_field(save_button)
         .build()
         .into_node();

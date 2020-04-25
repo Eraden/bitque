@@ -187,7 +187,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
             event.prevent_default();
         }
 
-        Msg::InputChanged(
+        Msg::StrInputChanged(
             id,
             if handler_disable_auto_resize {
                 value.trim().to_string()
