@@ -75,7 +75,7 @@ impl std::fmt::Display for FieldId {
                 EditIssueModalSection::Issue(IssueFieldId::Estimate) => {
                     f.write_str("estimateIssueEditModal")
                 }
-                EditIssueModalSection::Issue(IssueFieldId::TimeSpend) => {
+                EditIssueModalSection::Issue(IssueFieldId::TimeSpent) => {
                     f.write_str("timeSpendIssueEditModal")
                 }
                 EditIssueModalSection::Issue(IssueFieldId::TimeRemaining) => {
@@ -97,7 +97,7 @@ impl std::fmt::Display for FieldId {
                 IssueFieldId::Priority => f.write_str("issuePriorityAddIssueModal"),
                 IssueFieldId::Status => f.write_str("addIssueModal-status"),
                 IssueFieldId::Estimate => f.write_str("addIssueModal-estimate"),
-                IssueFieldId::TimeSpend => f.write_str("addIssueModal-timeSpend"),
+                IssueFieldId::TimeSpent => f.write_str("addIssueModal-timeSpend"),
                 IssueFieldId::TimeRemaining => f.write_str("addIssueModal-timeRemaining"),
                 IssueFieldId::ListPosition => f.write_str("addIssueModal-listPosition"),
             },
@@ -145,8 +145,15 @@ pub enum UsersPageChange {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum ProjectPageChange {
+    ResetForm,
+    SubmitForm,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum PageChanged {
     Users(UsersPageChange),
+    ProjectSettings(ProjectPageChange),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -186,7 +193,6 @@ pub enum Msg {
     ProjectToggleOnlyMy,
     ProjectToggleRecentlyUpdated,
     ProjectClearFilters,
-    ProjectSaveChanges,
 
     // dragging
     IssueDragStarted(IssueId),

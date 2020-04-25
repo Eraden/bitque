@@ -1,6 +1,6 @@
 use seed::{prelude::*, *};
 
-use jirs_data::WsMsg;
+use jirs_data::{TimeTracking, WsMsg};
 
 use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, EditIssueModal, ModalType, Model, Page};
@@ -12,7 +12,7 @@ use crate::{model, FieldChange, FieldId, Msg};
 mod add_issue;
 mod confirm_delete_issue;
 mod issue_details;
-mod time_tracking;
+pub mod time_tracking;
 
 pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -96,12 +96,20 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 }
 
 fn push_edit_modal(issue_id: i32, model: &mut Model) {
+    let time_tracking_type = model
+        .project
+        .as_ref()
+        .map(|p| p.time_tracking)
+        .unwrap_or_else(|| TimeTracking::Untracked);
     let modal = {
         let issue = match find_issue(model, issue_id) {
             Some(issue) => issue,
             _ => return,
         };
-        ModalType::EditIssue(issue_id, Box::new(EditIssueModal::new(issue)))
+        ModalType::EditIssue(
+            issue_id,
+            Box::new(EditIssueModal::new(issue, time_tracking_type)),
+        )
     };
     send_ws_msg(WsMsg::IssueCommentsRequest(issue_id));
     model.modals.push(modal);

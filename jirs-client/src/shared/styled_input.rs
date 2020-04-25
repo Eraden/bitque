@@ -4,6 +4,45 @@ use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
+pub struct StyledInputState {
+    id: FieldId,
+    pub value: String,
+}
+
+impl StyledInputState {
+    pub fn new<S>(id: FieldId, value: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self {
+            id,
+            value: value.into(),
+        }
+    }
+
+    pub fn to_i32(&self) -> Option<i32> {
+        self.value.parse::<i32>().ok()
+    }
+
+    pub fn to_f64(&self) -> Option<f64> {
+        self.value.parse::<f64>().ok()
+    }
+
+    pub fn represent_f64_as_i32(&self) -> Option<i32> {
+        self.to_f64().map(|f| (f * 10.0f64) as i32)
+    }
+
+    pub fn update(&mut self, msg: &Msg) {
+        match msg {
+            Msg::StrInputChanged(field_id, s) if field_id == &self.id => {
+                self.value = s.clone();
+            }
+            _ => (),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct StyledInput {
     id: FieldId,
@@ -57,6 +96,10 @@ impl StyledInputBuilder {
     {
         self.value = Some(v.into());
         self
+    }
+
+    pub fn state(self, state: &StyledInputState) -> Self {
+        self.value(state.value.as_str())
     }
 
     pub fn add_input_class<S>(mut self, name: S) -> Self

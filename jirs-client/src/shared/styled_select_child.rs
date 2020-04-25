@@ -1,12 +1,8 @@
 use seed::{prelude::*, *};
 
 use crate::shared::styled_select::Variant;
-use crate::shared::ToNode;
+use crate::shared::{ToChild, ToNode};
 use crate::Msg;
-
-pub trait ToStyledSelectChild {
-    fn to_select_child(&self) -> StyledSelectChildBuilder;
-}
 
 pub enum DisplayType {
     SelectOption,
@@ -180,8 +176,10 @@ pub fn render(values: StyledSelectChild) -> Node<Msg> {
     div![class![wrapper_class.as_str()], icon_node, label_node]
 }
 
-impl ToStyledSelectChild for jirs_data::User {
-    fn to_select_child(&self) -> StyledSelectChildBuilder {
+impl ToChild for jirs_data::User {
+    type Builder = StyledSelectChildBuilder;
+
+    fn to_child(&self) -> Self::Builder {
         let avatar = crate::shared::styled_avatar::StyledAvatar::build()
             .avatar_url(self.avatar_url.as_ref().cloned().unwrap_or_default())
             .size(20)
@@ -195,8 +193,9 @@ impl ToStyledSelectChild for jirs_data::User {
     }
 }
 
-impl ToStyledSelectChild for jirs_data::IssuePriority {
-    fn to_select_child(&self) -> StyledSelectChildBuilder {
+impl ToChild for jirs_data::IssuePriority {
+    type Builder = StyledSelectChildBuilder;
+    fn to_child(&self) -> StyledSelectChildBuilder {
         let icon = crate::shared::styled_icon::StyledIcon::build(self.clone().into())
             .add_class(self.to_string())
             .build()
@@ -211,8 +210,10 @@ impl ToStyledSelectChild for jirs_data::IssuePriority {
     }
 }
 
-impl ToStyledSelectChild for jirs_data::IssueStatus {
-    fn to_select_child(&self) -> StyledSelectChildBuilder {
+impl ToChild for jirs_data::IssueStatus {
+    type Builder = StyledSelectChildBuilder;
+
+    fn to_child(&self) -> StyledSelectChildBuilder {
         let text = self.to_label();
 
         StyledSelectChild::build()
@@ -222,8 +223,10 @@ impl ToStyledSelectChild for jirs_data::IssueStatus {
     }
 }
 
-impl ToStyledSelectChild for jirs_data::IssueType {
-    fn to_select_child(&self) -> StyledSelectChildBuilder {
+impl ToChild for jirs_data::IssueType {
+    type Builder = StyledSelectChildBuilder;
+
+    fn to_child(&self) -> StyledSelectChildBuilder {
         let name = self.to_label().to_owned();
 
         let type_icon = crate::shared::styled_icon::StyledIcon::build(self.clone().into())
@@ -239,8 +242,10 @@ impl ToStyledSelectChild for jirs_data::IssueType {
     }
 }
 
-impl ToStyledSelectChild for jirs_data::ProjectCategory {
-    fn to_select_child(&self) -> StyledSelectChildBuilder {
+impl ToChild for jirs_data::ProjectCategory {
+    type Builder = StyledSelectChildBuilder;
+
+    fn to_child(&self) -> StyledSelectChildBuilder {
         let name = self.to_string();
 
         StyledSelectChild::build()
@@ -250,8 +255,10 @@ impl ToStyledSelectChild for jirs_data::ProjectCategory {
     }
 }
 
-impl ToStyledSelectChild for jirs_data::UserRole {
-    fn to_select_child(&self) -> StyledSelectChildBuilder {
+impl ToChild for jirs_data::UserRole {
+    type Builder = StyledSelectChildBuilder;
+
+    fn to_child(&self) -> StyledSelectChildBuilder {
         let name = self.to_string();
 
         StyledSelectChild::build()
@@ -259,5 +266,18 @@ impl ToStyledSelectChild for jirs_data::UserRole {
             .add_class("capitalize")
             .text(name)
             .value(self.clone().into())
+    }
+}
+
+impl ToChild for u32 {
+    type Builder = StyledSelectChildBuilder;
+
+    fn to_child(&self) -> Self::Builder {
+        let name = self.to_string();
+
+        StyledSelectChild::build()
+            .add_class(name.as_str())
+            .text(name)
+            .value(*self)
     }
 }

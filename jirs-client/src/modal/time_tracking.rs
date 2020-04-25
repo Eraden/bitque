@@ -1,15 +1,26 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{IssueFieldId, IssueId};
+use jirs_data::{IssueFieldId, IssueId, TimeTracking};
 
 use crate::model::{ModalType, Model};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
-use crate::shared::styled_input::StyledInput;
+use crate::shared::styled_input::{StyledInput, StyledInputState};
 use crate::shared::styled_modal::StyledModal;
-use crate::shared::tracking_widget::tracking_widget;
-use crate::shared::{find_issue, ToNode};
+use crate::shared::styled_select::StyledSelect;
+use crate::shared::styled_select_child::*;
+use crate::shared::tracking_widget::{fibonacci_values, tracking_widget};
+use crate::shared::{find_issue, ToChild, ToNode};
 use crate::{EditIssueModalSection, FieldId, Msg};
+
+pub fn value_for_time_tracking(v: &Option<i32>, time_tracking_type: &TimeTracking) -> String {
+    match (time_tracking_type, v.as_ref()) {
+        (TimeTracking::Untracked, _) => "".to_string(),
+        (TimeTracking::Fibonacci, Some(n)) => n.to_string(),
+        (TimeTracking::Hourly, Some(n)) => format!("{:.1}", *n as f64 / 10.0f64),
+        _ => "".to_string(),
+    }
+}
 
 pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
     let _issue = match find_issue(model, issue_id) {
@@ -21,49 +32,28 @@ pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
         Some(ModalType::EditIssue(_, modal)) => modal,
         _ => return empty![],
     };
+    let time_tracking_type = model
+        .project
+        .as_ref()
+        .map(|p| p.time_tracking)
+        .unwrap_or_else(|| TimeTracking::Untracked);
 
     let modal_title = div![class!["modalTitle"], "Time tracking"];
 
     let tracking = tracking_widget(model, edit_issue_modal);
 
-    let time_spent = StyledInput::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-        IssueFieldId::TimeSpend,
-    )))
-    .value(
-        edit_issue_modal
-            .payload
-            .time_spent
-            .as_ref()
-            .map(|n| n.to_string())
-            .unwrap_or_default(),
-    )
-    .valid(true)
-    .build()
-    .into_node();
-    let time_spent_field = StyledField::build()
-        .input(time_spent)
-        .label("Time spent")
-        .build()
-        .into_node();
-    let time_remaining = StyledInput::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-        IssueFieldId::TimeRemaining,
-    )))
-    .value(
-        edit_issue_modal
-            .payload
-            .time_remaining
-            .as_ref()
-            .map(|n| n.to_string())
-            .unwrap_or_default(),
-    )
-    .valid(true)
-    .build()
-    .into_node();
-    let time_remaining_field = StyledField::build()
-        .input(time_remaining)
-        .label("Time remaining")
-        .build()
-        .into_node();
+    let time_spent_field = time_tracking_field(
+        time_tracking_type,
+        FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
+        "Time spent",
+        &edit_issue_modal.time_spent,
+    );
+    let time_remaining_field = time_tracking_field(
+        time_tracking_type,
+        FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
+        "Time remaining",
+        &edit_issue_modal.time_remaining,
+    );
 
     let inputs = div![
         class!["inputs"],
@@ -86,6 +76,37 @@ pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
             div![class!["actions"], close],
         ])
         .width(400)
+        .build()
+        .into_node()
+}
+
+fn time_tracking_field(
+    time_tracking_type: TimeTracking,
+    field_id: FieldId,
+    label: &str,
+    state: &StyledInputState,
+) -> Node<Msg> {
+    let input = match time_tracking_type {
+        TimeTracking::Untracked => empty![],
+        TimeTracking::Fibonacci => StyledSelect::build(field_id)
+            .selected(vec![(state.to_i32().unwrap_or_default() as u32).to_child()])
+            .options(
+                fibonacci_values()
+                    .into_iter()
+                    .map(|v| v.to_child())
+                    .collect(),
+            )
+            .build()
+            .into_node(),
+        TimeTracking::Hourly => StyledInput::build(field_id)
+            .state(state)
+            .valid(true)
+            .build()
+            .into_node(),
+    };
+    StyledField::build()
+        .input(input)
+        .label(label)
         .build()
         .into_node()
 }

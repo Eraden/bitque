@@ -5,8 +5,10 @@ use uuid::Uuid;
 
 use jirs_data::*;
 
+use crate::modal::time_tracking::value_for_time_tracking;
 use crate::shared::styled_checkbox::StyledCheckboxState;
 use crate::shared::styled_editor::Mode;
+use crate::shared::styled_input::StyledInputState;
 use crate::shared::styled_select::StyledSelectState;
 use crate::{EditIssueModalSection, FieldId, ProjectFieldId, HOST_URL};
 
@@ -37,6 +39,10 @@ pub struct EditIssueModal {
     pub assignees_state: StyledSelectState,
     pub priority_state: StyledSelectState,
 
+    pub estimate: StyledInputState,
+    pub time_spent: StyledInputState,
+    pub time_remaining: StyledInputState,
+
     pub description_editor_mode: Mode,
 
     // comments
@@ -44,7 +50,7 @@ pub struct EditIssueModal {
 }
 
 impl EditIssueModal {
-    pub fn new(issue: &Issue) -> Self {
+    pub fn new(issue: &Issue, time_tracking_type: TimeTracking) -> Self {
         Self {
             id: issue.id,
             link_copied: false,
@@ -78,6 +84,18 @@ impl EditIssueModal {
             priority_state: StyledSelectState::new(FieldId::EditIssueModal(
                 EditIssueModalSection::Issue(IssueFieldId::Priority),
             )),
+            estimate: StyledInputState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
+                value_for_time_tracking(&issue.estimate, &time_tracking_type),
+            ),
+            time_spent: StyledInputState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
+                value_for_time_tracking(&issue.time_spent, &time_tracking_type),
+            ),
+            time_remaining: StyledInputState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
+                value_for_time_tracking(&issue.time_remaining, &time_tracking_type),
+            ),
             description_editor_mode: Mode::View,
             comment_form: CommentForm {
                 id: None,
@@ -96,9 +114,9 @@ pub struct AddIssueModal {
     pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
-    pub estimate: Option<f64>,
-    pub time_spent: Option<f64>,
-    pub time_remaining: Option<f64>,
+    pub estimate: Option<i32>,
+    pub time_spent: Option<i32>,
+    pub time_remaining: Option<i32>,
     pub project_id: Option<i32>,
     pub user_ids: Vec<i32>,
     pub reporter_id: Option<i32>,
@@ -212,6 +230,7 @@ impl ProjectSettingsPage {
             url,
             description,
             category,
+            time_tracking,
             ..
         } = project;
         Self {
@@ -221,6 +240,7 @@ impl ProjectSettingsPage {
                 url: Some(url.clone()),
                 description: Some(description.clone()),
                 category: Some(category.clone()),
+                time_tracking: Some(*time_tracking),
             },
             description_mode: EditorMode::View,
             project_category_state: StyledSelectState::new(FieldId::ProjectSettings(
@@ -228,7 +248,7 @@ impl ProjectSettingsPage {
             )),
             time_tracking: StyledCheckboxState::new(
                 FieldId::ProjectSettings(ProjectFieldId::TimeTracking),
-                0,
+                (*time_tracking).into(),
             ),
         }
     }

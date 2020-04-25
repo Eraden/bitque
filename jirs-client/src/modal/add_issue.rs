@@ -12,9 +12,8 @@ use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
 use crate::shared::styled_select::StyledSelect;
 use crate::shared::styled_select::StyledSelectChange;
-use crate::shared::styled_select_child::ToStyledSelectChild;
 use crate::shared::styled_textarea::StyledTextarea;
-use crate::shared::ToNode;
+use crate::shared::{ToChild, ToNode};
 use crate::{FieldId, Msg};
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
@@ -127,10 +126,10 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .options(
             IssueType::ordered()
                 .iter()
-                .map(|t| t.to_select_child().name("type"))
+                .map(|t| t.to_child().name("type"))
                 .collect(),
         )
-        .selected(vec![modal.issue_type.to_select_child().name("type")])
+        .selected(vec![modal.issue_type.to_child().name("type")])
         .build()
         .into_node();
     let issue_type_field = StyledField::build()
@@ -175,7 +174,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
             model
                 .users
                 .iter()
-                .map(|u| u.to_select_child().name("reporter"))
+                .map(|u| u.to_child().name("reporter"))
                 .collect(),
         )
         .selected(
@@ -184,7 +183,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
                 .iter()
                 .filter_map(|user| {
                     if user.id == reporter_id {
-                        Some(user.to_select_child().name("reporter"))
+                        Some(user.to_child().name("reporter"))
                     } else {
                         None
                     }
@@ -210,7 +209,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
             model
                 .users
                 .iter()
-                .map(|u| u.to_select_child().name("assignees"))
+                .map(|u| u.to_child().name("assignees"))
                 .collect(),
         )
         .selected(
@@ -219,7 +218,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
                 .iter()
                 .filter_map(|user| {
                     if modal.user_ids.contains(&user.id) {
-                        Some(user.to_select_child().name("assignees"))
+                        Some(user.to_child().name("assignees"))
                     } else {
                         None
                     }
@@ -245,10 +244,10 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .options(
             IssuePriority::ordered()
                 .iter()
-                .map(|p| p.to_select_child().name("priority"))
+                .map(|p| p.to_child().name("priority"))
                 .collect(),
         )
-        .selected(vec![modal.priority.to_select_child().name("priority")])
+        .selected(vec![modal.priority.to_child().name("priority")])
         .build()
         .into_node();
     let issue_priority_field = StyledField::build()

@@ -1,6 +1,6 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{ProjectCategory, TimeTracking, ToVec, WsMsg};
+use jirs_data::{ProjectCategory, TimeTracking, ToVec, UpdateProjectPayload, WsMsg};
 
 use crate::api::send_ws_msg;
 use crate::model::{Model, Page, PageContent, ProjectSettingsPage};
@@ -10,11 +10,13 @@ use crate::shared::styled_editor::StyledEditor;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
-use crate::shared::styled_select_child::ToStyledSelectChild;
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::FieldChange::TabChanged;
-use crate::{model, FieldId, Msg, ProjectFieldId};
+use crate::{model, FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange};
+
+static TIME_TRACKING_FIBONACCI: &'static str = "Tracking employees’ time carries the risk of having them feel like they are being spied on. This is one of the most common fears that employees have when a time tracking system is implemented. No one likes to feel like they’re always being watched.";
+static TIME_TRACKING_HOURLY: &'static str = "Employees may feel intimidated by demands to track their time. Or they could feel that they’re constantly being watched and evaluated. And for overly ambitious managers, employee time tracking may open the doors to excessive micromanaging.";
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.user.is_none() {
@@ -47,7 +49,6 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     page.time_tracking.update(&msg);
 
     match msg {
-        Msg::ProjectSaveChanges => send_ws_msg(WsMsg::ProjectUpdateRequest(page.payload.clone())),
         Msg::StrInputChanged(FieldId::ProjectSettings(ProjectFieldId::Name), text) => {
             page.payload.name = Some(text);
         }
@@ -69,6 +70,16 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
             mode,
         )) => {
             page.description_mode = mode;
+        }
+        Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::SubmitForm)) => {
+            send_ws_msg(WsMsg::ProjectUpdateRequest(UpdateProjectPayload {
+                id: page.payload.id,
+                name: page.payload.name.clone(),
+                url: page.payload.url.clone(),
+                description: page.payload.description.clone(),
+                category: page.payload.category.clone(),
+                time_tracking: Some(page.time_tracking.value.into()),
+            }));
         }
         _ => (),
     }
@@ -142,7 +153,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .options(
             ProjectCategory::ordered()
                 .into_iter()
-                .map(|c| c.to_select_child())
+                .map(|c| c.to_child())
                 .collect(),
         )
         .selected(vec![page
@@ -151,7 +162,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             .as_ref()
             .cloned()
             .unwrap_or_default()
-            .to_select_child()])
+            .to_child()])
         .build()
         .into_node();
     let category_field = StyledField::build()
@@ -174,23 +185,30 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     let time_tracking_type: TimeTracking = page.time_tracking.value.into();
     let time_tracking_field = StyledField::build()
         .input(time_tracking)
-        .tip(if time_tracking_type == TimeTracking::Hourly {
-            "Employees may feel intimidated by demands to track their time. Or they could feel that they’re constantly being watched and evaluated. And for overly ambitious managers, employee time tracking may open the doors to excessive micromanaging."
-        } else {
-            ""
+        .tip(match time_tracking_type {
+            TimeTracking::Fibonacci => TIME_TRACKING_FIBONACCI,
+            TimeTracking::Hourly => TIME_TRACKING_HOURLY,
+            _ => "",
         })
         .build()
         .into_node();
 
     let save_button = StyledButton::build()
         .add_class("actionButton")
-        .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectSaveChanges))
+        .on_click(mouse_ev(Ev::Click, |ev| {
+            ev.prevent_default();
+            Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::SubmitForm))
+        }))
         .text("Save changes")
         .build()
         .into_node();
 
     let form = StyledForm::build()
         .heading("Project Details")
+        .on_submit(ev(Ev::Submit, |ev| {
+            ev.prevent_default();
+            Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::SubmitForm))
+        }))
         .add_field(name_field)
         .add_field(url_field)
         .add_field(description_field)

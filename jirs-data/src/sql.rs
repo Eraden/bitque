@@ -255,7 +255,7 @@ impl diesel::query_builder::QueryId for TimeTrackingType {
 fn time_tracking_from_sql(bytes: Option<&[u8]>) -> deserialize::Result<TimeTracking> {
     match not_none!(bytes) {
         b"untracked" => Ok(TimeTracking::Untracked),
-        b"fibnachi" => Ok(TimeTracking::Fibonacci),
+        b"fibonacci" => Ok(TimeTracking::Fibonacci),
         b"hourly" => Ok(TimeTracking::Hourly),
         _ => Ok(TimeTracking::Untracked),
     }
@@ -277,7 +277,7 @@ impl ToSql<TimeTrackingType, Pg> for TimeTracking {
     fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         match *self {
             TimeTracking::Untracked => out.write_all(b"untracked")?,
-            TimeTracking::Fibonacci => out.write_all(b"fibnacci")?,
+            TimeTracking::Fibonacci => out.write_all(b"fibonacci")?,
             TimeTracking::Hourly => out.write_all(b"hourly")?,
         }
         Ok(IsNull::No)

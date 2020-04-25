@@ -11,10 +11,9 @@ use crate::shared::styled_field::StyledField;
 use crate::shared::styled_icon::Icon;
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
-use crate::shared::styled_select_child::ToStyledSelectChild;
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::tracking_widget::tracking_link;
-use crate::shared::ToNode;
+use crate::shared::{ToChild, ToNode};
 use crate::{EditIssueModalSection, FieldChange, FieldId, Msg};
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
@@ -27,6 +26,9 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     modal.reporter_state.update(msg, orders);
     modal.assignees_state.update(msg, orders);
     modal.priority_state.update(msg, orders);
+    modal.estimate.update(msg);
+    modal.time_spent.update(msg);
+    modal.time_remaining.update(msg);
 
     match msg {
         Msg::WsMsg(WsMsg::IssueUpdated(issue)) => {
@@ -136,25 +138,25 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         Msg::StrInputChanged(
-            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpend)),
-            value,
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
+            _value,
         ) => {
-            modal.payload.time_spent = value.parse::<f64>().ok();
+            modal.payload.time_spent = modal.time_spent.represent_f64_as_i32();
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
-                IssueFieldId::TimeSpend,
-                PayloadVariant::OptionF64(modal.payload.time_spent),
+                IssueFieldId::TimeSpent,
+                PayloadVariant::OptionI32(modal.payload.time_spent),
             ));
         }
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
-            value,
+            _value,
         ) => {
-            modal.payload.time_remaining = value.parse::<f64>().ok();
+            modal.payload.time_remaining = modal.time_remaining.represent_f64_as_i32();
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
                 IssueFieldId::TimeRemaining,
-                PayloadVariant::OptionF64(modal.payload.time_remaining),
+                PayloadVariant::OptionI32(modal.payload.time_remaining),
             ));
         }
         Msg::ModalChanged(FieldChange::TabChanged(
@@ -182,26 +184,15 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
-            value,
-        ) => match value.parse::<f64>() {
-            Ok(n) if !value.is_empty() => {
-                modal.payload.estimate = Some(n);
-                send_ws_msg(WsMsg::IssueUpdateRequest(
-                    modal.id,
-                    IssueFieldId::TimeRemaining,
-                    PayloadVariant::OptionF64(modal.payload.estimate),
-                ));
-            }
-            _ if value.is_empty() => {
-                modal.payload.estimate = None;
-                send_ws_msg(WsMsg::IssueUpdateRequest(
-                    modal.id,
-                    IssueFieldId::TimeRemaining,
-                    PayloadVariant::OptionF64(modal.payload.estimate),
-                ));
-            }
-            _ => {}
-        },
+            _value,
+        ) => {
+            modal.payload.estimate = modal.estimate.represent_f64_as_i32();
+            send_ws_msg(WsMsg::IssueUpdateRequest(
+                modal.id,
+                IssueFieldId::Estimate,
+                PayloadVariant::OptionI32(modal.payload.estimate),
+            ));
+        }
         Msg::SaveComment => {
             let msg = match modal.comment_form.id {
                 Some(id) => WsMsg::UpdateComment(UpdateCommentPayload {
@@ -338,14 +329,14 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     .options(
         IssueType::ordered()
             .into_iter()
-            .map(|t| t.to_select_child().name("type"))
+            .map(|t| t.to_child().name("type"))
             .collect(),
     )
     .selected(vec![{
         let id = modal.id;
         let issue_type = &payload.issue_type;
         issue_type
-            .to_select_child()
+            .to_child()
             .name("type")
             .text(format!("{} - {}", issue_type, id))
     }])
@@ -574,10 +565,10 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     .options(
         IssueStatus::ordered()
             .into_iter()
-            .map(|opt| opt.to_select_child().name("status"))
+            .map(|opt| opt.to_child().name("status"))
             .collect(),
     )
-    .selected(vec![payload.status.to_select_child().name("status")])
+    .selected(vec![payload.status.to_child().name("status")])
     .valid(true)
     .build()
     .into_node();
@@ -599,7 +590,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         model
             .users
             .iter()
-            .map(|user| user.to_select_child().name("assignees"))
+            .map(|user| user.to_child().name("assignees"))
             .collect(),
     )
     .selected(
@@ -607,7 +598,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             .users
             .iter()
             .filter(|user| payload.user_ids.contains(&user.id))
-            .map(|user| user.to_select_child().name("assignees"))
+            .map(|user| user.to_child().name("assignees"))
             .collect(),
     )
     .build()
@@ -629,7 +620,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         model
             .users
             .iter()
-            .map(|user| user.to_select_child().name("reporter"))
+            .map(|user| user.to_child().name("reporter"))
             .collect(),
     )
     .selected(
@@ -637,7 +628,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             .users
             .iter()
             .filter(|user| payload.reporter_id == user.id)
-            .map(|user| user.to_select_child().name("reporter"))
+            .map(|user| user.to_child().name("reporter"))
             .collect(),
     )
     .build()
@@ -658,10 +649,10 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     .options(
         IssuePriority::ordered()
             .into_iter()
-            .map(|p| p.to_select_child().name("priority"))
+            .map(|p| p.to_child().name("priority"))
             .collect(),
     )
-    .selected(vec![payload.priority.to_select_child().name("priority")])
+    .selected(vec![payload.priority.to_child().name("priority")])
     .build()
     .into_node();
     let priority_field = StyledField::build()
@@ -681,17 +672,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             IssueFieldId::Estimate,
         )))
         .valid(true)
-        .value(
-            payload
-                .estimate
-                .as_ref()
-                .map(|n| match time_tracking_type {
-                    TimeTracking::Fibonacci => format!("{}", n),
-                    TimeTracking::Hourly => format!("{:.1}", n),
-                    _ => "".to_string(),
-                })
-                .unwrap_or_default(),
-        )
+        .value(modal.estimate.value.as_str())
         .build()
         .into_node();
         let estimate_field = StyledField::build()

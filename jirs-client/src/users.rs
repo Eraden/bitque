@@ -9,8 +9,7 @@ use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::*;
-use crate::shared::styled_select_child::ToStyledSelectChild;
-use crate::shared::{inner_layout, ToNode};
+use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::validations::is_email;
 use crate::{FieldId, Msg, PageChanged, UsersPageChange};
 
@@ -144,11 +143,11 @@ pub fn view(model: &Model) -> Node<Msg> {
         .valid(true)
         .normal()
         .with_state(&page.user_role_state)
-        .selected(vec![page.user_role.to_select_child()])
+        .selected(vec![page.user_role.to_child()])
         .options(
             UserRole::ordered()
                 .into_iter()
-                .map(|role| role.to_select_child())
+                .map(|role| role.to_child())
                 .collect(),
         )
         .build()

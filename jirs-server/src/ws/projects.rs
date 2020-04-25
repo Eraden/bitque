@@ -35,10 +35,17 @@ impl WsHandler<UpdateProjectPayload> for WebSocketActor {
             url: msg.url,
             description: msg.description,
             category: msg.category,
-            time_tracking: None,
+            time_tracking: msg.time_tracking,
         })) {
             Ok(Ok(project)) => project,
-            _ => return Ok(None),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
         };
         Ok(Some(WsMsg::ProjectLoaded(project)))
     }
