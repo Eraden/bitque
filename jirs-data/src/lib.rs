@@ -335,7 +335,7 @@ impl Into<UserRole> for u32 {
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "ProjectCategoryType")]
-#[derive(Clone, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Copy, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
 pub enum ProjectCategory {
     Software,
     Marketing,

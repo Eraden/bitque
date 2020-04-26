@@ -40,8 +40,11 @@ pub struct EditIssueModal {
     pub priority_state: StyledSelectState,
 
     pub estimate: StyledInputState,
+    pub estimate_select: StyledSelectState,
     pub time_spent: StyledInputState,
+    pub time_spent_select: StyledSelectState,
     pub time_remaining: StyledInputState,
+    pub time_remaining_select: StyledSelectState,
 
     pub description_editor_mode: Mode,
 
@@ -69,32 +72,52 @@ impl EditIssueModal {
                 reporter_id: issue.reporter_id,
                 user_ids: issue.user_ids.clone(),
             },
-            top_type_state: StyledSelectState::new(FieldId::EditIssueModal(
-                EditIssueModalSection::Issue(IssueFieldId::Type),
-            )),
-            status_state: StyledSelectState::new(FieldId::EditIssueModal(
-                EditIssueModalSection::Issue(IssueFieldId::Status),
-            )),
-            reporter_state: StyledSelectState::new(FieldId::EditIssueModal(
-                EditIssueModalSection::Issue(IssueFieldId::Reporter),
-            )),
-            assignees_state: StyledSelectState::new(FieldId::EditIssueModal(
-                EditIssueModalSection::Issue(IssueFieldId::Assignees),
-            )),
-            priority_state: StyledSelectState::new(FieldId::EditIssueModal(
-                EditIssueModalSection::Issue(IssueFieldId::Priority),
-            )),
+            top_type_state: StyledSelectState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
+                issue.estimate.map(|v| vec![v as u32]).unwrap_or_default(),
+            ),
+            status_state: StyledSelectState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Status)),
+                vec![issue.status.into()],
+            ),
+            reporter_state: StyledSelectState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Reporter)),
+                vec![issue.reporter_id as u32],
+            ),
+            assignees_state: StyledSelectState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
+                issue.user_ids.iter().map(|n| *n as u32).collect(),
+            ),
+            priority_state: StyledSelectState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Priority)),
+                vec![issue.priority.into()],
+            ),
             estimate: StyledInputState::new(
                 FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
                 value_for_time_tracking(&issue.estimate, &time_tracking_type),
+            ),
+            estimate_select: StyledSelectState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
+                issue.estimate.map(|n| vec![n as u32]).unwrap_or_default(),
             ),
             time_spent: StyledInputState::new(
                 FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
                 value_for_time_tracking(&issue.time_spent, &time_tracking_type),
             ),
+            time_spent_select: StyledSelectState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
+                issue.time_spent.map(|n| vec![n as u32]).unwrap_or_default(),
+            ),
             time_remaining: StyledInputState::new(
                 FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
                 value_for_time_tracking(&issue.time_remaining, &time_tracking_type),
+            ),
+            time_remaining_select: StyledSelectState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
+                issue
+                    .time_remaining
+                    .map(|n| vec![n as u32])
+                    .unwrap_or_default(),
             ),
             description_editor_mode: Mode::View,
             comment_form: CommentForm {
@@ -143,12 +166,19 @@ impl Default for AddIssueModal {
             project_id: Default::default(),
             user_ids: Default::default(),
             reporter_id: Default::default(),
-            type_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Type)),
-            reporter_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Reporter)),
-            assignees_state: StyledSelectState::new(FieldId::AddIssueModal(
-                IssueFieldId::Assignees,
-            )),
-            priority_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Priority)),
+            type_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Type), vec![]),
+            reporter_state: StyledSelectState::new(
+                FieldId::AddIssueModal(IssueFieldId::Reporter),
+                vec![],
+            ),
+            assignees_state: StyledSelectState::new(
+                FieldId::AddIssueModal(IssueFieldId::Assignees),
+                vec![],
+            ),
+            priority_state: StyledSelectState::new(
+                FieldId::AddIssueModal(IssueFieldId::Priority),
+                vec![],
+            ),
         }
     }
 }
@@ -243,9 +273,10 @@ impl ProjectSettingsPage {
                 time_tracking: Some(*time_tracking),
             },
             description_mode: EditorMode::View,
-            project_category_state: StyledSelectState::new(FieldId::ProjectSettings(
-                ProjectFieldId::Category,
-            )),
+            project_category_state: StyledSelectState::new(
+                FieldId::ProjectSettings(ProjectFieldId::Category),
+                vec![(*category).into()],
+            ),
             time_tracking: StyledCheckboxState::new(
                 FieldId::ProjectSettings(ProjectFieldId::TimeTracking),
                 (*time_tracking).into(),
@@ -317,7 +348,7 @@ impl Default for UsersPage {
             email: "".to_string(),
             email_touched: false,
             user_role: Default::default(),
-            user_role_state: StyledSelectState::new(FieldId::Users(UsersFieldId::UserRole)),
+            user_role_state: StyledSelectState::new(FieldId::Users(UsersFieldId::UserRole), vec![]),
             pending_invitations: vec![],
             error: "".to_string(),
             form_state: Default::default(),

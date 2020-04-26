@@ -7,7 +7,7 @@ use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_input::{StyledInput, StyledInputState};
 use crate::shared::styled_modal::StyledModal;
-use crate::shared::styled_select::StyledSelect;
+use crate::shared::styled_select::{StyledSelect, StyledSelectState};
 use crate::shared::styled_select_child::*;
 use crate::shared::tracking_widget::{fibonacci_values, tracking_widget};
 use crate::shared::{find_issue, ToChild, ToNode};
@@ -47,12 +47,14 @@ pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
         FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
         "Time spent",
         &edit_issue_modal.time_spent,
+        &edit_issue_modal.time_spent_select,
     );
     let time_remaining_field = time_tracking_field(
         time_tracking_type,
         FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
         "Time remaining",
         &edit_issue_modal.time_remaining,
+        &edit_issue_modal.time_remaining_select,
     );
 
     let inputs = div![
@@ -80,16 +82,24 @@ pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
         .into_node()
 }
 
-fn time_tracking_field(
+pub fn time_tracking_field(
     time_tracking_type: TimeTracking,
     field_id: FieldId,
     label: &str,
-    state: &StyledInputState,
+    input_state: &StyledInputState,
+    select_state: &StyledSelectState,
 ) -> Node<Msg> {
     let input = match time_tracking_type {
         TimeTracking::Untracked => empty![],
         TimeTracking::Fibonacci => StyledSelect::build(field_id)
-            .selected(vec![(state.to_i32().unwrap_or_default() as u32).to_child()])
+            .selected(
+                select_state
+                    .values
+                    .iter()
+                    .map(|n| (*n).to_child())
+                    .collect(),
+            )
+            .with_state(select_state)
             .options(
                 fibonacci_values()
                     .into_iter()
@@ -99,7 +109,7 @@ fn time_tracking_field(
             .build()
             .into_node(),
         TimeTracking::Hourly => StyledInput::build(field_id)
-            .state(state)
+            .state(input_state)
             .valid(true)
             .build()
             .into_node(),

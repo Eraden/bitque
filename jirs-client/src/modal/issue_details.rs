@@ -3,6 +3,7 @@ use seed::{prelude::*, *};
 use jirs_data::*;
 
 use crate::api::send_ws_msg;
+use crate::modal::time_tracking::time_tracking_field;
 use crate::model::{CommentForm, EditIssueModal, ModalType, Model};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
@@ -27,8 +28,11 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     modal.assignees_state.update(msg, orders);
     modal.priority_state.update(msg, orders);
     modal.estimate.update(msg);
+    modal.estimate_select.update(msg, orders);
     modal.time_spent.update(msg);
+    modal.time_spent_select.update(msg, orders);
     modal.time_remaining.update(msg);
+    modal.time_remaining_select.update(msg, orders);
 
     match msg {
         Msg::WsMsg(WsMsg::IssueUpdated(issue)) => {
@@ -137,9 +141,10 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 ),
             ));
         }
+        // TimeSpent
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
-            _value,
+            ..,
         ) => {
             modal.payload.time_spent = modal.time_spent.represent_f64_as_i32();
             send_ws_msg(WsMsg::IssueUpdateRequest(
@@ -148,15 +153,62 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 PayloadVariant::OptionI32(modal.payload.time_spent),
             ));
         }
+        Msg::StyledSelectChanged(
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
+            StyledSelectChange::Changed(..),
+        ) => {
+            modal.payload.time_spent = modal.time_spent_select.values.get(0).map(|n| *n as i32);
+            send_ws_msg(WsMsg::IssueUpdateRequest(
+                modal.id,
+                IssueFieldId::TimeSpent,
+                PayloadVariant::OptionI32(modal.payload.time_spent),
+            ));
+        }
+        // Time Remaining
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
-            _value,
+            ..,
         ) => {
             modal.payload.time_remaining = modal.time_remaining.represent_f64_as_i32();
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
                 IssueFieldId::TimeRemaining,
                 PayloadVariant::OptionI32(modal.payload.time_remaining),
+            ));
+        }
+        Msg::StyledSelectChanged(
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
+            StyledSelectChange::Changed(..),
+        ) => {
+            modal.payload.time_remaining =
+                modal.time_remaining_select.values.get(0).map(|n| *n as i32);
+            send_ws_msg(WsMsg::IssueUpdateRequest(
+                modal.id,
+                IssueFieldId::TimeRemaining,
+                PayloadVariant::OptionI32(modal.payload.time_remaining),
+            ));
+        }
+        // Estimate
+        Msg::StrInputChanged(
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
+            ..,
+        ) => {
+            modal.payload.estimate = modal.estimate.represent_f64_as_i32();
+            send_ws_msg(WsMsg::IssueUpdateRequest(
+                modal.id,
+                IssueFieldId::Estimate,
+                PayloadVariant::OptionI32(modal.payload.estimate),
+            ));
+        }
+        Msg::StyledSelectChanged(
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
+            StyledSelectChange::Changed(..),
+        ) => {
+            modal.payload.estimate = modal.estimate_select.values.get(0).map(|n| *n as i32);
+            send_ws_msg(WsMsg::IssueUpdateRequest(
+                modal.id,
+                IssueFieldId::Estimate,
+                PayloadVariant::OptionI32(modal.payload.estimate),
             ));
         }
         Msg::ModalChanged(FieldChange::TabChanged(
@@ -175,23 +227,14 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 modal.comment_form.id = None;
             }
         }
+        //
         // comments
+        //
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Comment(CommentFieldId::Body)),
             text,
         ) => {
             modal.comment_form.body = text.clone();
-        }
-        Msg::StrInputChanged(
-            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
-            _value,
-        ) => {
-            modal.payload.estimate = modal.estimate.represent_f64_as_i32();
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Estimate,
-                PayloadVariant::OptionI32(modal.payload.estimate),
-            ));
         }
         Msg::SaveComment => {
             let msg = match modal.comment_form.id {
@@ -668,18 +711,13 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .unwrap_or_else(|| TimeTracking::Untracked);
 
     let (estimate_field, tracking_field) = if time_tracking_type != TimeTracking::Untracked {
-        let estimate = StyledInput::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-            IssueFieldId::Estimate,
-        )))
-        .valid(true)
-        .value(modal.estimate.value.as_str())
-        .build()
-        .into_node();
-        let estimate_field = StyledField::build()
-            .input(estimate)
-            .label("Original Estimate (hours)")
-            .build()
-            .into_node();
+        let estimate_field = time_tracking_field(
+            time_tracking_type,
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
+            "Original Estimate (hours)",
+            &modal.estimate,
+            &modal.estimate_select,
+        );
 
         let tracking = tracking_link(model, modal);
         let tracking_field = StyledField::build()

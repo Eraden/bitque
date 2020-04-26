@@ -51,12 +51,12 @@ impl StyledSelectState {
 }
 
 impl StyledSelectState {
-    pub fn new(field_id: FieldId) -> Self {
+    pub fn new(field_id: FieldId, values: Vec<u32>) -> Self {
         Self {
             field_id,
             opened: false,
             text_filter: String::new(),
-            values: vec![],
+            values,
         }
     }
 
