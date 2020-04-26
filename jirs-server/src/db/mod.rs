@@ -25,7 +25,7 @@ pub type DbPooledConn = r2d2::PooledConnection<ConnectionManager<dev::VerboseCon
 #[cfg(not(debug_assertions))]
 pub type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 #[cfg(not(debug_assertions))]
-pub type DbPooledConn = r2d2::PooledConnection<ConnectionManager<dev::PgConnection>>;
+pub type DbPooledConn = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 pub struct DbExecutor {
     pub pool: DbPool,
