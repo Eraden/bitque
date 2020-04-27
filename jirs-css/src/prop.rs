@@ -139,9 +139,30 @@ impl CssParser {
                 self.consume_expected(";")?;
                 Property::AlignContent(p)
             }
-            //     "align-items" => Property::AlignItems,
-            //     "align-self" => Property::AlignSelf,
-            //     "all" => Property::All,
+            "align-items" => {
+                self.skip_white();
+                self.consume_expected(":")?;
+                self.skip_white();
+                let p = self.parse_expected::<AlignItemsProperty>()?;
+                self.consume_expected(";")?;
+                Property::AlignItems(p)
+            }
+            "align-self" => {
+                self.skip_white();
+                self.consume_expected(":")?;
+                self.skip_white();
+                let p = self.parse_expected::<AlignSelfProperty>()?;
+                self.consume_expected(";")?;
+                Property::AlignSelf(p)
+            }
+            "all" => {
+                self.skip_white();
+                self.consume_expected(":")?;
+                self.skip_white();
+                let p = self.parse_expected::<AllProperty>()?;
+                self.consume_expected(";")?;
+                Property::All(p)
+            }
             "animation" => {
                 self.skip_white();
                 self.consume_expected(":")?;
@@ -1088,6 +1109,117 @@ impl FromStr for ZIndexProperty {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum ColorProperty {
+    Name(String),
+    Rgba(u16, u16, u16, u16),
+    Hsla(u16, u16, u16, u16),
+    Current,
+}
+
+impl FromStr for ColorProperty {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let p = match s.trim().to_lowercase().as_str() {
+            "currentcolor" => ColorProperty::Current,
+            _ if s.len() == 7 && s.starts_with('#') => {
+                let (r, g, b) = (
+                    u16::from_str_radix(&s[1..2], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                    u16::from_str_radix(&s[3..4], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                    u16::from_str_radix(&s[5..6], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                );
+                ColorProperty::Rgba(r, g, b, 255)
+            }
+            _ if s.len() == 9 && s.starts_with('#') => {
+                let (r, g, b, a) = (
+                    u16::from_str_radix(&s[1..2], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                    u16::from_str_radix(&s[3..4], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                    u16::from_str_radix(&s[5..6], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                    u16::from_str_radix(&s[7..8], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                );
+                ColorProperty::Rgba(r, g, b, a)
+            }
+            _ if s.starts_with("rgba(") => {
+                let v: Vec<String> = s[5..(s.len() - 1)]
+                    .split(',')
+                    .map(|s| s.to_string())
+                    .collect();
+                let r = v
+                    .get(0)
+                    .ok_or_else(|| format!("invalid color {:?}", s))
+                    .and_then(|s| {
+                        s.parse::<u16>()
+                            .map_err(|_| format!("invalid color {:?}", s))
+                    })?;
+                let g = v
+                    .get(1)
+                    .ok_or_else(|| format!("invalid color {:?}", s))
+                    .and_then(|s| {
+                        s.parse::<u16>()
+                            .map_err(|_| format!("invalid color {:?}", s))
+                    })?;
+                let b = v
+                    .get(2)
+                    .ok_or_else(|| format!("invalid color {:?}", s))
+                    .and_then(|s| {
+                        s.parse::<u16>()
+                            .map_err(|_| format!("invalid color {:?}", s))
+                    })?;
+                let a = (v
+                    .get(3)
+                    .ok_or_else(|| format!("invalid color {:?}", s))
+                    .and_then(|s| {
+                        s.parse::<f64>()
+                            .map_err(|_| format!("invalid color {:?}", s))
+                    })?
+                    * 255f64) as u16;
+                ColorProperty::Rgba(r, g, b, a)
+            }
+            _ if s.starts_with("rgb(") => {
+                let v: Vec<String> = s[5..(s.len() - 1)]
+                    .split(',')
+                    .map(|s| s.to_string())
+                    .collect();
+                let r = v
+                    .get(0)
+                    .ok_or_else(|| format!("invalid color {:?}", s))
+                    .and_then(|s| {
+                        s.parse::<u16>()
+                            .map_err(|_| format!("invalid color {:?}", s))
+                    })?;
+                let g = v
+                    .get(1)
+                    .ok_or_else(|| format!("invalid color {:?}", s))
+                    .and_then(|s| {
+                        s.parse::<u16>()
+                            .map_err(|_| format!("invalid color {:?}", s))
+                    })?;
+                let b = v
+                    .get(2)
+                    .ok_or_else(|| format!("invalid color {:?}", s))
+                    .and_then(|s| {
+                        s.parse::<u16>()
+                            .map_err(|_| format!("invalid color {:?}", s))
+                    })?;
+                let a = 255;
+                ColorProperty::Rgba(r, g, b, a)
+            }
+            // _ if s.starts_with("hsla(") => {}
+            // _ if s.starts_with("hsl(") => {}
+            _ => return Err(format!("invalid color {:?}", s)),
+        };
+        Ok(p)
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Property {
     AlignContent(AlignContentProperty),
     AlignItems(AlignItemsProperty),
@@ -1302,6 +1434,7 @@ pub enum Property {
     WordWrap(String),
     WritingMode(String),
     ZIndex(ZIndexProperty),
+    Variable(String, String),
 }
 
 #[cfg(test)]
