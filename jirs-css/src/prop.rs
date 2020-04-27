@@ -2,6 +2,7 @@ use std::iter::Peekable;
 use std::str::{Chars, FromStr};
 use std::vec::IntoIter;
 
+use crate::colors::Color;
 use crate::colors::{parse_hsla, parse_rgba};
 
 #[derive(Debug)]
@@ -1158,25 +1159,33 @@ impl FromStr for ColorProperty {
         let p = match s.trim() {
             "currentColor" => ColorProperty::Current,
             _ if s.len() == 7 && s.starts_with('#') => {
-                let (r, g, b) = (
-                    u8::from_str_radix(&s[1..2], 16)
-                        .map_err(|_| format!("invalid color {:?}", s))?,
-                    u8::from_str_radix(&s[3..4], 16)
-                        .map_err(|_| format!("invalid color {:?}", s))?,
-                    u8::from_str_radix(&s[5..6], 16)
-                        .map_err(|_| format!("invalid color {:?}", s))?,
-                );
+                let r = u8::from_str_radix(&s[1..=2], 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                let g = u8::from_str_radix(&s[3..=4], 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                let b = u8::from_str_radix(&s[5..=6], 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                ColorProperty::Rgba(r, g, b, 255)
+            }
+            _ if s.len() == 4 && s.starts_with('#') => {
+                let _x = &s[1..=1];
+                let r = u8::from_str_radix(&s[1..=1].repeat(2), 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                let g = u8::from_str_radix(&s[2..=2].repeat(2), 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                let b = u8::from_str_radix(&s[3..=3].repeat(2), 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
                 ColorProperty::Rgba(r, g, b, 255)
             }
             _ if s.len() == 9 && s.starts_with('#') => {
                 let (r, g, b, a) = (
-                    u8::from_str_radix(&s[1..2], 16)
+                    u8::from_str_radix(&s[1..=2], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
-                    u8::from_str_radix(&s[3..4], 16)
+                    u8::from_str_radix(&s[3..=4], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
-                    u8::from_str_radix(&s[5..6], 16)
+                    u8::from_str_radix(&s[5..=6], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
-                    u8::from_str_radix(&s[7..8], 16)
+                    u8::from_str_radix(&s[7..=8], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
                 );
                 ColorProperty::Rgba(r, g, b, a)
@@ -1197,7 +1206,11 @@ impl FromStr for ColorProperty {
                 let (h, s, l, a) = parse_hsla(s.trim(), false)?;
                 ColorProperty::Hsla(h, s, l, a)
             }
-            _ => return Err(format!("invalid color {:?}", s)),
+
+            _ => s
+                .parse::<Color>()
+                .map(|c| c.to_hex())
+                .and_then(|s| s.parse::<ColorProperty>())?,
         };
         Ok(p)
     }
@@ -1424,6 +1437,52 @@ pub enum Property {
 #[cfg(test)]
 mod tests {
     use crate::prop::*;
+
+    #[test]
+    fn parse_color() {
+        let res = "#123".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Rgba(17, 34, 51, 255));
+        assert_eq!(res, expected);
+        let res = "#010203".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Rgba(1, 2, 3, 255));
+        assert_eq!(res, expected);
+        let res = "#fff".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Rgba(255, 255, 255, 255));
+        assert_eq!(res, expected);
+        let res = "#ffffff".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Rgba(255, 255, 255, 255));
+        assert_eq!(res, expected);
+        let res = "#abcdef".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Rgba(171, 205, 239, 255));
+        assert_eq!(res, expected);
+        let res = "currentColor".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Current);
+        assert_eq!(res, expected);
+        let res = "rgb(1,2,3)".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Rgba(1, 2, 3, 255));
+        assert_eq!(res, expected);
+        let res = "rgb(1,2,3,.2)".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Rgba(1, 2, 3, 255));
+        assert_eq!(res, expected);
+        let res = "rgba(1,2,3,.1)".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Rgba(1, 2, 3, 25));
+        assert_eq!(res, expected);
+        let res = "hsla(100,20%,30%,.4)".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Hsla(100, 20, 30, 0.4f64));
+        assert_eq!(res, expected);
+        let res = "hsl(100,20%,30%)".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Hsla(100, 20, 30, 1.0f64));
+        assert_eq!(res, expected);
+        let res = "hsl(100,20%,30%,0.5)".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Hsla(100, 20, 30, 1.0f64));
+        assert_eq!(res, expected);
+        let res = "CornflowerBlue".parse::<ColorProperty>();
+        let expected = Ok(ColorProperty::Rgba(100, 149, 237, 255));
+        assert_eq!(res, expected);
+        let res = "foo".parse::<ColorProperty>();
+        let expected = Err("invalid predefined color \"foo\"".to_string());
+        assert_eq!(res, expected);
+    }
 
     #[test]
     fn parse_selector_part() {
