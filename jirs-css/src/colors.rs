@@ -1,5 +1,85 @@
 use std::str::FromStr;
 
+/// rgba(255, 255, 255, 1.0)
+/// 012345
+/// rgb(255, 255, 255, 1.0)
+/// 01234
+pub fn parse_rgba(s: &str, parse_alpha: bool) -> Result<(u8, u8, u8, u8), String> {
+    let start_idx = if parse_alpha { 5 } else { 4 };
+    let v: Vec<String> = s[start_idx..(s.len() - 1)]
+        .split(',')
+        .map(|s| s.to_string())
+        .collect();
+    let r = v
+        .get(0)
+        .ok_or_else(|| format!("invalid color {:?}", s))
+        .and_then(|s| s.parse().map_err(|_| format!("invalid color {:?}", s)))?;
+    let g = v
+        .get(1)
+        .ok_or_else(|| format!("invalid color {:?}", s))
+        .and_then(|s| s.parse().map_err(|_| format!("invalid color {:?}", s)))?;
+    let b = v
+        .get(2)
+        .ok_or_else(|| format!("invalid color {:?}", s))
+        .and_then(|s| s.parse().map_err(|_| format!("invalid color {:?}", s)))?;
+    let a = if parse_alpha {
+        (v.get(3)
+            .ok_or_else(|| format!("invalid color {:?}", s))
+            .and_then(|s| {
+                s.parse::<f64>()
+                    .map_err(|_| format!("invalid color {:?}", s))
+            })?
+            * 255f64) as u8
+    } else {
+        255
+    };
+    Ok((r, g, b, a))
+}
+
+/// hsla(360, 100%, 100%, 1.0)
+/// 012345
+/// hsl(360, 100%, 100%, 1.0)
+/// 01234
+pub fn parse_hsla(given: &str, parse_alpha: bool) -> Result<(u16, u8, u8, f64), String> {
+    let start_idx = if parse_alpha { 5 } else { 4 };
+    let v: Vec<String> = given[start_idx..(given.len() - 1)]
+        .split(',')
+        .map(|s| s.to_string())
+        .collect();
+    let h = v
+        .get(0)
+        .ok_or_else(|| format!("invalid color {:?}", given))
+        .and_then(|s| s.parse().map_err(|_| format!("invalid color {:?}", given)))?;
+    let s = parse_percent(given, v.get(1))?;
+    let l = parse_percent(given, v.get(2))?;
+    let a = if parse_alpha {
+        v.get(3)
+            .ok_or_else(|| format!("invalid color {:?}", given))
+            .and_then(|s| {
+                s.parse::<f64>()
+                    .map_err(|_| format!("invalid color {:?}", given))
+            })?
+    } else {
+        1.0f64
+    };
+    Ok((h, s, l, a))
+}
+
+fn parse_percent(s: &str, v: Option<&String>) -> Result<u8, String> {
+    v.ok_or_else(|| format!("invalid color {:?}", s))
+        .and_then(|s| {
+            if s.ends_with('%') {
+                Ok(s[0..(s.len() - 1)].to_string())
+            } else {
+                Err(format!("invalid color {:?}", s))
+            }
+        })
+        .and_then(|s| {
+            s.parse::<u8>()
+                .map_err(|_| format!("invalid color {:?}", s))
+        })
+}
+
 pub enum Color {
     AliceBlue,
     AntiqueWhite,

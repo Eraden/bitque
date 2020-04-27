@@ -2,6 +2,8 @@ use std::iter::Peekable;
 use std::str::{Chars, FromStr};
 use std::vec::IntoIter;
 
+use crate::colors::{parse_hsla, parse_rgba};
+
 #[derive(Debug)]
 pub struct CssTokenizer<'l> {
     it: Peekable<Chars<'l>>,
@@ -60,9 +62,23 @@ impl<'l> CssTokenizer<'l> {
 }
 
 #[derive(Debug)]
+pub struct ParserPosition {
+    line: usize,
+    line_character: usize,
+    character: usize,
+}
+
+impl std::fmt::Display for ParserPosition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(format!("({}:{}:{})", self.line, self.line_character, self.character).as_str())
+    }
+}
+
+#[derive(Debug)]
 pub struct CssParser {
     it: Peekable<IntoIter<String>>,
     selectors: Vec<Selector>,
+    pos: ParserPosition,
 }
 
 impl CssParser {
@@ -70,6 +86,11 @@ impl CssParser {
         Self {
             it: tokens.into_iter().peekable(),
             selectors: vec![],
+            pos: ParserPosition {
+                line: 0,
+                line_character: 0,
+                character: 0,
+            },
         }
     }
 
@@ -526,7 +547,21 @@ impl CssParser {
     }
 
     fn consume(&mut self) -> Option<String> {
-        self.it.next()
+        let current = self.it.next();
+        if let Some(s) = current.as_ref() {
+            match s.as_str() {
+                "\n" => {
+                    self.pos.character += s.len();
+                    self.pos.line += 1;
+                    self.pos.line_character += 0;
+                }
+                _ => {
+                    self.pos.character += s.len();
+                    self.pos.line_character += s.len();
+                }
+            }
+        }
+        current
     }
 
     fn expect_consume(&mut self) -> Result<String, String> {
@@ -1111,8 +1146,8 @@ impl FromStr for ZIndexProperty {
 #[derive(Debug, PartialEq)]
 pub enum ColorProperty {
     Name(String),
-    Rgba(u16, u16, u16, u16),
-    Hsla(u16, u16, u16, u16),
+    Rgba(u8, u8, u8, u8),
+    Hsla(u16, u8, u8, f64),
     Current,
 }
 
@@ -1120,99 +1155,48 @@ impl FromStr for ColorProperty {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let p = match s.trim().to_lowercase().as_str() {
-            "currentcolor" => ColorProperty::Current,
+        let p = match s.trim() {
+            "currentColor" => ColorProperty::Current,
             _ if s.len() == 7 && s.starts_with('#') => {
                 let (r, g, b) = (
-                    u16::from_str_radix(&s[1..2], 16)
+                    u8::from_str_radix(&s[1..2], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
-                    u16::from_str_radix(&s[3..4], 16)
+                    u8::from_str_radix(&s[3..4], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
-                    u16::from_str_radix(&s[5..6], 16)
+                    u8::from_str_radix(&s[5..6], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
                 );
                 ColorProperty::Rgba(r, g, b, 255)
             }
             _ if s.len() == 9 && s.starts_with('#') => {
                 let (r, g, b, a) = (
-                    u16::from_str_radix(&s[1..2], 16)
+                    u8::from_str_radix(&s[1..2], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
-                    u16::from_str_radix(&s[3..4], 16)
+                    u8::from_str_radix(&s[3..4], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
-                    u16::from_str_radix(&s[5..6], 16)
+                    u8::from_str_radix(&s[5..6], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
-                    u16::from_str_radix(&s[7..8], 16)
+                    u8::from_str_radix(&s[7..8], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
                 );
                 ColorProperty::Rgba(r, g, b, a)
             }
-            _ if s.starts_with("rgba(") => {
-                let v: Vec<String> = s[5..(s.len() - 1)]
-                    .split(',')
-                    .map(|s| s.to_string())
-                    .collect();
-                let r = v
-                    .get(0)
-                    .ok_or_else(|| format!("invalid color {:?}", s))
-                    .and_then(|s| {
-                        s.parse::<u16>()
-                            .map_err(|_| format!("invalid color {:?}", s))
-                    })?;
-                let g = v
-                    .get(1)
-                    .ok_or_else(|| format!("invalid color {:?}", s))
-                    .and_then(|s| {
-                        s.parse::<u16>()
-                            .map_err(|_| format!("invalid color {:?}", s))
-                    })?;
-                let b = v
-                    .get(2)
-                    .ok_or_else(|| format!("invalid color {:?}", s))
-                    .and_then(|s| {
-                        s.parse::<u16>()
-                            .map_err(|_| format!("invalid color {:?}", s))
-                    })?;
-                let a = (v
-                    .get(3)
-                    .ok_or_else(|| format!("invalid color {:?}", s))
-                    .and_then(|s| {
-                        s.parse::<f64>()
-                            .map_err(|_| format!("invalid color {:?}", s))
-                    })?
-                    * 255f64) as u16;
+            _ if s.trim().to_lowercase().starts_with("rgba(") => {
+                let (r, g, b, a) = parse_rgba(s.trim(), true)?;
                 ColorProperty::Rgba(r, g, b, a)
             }
-            _ if s.starts_with("rgb(") => {
-                let v: Vec<String> = s[5..(s.len() - 1)]
-                    .split(',')
-                    .map(|s| s.to_string())
-                    .collect();
-                let r = v
-                    .get(0)
-                    .ok_or_else(|| format!("invalid color {:?}", s))
-                    .and_then(|s| {
-                        s.parse::<u16>()
-                            .map_err(|_| format!("invalid color {:?}", s))
-                    })?;
-                let g = v
-                    .get(1)
-                    .ok_or_else(|| format!("invalid color {:?}", s))
-                    .and_then(|s| {
-                        s.parse::<u16>()
-                            .map_err(|_| format!("invalid color {:?}", s))
-                    })?;
-                let b = v
-                    .get(2)
-                    .ok_or_else(|| format!("invalid color {:?}", s))
-                    .and_then(|s| {
-                        s.parse::<u16>()
-                            .map_err(|_| format!("invalid color {:?}", s))
-                    })?;
-                let a = 255;
+            _ if s.trim().to_lowercase().starts_with("rgb(") => {
+                let (r, g, b, a) = parse_rgba(s.trim(), false)?;
                 ColorProperty::Rgba(r, g, b, a)
             }
-            // _ if s.starts_with("hsla(") => {}
-            // _ if s.starts_with("hsl(") => {}
+            _ if s.trim().to_lowercase().starts_with("hsla(") => {
+                let (h, s, l, a) = parse_hsla(s.trim(), true)?;
+                ColorProperty::Hsla(h, s, l, a)
+            }
+            _ if s.trim().to_lowercase().starts_with("hsl(") => {
+                let (h, s, l, a) = parse_hsla(s.trim(), false)?;
+                ColorProperty::Hsla(h, s, l, a)
+            }
             _ => return Err(format!("invalid color {:?}", s)),
         };
         Ok(p)
@@ -1439,7 +1423,6 @@ pub enum Property {
 
 #[cfg(test)]
 mod tests {
-    use crate::prop::Property::AnimationDelay;
     use crate::prop::*;
 
     #[test]
