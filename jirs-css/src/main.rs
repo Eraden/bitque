@@ -12,6 +12,8 @@ const INPUT: &str = "./jirs-client/js/styles.css";
 
 type Css = Arc<RwLock<CssFile>>;
 
+mod prop;
+
 #[derive(Debug)]
 enum Partial {
     String(String),
