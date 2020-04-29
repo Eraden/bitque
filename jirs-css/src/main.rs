@@ -12,7 +12,6 @@ const INPUT: &str = "./jirs-client/js/styles.css";
 
 type Css = Arc<RwLock<CssFile>>;
 
-mod colors;
 mod prop;
 
 #[derive(Debug)]

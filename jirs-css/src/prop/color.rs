@@ -1,47 +1,190 @@
 use std::str::FromStr;
 
-/// hsla(360, 100%, 100%, 1.0)
-/// 012345
-/// hsl(360, 100%, 100%, 1.0)
-/// 01234
-pub fn parse_hsla(given: &str, parse_alpha: bool) -> Result<(u16, u8, u8, f64), String> {
-    let start_idx = if parse_alpha { 5 } else { 4 };
-    let v: Vec<String> = given[start_idx..(given.len() - 1)]
-        .split(',')
-        .map(|s| s.to_string())
-        .collect();
-    let h = v
-        .get(0)
-        .ok_or_else(|| format!("invalid color {:?}", given))
-        .and_then(|s| s.parse().map_err(|_| format!("invalid color {:?}", given)))?;
-    let s = parse_percent(given, v.get(1))?;
-    let l = parse_percent(given, v.get(2))?;
-    let a = if parse_alpha {
-        v.get(3)
-            .ok_or_else(|| format!("invalid color {:?}", given))
-            .and_then(|s| {
-                s.parse::<f64>()
-                    .map_err(|_| format!("invalid color {:?}", given))
-            })?
-    } else {
-        1.0f64
-    };
-    Ok((h, s, l, a))
+use crate::prop::{CssParser, ParseToken, Parser, PropertyValue, Token, ValueResult};
+
+#[derive(Debug, PartialEq)]
+pub enum ColorProperty {
+    Name(String),
+    Rgba(
+        PropertyValue<u8>,
+        PropertyValue<u8>,
+        PropertyValue<u8>,
+        PropertyValue<u8>,
+    ),
+    Hsla(
+        PropertyValue<u16>,
+        PropertyValue<u8>,
+        PropertyValue<u8>,
+        PropertyValue<f64>,
+    ),
+    Current,
 }
 
-fn parse_percent(s: &str, v: Option<&String>) -> Result<u8, String> {
-    v.ok_or_else(|| format!("invalid color {:?}", s))
-        .and_then(|s| {
-            if s.ends_with('%') {
-                Ok(s[0..(s.len() - 1)].to_string())
-            } else {
-                Err(format!("invalid color {:?}", s))
+impl Token for ColorProperty {}
+
+impl ParseToken<ColorProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<ColorProperty> {
+        self.skip_white();
+        let current = self.expect_consume()?;
+        let s = current.trim();
+
+        let p = match s {
+            "currentColor" => ColorProperty::Current,
+            _ if s.len() == 7 && s.starts_with('#') => {
+                let r = u8::from_str_radix(&s[1..=2], 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                let g = u8::from_str_radix(&s[3..=4], 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                let b = u8::from_str_radix(&s[5..=6], 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                ColorProperty::Rgba(
+                    PropertyValue::Other(r),
+                    PropertyValue::Other(g),
+                    PropertyValue::Other(b),
+                    PropertyValue::Other(255),
+                )
             }
-        })
-        .and_then(|s| {
-            s.parse::<u8>()
-                .map_err(|_| format!("invalid color {:?}", s))
-        })
+            _ if s.len() == 4 && s.starts_with('#') => {
+                let _x = &s[1..=1];
+                let r = u8::from_str_radix(&s[1..=1].repeat(2), 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                let g = u8::from_str_radix(&s[2..=2].repeat(2), 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                let b = u8::from_str_radix(&s[3..=3].repeat(2), 16)
+                    .map_err(|_| format!("invalid color {:?}", s))?;
+                ColorProperty::Rgba(
+                    PropertyValue::Other(r),
+                    PropertyValue::Other(g),
+                    PropertyValue::Other(b),
+                    PropertyValue::Other(255),
+                )
+            }
+            _ if s.len() == 9 && s.starts_with('#') => {
+                let (r, g, b, a) = (
+                    u8::from_str_radix(&s[1..=2], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                    u8::from_str_radix(&s[3..=4], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                    u8::from_str_radix(&s[5..=6], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                    u8::from_str_radix(&s[7..=8], 16)
+                        .map_err(|_| format!("invalid color {:?}", s))?,
+                );
+                ColorProperty::Rgba(
+                    PropertyValue::Other(r),
+                    PropertyValue::Other(g),
+                    PropertyValue::Other(b),
+                    PropertyValue::Other(a),
+                )
+            }
+            "rgba" => {
+                self.skip_white();
+                self.consume_expected("(")?;
+                self.skip_white();
+                let r = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let g = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let b = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let a = self.parse_token()?.into_color_alpha();
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
+                ColorProperty::Rgba(r, g, b, a)
+            }
+            "rgb" => {
+                self.skip_white();
+                self.consume_expected("(")?;
+                self.skip_white();
+                let r = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let g = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let b = self.parse_token()?;
+                self.skip_white();
+                let a = PropertyValue::Other(255);
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
+                ColorProperty::Rgba(r, g, b, a)
+            }
+            "hsla" => {
+                self.skip_white();
+                self.consume_expected("(")?;
+                self.skip_white();
+                let h = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let s = self.parse_token()?;
+                self.consume_expected("%")?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let l = self.parse_token()?;
+                self.consume_expected("%")?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let a = self.parse_token()?;
+                match a {
+                    PropertyValue::Other(f) if -0.001f64 > f || f > 1.001f64 => {
+                        return Err(format!("out of range hsl alpha value {:?}", a))
+                    }
+                    _ => (),
+                };
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
+                ColorProperty::Hsla(h, s, l, a)
+            }
+            "hsl" => {
+                self.skip_white();
+                self.consume_expected("(")?;
+                self.skip_white();
+                let h = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let s = self.parse_token()?;
+                self.consume_expected("%")?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let l = self.parse_token()?;
+                self.consume_expected("%")?;
+                let a = PropertyValue::Other(1f64);
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
+                ColorProperty::Hsla(h, s, l, a)
+            }
+
+            _ => s
+                .parse::<Color>()
+                .map(|c| c.to_values())
+                .and_then(|(r, g, b)| {
+                    Ok(ColorProperty::Rgba(
+                        PropertyValue::Other(r),
+                        PropertyValue::Other(g),
+                        PropertyValue::Other(b),
+                        PropertyValue::Other(255),
+                    ))
+                })?,
+        };
+        Ok(PropertyValue::Other(p))
+    }
 }
 
 pub enum Color {
