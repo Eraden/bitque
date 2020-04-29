@@ -3,7 +3,15 @@ use std::str::{Chars, FromStr};
 use std::vec::IntoIter;
 
 use crate::colors::Color;
-use crate::colors::{parse_hsla, parse_rgba};
+
+pub type ParseResult<T> = Result<T, String>;
+pub type ValueResult<T> = Result<PropertyValue<T>, String>;
+
+pub trait Token {}
+
+pub trait ParseToken<Token> {
+    fn parse_token(&mut self) -> ValueResult<Token>;
+}
 
 #[derive(Debug)]
 pub struct CssTokenizer<'l> {
@@ -25,7 +33,7 @@ impl<'l> CssTokenizer<'l> {
         let mut escaped = false;
         while let Some(c) = self.it.next() {
             match c {
-                '{' | '}' | ';' | ':' => {
+                '{' | '}' | ';' | ':' | ')' | '(' | '"' | '\'' | ',' | '%' => {
                     self.push_buffer();
                     self.tokens.push(c.to_string())
                 }
@@ -71,34 +79,46 @@ pub struct ParserPosition {
 
 impl std::fmt::Display for ParserPosition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(format!("({}:{}:{})", self.line, self.line_character, self.character).as_str())
+        f.write_str(format!("{}:{}:{}", self.line, self.line_character, self.character).as_str())
     }
 }
 
 #[derive(Debug)]
 pub struct CssParser {
+    tokens: Vec<String>,
     it: Peekable<IntoIter<String>>,
     selectors: Vec<Selector>,
     pos: ParserPosition,
+    current: String,
+    filename: String,
 }
 
 impl CssParser {
-    pub fn new(tokens: Vec<String>) -> Self {
+    pub fn new<S>(filename: S, tokens: Vec<String>) -> Self
+    where
+        S: Into<String>,
+    {
         Self {
+            tokens: tokens.clone(),
             it: tokens.into_iter().peekable(),
             selectors: vec![],
             pos: ParserPosition {
-                line: 0,
-                line_character: 0,
+                line: 1,
+                line_character: 1,
                 character: 0,
             },
+            current: "".to_string(),
+            filename: filename.into(),
         }
     }
 
     pub fn parse(mut self) -> Result<Vec<Selector>, String> {
-        while let Some(token) = self.it.next() {
-            let selector = self.parse_selector(token.as_str())?;
+        while let Some(token) = self.consume() {
+            let selector = self
+                .parse_selector(token.as_str())
+                .map_err(|error| format!("{} ({}:{})", error, self.filename, self.pos))?;
             self.selectors.push(selector);
+            self.skip_white();
         }
         Ok(self.selectors)
     }
@@ -108,8 +128,9 @@ impl CssParser {
 
         if let Ok(part) = token.parse::<SelectorPart>() {
             path.push(part);
-            self.parse_selector_path(&mut path);
+            self.parse_selector_path(&mut path)?;
         }
+        self.skip_white();
         let block = self
             .expect_consume()
             .and_then(|s| self.parse_block(s.as_str()))?;
@@ -117,13 +138,13 @@ impl CssParser {
         Ok(Selector { path, block })
     }
 
-    fn parse_selector_path(&mut self, path: &mut Vec<SelectorPart>) {
+    fn parse_selector_path(&mut self, path: &mut Vec<SelectorPart>) -> Result<(), String> {
         self.skip_white();
-        while let Some(token) = self.it.peek() {
+        while let Some(token) = self.peek() {
             if token.as_str() == "{" {
                 break;
             }
-            match self.consume().unwrap_or_default().parse::<SelectorPart>() {
+            match self.expect_consume()?.parse::<SelectorPart>() {
                 Ok(part) => {
                     path.push(part);
                 }
@@ -131,6 +152,7 @@ impl CssParser {
             };
             self.skip_white();
         }
+        Ok(())
     }
 
     fn parse_block(&mut self, token: &str) -> Result<Block, String> {
@@ -141,7 +163,6 @@ impl CssParser {
         self.skip_white();
         while let Some(token) = self.consume() {
             if token.as_str() == "}" {
-                self.consume();
                 break;
             }
             let prop = self.parse_property(token.as_str())?;
@@ -153,177 +174,28 @@ impl CssParser {
 
     fn parse_property(&mut self, s: &str) -> Result<Property, String> {
         let prop = match s {
-            "align-content" => {
-                self.skip_white();
-                self.consume_expected(":")?;
-                self.skip_white();
-                let p = self.parse_expected_prop_value::<AlignContentProperty>()?;
-                self.consume_expected(";")?;
-                Property::AlignContent(p)
-            }
-            "align-items" => {
-                self.skip_white();
-                self.consume_expected(":")?;
-                self.skip_white();
-                let p = self.parse_expected_prop_value::<AlignItemsProperty>()?;
-                self.consume_expected(";")?;
-                Property::AlignItems(p)
-            }
-            "align-self" => {
-                self.skip_white();
-                self.consume_expected(":")?;
-                self.skip_white();
-                let p = self.parse_expected_prop_value::<AlignSelfProperty>()?;
-                self.consume_expected(";")?;
-                Property::AlignSelf(p)
-            }
-            "all" => {
-                self.skip_white();
-                self.consume_expected(":")?;
-                self.skip_white();
-                let p = self.parse_expected_prop_value::<AllProperty>()?;
-                self.consume_expected(";")?;
-                Property::All(p)
-            }
-            "animation" => {
-                self.skip_white();
-                self.consume_expected(":")?;
-                self.skip_white();
-                let def = self.expect_consume()?;
-                let p = match def.as_str() {
-                    "initial" => PropertyValue::Other(AnimationProperty::Initial),
-                    "inherit" => PropertyValue::Other(AnimationProperty::Inherit),
-                    _ if def.starts_with("--") => PropertyValue::Variable(def[2..].to_string()),
-                    _ => {
-                        let name = def;
-                        self.skip_white();
-
-                        let duration = if self.current_is_semicolon() {
-                            PropertyValue::Other(TimeProperty::Seconds(0))
-                        } else {
-                            let v = self.parse_expected_prop_value::<TimeProperty>()?;
-                            self.skip_white();
-                            v
-                        };
-                        let timing = if self.current_is_semicolon() {
-                            PropertyValue::Other(AnimationTimingFunction::Ease)
-                        } else {
-                            let v = self.parse_expected_prop_value::<AnimationTimingFunction>()?;
-                            self.skip_white();
-                            v
-                        };
-                        let delay = if self.current_is_semicolon() {
-                            PropertyValue::Other(AnimationDelayProperty::Time(
-                                TimeProperty::Seconds(0),
-                            ))
-                        } else {
-                            let v = self.parse_expected_prop_value::<AnimationDelayProperty>()?;
-                            self.skip_white();
-                            v
-                        };
-                        let iteration_count = if self.current_is_semicolon() {
-                            PropertyValue::Other(1)
-                        } else {
-                            let count = self.expect_consume()?;
-                            let v = count.parse::<usize>().map_err(|_| {
-                                format!(
-                                    "invalid animation iteration count, expect number got {:?}",
-                                    count
-                                )
-                            })?;
-                            self.skip_white();
-                            PropertyValue::Other(v)
-                        };
-                        let direction = if self.current_is_semicolon() {
-                            PropertyValue::Other(AnimationDirectionProperty::Normal)
-                        } else {
-                            let v =
-                                self.parse_expected_prop_value::<AnimationDirectionProperty>()?;
-                            self.skip_white();
-                            v
-                        };
-                        let fill_mode = if self.current_is_semicolon() {
-                            PropertyValue::Other(AnimationFillModeProperty::None)
-                        } else {
-                            let v =
-                                self.parse_expected_prop_value::<AnimationFillModeProperty>()?;
-                            self.skip_white();
-                            v
-                        };
-                        let play_state = if self.current_is_semicolon() {
-                            PropertyValue::Other(AnimationPlayStateProperty::Running)
-                        } else {
-                            let v =
-                                self.parse_expected_prop_value::<AnimationPlayStateProperty>()?;
-                            self.skip_white();
-                            v
-                        };
-
-                        PropertyValue::Other(AnimationProperty::Custom(
-                            name,
-                            duration,
-                            timing,
-                            delay,
-                            iteration_count,
-                            direction,
-                            fill_mode,
-                            play_state,
-                        ))
-                    }
-                };
-                self.consume_expected(";")?;
-                Property::Animation(p)
-            }
-            "animation-delay" => {
-                let d = self.parse_expected_prop_value::<TimeProperty>()?;
-                self.consume_expected(";")?;
-                Property::AnimationDelay(d)
-            }
-            "animation-direction" => {
-                let p = self.parse_expected_prop_value::<AnimationDirectionProperty>()?;
-                self.consume_expected(";")?;
-                Property::AnimationDirection(p)
-            }
-            "animation-duration" => {
-                let p = self.parse_expected_prop_value::<AnimationDirectionProperty>()?;
-                self.consume_expected(";")?;
-                Property::AnimationDuration(p)
-            }
+            "align-content" => Property::AlignContent(self.parse_token()?),
+            "align-items" => Property::AlignItems(self.parse_token()?),
+            "align-self" => Property::AlignSelf(self.parse_token()?),
+            "all" => Property::All(self.parse_token()?),
+            "animation" => Property::Animation(self.parse_token()?),
+            "animation-delay" => Property::AnimationDelay(self.parse_token()?),
+            "animation-direction" => Property::AnimationDirection(self.parse_token()?),
+            "animation-duration" => Property::AnimationDuration(self.parse_token()?),
             "animation-fill-mode" => {
                 let p = self.parse_expected_prop_value()?;
                 self.consume_expected(";")?;
                 Property::AnimationFillMode(p)
             }
-            "animation-iteration-count" => {
-                let count = self.expect_consume()?;
-                let p = if count.starts_with("--") {
-                    PropertyValue::Variable(count[2..].to_string())
-                } else {
-                    PropertyValue::Other(count.parse::<usize>().map_err(|_| {
-                        format!("invalid iteration count, expect number got {:?}", count)
-                    })?)
-                };
-
-                self.consume_expected(";")?;
-                Property::AnimationIterationCount(p)
-            }
-            "animation-name" => {
-                self.consume_expected(";")?;
-                let name = match self.expect_consume()?.as_str() {
-                    name @ _ if name.starts_with("--") => {
-                        PropertyValue::Variable(name[2..].to_string())
-                    }
-                    name @ _ => PropertyValue::Other(name.to_string()),
-                };
-                Property::AnimationName(name)
-            }
+            "animation-iteration-count" => Property::AnimationIterationCount(self.parse_token()?),
+            "animation-name" => Property::AnimationName(self.parse_token()?),
             "animation-play-state" => {
                 let p = self.parse_expected_prop_value()?;
                 self.consume_expected(";")?;
                 Property::AnimationPlayState(p)
             }
             "animation-timing-function" => {
-                let p = self.parse_expected_prop_value()?;
+                let p = self.parse_token()?;
                 self.consume_expected(";")?;
                 Property::AnimationTimingFunction(p)
             }
@@ -349,7 +221,10 @@ impl CssParser {
                 Property::BackgroundClip(p)
             }
             "background-color" => {
-                let p = self.parse_expected_prop_value()?;
+                self.skip_white();
+                self.consume_expected(":")?;
+                self.skip_white();
+                let p = self.parse_token()?;
                 self.consume_expected(";")?;
                 Property::BackgroundColor(p)
             }
@@ -401,10 +276,21 @@ impl CssParser {
             //     "caption-side" => Property::CaptionSide,
             //     "caret-color" => Property::CaretColor,
             //     "@charset" => Property::AtCharset,
-            //     "clear" => Property::Clear,
+            "clear" => {
+                let p = self.parse_expected_prop_value()?;
+                self.consume_expected(";")?;
+                Property::Clear(p)
+            }
             //     "clip" => Property::Clip,
             //     "clip-path" => Property::ClipPath,
-            //     "color" => Property::Color,
+            "color" => {
+                self.skip_white();
+                self.consume_expected(":")?;
+                self.skip_white();
+                let p = self.parse_token()?;
+                self.consume_expected(";")?;
+                Property::Color(p)
+            }
             //     "column-count" => Property::ColumnCount,
             //     "column-fill" => Property::ColumnFill,
             //     "column-gap" => Property::ColumnGap,
@@ -420,14 +306,7 @@ impl CssParser {
             //     "counter-reset" => Property::CounterReset,
             //     "cursor" => Property::Cursor,
             //     "direction" => Property::Direction,
-            "display" => {
-                self.skip_white();
-                self.consume_expected(":")?;
-                self.skip_white();
-                let p = self.parse_expected::<DisplayProperty>()?;
-                self.consume_expected(";")?;
-                Property::Display(p)
-            }
+            "display" => Property::Display(self.parse_token()?),
             //     "empty-cells" => Property::EmptyCells,
             //     "filter" => Property::Filter,
             //     "flex" => Property::Flex,
@@ -437,7 +316,11 @@ impl CssParser {
             //     "flex-grow" => Property::FlexGrow,
             //     "flex-shrink" => Property::FlexShrink,
             //     "flex-wrap" => Property::FlexWrap,
-            //     "float" => Property::Float,
+            "float" => {
+                let p = self.parse_expected_prop_value()?;
+                self.consume_expected(";")?;
+                Property::Float(p)
+            }
             //     "font" => Property::Font,
             //     "@font-face" => Property::AtFontFace,
             //     "font-family" => Property::FontFamily,
@@ -473,14 +356,7 @@ impl CssParser {
             //     "hyphens" => Property::Hyphens,
             //     "@import" => Property::AtImport,
             //     "isolation" => Property::Isolation,
-            "justify-content" => {
-                self.skip_white();
-                self.consume_expected(":")?;
-                self.skip_white();
-                let p = self.parse_expected_prop_value::<JustifyContentProperty>()?;
-                self.consume_expected(";")?;
-                Property::JustifyContent(p)
-            }
+            "justify-content" => Property::JustifyContent(self.parse_token()?),
             //     "@keyframes" => Property::AtKeyframes,
             //     "left" => Property::Left,
             //     "letter-spacing" => Property::LetterSpacing,
@@ -523,7 +399,11 @@ impl CssParser {
             //     "perspective" => Property::Perspective,
             //     "perspective-origin" => Property::PerspectiveOrigin,
             //     "pointer-events" => Property::PointerEvents,
-            //     "position" => Property::Position,
+            "position" => {
+                let p = self.parse_expected_prop_value()?;
+                self.consume_expected(";")?;
+                Property::Position(p)
+            }
             //     "quotes" => Property::Quotes,
             //     "resize" => Property::Resize,
             //     "right" => Property::Right,
@@ -582,7 +462,7 @@ impl CssParser {
                 "\n" => {
                     self.pos.character += s.len();
                     self.pos.line += 1;
-                    self.pos.line_character += 0;
+                    self.pos.line_character = 1;
                 }
                 _ => {
                     self.pos.character += s.len();
@@ -590,6 +470,7 @@ impl CssParser {
                 }
             }
         }
+        self.current = current.as_ref().cloned().unwrap_or_default();
         current
     }
 
@@ -613,7 +494,12 @@ impl CssParser {
 
     fn consume_expected(&mut self, expected: &str) -> Result<String, String> {
         self.consume()
-            .ok_or_else(|| "expect to have parsable token but nothing was found".to_string())
+            .ok_or_else(|| {
+                format!(
+                    "expect to have parsable token {:?} but nothing was found",
+                    expected
+                )
+            })
             .and_then(|s| {
                 if s.as_str() == expected {
                     Ok(s)
@@ -634,15 +520,13 @@ impl CssParser {
         s.parse::<ExpectedType>()
     }
 
-    fn parse_expected_prop_value<ExpectedType>(
-        &mut self,
-    ) -> Result<PropertyValue<ExpectedType>, String>
+    fn parse_expected_prop_value<ExpectedType>(&mut self) -> ValueResult<ExpectedType>
     where
         ExpectedType: FromStr<Err = String>,
     {
         let s = self.expect_consume()?;
-        if s.starts_with("--") {
-            Ok(PropertyValue::Variable(s[2..].to_string()))
+        if Self::check_if_variable(s.as_str()) {
+            Self::parse_prop_value_variable(s.as_str())
         } else {
             s.parse::<ExpectedType>().map(|v| PropertyValue::Other(v))
         }
@@ -650,6 +534,19 @@ impl CssParser {
 
     fn current_is_semicolon(&mut self) -> bool {
         self.peek().map(|s| s.as_str() == ";").unwrap_or_default()
+    }
+
+    fn parse_prop_value_variable<T>(s: &str) -> Result<PropertyValue<T>, String> {
+        if !Self::check_if_variable(s) {
+            return Err(format!("given string is not a variable {:?}", s));
+        }
+        Ok(PropertyValue::Variable(
+            s[6..(s.len() - 1)].trim().to_string(),
+        ))
+    }
+
+    fn check_if_variable(s: &str) -> bool {
+        s.starts_with("var(--") && s.ends_with(")")
     }
 }
 
@@ -709,6 +606,127 @@ pub enum BlockProperty {
     Selector(Box<Selector>),
 }
 
+impl Token for usize {}
+
+impl ParseToken<usize> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<usize>, String> {
+        let count = self.expect_consume()?;
+        let p = if Self::check_if_variable(count.as_str()) {
+            Self::parse_prop_value_variable(count.as_str())?
+        } else {
+            PropertyValue::Other(
+                count
+                    .parse()
+                    .map_err(|_| format!("invalid token, expect number got {:?}", count))?,
+            )
+        };
+
+        Ok(p)
+    }
+}
+
+impl Token for u8 {}
+
+impl ParseToken<u8> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<u8>, String> {
+        let count = self.expect_consume()?;
+        let p = if Self::check_if_variable(count.as_str()) {
+            Self::parse_prop_value_variable(count.as_str())?
+        } else {
+            PropertyValue::Other(count.parse().map_err(|_| {
+                format!(
+                    "invalid token, expect short number greater or equal 0 got {:?}",
+                    count
+                )
+            })?)
+        };
+
+        Ok(p)
+    }
+}
+
+impl Token for u16 {}
+
+impl ParseToken<u16> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<u16>, String> {
+        let count = self.expect_consume()?;
+        let p = if Self::check_if_variable(count.as_str()) {
+            Self::parse_prop_value_variable(count.as_str())?
+        } else {
+            PropertyValue::Other(count.parse().map_err(|_| {
+                format!(
+                    "invalid token, expect middle range number greater or equal 0 got {:?}",
+                    count
+                )
+            })?)
+        };
+
+        Ok(p)
+    }
+}
+
+impl Token for u32 {}
+
+impl ParseToken<u32> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<u32>, String> {
+        let count = self.expect_consume()?;
+        let p = if Self::check_if_variable(count.as_str()) {
+            Self::parse_prop_value_variable(count.as_str())?
+        } else {
+            PropertyValue::Other(count.parse().map_err(|_| {
+                format!(
+                    "invalid token, expect number greater or equal 0 got {:?}",
+                    count
+                )
+            })?)
+        };
+
+        Ok(p)
+    }
+}
+
+impl Token for f64 {}
+
+impl ParseToken<f64> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<f64>, String> {
+        let count = self.expect_consume()?;
+        let p = if Self::check_if_variable(count.as_str()) {
+            Self::parse_prop_value_variable(count.as_str())?
+        } else {
+            PropertyValue::Other(count.parse().map_err(|_| {
+                format!(
+                    "invalid token, expect floating point number got {:?}",
+                    count
+                )
+            })?)
+        };
+
+        Ok(p)
+    }
+}
+
+impl PropertyValue<f64> {
+    fn into_color_alpha(self) -> PropertyValue<u8> {
+        match self {
+            PropertyValue::Variable(v) => PropertyValue::Variable(v),
+            PropertyValue::Other(f) => PropertyValue::Other((f * 255f64) as u8),
+        }
+    }
+}
+
+impl Token for String {}
+
+impl ParseToken<String> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<String>, String> {
+        self.consume_expected(":")?;
+        let name = match self.expect_consume()?.as_str() {
+            name @ _ if Self::check_if_variable(name) => Self::parse_prop_value_variable(name)?,
+            name @ _ => PropertyValue::Other(name.to_string()),
+        };
+        Ok(name)
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum DisplayProperty {
     Inline,
@@ -734,6 +752,19 @@ pub enum DisplayProperty {
     None,
     Initial,
     Inherit,
+}
+
+impl Token for DisplayProperty {}
+
+impl ParseToken<DisplayProperty> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<DisplayProperty>, String> {
+        self.skip_white();
+        self.consume_expected(":")?;
+        self.skip_white();
+        let p = self.parse_expected::<DisplayProperty>()?;
+        self.consume_expected(";")?;
+        Ok(PropertyValue::Other(p))
+    }
 }
 
 impl FromStr for DisplayProperty {
@@ -782,6 +813,19 @@ pub enum AlignContentProperty {
     Inherit,
 }
 
+impl Token for AlignContentProperty {}
+
+impl ParseToken<AlignContentProperty> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<AlignContentProperty>, String> {
+        self.skip_white();
+        self.consume_expected(":")?;
+        self.skip_white();
+        let p = self.parse_expected_prop_value()?;
+        self.consume_expected(";")?;
+        Ok(p)
+    }
+}
+
 impl FromStr for AlignContentProperty {
     type Err = String;
 
@@ -810,6 +854,19 @@ pub enum AlignItemsProperty {
     Baseline,
     Initial,
     Inherit,
+}
+
+impl Token for AlignItemsProperty {}
+
+impl ParseToken<AlignItemsProperty> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<AlignItemsProperty>, String> {
+        self.skip_white();
+        self.consume_expected(":")?;
+        self.skip_white();
+        let p = self.parse_expected_prop_value()?;
+        self.consume_expected(";")?;
+        Ok(p)
+    }
 }
 
 impl FromStr for AlignItemsProperty {
@@ -841,6 +898,19 @@ pub enum AlignSelfProperty {
     Inherit,
 }
 
+impl Token for AlignSelfProperty {}
+
+impl ParseToken<AlignSelfProperty> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<AlignSelfProperty>, String> {
+        self.skip_white();
+        self.consume_expected(":")?;
+        self.skip_white();
+        let p = self.parse_expected_prop_value::<AlignSelfProperty>()?;
+        self.consume_expected(";")?;
+        Ok(p)
+    }
+}
+
 impl FromStr for AlignSelfProperty {
     type Err = String;
 
@@ -866,6 +936,19 @@ pub enum AllProperty {
     Unset,
 }
 
+impl Token for AllProperty {}
+
+impl ParseToken<AllProperty> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<AllProperty>, String> {
+        self.skip_white();
+        self.consume_expected(":")?;
+        self.skip_white();
+        let p = self.parse_expected_prop_value::<AllProperty>()?;
+        self.consume_expected(";")?;
+        Ok(p)
+    }
+}
+
 impl FromStr for AllProperty {
     type Err = String;
 
@@ -888,6 +971,16 @@ pub enum AnimationDirectionProperty {
     AlternateReverse,
     Initial,
     Inherit,
+}
+
+impl Token for AnimationDirectionProperty {}
+
+impl ParseToken<AnimationDirectionProperty> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<AnimationDirectionProperty>, String> {
+        let p = self.parse_expected_prop_value::<AnimationDirectionProperty>()?;
+        self.consume_expected(";")?;
+        Ok(p)
+    }
 }
 
 impl FromStr for AnimationDirectionProperty {
@@ -967,24 +1060,28 @@ pub enum TimeProperty {
     Inherit,
 }
 
-impl FromStr for TimeProperty {
-    type Err = String;
+impl Token for TimeProperty {}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let p = match s {
+impl ParseToken<TimeProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<TimeProperty> {
+        self.skip_white();
+        self.consume_expected(":")?;
+        self.skip_white();
+        let current = self.expect_consume()?;
+        let p = match current.as_str() {
             "initial" => TimeProperty::Initial,
             "inherit" => TimeProperty::Inherit,
-            _ if s.ends_with("ms") => match s[0..(s.len() - 2)].parse::<i32>() {
+            _ if current.ends_with("ms") => match current[0..(current.len() - 2)].parse::<i32>() {
                 Ok(n) => TimeProperty::MilliSeconds(n),
                 _ => return Err("invalid time".to_string()),
             },
-            _ if s.ends_with("s") => match s[0..(s.len() - 1)].parse::<i32>() {
+            _ if current.ends_with("s") => match current[0..(current.len() - 1)].parse::<i32>() {
                 Ok(n) => TimeProperty::Seconds(n),
                 _ => return Err("invalid time".to_string()),
             },
             _ => return Err("invalid time".to_string()),
         };
-        Ok(p)
+        Ok(PropertyValue::Other(p))
     }
 }
 
@@ -994,15 +1091,17 @@ pub enum AnimationTimingFunctionSteps {
     End,
 }
 
-impl FromStr for AnimationTimingFunctionSteps {
-    type Err = String;
+impl Token for AnimationTimingFunctionSteps {}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "start" => Ok(AnimationTimingFunctionSteps::Start),
-            "end" => Ok(AnimationTimingFunctionSteps::End),
-            _ => Err(format!("invalid animation timing function step {:?}", s)),
-        }
+impl ParseToken<AnimationTimingFunctionSteps> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<AnimationTimingFunctionSteps> {
+        let s = self.expect_consume()?;
+        let p = match s.to_lowercase().as_str() {
+            "start" => AnimationTimingFunctionSteps::Start,
+            "end" => AnimationTimingFunctionSteps::End,
+            _ => return Err(format!("invalid animation timing function step {:?}", s)),
+        };
+        Ok(PropertyValue::Other(p))
     }
 }
 
@@ -1015,17 +1114,29 @@ pub enum AnimationTimingFunction {
     EaseInOut,
     StepStart,
     StepEnd,
-    Steps(u32, AnimationTimingFunctionSteps),
-    CubicBezier(f64, f64, f64, f64),
+    Steps(
+        PropertyValue<u32>,
+        PropertyValue<AnimationTimingFunctionSteps>,
+    ),
+    CubicBezier(
+        PropertyValue<f64>,
+        PropertyValue<f64>,
+        PropertyValue<f64>,
+        PropertyValue<f64>,
+    ),
     Initial,
     Inherit,
 }
 
-impl FromStr for AnimationTimingFunction {
-    type Err = String;
+impl Token for AnimationTimingFunction {}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let p = match s.to_string().as_str() {
+impl ParseToken<AnimationTimingFunction> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<AnimationTimingFunction>, String> {
+        self.skip_white();
+        self.consume_expected(":")?;
+        self.skip_white();
+        let current = self.expect_consume()?;
+        let p = match current.as_str() {
             "linear" => AnimationTimingFunction::Linear,
             "ease" => AnimationTimingFunction::Ease,
             "ease-in" => AnimationTimingFunction::EaseIn,
@@ -1035,61 +1146,74 @@ impl FromStr for AnimationTimingFunction {
             "step-end" => AnimationTimingFunction::StepEnd,
             "initial" => AnimationTimingFunction::Initial,
             "inherit" => AnimationTimingFunction::Inherit,
-            _ if s.starts_with("steps(") => {
-                let n_start = "steps(".len();
-                let (n_end, _) = s
-                    .char_indices()
-                    .find(|(_idx, c)| *c == ',')
-                    .ok_or_else(|| format!("invalid animation timing function {:?}", s))?;
-                let b = s[n_start..n_end]
-                    .trim()
-                    .parse::<u32>()
-                    .map_err(|_| format!("invalid animation timing function {:?}", s))?;
-                if b == 0 {
-                    return Err(format!("invalid animation timing function {:?}", s));
+            "steps" => {
+                self.consume_expected("(")?;
+                self.skip_white();
+                let b = self.parse_token()?;
+                match b {
+                    PropertyValue::Other(n) if n <= 0 => {
+                        return Err(format!("invalid animation timing function, number of iterations must be greater than 0"));
+                    }
+                    _ => (),
                 }
-                let c = s[(n_end + 1)..(s.len() - 1)]
-                    .trim()
-                    .parse::<AnimationTimingFunctionSteps>()
-                    .map_err(|_| format!("invalid animation timing function {:?}", s))?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let c = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
+                self.consume_expected(";")?;
                 AnimationTimingFunction::Steps(b, c)
             }
-            _ if s.starts_with("cubic-bezier(") => {
-                let v: Vec<f64> = s["cubic-bezier(".len()..(s.len() - 1)]
-                    .split(',')
-                    .filter_map(|p| p.trim().parse::<f64>().ok())
-                    .collect();
-                if v.len() != 4 {
-                    return Err(format!("invalid animation timing function {:?}", s));
-                }
-                AnimationTimingFunction::CubicBezier(v[0], v[1], v[2], v[3])
+            "cubic-bezier" => {
+                self.consume_expected("(")?;
+                self.skip_white();
+                let a = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let b = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let c = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let d = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
+                self.consume_expected(";")?;
+                AnimationTimingFunction::CubicBezier(a, b, c, d)
             }
-            // "steps(int,start|end)" => AnimationTimingFunction::Steps(int, start | end),
-            // "cubic-bezier(n,n,n,n)" => AnimationTimingFunction::CubicBezier(n, n, n, n),
-            _ => return Err(format!("invalid animation timing function {:?}", s)),
+            _ => return Err(format!("invalid animation timing function {:?}", current)),
         };
-        Ok(p)
+        Ok(PropertyValue::Other(p))
     }
 }
 
 #[derive(Debug, PartialEq)]
 pub enum AnimationDelayProperty {
-    Time(TimeProperty),
+    Time(PropertyValue<TimeProperty>),
     Initial,
     Inherit,
 }
 
-impl FromStr for AnimationDelayProperty {
-    type Err = String;
+impl Token for AnimationDelayProperty {}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "initial" => Ok(AnimationDelayProperty::Initial),
-            "inherit" => Ok(AnimationDelayProperty::Inherit),
-            _ => s
-                .parse::<TimeProperty>()
-                .map(|p| AnimationDelayProperty::Time(p)),
-        }
+impl ParseToken<AnimationDelayProperty> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<AnimationDelayProperty>, String> {
+        self.skip_white();
+        let current = self.expect_consume()?;
+        let p = match current.as_str() {
+            "initial" => AnimationDelayProperty::Initial,
+            "inherit" => AnimationDelayProperty::Inherit,
+            _ => AnimationDelayProperty::Time(self.parse_token()?),
+        };
+        self.consume_expected(";")?;
+        Ok(PropertyValue::Other(p))
     }
 }
 
@@ -1109,6 +1233,99 @@ pub enum AnimationProperty {
     ),
 }
 
+impl Token for AnimationProperty {}
+
+impl ParseToken<AnimationProperty> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<AnimationProperty>, String> {
+        self.skip_white();
+        self.consume_expected(":")?;
+        self.skip_white();
+        let def = self.expect_consume()?;
+        let p = match def.as_str() {
+            "initial" => PropertyValue::Other(AnimationProperty::Initial),
+            "inherit" => PropertyValue::Other(AnimationProperty::Inherit),
+            _ if Self::check_if_variable(def.as_str()) => {
+                Self::parse_prop_value_variable(def.as_str())?
+            }
+            _ => {
+                let name = def;
+                self.skip_white();
+
+                let duration = if self.current_is_semicolon() {
+                    PropertyValue::Other(TimeProperty::Seconds(0))
+                } else {
+                    let v = self.parse_token()?;
+                    self.skip_white();
+                    v
+                };
+                let timing = if self.current_is_semicolon() {
+                    PropertyValue::Other(AnimationTimingFunction::Ease)
+                } else {
+                    let v = self.parse_token()?;
+                    self.skip_white();
+                    v
+                };
+                let delay = if self.current_is_semicolon() {
+                    PropertyValue::Other(AnimationDelayProperty::Time(PropertyValue::Other(
+                        TimeProperty::Seconds(0),
+                    )))
+                } else {
+                    let v = self.parse_token()?;
+                    self.skip_white();
+                    v
+                };
+                let iteration_count = if self.current_is_semicolon() {
+                    PropertyValue::Other(1)
+                } else {
+                    let count = self.expect_consume()?;
+                    let v = count.parse::<usize>().map_err(|_| {
+                        format!(
+                            "invalid animation iteration count, expect number got {:?}",
+                            count
+                        )
+                    })?;
+                    self.skip_white();
+                    PropertyValue::Other(v)
+                };
+                let direction = if self.current_is_semicolon() {
+                    PropertyValue::Other(AnimationDirectionProperty::Normal)
+                } else {
+                    let v = self.parse_expected_prop_value::<AnimationDirectionProperty>()?;
+                    self.skip_white();
+                    v
+                };
+                let fill_mode = if self.current_is_semicolon() {
+                    PropertyValue::Other(AnimationFillModeProperty::None)
+                } else {
+                    let v = self.parse_expected_prop_value::<AnimationFillModeProperty>()?;
+                    self.skip_white();
+                    v
+                };
+                let play_state = if self.current_is_semicolon() {
+                    PropertyValue::Other(AnimationPlayStateProperty::Running)
+                } else {
+                    let v = self.parse_expected_prop_value::<AnimationPlayStateProperty>()?;
+                    self.skip_white();
+                    v
+                };
+
+                PropertyValue::Other(AnimationProperty::Custom(
+                    name,
+                    duration,
+                    timing,
+                    delay,
+                    iteration_count,
+                    direction,
+                    fill_mode,
+                    play_state,
+                ))
+            }
+        };
+        self.consume_expected(";")?;
+        Ok(p)
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum JustifyContentProperty {
     FlexStart,
@@ -1118,6 +1335,19 @@ pub enum JustifyContentProperty {
     SpaceAround,
     Initial,
     Inherit,
+}
+
+impl Token for JustifyContentProperty {}
+
+impl ParseToken<JustifyContentProperty> for CssParser {
+    fn parse_token(&mut self) -> Result<PropertyValue<JustifyContentProperty>, String> {
+        self.skip_white();
+        self.consume_expected(":")?;
+        self.skip_white();
+        let p = self.parse_expected_prop_value::<JustifyContentProperty>()?;
+        self.consume_expected(";")?;
+        Ok(p)
+    }
 }
 
 impl FromStr for JustifyContentProperty {
@@ -1187,18 +1417,66 @@ impl FromStr for ZIndexProperty {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum ColorProperty {
-    Name(String),
-    Rgba(u8, u8, u8, u8),
-    Hsla(u16, u8, u8, f64),
-    Current,
+pub enum ClearProperty {
+    None,
+    Left,
+    Right,
+    Both,
+    InlineStart,
+    InlineEnd,
+
+    Initial,
+    Inherit,
+    Unset,
 }
 
-impl FromStr for ColorProperty {
+impl FromStr for ClearProperty {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let p = match s.trim() {
+        let p = match s {
+            "none" => ClearProperty::None,
+            "left" => ClearProperty::Left,
+            "right" => ClearProperty::Right,
+            "both" => ClearProperty::Both,
+            "inline-start" => ClearProperty::InlineStart,
+            "inline-end" => ClearProperty::InlineEnd,
+            "initial" => ClearProperty::Initial,
+            "inherit" => ClearProperty::Inherit,
+            "unset" => ClearProperty::Unset,
+            _ => return Err(format!("invalid clear {:?}", s)),
+        };
+        Ok(p)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ColorProperty {
+    Name(String),
+    Rgba(
+        PropertyValue<u8>,
+        PropertyValue<u8>,
+        PropertyValue<u8>,
+        PropertyValue<u8>,
+    ),
+    Hsla(
+        PropertyValue<u16>,
+        PropertyValue<u8>,
+        PropertyValue<u8>,
+        PropertyValue<f64>,
+    ),
+    Current,
+}
+
+impl Token for ColorProperty {}
+
+impl ParseToken<ColorProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<ColorProperty> {
+        self.skip_white();
+        let current = self.expect_consume()?;
+        let s = current.trim();
+
+        let p = match s {
             "currentColor" => ColorProperty::Current,
             _ if s.len() == 7 && s.starts_with('#') => {
                 let r = u8::from_str_radix(&s[1..=2], 16)
@@ -1207,7 +1485,12 @@ impl FromStr for ColorProperty {
                     .map_err(|_| format!("invalid color {:?}", s))?;
                 let b = u8::from_str_radix(&s[5..=6], 16)
                     .map_err(|_| format!("invalid color {:?}", s))?;
-                ColorProperty::Rgba(r, g, b, 255)
+                ColorProperty::Rgba(
+                    PropertyValue::Other(r),
+                    PropertyValue::Other(g),
+                    PropertyValue::Other(b),
+                    PropertyValue::Other(255),
+                )
             }
             _ if s.len() == 4 && s.starts_with('#') => {
                 let _x = &s[1..=1];
@@ -1217,7 +1500,12 @@ impl FromStr for ColorProperty {
                     .map_err(|_| format!("invalid color {:?}", s))?;
                 let b = u8::from_str_radix(&s[3..=3].repeat(2), 16)
                     .map_err(|_| format!("invalid color {:?}", s))?;
-                ColorProperty::Rgba(r, g, b, 255)
+                ColorProperty::Rgba(
+                    PropertyValue::Other(r),
+                    PropertyValue::Other(g),
+                    PropertyValue::Other(b),
+                    PropertyValue::Other(255),
+                )
             }
             _ if s.len() == 9 && s.starts_with('#') => {
                 let (r, g, b, a) = (
@@ -1230,31 +1518,120 @@ impl FromStr for ColorProperty {
                     u8::from_str_radix(&s[7..=8], 16)
                         .map_err(|_| format!("invalid color {:?}", s))?,
                 );
+                ColorProperty::Rgba(
+                    PropertyValue::Other(r),
+                    PropertyValue::Other(g),
+                    PropertyValue::Other(b),
+                    PropertyValue::Other(a),
+                )
+            }
+            "rgba" => {
+                self.skip_white();
+                self.consume_expected("(")?;
+                self.skip_white();
+                let r = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let g = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let b = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let a = self.parse_token()?.into_color_alpha();
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
                 ColorProperty::Rgba(r, g, b, a)
             }
-            _ if s.trim().to_lowercase().starts_with("rgba(") => {
-                let (r, g, b, a) = parse_rgba(s.trim(), true)?;
+            "rgb" => {
+                self.skip_white();
+                self.consume_expected("(")?;
+                self.skip_white();
+                let r = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let g = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let b = self.parse_token()?;
+                self.skip_white();
+                let a = PropertyValue::Other(255);
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
                 ColorProperty::Rgba(r, g, b, a)
             }
-            _ if s.trim().to_lowercase().starts_with("rgb(") => {
-                let (r, g, b, a) = parse_rgba(s.trim(), false)?;
-                ColorProperty::Rgba(r, g, b, a)
-            }
-            _ if s.trim().to_lowercase().starts_with("hsla(") => {
-                let (h, s, l, a) = parse_hsla(s.trim(), true)?;
+            "hsla" => {
+                self.skip_white();
+                self.consume_expected("(")?;
+                self.skip_white();
+                let h = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let s = self.parse_token()?;
+                self.consume_expected("%")?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let l = self.parse_token()?;
+                self.consume_expected("%")?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let a = self.parse_token()?;
+                match a {
+                    PropertyValue::Other(f) if -0.001f64 > f || f > 1.001f64 => {
+                        return Err(format!("out of range hsl alpha value {:?}", a))
+                    }
+                    _ => (),
+                };
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
                 ColorProperty::Hsla(h, s, l, a)
             }
-            _ if s.trim().to_lowercase().starts_with("hsl(") => {
-                let (h, s, l, a) = parse_hsla(s.trim(), false)?;
+            "hsl" => {
+                self.skip_white();
+                self.consume_expected("(")?;
+                self.skip_white();
+                let h = self.parse_token()?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let s = self.parse_token()?;
+                self.consume_expected("%")?;
+                self.skip_white();
+                self.consume_expected(",")?;
+                self.skip_white();
+                let l = self.parse_token()?;
+                self.consume_expected("%")?;
+                let a = PropertyValue::Other(1f64);
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
                 ColorProperty::Hsla(h, s, l, a)
             }
 
             _ => s
                 .parse::<Color>()
-                .map(|c| c.to_hex())
-                .and_then(|s| s.parse::<ColorProperty>())?,
+                .map(|c| c.to_values())
+                .and_then(|(r, g, b)| {
+                    Ok(ColorProperty::Rgba(
+                        PropertyValue::Other(r),
+                        PropertyValue::Other(g),
+                        PropertyValue::Other(b),
+                        PropertyValue::Other(255),
+                    ))
+                })?,
         };
-        Ok(p)
+        Ok(PropertyValue::Other(p))
     }
 }
 
@@ -1353,6 +1730,64 @@ impl FromStr for BackgroundAttachmentProperty {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum AngleUnit {
+    Deg(f64),
+    Grad(f64),
+    Rad(f64),
+    Turn(f64),
+}
+
+#[derive(Debug, PartialEq)]
+pub enum PositionProperty {
+    Static,
+    Relative,
+    Absolute,
+    Fixed,
+    Sticky,
+}
+
+impl FromStr for PositionProperty {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let p = match s {
+            "static" => PositionProperty::Static,
+            "relative" => PositionProperty::Relative,
+            "absolute" => PositionProperty::Absolute,
+            "fixed" => PositionProperty::Fixed,
+            "sticky" => PositionProperty::Sticky,
+            _ => return Err(format!("invalid position {:?}", s)),
+        };
+        Ok(p)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum FloatProperty {
+    Left,
+    Right,
+    None,
+    InlineStart,
+    InlineEnd,
+}
+
+impl FromStr for FloatProperty {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let p = match s {
+            "left " => FloatProperty::Left,
+            "right " => FloatProperty::Right,
+            "none " => FloatProperty::None,
+            "inline-start" => FloatProperty::InlineStart,
+            "inline-end" => FloatProperty::InlineEnd,
+            _ => return Err(format!("invalid float {:?}", s)),
+        };
+        Ok(p)
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum PropertyValue<T> {
     Variable(String),
     Other(T),
@@ -1365,7 +1800,7 @@ pub enum Property {
     AlignSelf(PropertyValue<AlignSelfProperty>),
     All(PropertyValue<AllProperty>),
     Animation(PropertyValue<AnimationProperty>),
-    AnimationDelay(PropertyValue<TimeProperty>),
+    AnimationDelay(PropertyValue<AnimationDelayProperty>),
     AnimationDirection(PropertyValue<AnimationDirectionProperty>),
     AnimationDuration(PropertyValue<AnimationDirectionProperty>),
     AnimationFillMode(PropertyValue<AnimationFillModeProperty>),
@@ -1427,10 +1862,10 @@ pub enum Property {
     CaptionSide(String),
     CaretColor(String),
     AtCharset(String),
-    Clear(String),
+    Clear(PropertyValue<ClearProperty>),
     Clip(String),
     ClipPath(String),
-    Color(String),
+    Color(PropertyValue<ColorProperty>),
     ColumnCount(String),
     ColumnFill(String),
     ColumnGap(String),
@@ -1446,7 +1881,7 @@ pub enum Property {
     CounterReset(String),
     Cursor(String),
     Direction(String),
-    Display(DisplayProperty),
+    Display(PropertyValue<DisplayProperty>),
     EmptyCells(String),
     Filter(String),
     Flex(String),
@@ -1456,7 +1891,7 @@ pub enum Property {
     FlexGrow(String),
     FlexShrink(String),
     FlexWrap(String),
-    Float(String),
+    Float(PropertyValue<FloatProperty>),
     Font(String),
     AtFontFace(String),
     FontFamily(String),
@@ -1535,7 +1970,7 @@ pub enum Property {
     Perspective(String),
     PerspectiveOrigin(String),
     PointerEvents(String),
-    Position(String),
+    Position(PropertyValue<PositionProperty>),
     Quotes(String),
     Resize(String),
     Right(String),
@@ -1573,56 +2008,143 @@ pub enum Property {
     WordWrap(String),
     WritingMode(String),
     ZIndex(PropertyValue<ZIndexProperty>),
-    Variable(String, String),
+    Variable(String, PropertyValue<String>),
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::prop::*;
+    use super::*;
+
+    /// we assume currently we hit property name
+    /// display : block;
+    /// ^
+    /// so we need to add `:`
+    ///
+    /// But we also we adding spaces around because they are allowed in css and needs to be skipped
+    fn parse_prop_value(s: &str) -> CssParser {
+        let full = format!(" : {} {}", s, if s.contains(";") { "" } else { ";" });
+        let tokens = CssTokenizer::new(full.as_str()).tokenize();
+        CssParser::new("", tokens)
+    }
+
+    fn parse_simple_value(s: &str) -> CssParser {
+        let tokens = CssTokenizer::new(s).tokenize();
+        CssParser::new("", tokens)
+    }
+
+    #[test]
+    fn parse_prop_value_variable() {
+        let res: Result<PropertyValue<()>, String> =
+            CssParser::parse_prop_value_variable("var(--a)");
+        let expected = Ok(PropertyValue::Variable("a".to_string()));
+        assert_eq!(res, expected);
+        let res: Result<PropertyValue<()>, String> =
+            CssParser::parse_prop_value_variable("var(--foo)");
+        let expected = Ok(PropertyValue::Variable("foo".to_string()));
+        assert_eq!(res, expected);
+        let res: Result<PropertyValue<()>, String> = CssParser::parse_prop_value_variable("--foo");
+        let expected = Err(r#"given string is not a variable "--foo""#.to_string());
+        assert_eq!(res, expected);
+        let res: Result<PropertyValue<()>, String> = CssParser::parse_prop_value_variable("foo");
+        let expected = Err(r#"given string is not a variable "foo""#.to_string());
+        assert_eq!(res, expected);
+    }
 
     #[test]
     fn parse_color() {
-        let res = "#123".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Rgba(17, 34, 51, 255));
+        let res: ValueResult<ColorProperty> = parse_simple_value("#123").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Rgba(
+            PropertyValue::Other(17),
+            PropertyValue::Other(34),
+            PropertyValue::Other(51),
+            PropertyValue::Other(255),
+        )));
         assert_eq!(res, expected);
-        let res = "#010203".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Rgba(1, 2, 3, 255));
+        let res: ValueResult<ColorProperty> = parse_simple_value("#010203").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Rgba(
+            PropertyValue::Other(1),
+            PropertyValue::Other(2),
+            PropertyValue::Other(3),
+            PropertyValue::Other(255),
+        )));
         assert_eq!(res, expected);
-        let res = "#fff".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Rgba(255, 255, 255, 255));
+        let res: ValueResult<ColorProperty> = parse_simple_value("#fff").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Rgba(
+            PropertyValue::Other(255),
+            PropertyValue::Other(255),
+            PropertyValue::Other(255),
+            PropertyValue::Other(255),
+        )));
         assert_eq!(res, expected);
-        let res = "#ffffff".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Rgba(255, 255, 255, 255));
+        let res: ValueResult<ColorProperty> = parse_simple_value("#ffffff").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Rgba(
+            PropertyValue::Other(255),
+            PropertyValue::Other(255),
+            PropertyValue::Other(255),
+            PropertyValue::Other(255),
+        )));
         assert_eq!(res, expected);
-        let res = "#abcdef".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Rgba(171, 205, 239, 255));
+        let res: ValueResult<ColorProperty> = parse_simple_value("#abcdef").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Rgba(
+            PropertyValue::Other(171),
+            PropertyValue::Other(205),
+            PropertyValue::Other(239),
+            PropertyValue::Other(255),
+        )));
         assert_eq!(res, expected);
-        let res = "currentColor".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Current);
+        let res: ValueResult<ColorProperty> = parse_simple_value("currentColor").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Current));
         assert_eq!(res, expected);
-        let res = "rgb(1,2,3)".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Rgba(1, 2, 3, 255));
+        let res: ValueResult<ColorProperty> = parse_simple_value("rgb(1,2,3)").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Rgba(
+            PropertyValue::Other(1),
+            PropertyValue::Other(2),
+            PropertyValue::Other(3),
+            PropertyValue::Other(255),
+        )));
         assert_eq!(res, expected);
-        let res = "rgb(1,2,3,.2)".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Rgba(1, 2, 3, 255));
+        let res: ValueResult<ColorProperty> = parse_simple_value("rgb(1,2,3,.2)").parse_token();
+        let expected = Err("expect to find token \")\" but found \",\"".to_string());
         assert_eq!(res, expected);
-        let res = "rgba(1,2,3,.1)".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Rgba(1, 2, 3, 25));
+        let res: ValueResult<ColorProperty> = parse_simple_value("rgba(1,2,3,.1)").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Rgba(
+            PropertyValue::Other(1),
+            PropertyValue::Other(2),
+            PropertyValue::Other(3),
+            PropertyValue::Other(25),
+        )));
         assert_eq!(res, expected);
-        let res = "hsla(100,20%,30%,.4)".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Hsla(100, 20, 30, 0.4f64));
+        let res: ValueResult<ColorProperty> =
+            parse_simple_value("hsla(100,20%,30%,.4)").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Hsla(
+            PropertyValue::Other(100),
+            PropertyValue::Other(20),
+            PropertyValue::Other(30),
+            PropertyValue::Other(0.4f64),
+        )));
         assert_eq!(res, expected);
-        let res = "hsl(100,20%,30%)".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Hsla(100, 20, 30, 1.0f64));
+        let res: ValueResult<ColorProperty> = parse_simple_value("hsl(100,20%,30%)").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Hsla(
+            PropertyValue::Other(100),
+            PropertyValue::Other(20),
+            PropertyValue::Other(30),
+            PropertyValue::Other(1.0f64),
+        )));
         assert_eq!(res, expected);
-        let res = "hsl(100,20%,30%,0.5)".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Hsla(100, 20, 30, 1.0f64));
+        let res: ValueResult<ColorProperty> =
+            parse_simple_value("hsl(100,20%,30%,0.5)").parse_token();
+        let expected = Err("expect to find token \")\" but found \",\"".to_string());
         assert_eq!(res, expected);
-        let res = "CornflowerBlue".parse::<ColorProperty>();
-        let expected = Ok(ColorProperty::Rgba(100, 149, 237, 255));
+        let res: ValueResult<ColorProperty> = parse_simple_value("CornflowerBlue").parse_token();
+        let expected = Ok(PropertyValue::Other(ColorProperty::Rgba(
+            PropertyValue::Other(100),
+            PropertyValue::Other(149),
+            PropertyValue::Other(237),
+            PropertyValue::Other(255),
+        )));
         assert_eq!(res, expected);
-        let res = "foo".parse::<ColorProperty>();
-        let expected = Err("invalid predefined color \"foo\"".to_string());
+        let res: ValueResult<ColorProperty> = parse_simple_value("foo").parse_token();
+        let expected = Err("\"foo\" is not a predefined color".to_string());
         assert_eq!(res, expected);
     }
 
@@ -1635,113 +2157,149 @@ mod tests {
 
     #[test]
     fn parse_time() {
-        let res = "".parse::<TimeProperty>();
+        let res: ValueResult<TimeProperty> = parse_prop_value("").parse_token();
         let expected = Err("invalid time".to_string());
         assert_eq!(res, expected);
-        let res = "as".parse::<TimeProperty>();
+        let res: ValueResult<TimeProperty> = parse_prop_value("as").parse_token();
         let expected = Err("invalid time".to_string());
         assert_eq!(res, expected);
-        let res = "3s".parse::<TimeProperty>();
-        let expected = Ok(TimeProperty::Seconds(3));
+        let res: ValueResult<TimeProperty> = parse_prop_value("3s").parse_token();
+        let expected = Ok(PropertyValue::Other(TimeProperty::Seconds(3)));
         assert_eq!(res, expected);
-        let res = "2s".parse::<TimeProperty>();
-        let expected = Ok(TimeProperty::Seconds(2));
+        let res: ValueResult<TimeProperty> = parse_prop_value("2s").parse_token();
+        let expected = Ok(PropertyValue::Other(TimeProperty::Seconds(2)));
         assert_eq!(res, expected);
-        let res = "-5s".parse::<TimeProperty>();
-        let expected = Ok(TimeProperty::Seconds(-5));
+        let res: ValueResult<TimeProperty> = parse_prop_value("-5s").parse_token();
+        let expected = Ok(PropertyValue::Other(TimeProperty::Seconds(-5)));
         assert_eq!(res, expected);
-        let res = "3ms".parse::<TimeProperty>();
-        let expected = Ok(TimeProperty::MilliSeconds(3));
+        let res: ValueResult<TimeProperty> = parse_prop_value("3ms").parse_token();
+        let expected = Ok(PropertyValue::Other(TimeProperty::MilliSeconds(3)));
         assert_eq!(res, expected);
-        let res = "2ms".parse::<TimeProperty>();
-        let expected = Ok(TimeProperty::MilliSeconds(2));
+        let res: ValueResult<TimeProperty> = parse_prop_value("2ms").parse_token();
+        let expected = Ok(PropertyValue::Other(TimeProperty::MilliSeconds(2)));
         assert_eq!(res, expected);
-        let res = "-5ms".parse::<TimeProperty>();
-        let expected = Ok(TimeProperty::MilliSeconds(-5));
+        let res: ValueResult<TimeProperty> = parse_prop_value("-5ms").parse_token();
+        let expected = Ok(PropertyValue::Other(TimeProperty::MilliSeconds(-5)));
         assert_eq!(res, expected);
     }
 
     #[test]
     fn parse_animation_timing_function() {
-        let res = "linear".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::Linear);
+        let res: ValueResult<AnimationTimingFunction> = parse_prop_value("linear").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::Linear));
         assert_eq!(res, expected);
-        let res = "ease".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::Ease);
+        let res: ValueResult<AnimationTimingFunction> = parse_prop_value("ease").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::Ease));
         assert_eq!(res, expected);
-        let res = "ease-in".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::EaseIn);
+        let res: ValueResult<AnimationTimingFunction> = parse_prop_value("ease-in").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::EaseIn));
         assert_eq!(res, expected);
-        let res = "ease-out".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::EaseOut);
+        let res: ValueResult<AnimationTimingFunction> = parse_prop_value("ease-out").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::EaseOut));
         assert_eq!(res, expected);
-        let res = "ease-in-out".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::EaseInOut);
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("ease-in-out").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::EaseInOut));
         assert_eq!(res, expected);
-        let res = "step-start".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::StepStart);
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("step-start").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::StepStart));
         assert_eq!(res, expected);
-        let res = "step-end".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::StepEnd);
+        let res: ValueResult<AnimationTimingFunction> = parse_prop_value("step-end").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::StepEnd));
         assert_eq!(res, expected);
-        let res = "steps(1,start)".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::Steps(
-            1,
-            AnimationTimingFunctionSteps::Start,
-        ));
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("steps(1,start)").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::Steps(
+            PropertyValue::Other(1),
+            PropertyValue::Other(AnimationTimingFunctionSteps::Start),
+        )));
         assert_eq!(res, expected);
-        let res = "steps(3,end)".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::Steps(
-            3,
-            AnimationTimingFunctionSteps::End,
-        ));
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("steps(3,end)").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::Steps(
+            PropertyValue::Other(3),
+            PropertyValue::Other(AnimationTimingFunctionSteps::End),
+        )));
         assert_eq!(res, expected);
-        let res = "steps(0,start)".parse::<AnimationTimingFunction>();
-        let expected = Err("invalid animation timing function \"steps(0,start)\"".to_string());
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("steps(0,start)").parse_token();
+        let expected = Err(
+            "invalid animation timing function, number of iterations must be greater than 0"
+                .to_string(),
+        );
         assert_eq!(res, expected);
-        let res = "steps(-2,start)".parse::<AnimationTimingFunction>();
-        let expected = Err("invalid animation timing function \"steps(-2,start)\"".to_string());
-        assert_eq!(res, expected);
-        let res = "steps(0,end)".parse::<AnimationTimingFunction>();
-        let expected = Err("invalid animation timing function \"steps(0,end)\"".to_string());
-        assert_eq!(res, expected);
-        let res = "steps(-1,end)".parse::<AnimationTimingFunction>();
-        let expected = Err("invalid animation timing function \"steps(-1,end)\"".to_string());
-        assert_eq!(res, expected);
-        let res = "steps(end)".parse::<AnimationTimingFunction>();
-        let expected = Err("invalid animation timing function \"steps(end)\"".to_string());
-        assert_eq!(res, expected);
-        let res = "steps(start)".parse::<AnimationTimingFunction>();
-        let expected = Err("invalid animation timing function \"steps(start)\"".to_string());
-        assert_eq!(res, expected);
-        let res = "steps(0)".parse::<AnimationTimingFunction>();
-        let expected = Err("invalid animation timing function \"steps(0)\"".to_string());
-        assert_eq!(res, expected);
-        let res = "steps(1)".parse::<AnimationTimingFunction>();
-        let expected = Err("invalid animation timing function \"steps(1)\"".to_string());
-        assert_eq!(res, expected);
-        let res = "cubic-bezier(0.1,0.2,0.3,0.4)".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::CubicBezier(0.1, 0.2, 0.3, 0.4));
-        assert_eq!(res, expected);
-        let res = "cubic-bezier(0.1, 0.2, 0.3, 0.4)".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::CubicBezier(0.1, 0.2, 0.3, 0.4));
-        assert_eq!(res, expected);
-        let res = "cubic-bezier(0.1,0.2,0.3)".parse::<AnimationTimingFunction>();
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("steps(-2,start)").parse_token();
         let expected =
-            Err(r#"invalid animation timing function "cubic-bezier(0.1,0.2,0.3)""#.to_string());
+            Err("invalid token, expect number greater or equal 0 got \"-2\"".to_string());
         assert_eq!(res, expected);
-        let res = "cubic-bezier(0.1,0.2)".parse::<AnimationTimingFunction>();
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("steps(0,end)").parse_token();
+        let expected = Err(
+            "invalid animation timing function, number of iterations must be greater than 0"
+                .to_string(),
+        );
+        assert_eq!(res, expected);
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("steps(-1,end)").parse_token();
         let expected =
-            Err(r#"invalid animation timing function "cubic-bezier(0.1,0.2)""#.to_string());
+            Err("invalid token, expect number greater or equal 0 got \"-1\"".to_string());
         assert_eq!(res, expected);
-        let res = "cubic-bezier(0.1)".parse::<AnimationTimingFunction>();
-        let expected = Err(r#"invalid animation timing function "cubic-bezier(0.1)""#.to_string());
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("steps(end)").parse_token();
+        let expected =
+            Err("invalid token, expect number greater or equal 0 got \"end\"".to_string());
         assert_eq!(res, expected);
-        let res = "initial".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::Initial);
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("steps(start)").parse_token();
+        let expected =
+            Err("invalid token, expect number greater or equal 0 got \"start\"".to_string());
         assert_eq!(res, expected);
-        let res = "inherit".parse::<AnimationTimingFunction>();
-        let expected = Ok(AnimationTimingFunction::Inherit);
+        let res: ValueResult<AnimationTimingFunction> = parse_prop_value("steps(0)").parse_token();
+        let expected = Err(
+            "invalid animation timing function, number of iterations must be greater than 0"
+                .to_string(),
+        );
+        assert_eq!(res, expected);
+        let res: ValueResult<AnimationTimingFunction> = parse_prop_value("steps(1)").parse_token();
+        let expected = Err("expect to find token \",\" but found \")\"".to_string());
+        assert_eq!(res, expected);
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("cubic-bezier(0.1,0.2,0.3,0.4)").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::CubicBezier(
+            PropertyValue::Other(0.1),
+            PropertyValue::Other(0.2),
+            PropertyValue::Other(0.3),
+            PropertyValue::Other(0.4),
+        )));
+        assert_eq!(res, expected);
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("cubic-bezier(0.1, 0.2, 0.3, 0.4)").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::CubicBezier(
+            PropertyValue::Other(0.1),
+            PropertyValue::Other(0.2),
+            PropertyValue::Other(0.3),
+            PropertyValue::Other(0.4),
+        )));
+        assert_eq!(res, expected);
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("cubic-bezier(0.1,0.2,0.3)").parse_token();
+        let expected = Err("expect to find token \",\" but found \")\"".to_string());
+        assert_eq!(res, expected);
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("cubic-bezier(0.1,0.2)").parse_token();
+        let expected = Err("expect to find token \",\" but found \")\"".to_string());
+        assert_eq!(res, expected);
+        let res: ValueResult<AnimationTimingFunction> =
+            parse_prop_value("cubic-bezier(0.1)").parse_token();
+        let expected = Err("expect to find token \",\" but found \")\"".to_string());
+        assert_eq!(res, expected);
+        let res: ValueResult<AnimationTimingFunction> = parse_prop_value("initial").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::Initial));
+        assert_eq!(res, expected);
+        let res: ValueResult<AnimationTimingFunction> = parse_prop_value("inherit").parse_token();
+        let expected = Ok(PropertyValue::Other(AnimationTimingFunction::Inherit));
         assert_eq!(res, expected);
     }
 
@@ -1798,10 +2356,37 @@ mod tests {
     }
 
     #[test]
+    fn tokenize_p_background_image_url() {
+        let source = r#"p { background-image: url("hello/world.jpg"); }"#;
+        let result = CssTokenizer::new(source).tokenize();
+        assert_eq!(
+            result,
+            vec![
+                "p".to_string(),
+                " ".to_string(),
+                "{".to_string(),
+                " ".to_string(),
+                "background-image".to_string(),
+                ":".to_string(),
+                " ".to_string(),
+                "url".to_string(),
+                "(".to_string(),
+                "\"".to_string(),
+                "hello/world.jpg".to_string(),
+                "\"".to_string(),
+                ")".to_string(),
+                ";".to_string(),
+                " ".to_string(),
+                "}".to_string()
+            ],
+        )
+    }
+
+    #[test]
     fn parse_empty_p_selector() {
         let source = r#"p{}"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
@@ -1815,7 +2400,7 @@ mod tests {
     fn parse_p_align_content() {
         let source = r#"p { align-content: flex-start; }"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
@@ -1833,13 +2418,15 @@ mod tests {
     fn parse_p_display_block() {
         let source = r#"p { display: block; }"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
                 path: vec![SelectorPart::TagName("p".to_string())],
                 block: Block {
-                    properties: vec![Property::Display(DisplayProperty::Block),]
+                    properties: vec![Property::Display(PropertyValue::Other(
+                        DisplayProperty::Block
+                    ))]
                 },
             }]),
         )
@@ -1849,7 +2436,7 @@ mod tests {
     fn parse_long_path() {
         let source = r#"p p {}"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
@@ -1866,7 +2453,7 @@ mod tests {
     fn parse_long_path_with_parent_bound() {
         let source = r#"p > p {}"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
@@ -1884,7 +2471,7 @@ mod tests {
     fn parse_long_path_with_before_sibling_bound() {
         let source = r#"p ~ p {}"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
@@ -1902,7 +2489,7 @@ mod tests {
     fn parse_long_path_with_after_sibling_bound() {
         let source = r#"p + p {}"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
@@ -1920,14 +2507,14 @@ mod tests {
     fn parse_multiple_properties() {
         let source = r#"p { display: block; justify-content: initial; }"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
                 path: vec![SelectorPart::TagName("p".to_string()),],
                 block: Block {
                     properties: vec![
-                        Property::Display(DisplayProperty::Block),
+                        Property::Display(PropertyValue::Other(DisplayProperty::Block)),
                         Property::JustifyContent(PropertyValue::Other(
                             JustifyContentProperty::Initial
                         )),
@@ -1941,7 +2528,7 @@ mod tests {
     fn parse_animation() {
         let source = r#"p { animation: initial; }"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
@@ -1955,7 +2542,7 @@ mod tests {
         );
         let source = r#"p { animation: inherit; }"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         assert_eq!(
             result,
             Ok(vec![Selector {
@@ -1969,12 +2556,14 @@ mod tests {
         );
         let source = r#"p { animation: some; }"#;
         let tokens = CssTokenizer::new(source).tokenize();
-        let result = CssParser::new(tokens).parse();
+        let result = CssParser::new("", tokens).parse();
         let animation = Property::Animation(PropertyValue::Other(AnimationProperty::Custom(
             "some".to_string(),
             PropertyValue::Other(TimeProperty::Seconds(0)),
             PropertyValue::Other(AnimationTimingFunction::Ease),
-            PropertyValue::Other(AnimationDelayProperty::Time(TimeProperty::Seconds(0))),
+            PropertyValue::Other(AnimationDelayProperty::Time(PropertyValue::Other(
+                TimeProperty::Seconds(0),
+            ))),
             PropertyValue::Other(1),
             PropertyValue::Other(AnimationDirectionProperty::Normal),
             PropertyValue::Other(AnimationFillModeProperty::None),
@@ -1989,5 +2578,49 @@ mod tests {
                 },
             }]),
         );
+    }
+
+    #[test]
+    fn test_file_a() {
+        let tokens = CssTokenizer::new(include_str!("../tests/a.css")).tokenize();
+        let res = CssParser::new("../tests/a.css", tokens).parse();
+        let expected: Result<Vec<Selector>, String> = Ok(vec![
+            Selector {
+                path: vec![SelectorPart::Class("foo".to_string())],
+                block: Block { properties: vec![] },
+            },
+            Selector {
+                path: vec![SelectorPart::Class("bar".to_string())],
+                block: Block { properties: vec![] },
+            },
+            Selector {
+                path: vec![SelectorPart::Class("foz".to_string())],
+                block: Block { properties: vec![] },
+            },
+            Selector {
+                path: vec![SelectorPart::Class("baz".to_string())],
+                block: Block {
+                    properties: vec![
+                        Property::Display(PropertyValue::Other(DisplayProperty::Block)),
+                        Property::JustifyContent(PropertyValue::Other(
+                            JustifyContentProperty::SpaceBetween,
+                        )),
+                        Property::Color(PropertyValue::Other(ColorProperty::Rgba(
+                            PropertyValue::Other(255),
+                            PropertyValue::Other(0),
+                            PropertyValue::Other(0),
+                            PropertyValue::Other(255),
+                        ))),
+                        Property::BackgroundColor(PropertyValue::Other(ColorProperty::Rgba(
+                            PropertyValue::Other(66),
+                            PropertyValue::Other(65),
+                            PropertyValue::Other(61),
+                            PropertyValue::Other(255),
+                        ))),
+                    ],
+                },
+            },
+        ]);
+        assert_eq!(res, expected);
     }
 }
