@@ -23,6 +23,25 @@ p > #foo + .bar {
     float: right;
     justify-content: flex-end;
     position: relative;
+    width: 1px;
+    width: 2em;
+    width: 3rem;
+    width: 4%;
+    width: auto;
+    width: min-content;
+    width: max-content;
+    width: fit-content(5%);
+    width: fit-content(var(--x));
+    width: var(--y);
+    word-spacing: 1px;
+    word-spacing: 2%;
+    word-spacing: 3em;
+    word-spacing: 4rem;
+    word-spacing: normal;
+    word-spacing: inherit;
+    word-spacing: initial;
+    word-spacing: unset;
+    word-spacing: var(--z);
     z-index: -2;
 }
 

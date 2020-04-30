@@ -4,7 +4,6 @@ use crate::prop::{CssParser, ParseToken, Parser, PropertyValue, Token, ValueResu
 
 #[derive(Debug, PartialEq)]
 pub enum ColorProperty {
-    Name(String),
     Rgba(
         PropertyValue<u8>,
         PropertyValue<u8>,

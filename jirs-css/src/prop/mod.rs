@@ -8,7 +8,6 @@ use crate::prop::color::ColorProperty;
 mod animation;
 mod color;
 
-pub type ParseResult<T> = Result<T, String>;
 pub type ValueResult<T> = Result<PropertyValue<T>, String>;
 
 pub trait Token {}
@@ -20,15 +19,17 @@ pub trait ParseToken<Token>: Parser {
         self.skip_white();
         self.consume_colon()?;
         self.skip_white();
-        let _x = self.peek().cloned().unwrap_or_default();
-        let _y = 1;
-        let p = match self.try_parse_variable() {
-            Some(v) => Ok(PropertyValue::Variable(v)),
-            _ => self.parse_token(),
-        };
+        let p = self.parse_var_or_token();
         self.skip_white();
         self.consume_semicolon()?;
         p
+    }
+
+    fn parse_var_or_token(&mut self) -> ValueResult<Token> {
+        match self.try_parse_variable() {
+            Some(v) => Ok(PropertyValue::Variable(v)),
+            _ => self.parse_token(),
+        }
     }
 }
 
@@ -52,7 +53,7 @@ impl<'l> CssTokenizer<'l> {
         let mut escaped = false;
         while let Some(c) = self.it.next() {
             match c {
-                '{' | '}' | ';' | ':' | ')' | '(' | '"' | '\'' | ',' | '%' => {
+                '{' | '}' | ';' | ':' | ')' | '(' | '"' | '\'' | ',' => {
                     self.push_buffer();
                     self.tokens.push(c.to_string())
                 }
@@ -106,6 +107,7 @@ pub trait Parser {
     fn consume(&mut self) -> Option<String>;
     fn expect_consume(&mut self) -> Result<String, String>;
     fn peek(&mut self) -> Option<&String>;
+    fn expect_peek(&mut self) -> Result<String, String>;
     fn skip_white(&mut self);
     fn consume_expected(&mut self, expected: &str) -> Result<String, String>;
     fn consume_semicolon(&mut self) -> Result<String, String>;
@@ -150,6 +152,12 @@ impl Parser for CssParser {
 
     fn peek(&mut self) -> Option<&String> {
         self.it.peek()
+    }
+
+    fn expect_peek(&mut self) -> Result<String, String> {
+        self.peek()
+            .cloned()
+            .ok_or_else(|| "expect token but nothing was found".to_string())
     }
 
     fn skip_white(&mut self) {
@@ -357,7 +365,7 @@ impl CssParser {
             //     "border-top-style" => Property::BorderTopStyle,
             //     "border-top-width" => Property::BorderTopWidth,
             //     "border-width" => Property::BorderWidth,
-            //     "bottom" => Property::Bottom,
+            "bottom" => Property::Bottom(self.parse_full_token()?),
             //     "box-decoration-break" => Property::BoxDecorationBreak,
             //     "box-shadow" => Property::BoxShadow,
             //     "box-sizing" => Property::BoxSizing,
@@ -428,13 +436,13 @@ impl CssParser {
             //     "grid-template-columns" => Property::GridTemplateColumns,
             //     "grid-template-rows" => Property::GridTemplateRows,
             //     "hanging-punctuation" => Property::HangingPunctuation,
-            //     "height" => Property::Height,
+            "height" => Property::Height(self.parse_full_token()?),
             //     "hyphens" => Property::Hyphens,
             //     "@import" => Property::AtImport,
             //     "isolation" => Property::Isolation,
             "justify-content" => Property::JustifyContent(self.parse_full_token()?),
             //     "@keyframes" => Property::AtKeyframes,
-            //     "left" => Property::Left,
+            "left" => Property::Left(self.parse_full_token()?),
             //     "letter-spacing" => Property::LetterSpacing,
             //     "line-height" => Property::LineHeight,
             //     "list-style" => Property::ListStyle,
@@ -446,11 +454,11 @@ impl CssParser {
             //     "margin-left" => Property::MarginLeft,
             //     "margin-right" => Property::MarginRight,
             //     "margin-top" => Property::MarginTop,
-            //     "max-height" => Property::MaxHeight,
-            //     "max-width" => Property::MaxWidth,
+            "max-height" => Property::MaxHeight(self.parse_full_token()?),
+            "max-width" => Property::MaxWidth(self.parse_full_token()?),
             //     "@media" => Property::AtMedia,
-            //     "min-height" => Property::MinHeight,
-            //     "min-width" => Property::MinWidth,
+            "min-height" => Property::MinHeight(self.parse_full_token()?),
+            "min-width" => Property::MinWidth(self.parse_full_token()?),
             //     "mix-blend-mode" => Property::MixBlendMode,
             //     "object-fit" => Property::ObjectFit,
             //     "object-position" => Property::ObjectPosition,
@@ -478,7 +486,7 @@ impl CssParser {
             "position" => Property::Position(self.parse_full_token()?),
             //     "quotes" => Property::Quotes,
             //     "resize" => Property::Resize,
-            //     "right" => Property::Right,
+            "right" => Property::Right(self.parse_full_token()?),
             //     "scroll-behavior" => Property::ScrollBehavior,
             //     "tab-size" => Property::TabSize,
             //     "table-layout" => Property::TableLayout,
@@ -493,7 +501,7 @@ impl CssParser {
             //     "text-overflow" => Property::TextOverflow,
             //     "text-shadow" => Property::TextShadow,
             //     "text-transform" => Property::TextTransform,
-            //     "top" => Property::Top,
+            "top" => Property::Top(self.parse_full_token()?),
             //     "transform" => Property::Transform,
             //     "transform-origin" => Property::TransformOrigin,
             //     "transform-style" => Property::TransformStyle,
@@ -505,10 +513,10 @@ impl CssParser {
             //     "unicode-bidi" => Property::UnicodeBidi,
             //     "user-select" => Property::UserSelect,
             //     "vertical-align" => Property::VerticalAlign,
-            //     "visibility" => Property::Visibility,
-            //     "white-space" => Property::WhiteSpace,
-            //     "width" => Property::Width,
-            //     "word-break" => Property::WordBreak,
+            "visibility" => Property::Visibility(self.parse_full_token()?),
+            "white-space" => Property::WhiteSpace(self.parse_full_token()?),
+            "width" => Property::Width(self.parse_full_token()?),
+            "word-break" => Property::WordBreak(self.parse_full_token()?),
             "word-spacing" => Property::WordSpacing(self.parse_full_token()?),
             "word-wrap" => Property::WordWrap(self.parse_full_token()?),
             "writing-mode" => Property::WritingMode(self.parse_full_token()?),
@@ -527,14 +535,6 @@ impl CssParser {
             }
         };
         Ok(prop)
-    }
-
-    fn parse_expected<ExpectedType>(&mut self) -> Result<ExpectedType, String>
-    where
-        ExpectedType: FromStr<Err = String>,
-    {
-        let s = self.expect_consume()?;
-        s.parse::<ExpectedType>()
     }
 
     fn next_is_semicolon(&mut self) -> bool {
@@ -583,11 +583,17 @@ impl ParseToken<SelectorPart> for CssParser {
         self.skip_white();
         while let Some(s) = self.peek().cloned() {
             match s.as_str() {
+                "*" if buffer.is_empty() => {
+                    self.expect_consume()?;
+                    return Ok(PropertyValue::Other(SelectorPart::Any));
+                }
                 "{" if buffer.is_empty() => return Err("end of selector".to_string()),
-                "{" | ">" | "~" | "+" | ":" | "(" | "[" | "#" | "." if !buffer.is_empty() => {
+                "*" | "{" | ">" | "~" | "+" | ":" | "(" | "[" | "#" | "." if !buffer.is_empty() => {
                     return Ok(PropertyValue::Other(buffer.parse::<SelectorPart>()?));
                 }
-                _ if !buffer.is_empty() && s.starts_with(".") | s.starts_with("#") => {
+                _ if !buffer.is_empty()
+                    && s.starts_with(".") | s.starts_with("#") | s.ends_with("]") =>
+                {
                     return Ok(PropertyValue::Other(buffer.parse::<SelectorPart>()?));
                 }
                 _ => {
@@ -617,6 +623,17 @@ impl FromStr for SelectorPart {
             ">" => SelectorPart::ParentBound,
             "+" => SelectorPart::AfterSiblingBound,
             "~" => SelectorPart::BeforeSiblingBound,
+            _ if s.starts_with("[") && s.ends_with("]") => {
+                let v: Vec<String> = s[1..(s.len() - 1)]
+                    .split('=')
+                    .map(|s| s.to_string())
+                    .collect();
+
+                SelectorPart::Attr(
+                    v.get(0).cloned().unwrap_or_default(),
+                    v.get(1).cloned().unwrap_or_default(),
+                )
+            }
             _ if s.starts_with(".") => SelectorPart::Class(s[1..].to_string()),
             _ if s.starts_with("#") => SelectorPart::Id(s[1..].to_string()),
             _ if s.starts_with(":") && !s.contains("(") => {
@@ -1180,14 +1197,6 @@ impl ParseToken<BackgroundAttachmentProperty> for CssParser {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum AngleUnit {
-    Deg(f64),
-    Grad(f64),
-    Rad(f64),
-    Turn(f64),
-}
-
-#[derive(Debug, PartialEq)]
 pub enum PositionProperty {
     Static,
     Relative,
@@ -1268,23 +1277,209 @@ impl ParseToken<VariableUsage> for CssParser {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum AngleUnit {
+    Deg(f64),
+    Grad(f64),
+    Rad(f64),
+    Turn(f64),
+}
+
+impl Token for AngleUnit {}
+
+#[derive(Debug, PartialEq)]
 pub enum CssUnit {
     Percent(f64),
     Em(f64),
     Rem(f64),
     Px(f64),
+    Auto,
+    Initial,
+    Inherit,
 }
 
-impl CssUnit {
-    pub fn parse_from_name(name: &str, value: f64) -> Result<CssUnit, String> {
-        let p = match name {
-            "%" => CssUnit::Percent(value),
-            "em" => CssUnit::Em(value),
-            "rem" => CssUnit::Rem(value),
-            "px" => CssUnit::Px(value),
-            _ => return Err(format!("invalid css unit {:?}", name)),
+impl Token for CssUnit {}
+
+impl ParseToken<CssUnit> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<CssUnit> {
+        let p = match self.expect_consume()?.as_str() {
+            "auto" => CssUnit::Auto,
+            "initial" => CssUnit::Initial,
+            "inherit" => CssUnit::Inherit,
+            s @ _ if s.ends_with("%") => {
+                let mut v = s[0..(s.len() - 1)].to_string();
+                if !v.contains('.') {
+                    v.push_str(".0");
+                }
+                CssUnit::Percent(
+                    v.parse::<f64>()
+                        .map_err(|_| format!("invalid css unit {:?}", self.current))?,
+                )
+            }
+            s @ _ if s.ends_with("rem") => {
+                let mut v = s[0..(s.len() - 3)].to_string();
+                if !v.contains('.') {
+                    v.push_str(".0");
+                }
+                CssUnit::Rem(
+                    v.parse::<f64>()
+                        .map_err(|_| format!("invalid css unit {:?}", self.current))?,
+                )
+            }
+            s @ _ if s.ends_with("em") => {
+                let mut v = s[0..(s.len() - 2)].to_string();
+                if !v.contains('.') {
+                    v.push_str(".0");
+                }
+                CssUnit::Em(
+                    v.parse::<f64>()
+                        .map_err(|_| format!("invalid css unit {:?}", self.current))?,
+                )
+            }
+            s @ _ if s.ends_with("px") => {
+                let mut v = s[0..(s.len() - 2)].to_string();
+                if !v.contains('.') {
+                    v.push_str(".0");
+                }
+                CssUnit::Px(
+                    v.parse::<f64>()
+                        .map_err(|_| format!("invalid css unit {:?}", self.current))?,
+                )
+            }
+            _ => return Err(format!("invalid css unit {:?}", self.current)),
         };
-        Ok(p)
+        Ok(PropertyValue::Other(p))
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum VisibilityProperty {
+    Visible,
+    Hidden,
+    Collapse,
+    Inherit,
+    Initial,
+    Unset,
+}
+
+impl Token for VisibilityProperty {}
+
+impl ParseToken<VisibilityProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<VisibilityProperty> {
+        let p = match self.expect_consume()?.as_str() {
+            "visible" => VisibilityProperty::Visible,
+            "hidden" => VisibilityProperty::Hidden,
+            "collapse" => VisibilityProperty::Collapse,
+            "inherit" => VisibilityProperty::Inherit,
+            "initial" => VisibilityProperty::Initial,
+            "unset" => VisibilityProperty::Unset,
+            _ => return Err(format!("invalid white space {:?}", self.current)),
+        };
+        Ok(PropertyValue::Other(p))
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WhiteSpaceProperty {
+    Normal,
+    Nowrap,
+    Pre,
+    PreWrap,
+    PreLine,
+    BreakSpaces,
+    Inherit,
+    Initial,
+    Unset,
+}
+
+impl Token for WhiteSpaceProperty {}
+
+impl ParseToken<WhiteSpaceProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<WhiteSpaceProperty> {
+        let p = match self.expect_consume()?.as_str() {
+            "normal" => WhiteSpaceProperty::Normal,
+            "nowrap" => WhiteSpaceProperty::Nowrap,
+            "pre" => WhiteSpaceProperty::Pre,
+            "pre-wrap" => WhiteSpaceProperty::PreWrap,
+            "pre-line" => WhiteSpaceProperty::PreLine,
+            "break-spaces" => WhiteSpaceProperty::BreakSpaces,
+            "inherit" => WhiteSpaceProperty::Inherit,
+            "initial" => WhiteSpaceProperty::Initial,
+            "unset" => WhiteSpaceProperty::Unset,
+            _ => return Err(format!("invalid white space {:?}", self.current)),
+        };
+        Ok(PropertyValue::Other(p))
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WidthProperty {
+    Auto,
+    Length(PropertyValue<CssUnit>),
+    MinContent,
+    MaxContent,
+    FitContent(PropertyValue<CssUnit>),
+}
+
+impl Token for WidthProperty {}
+
+impl ParseToken<WidthProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<WidthProperty> {
+        let p = match self.expect_peek()?.as_str() {
+            "auto" => {
+                self.expect_consume()?;
+                WidthProperty::Auto
+            }
+            "min-content" => {
+                self.expect_consume()?;
+                WidthProperty::MinContent
+            }
+            "max-content" => {
+                self.expect_consume()?;
+                WidthProperty::MaxContent
+            }
+            "fit-content" => {
+                self.expect_consume()?;
+                self.skip_white();
+                self.consume_expected("(")?;
+                self.skip_white();
+                let p = WidthProperty::FitContent(self.parse_var_or_token()?);
+                self.skip_white();
+                self.consume_expected(")")?;
+                self.skip_white();
+                p
+            }
+            _ => WidthProperty::Length(self.parse_var_or_token()?),
+        };
+        Ok(PropertyValue::Other(p))
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WordBreakProperty {
+    Normal,
+    BreakAll,
+    KeepAll,
+    BreakWord,
+    Inherit,
+    Initial,
+    Unset,
+}
+
+impl Token for WordBreakProperty {}
+
+impl ParseToken<WordBreakProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<WordBreakProperty> {
+        let p = match self.expect_consume()?.as_str() {
+            "normal" => WordBreakProperty::Normal,
+            "inherit" => WordBreakProperty::Inherit,
+            "initial" => WordBreakProperty::Initial,
+            "unset" => WordBreakProperty::Unset,
+            "break-word" => WordBreakProperty::BreakWord,
+            "keep-all" => WordBreakProperty::KeepAll,
+            "break-all" => WordBreakProperty::BreakAll,
+            _ => return Err(format!("invalid word break {:?}", self.current)),
+        };
+        Ok(PropertyValue::Other(p))
     }
 }
 
@@ -1294,23 +1489,31 @@ pub enum WordSpacingProperty {
     Inherit,
     Initial,
     Unset,
-    Length(CssUnit),
+    Length(PropertyValue<CssUnit>),
 }
+
+impl Token for WordSpacingProperty {}
 
 impl ParseToken<WordSpacingProperty> for CssParser {
     fn parse_token(&mut self) -> ValueResult<WordSpacingProperty> {
-        let p = match self.expect_consume()?.as_str() {
-            "normal" => WordSpacingProperty::Normal,
-            "inherit" => WordSpacingProperty::Inherit,
-            "initial" => WordSpacingProperty::Initial,
-            "unset" => WordSpacingProperty::Unset,
-            s @ _ => match s.parse::<f64>() {
-                Err(_) => return Err(format!("invalid word wrap {:?}", self.current)),
-                Ok(f) => WordSpacingProperty::Length(CssUnit::parse_from_name(
-                    self.expect_consume()?.as_str(),
-                    f,
-                )?),
-            },
+        let p = match self.expect_peek()?.as_str() {
+            "normal" => {
+                self.expect_consume()?;
+                WordSpacingProperty::Normal
+            }
+            "inherit" => {
+                self.expect_consume()?;
+                WordSpacingProperty::Inherit
+            }
+            "initial" => {
+                self.expect_consume()?;
+                WordSpacingProperty::Initial
+            }
+            "unset" => {
+                self.expect_consume()?;
+                WordSpacingProperty::Unset
+            }
+            _ => WordSpacingProperty::Length(self.parse_var_or_token()?),
         };
         Ok(PropertyValue::Other(p))
     }
@@ -1425,7 +1628,7 @@ pub enum Property {
     BorderTopStyle(String),
     BorderTopWidth(String),
     BorderWidth(String),
-    Bottom(String),
+    Bottom(PropertyValue<CssUnit>),
     BoxDecorationBreak(String),
     BoxShadow(String),
     BoxSizing(String),
@@ -1496,13 +1699,13 @@ pub enum Property {
     GridTemplateColumns(String),
     GridTemplateRows(String),
     HangingPunctuation(String),
-    Height(String),
+    Height(PropertyValue<CssUnit>),
     Hyphens(String),
     AtImport(String),
     Isolation(String),
     JustifyContent(PropertyValue<JustifyContentProperty>),
     AtKeyframes(String),
-    Left(String),
+    Left(PropertyValue<CssUnit>),
     LetterSpacing(String),
     LineHeight(String),
     ListStyle(String),
@@ -1514,11 +1717,11 @@ pub enum Property {
     MarginLeft(String),
     MarginRight(String),
     MarginTop(String),
-    MaxHeight(String),
-    MaxWidth(String),
+    MaxHeight(PropertyValue<CssUnit>),
+    MaxWidth(PropertyValue<WidthProperty>),
     AtMedia(String),
-    MinHeight(String),
-    MinWidth(String),
+    MinHeight(PropertyValue<CssUnit>),
+    MinWidth(PropertyValue<WidthProperty>),
     MixBlendMode(String),
     ObjectFit(String),
     ObjectPosition(String),
@@ -1546,7 +1749,7 @@ pub enum Property {
     Position(PropertyValue<PositionProperty>),
     Quotes(String),
     Resize(String),
-    Right(String),
+    Right(PropertyValue<CssUnit>),
     ScrollBehavior(String),
     TabSize(String),
     TableLayout(String),
@@ -1561,7 +1764,7 @@ pub enum Property {
     TextOverflow(String),
     TextShadow(String),
     TextTransform(String),
-    Top(String),
+    Top(PropertyValue<CssUnit>),
     Transform(String),
     TransformOrigin(String),
     TransformStyle(String),
@@ -1573,10 +1776,10 @@ pub enum Property {
     UnicodeBidi(String),
     UserSelect(String),
     VerticalAlign(String),
-    Visibility(String),
-    WhiteSpace(String),
-    Width(String),
-    WordBreak(String),
+    Visibility(PropertyValue<VisibilityProperty>),
+    WhiteSpace(PropertyValue<WhiteSpaceProperty>),
+    Width(PropertyValue<WidthProperty>),
+    WordBreak(PropertyValue<WordBreakProperty>),
     WordSpacing(PropertyValue<WordSpacingProperty>),
     WordWrap(PropertyValue<WordWrapProperty>),
     WritingMode(PropertyValue<WritingModeProperty>),
@@ -2150,6 +2353,35 @@ mod tests {
                     Float(Other(FloatProperty::Right)),
                     JustifyContent(Other(JustifyContentProperty::FlexEnd)),
                     Position(Other(PositionProperty::Relative)),
+                    // width
+                    Width(Other(WidthProperty::Length(Other(CssUnit::Px(1f64))))),
+                    Width(Other(WidthProperty::Length(Other(CssUnit::Em(2f64))))),
+                    Width(Other(WidthProperty::Length(Other(CssUnit::Rem(3f64))))),
+                    Width(Other(WidthProperty::Length(Other(CssUnit::Percent(4f64))))),
+                    Width(Other(WidthProperty::Auto)),
+                    Width(Other(WidthProperty::MinContent)),
+                    Width(Other(WidthProperty::MaxContent)),
+                    Width(Other(WidthProperty::FitContent(Other(CssUnit::Percent(
+                        5f64,
+                    ))))),
+                    Width(Other(WidthProperty::FitContent(Variable(VariableUsage(
+                        "x".to_string(),
+                    ))))),
+                    Width(Variable(VariableUsage("y".to_string()))),
+                    // word-spacing
+                    WordSpacing(Other(WordSpacingProperty::Length(Other(CssUnit::Px(1f64))))),
+                    WordSpacing(Other(WordSpacingProperty::Length(Other(CssUnit::Percent(
+                        2f64,
+                    ))))),
+                    WordSpacing(Other(WordSpacingProperty::Length(Other(CssUnit::Em(3f64))))),
+                    WordSpacing(Other(WordSpacingProperty::Length(Other(CssUnit::Rem(
+                        4f64,
+                    ))))),
+                    WordSpacing(Other(WordSpacingProperty::Normal)),
+                    WordSpacing(Other(WordSpacingProperty::Inherit)),
+                    WordSpacing(Other(WordSpacingProperty::Initial)),
+                    WordSpacing(Other(WordSpacingProperty::Unset)),
+                    WordSpacing(Variable(VariableUsage("z".to_string()))),
                     ZIndex(Other(ZIndexProperty::Number(-2))),
                 ],
             ),
