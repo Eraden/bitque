@@ -53,3 +53,8 @@ p > #foo ~ .bar {
     position: var(--position);
     z-index: var(--z-index);
 }
+
+:host {
+    --clear: clear;
+    --from-var: var(--clear);
+}

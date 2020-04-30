@@ -224,9 +224,9 @@ impl CssParser {
     }
 
     pub fn parse(mut self) -> Result<Vec<Selector>, String> {
-        while let Some(token) = self.consume() {
+        while let Some(_) = self.peek() {
             let selector = self
-                .parse_selector(token.as_str())
+                .parse_selector()
                 .map_err(|error| self.failed_here(error))?;
             self.selectors.push(selector);
             self.skip_white();
@@ -234,39 +234,26 @@ impl CssParser {
         Ok(self.selectors)
     }
 
-    fn parse_selector(&mut self, token: &str) -> Result<Selector, String> {
+    fn parse_selector(&mut self) -> Result<Selector, String> {
         let mut path = vec![];
 
-        if let Ok(part) = token.parse::<SelectorPart>() {
-            path.push(part);
-            self.parse_selector_path(&mut path)?;
-        }
+        self.parse_selector_path(&mut path)?;
         self.skip_white();
         let block = self
             .expect_consume()
-            .and_then(|s| self.parse_block(s.as_str()))?;
+            .and_then(|s| self.parse_block(&path, s.as_str()))?;
 
         Ok(Selector { path, block })
     }
 
     fn parse_selector_path(&mut self, path: &mut Vec<SelectorPart>) -> Result<(), String> {
-        self.skip_white();
-        while let Some(token) = self.peek() {
-            if token.as_str() == "{" {
-                break;
-            }
-            match self.expect_consume()?.parse::<SelectorPart>() {
-                Ok(part) => {
-                    path.push(part);
-                }
-                _ => break,
-            };
-            self.skip_white();
+        while let Ok(PropertyValue::Other(part)) = self.parse_token() {
+            path.push(part);
         }
         Ok(())
     }
 
-    fn parse_block(&mut self, token: &str) -> Result<Block, String> {
+    fn parse_block(&mut self, path: &Vec<SelectorPart>, token: &str) -> Result<Block, String> {
         if token != "{" {
             return Err(format!("expect to find block but found {:?}", token));
         }
@@ -288,7 +275,7 @@ impl CssParser {
                     block.properties.push(Property::CommentBlock(comment))
                 }
                 _ => {
-                    let prop = self.parse_property(token.as_str())?;
+                    let prop = self.parse_property(path, token.as_str())?;
                     block.properties.push(prop);
                     self.skip_white();
                 }
@@ -297,7 +284,7 @@ impl CssParser {
         Ok(block)
     }
 
-    fn parse_property(&mut self, s: &str) -> Result<Property, String> {
+    fn parse_property(&mut self, path: &Vec<SelectorPart>, s: &str) -> Result<Property, String> {
         let prop = match s {
             "align-content" => Property::AlignContent(self.parse_full_token()?),
             "align-items" => Property::AlignItems(self.parse_full_token()?),
@@ -526,6 +513,14 @@ impl CssParser {
             //     "word-wrap" => Property::WordWrap,
             //     "writing-mode" => Property::WritingMode,
             "z-index" => Property::ZIndex(self.parse_full_token()?),
+            _ if s.starts_with("--") && s.len() > 2 => {
+                if path == &vec![SelectorPart::PseudoSelector("host".to_string())] {
+                    let value: PropertyValue<String> = self.parse_full_token()?;
+                    Property::VariableDefinition(s[2..].to_string(), value)
+                } else {
+                    return Err(format!("invalid property {:?}", s));
+                }
+            }
             _ => {
                 let _x = 1;
                 return Err(format!("invalid property {:?}", s));
@@ -540,23 +535,6 @@ impl CssParser {
     {
         let s = self.expect_consume()?;
         s.parse::<ExpectedType>()
-    }
-
-    fn parse_expected_prop_value<ExpectedType>(&mut self) -> ValueResult<ExpectedType>
-    where
-        ExpectedType: FromStr<Err = String>,
-    {
-        match self.try_parse_variable() {
-            Some(v) => {
-                self.skip_white();
-                self.consume_expected(";")?;
-                Ok(PropertyValue::Variable(v))
-            }
-            _ => {
-                let s = self.expect_consume()?;
-                s.parse::<ExpectedType>().map(|v| PropertyValue::Other(v))
-            }
-        }
     }
 
     fn next_is_semicolon(&mut self) -> bool {
@@ -599,6 +577,34 @@ pub enum SelectorPart {
     BeforeSiblingBound,
 }
 
+impl ParseToken<SelectorPart> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<SelectorPart> {
+        let mut buffer = String::new();
+        self.skip_white();
+        while let Some(s) = self.peek().cloned() {
+            match s.as_str() {
+                "{" if buffer.is_empty() => return Err("end of selector".to_string()),
+                "{" | ">" | "~" | "+" | ":" | "(" | "[" | "#" | "." if !buffer.is_empty() => {
+                    return Ok(PropertyValue::Other(buffer.parse::<SelectorPart>()?));
+                }
+                _ if !buffer.is_empty() && s.starts_with(".") | s.starts_with("#") => {
+                    return Ok(PropertyValue::Other(buffer.parse::<SelectorPart>()?));
+                }
+                _ => {
+                    self.expect_consume()?;
+                    buffer.push_str(s.as_str())
+                }
+            };
+            self.skip_white();
+        }
+        if buffer.is_empty() {
+            Err("".to_string())
+        } else {
+            Ok(PropertyValue::Other(buffer.parse::<SelectorPart>()?))
+        }
+    }
+}
+
 impl FromStr for SelectorPart {
     type Err = String;
 
@@ -606,7 +612,8 @@ impl FromStr for SelectorPart {
         if s.trim().is_empty() {
             return Err("invalid selector".to_string());
         }
-        let s = match s {
+        let _x = 1;
+        let p = match s {
             ">" => SelectorPart::ParentBound,
             "+" => SelectorPart::AfterSiblingBound,
             "~" => SelectorPart::BeforeSiblingBound,
@@ -617,7 +624,7 @@ impl FromStr for SelectorPart {
             }
             _ => SelectorPart::TagName(s.to_string()),
         };
-        Ok(s)
+        Ok(p)
     }
 }
 
@@ -1469,6 +1476,15 @@ pub enum Property {
 mod tests {
     use super::*;
 
+    impl Selector {
+        pub fn new(path: Vec<SelectorPart>, props: Vec<Property>) -> Self {
+            Self {
+                path,
+                block: Block { properties: props },
+            }
+        }
+    }
+
     /// we assume currently we hit property name
     /// display : block;
     /// ^
@@ -1929,33 +1945,28 @@ mod tests {
                 path: vec![SelectorPart::Class("bar".to_string())],
                 block: Block { properties: vec![] },
             },
-            Selector {
-                path: vec![SelectorPart::Class("foz".to_string())],
-                block: Block { properties: vec![] },
-            },
-            Selector {
-                path: vec![SelectorPart::Class("baz".to_string())],
-                block: Block {
-                    properties: vec![
-                        Property::Display(PropertyValue::Other(DisplayProperty::Block)),
-                        Property::JustifyContent(PropertyValue::Other(
-                            JustifyContentProperty::SpaceBetween,
-                        )),
-                        Property::Color(PropertyValue::Other(ColorProperty::Rgba(
-                            PropertyValue::Other(255),
-                            PropertyValue::Other(0),
-                            PropertyValue::Other(0),
-                            PropertyValue::Other(255),
-                        ))),
-                        Property::BackgroundColor(PropertyValue::Other(ColorProperty::Rgba(
-                            PropertyValue::Other(66),
-                            PropertyValue::Other(65),
-                            PropertyValue::Other(61),
-                            PropertyValue::Other(255),
-                        ))),
-                    ],
-                },
-            },
+            Selector::new(vec![SelectorPart::Class("foz".to_string())], vec![]),
+            Selector::new(
+                vec![SelectorPart::Class("baz".to_string())],
+                vec![
+                    Property::Display(PropertyValue::Other(DisplayProperty::Block)),
+                    Property::JustifyContent(PropertyValue::Other(
+                        JustifyContentProperty::SpaceBetween,
+                    )),
+                    Property::Color(PropertyValue::Other(ColorProperty::Rgba(
+                        PropertyValue::Other(255),
+                        PropertyValue::Other(0),
+                        PropertyValue::Other(0),
+                        PropertyValue::Other(255),
+                    ))),
+                    Property::BackgroundColor(PropertyValue::Other(ColorProperty::Rgba(
+                        PropertyValue::Other(66),
+                        PropertyValue::Other(65),
+                        PropertyValue::Other(61),
+                        PropertyValue::Other(255),
+                    ))),
+                ],
+            ),
         ]);
         assert_eq!(res, expected);
     }
@@ -1969,121 +1980,122 @@ mod tests {
         let tokens = CssTokenizer::new(include_str!("../../tests/full.css")).tokenize();
         let res = CssParser::new("./jirs-css/tests/full.css", tokens).parse();
         let expected = vec![
-            Selector {
-                path: vec![
+            Selector::new(
+                vec![
                     SelectorPart::TagName("p".to_string()),
                     SelectorPart::ParentBound,
                     SelectorPart::Id("foo".to_string()),
                     SelectorPart::AfterSiblingBound,
                     SelectorPart::Class("bar".to_string()),
                 ],
-                block: Block {
-                    properties: vec![
-                        AlignContent(Other(AlignContentProperty::SpaceBetween)),
-                        AlignItems(Other(AlignItemsProperty::Center)),
-                        AlignSelf(Other(AlignSelfProperty::Auto)),
-                        All(Other(AllProperty::Inherit)),
-                        Animation(Other(AnimationProperty::Custom(
-                            "slidein".to_string(),
-                            Other(TimeProperty::Seconds(3)),
-                            Other(AnimationTimingFunctionProperty::EaseIn),
-                            Other(AnimationDelayProperty::Time(Other(TimeProperty::Seconds(
-                                1,
-                            )))),
-                            Other(2),
-                            Other(AnimationDirectionProperty::Reverse),
-                            Other(AnimationFillModeProperty::Both),
-                            Other(AnimationPlayStateProperty::Paused),
-                        ))),
-                        AnimationDelay(Other(AnimationDelayProperty::Time(Other(
-                            TimeProperty::MilliSeconds(4),
+                vec![
+                    AlignContent(Other(AlignContentProperty::SpaceBetween)),
+                    AlignItems(Other(AlignItemsProperty::Center)),
+                    AlignSelf(Other(AlignSelfProperty::Auto)),
+                    All(Other(AllProperty::Inherit)),
+                    Animation(Other(AnimationProperty::Custom(
+                        "slidein".to_string(),
+                        Other(TimeProperty::Seconds(3)),
+                        Other(AnimationTimingFunctionProperty::EaseIn),
+                        Other(AnimationDelayProperty::Time(Other(TimeProperty::Seconds(
+                            1,
                         )))),
-                        AnimationDirection(Other(AnimationDirectionProperty::AlternateReverse)),
-                        AnimationDuration(Other(TimeProperty::Seconds(5))),
-                        AnimationIterationCount(Other(9)),
-                        AnimationName(Other("my-animation".to_string())),
-                        AnimationPlayState(Other(AnimationPlayStateProperty::Paused)),
-                        AnimationTimingFunction(Other(AnimationTimingFunctionProperty::EaseIn)),
-                        BackfaceVisibility(Other(BackfaceVisibilityProperty::Visible)),
-                        BackgroundAttachment(Other(BackgroundAttachmentProperty::Local)),
-                        BackgroundBlendMode(Other(BackgroundBlendModeProperty::Darken)),
-                        BackgroundClip(Other(BackgroundClipProperty::ContentBox)),
-                        BackgroundColor(Other(ColorProperty::Rgba(
-                            Other(12),
-                            Other(34),
-                            Other(56),
-                            Other(153),
-                        ))),
-                        CommentBlock(" ".to_string()),
-                        Clear(Other(ClearProperty::Left)),
-                        Color(Other(ColorProperty::Rgba(
-                            Other(0),
-                            Other(255),
-                            Other(255),
-                            Other(255),
-                        ))),
-                        Display(Other(DisplayProperty::Block)),
-                        Float(Other(FloatProperty::Right)),
-                        JustifyContent(Other(JustifyContentProperty::FlexEnd)),
-                        Position(Other(PositionProperty::Relative)),
-                        ZIndex(Other(ZIndexProperty::Number(-2))),
-                    ],
-                },
-            },
-            Selector {
-                path: vec![
+                        Other(2),
+                        Other(AnimationDirectionProperty::Reverse),
+                        Other(AnimationFillModeProperty::Both),
+                        Other(AnimationPlayStateProperty::Paused),
+                    ))),
+                    AnimationDelay(Other(AnimationDelayProperty::Time(Other(
+                        TimeProperty::MilliSeconds(4),
+                    )))),
+                    AnimationDirection(Other(AnimationDirectionProperty::AlternateReverse)),
+                    AnimationDuration(Other(TimeProperty::Seconds(5))),
+                    AnimationIterationCount(Other(9)),
+                    AnimationName(Other("my-animation".to_string())),
+                    AnimationPlayState(Other(AnimationPlayStateProperty::Paused)),
+                    AnimationTimingFunction(Other(AnimationTimingFunctionProperty::EaseIn)),
+                    BackfaceVisibility(Other(BackfaceVisibilityProperty::Visible)),
+                    BackgroundAttachment(Other(BackgroundAttachmentProperty::Local)),
+                    BackgroundBlendMode(Other(BackgroundBlendModeProperty::Darken)),
+                    BackgroundClip(Other(BackgroundClipProperty::ContentBox)),
+                    BackgroundColor(Other(ColorProperty::Rgba(
+                        Other(12),
+                        Other(34),
+                        Other(56),
+                        Other(153),
+                    ))),
+                    CommentBlock(" ".to_string()),
+                    Clear(Other(ClearProperty::Left)),
+                    Color(Other(ColorProperty::Rgba(
+                        Other(0),
+                        Other(255),
+                        Other(255),
+                        Other(255),
+                    ))),
+                    Display(Other(DisplayProperty::Block)),
+                    Float(Other(FloatProperty::Right)),
+                    JustifyContent(Other(JustifyContentProperty::FlexEnd)),
+                    Position(Other(PositionProperty::Relative)),
+                    ZIndex(Other(ZIndexProperty::Number(-2))),
+                ],
+            ),
+            Selector::new(
+                vec![
                     SelectorPart::TagName("p".to_string()),
                     SelectorPart::ParentBound,
                     SelectorPart::Id("foo".to_string()),
                     SelectorPart::BeforeSiblingBound,
                     SelectorPart::Class("bar".to_string()),
                 ],
-                block: Block {
-                    properties: vec![
-                        AlignContent(Variable(VariableUsage("align-content".to_string()))),
-                        AlignItems(Variable(VariableUsage("align-items".to_string()))),
-                        AlignSelf(Variable(VariableUsage("align-self".to_string()))),
-                        All(Variable(VariableUsage("all".to_string()))),
-                        Animation(Variable(VariableUsage("animation".to_string()))),
-                        AnimationDelay(Variable(VariableUsage("animation-delay".to_string()))),
-                        AnimationDirection(Variable(VariableUsage(
-                            "animation-direction".to_string(),
-                        ))),
-                        AnimationDuration(Variable(VariableUsage(
-                            "animation-duration".to_string(),
-                        ))),
-                        AnimationIterationCount(Variable(VariableUsage(
-                            "animation-iteration-count".to_string(),
-                        ))),
-                        AnimationName(Variable(VariableUsage("animation-name".to_string()))),
-                        AnimationPlayState(Variable(VariableUsage(
-                            "animation-play-state".to_string(),
-                        ))),
-                        AnimationTimingFunction(Variable(VariableUsage(
-                            "animation-timing-function".to_string(),
-                        ))),
-                        BackfaceVisibility(Variable(VariableUsage(
-                            "backface-visibility".to_string(),
-                        ))),
-                        BackgroundAttachment(Variable(VariableUsage(
-                            "background-attachment".to_string(),
-                        ))),
-                        BackgroundBlendMode(Variable(VariableUsage(
-                            "background-blend-mode".to_string(),
-                        ))),
-                        BackgroundClip(Variable(VariableUsage("background-clip".to_string()))),
-                        BackgroundColor(Variable(VariableUsage("background-color".to_string()))),
-                        CommentBlock(" ".to_string()),
-                        Clear(Variable(VariableUsage("clear".to_string()))),
-                        Color(Variable(VariableUsage("color".to_string()))),
-                        Display(Variable(VariableUsage("display".to_string()))),
-                        Float(Variable(VariableUsage("float".to_string()))),
-                        JustifyContent(Variable(VariableUsage("justify-content".to_string()))),
-                        Position(Variable(VariableUsage("position".to_string()))),
-                        ZIndex(Variable(VariableUsage("z-index".to_string()))),
-                    ],
-                },
-            },
+                vec![
+                    AlignContent(Variable(VariableUsage("align-content".to_string()))),
+                    AlignItems(Variable(VariableUsage("align-items".to_string()))),
+                    AlignSelf(Variable(VariableUsage("align-self".to_string()))),
+                    All(Variable(VariableUsage("all".to_string()))),
+                    Animation(Variable(VariableUsage("animation".to_string()))),
+                    AnimationDelay(Variable(VariableUsage("animation-delay".to_string()))),
+                    AnimationDirection(Variable(VariableUsage("animation-direction".to_string()))),
+                    AnimationDuration(Variable(VariableUsage("animation-duration".to_string()))),
+                    AnimationIterationCount(Variable(VariableUsage(
+                        "animation-iteration-count".to_string(),
+                    ))),
+                    AnimationName(Variable(VariableUsage("animation-name".to_string()))),
+                    AnimationPlayState(Variable(VariableUsage("animation-play-state".to_string()))),
+                    AnimationTimingFunction(Variable(VariableUsage(
+                        "animation-timing-function".to_string(),
+                    ))),
+                    BackfaceVisibility(Variable(VariableUsage("backface-visibility".to_string()))),
+                    BackgroundAttachment(Variable(VariableUsage(
+                        "background-attachment".to_string(),
+                    ))),
+                    BackgroundBlendMode(Variable(VariableUsage(
+                        "background-blend-mode".to_string(),
+                    ))),
+                    BackgroundClip(Variable(VariableUsage("background-clip".to_string()))),
+                    BackgroundColor(Variable(VariableUsage("background-color".to_string()))),
+                    CommentBlock(" ".to_string()),
+                    Clear(Variable(VariableUsage("clear".to_string()))),
+                    Color(Variable(VariableUsage("color".to_string()))),
+                    Display(Variable(VariableUsage("display".to_string()))),
+                    Float(Variable(VariableUsage("float".to_string()))),
+                    JustifyContent(Variable(VariableUsage("justify-content".to_string()))),
+                    Position(Variable(VariableUsage("position".to_string()))),
+                    ZIndex(Variable(VariableUsage("z-index".to_string()))),
+                ],
+            ),
+            Selector::new(
+                vec![SelectorPart::PseudoSelector("host".to_string())],
+                vec![
+                    Property::VariableDefinition(
+                        "clear".to_string(),
+                        PropertyValue::Other("clear".to_string()),
+                    ),
+                    Property::VariableDefinition(
+                        "from-var".to_string(),
+                        PropertyValue::Variable(VariableUsage("clear".to_string())),
+                    ),
+                ],
+            ),
         ];
         if let Ok(v) = res.as_ref() {
             for (idx, selector) in v.into_iter().enumerate() {
