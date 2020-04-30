@@ -371,7 +371,7 @@ impl CssParser {
             //     "clip" => Property::Clip,
             //     "clip-path" => Property::ClipPath,
             "color" => Property::Color(self.parse_full_token()?),
-            //     "column-count" => Property::ColumnCount,
+            "column-count" => Property::ColumnCount(self.parse_full_token()?),
             //     "column-fill" => Property::ColumnFill,
             //     "column-gap" => Property::ColumnGap,
             //     "column-rule" => Property::ColumnRule,
@@ -957,6 +957,27 @@ impl ParseToken<AllProperty> for CssParser {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum ColumnCountProperty {
+    Auto,
+    Number(u32),
+}
+
+impl Token for ColumnCountProperty {}
+
+impl ParseToken<ColumnCountProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<ColumnCountProperty> {
+        let p = match self.expect_consume()?.as_str() {
+            "auto" => ColumnCountProperty::Auto,
+            s @ _ => ColumnCountProperty::Number(
+                s.parse::<u32>()
+                    .map_err(|_| format!("invalid column count"))?,
+            ),
+        };
+        Ok(PropertyValue::Other(p))
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum JustifyContentProperty {
     FlexStart,
     FlexEnd,
@@ -1418,7 +1439,7 @@ pub enum Property {
     Clip(String),
     ClipPath(String),
     Color(PropertyValue<ColorProperty>),
-    ColumnCount(String),
+    ColumnCount(PropertyValue<ColumnCountProperty>),
     ColumnFill(String),
     ColumnGap(String),
     ColumnRule(String),
