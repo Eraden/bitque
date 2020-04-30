@@ -509,9 +509,9 @@ impl CssParser {
             //     "white-space" => Property::WhiteSpace,
             //     "width" => Property::Width,
             //     "word-break" => Property::WordBreak,
-            //     "word-spacing" => Property::WordSpacing,
-            //     "word-wrap" => Property::WordWrap,
-            //     "writing-mode" => Property::WritingMode,
+            "word-spacing" => Property::WordSpacing(self.parse_full_token()?),
+            "word-wrap" => Property::WordWrap(self.parse_full_token()?),
+            "writing-mode" => Property::WritingMode(self.parse_full_token()?),
             "z-index" => Property::ZIndex(self.parse_full_token()?),
             _ if s.starts_with("--") && s.len() > 2 => {
                 if path == &vec![SelectorPart::PseudoSelector("host".to_string())] {
@@ -1247,6 +1247,99 @@ impl ParseToken<VariableUsage> for CssParser {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum CssUnit {
+    Percent(f64),
+    Em(f64),
+    Rem(f64),
+    Px(f64),
+}
+
+impl CssUnit {
+    pub fn parse_from_name(name: &str, value: f64) -> Result<CssUnit, String> {
+        let p = match name {
+            "%" => CssUnit::Percent(value),
+            "em" => CssUnit::Em(value),
+            "rem" => CssUnit::Rem(value),
+            "px" => CssUnit::Px(value),
+            _ => return Err(format!("invalid css unit {:?}", name)),
+        };
+        Ok(p)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WordSpacingProperty {
+    Normal,
+    Inherit,
+    Initial,
+    Unset,
+    Length(CssUnit),
+}
+
+impl ParseToken<WordSpacingProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<WordSpacingProperty> {
+        let p = match self.expect_consume()?.as_str() {
+            "normal" => WordSpacingProperty::Normal,
+            "inherit" => WordSpacingProperty::Inherit,
+            "initial" => WordSpacingProperty::Initial,
+            "unset" => WordSpacingProperty::Unset,
+            s @ _ => match s.parse::<f64>() {
+                Err(_) => return Err(format!("invalid word wrap {:?}", self.current)),
+                Ok(f) => WordSpacingProperty::Length(CssUnit::parse_from_name(
+                    self.expect_consume()?.as_str(),
+                    f,
+                )?),
+            },
+        };
+        Ok(PropertyValue::Other(p))
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WordWrapProperty {
+    Normal,
+    BreakAll,
+    KeepAll,
+    BreakWord,
+}
+
+impl ParseToken<WordWrapProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<WordWrapProperty> {
+        let p = match self.expect_consume()?.as_str() {
+            "normal" => WordWrapProperty::Normal,
+            "break-word" => WordWrapProperty::BreakWord,
+            "keep-all" => WordWrapProperty::KeepAll,
+            "break-all" => WordWrapProperty::BreakAll,
+            _ => return Err(format!("invalid word wrap {:?}", self.current)),
+        };
+        Ok(PropertyValue::Other(p))
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WritingModeProperty {
+    HorizontalTb,
+    VerticalRl,
+    VerticalLr,
+    SidewaysRl,
+    SidewaysLr,
+}
+
+impl ParseToken<WritingModeProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<WritingModeProperty> {
+        let p = match self.expect_consume()?.as_str() {
+            "horizontal-tb" => WritingModeProperty::HorizontalTb,
+            "vertical-rl" => WritingModeProperty::VerticalRl,
+            "vertical-lr" => WritingModeProperty::VerticalLr,
+            "sideways-rl" => WritingModeProperty::SidewaysRl,
+            "sideways-lr" => WritingModeProperty::SidewaysLr,
+            _ => return Err(format!("invalid writing mode {:?}", self.current)),
+        };
+        Ok(PropertyValue::Other(p))
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum PropertyValue<T> {
     Variable(VariableUsage),
     Other(T),
@@ -1463,9 +1556,9 @@ pub enum Property {
     WhiteSpace(String),
     Width(String),
     WordBreak(String),
-    WordSpacing(String),
-    WordWrap(String),
-    WritingMode(String),
+    WordSpacing(PropertyValue<WordSpacingProperty>),
+    WordWrap(PropertyValue<WordWrapProperty>),
+    WritingMode(PropertyValue<WritingModeProperty>),
     ZIndex(PropertyValue<ZIndexProperty>),
     // special
     CommentBlock(String),
