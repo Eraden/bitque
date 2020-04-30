@@ -328,7 +328,7 @@ impl CssParser {
             "background-clip" => Property::BackgroundClip(self.parse_full_token()?),
             "background-color" => Property::BackgroundColor(self.parse_full_token()?),
             //     "background-image" => Property::BackgroundImage,
-            //     "background-origin" => Property::BackgroundOrigin,
+            "background-origin" => Property::BackgroundOrigin(self.parse_full_token()?),
             //     "background-position" => Property::BackgroundPosition,
             //     "background-repeat" => Property::BackgroundRepeat,
             //     "background-size" => Property::BackgroundSize,
@@ -1103,7 +1103,7 @@ impl ParseToken<ClearProperty> for CssParser {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum BackgroundClipProperty {
+pub enum ClipProperty {
     BorderBox,
     PaddingBox,
     ContentBox,
@@ -1111,16 +1111,16 @@ pub enum BackgroundClipProperty {
     Inherit,
 }
 
-impl Token for BackgroundClipProperty {}
+impl Token for ClipProperty {}
 
-impl ParseToken<BackgroundClipProperty> for CssParser {
-    fn parse_token(&mut self) -> ValueResult<BackgroundClipProperty> {
+impl ParseToken<ClipProperty> for CssParser {
+    fn parse_token(&mut self) -> ValueResult<ClipProperty> {
         let p = match self.expect_consume()?.as_str() {
-            "border-box" => BackgroundClipProperty::BorderBox,
-            "padding-box" => BackgroundClipProperty::PaddingBox,
-            "content-box" => BackgroundClipProperty::ContentBox,
-            "initial" => BackgroundClipProperty::Initial,
-            "inherit" => BackgroundClipProperty::Inherit,
+            "border-box" => ClipProperty::BorderBox,
+            "padding-box" => ClipProperty::PaddingBox,
+            "content-box" => ClipProperty::ContentBox,
+            "initial" => ClipProperty::Initial,
+            "inherit" => ClipProperty::Inherit,
             _ => return Err(format!("invalid background clip {:?}", self.current)),
         };
         Ok(PropertyValue::Other(p))
@@ -1588,10 +1588,10 @@ pub enum Property {
     Background(String),
     BackgroundAttachment(PropertyValue<BackgroundAttachmentProperty>),
     BackgroundBlendMode(PropertyValue<BackgroundBlendModeProperty>),
-    BackgroundClip(PropertyValue<BackgroundClipProperty>),
+    BackgroundClip(PropertyValue<ClipProperty>),
     BackgroundColor(PropertyValue<ColorProperty>),
     BackgroundImage(String),
-    BackgroundOrigin(String),
+    BackgroundOrigin(PropertyValue<ClipProperty>),
     BackgroundPosition(String),
     BackgroundRepeat(String),
     BackgroundSize(String),
@@ -2334,7 +2334,7 @@ mod tests {
                     BackfaceVisibility(Other(BackfaceVisibilityProperty::Visible)),
                     BackgroundAttachment(Other(BackgroundAttachmentProperty::Local)),
                     BackgroundBlendMode(Other(BackgroundBlendModeProperty::Darken)),
-                    BackgroundClip(Other(BackgroundClipProperty::ContentBox)),
+                    BackgroundClip(Other(ClipProperty::ContentBox)),
                     BackgroundColor(Other(ColorProperty::Rgba(
                         Other(12),
                         Other(34),
