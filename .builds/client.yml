@@ -31,6 +31,10 @@ tasks:
       yarn global add webpack-cli
       yarn add webpack-cli
       export NODE_ENV=production
-      yarn webpack-cli -p --config ./webpack.config.js
-  - deploy: |
-      cd ~/jirs
+      yarn webpack-cli -p --config ./webpack.config.js --progress
+      cp -R ./dev/* ./dist
+      export TAR_NAME=$(date -u +"%Y%m%d%H%M%s")
+      tar -czvf ~/${TAR_NAME}.tar.gz ./dist
+      cp ~/${TAR_NAME}.tar.gz ./latest.tar.gz
+artifacts:
+  - ./latest.tar.gz

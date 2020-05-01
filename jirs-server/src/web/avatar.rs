@@ -1,10 +1,10 @@
 use actix_multipart::Multipart;
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, Error, HttpResponse, Responder};
 use futures::{StreamExt, TryStreamExt};
 use std::io::Write;
 
 #[post("/")]
-async fn upload(mut payload: Multipart) -> impl Responder {
+async fn upload(mut payload: Multipart) -> Result<HttpResponse, Error> {
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_type = field.content_disposition().unwrap();
         let filename = content_type.get_filename().unwrap();
@@ -20,10 +20,10 @@ async fn upload(mut payload: Multipart) -> impl Responder {
             f = web::block(move || f.write_all(&data).map(|_| f)).await?;
         }
     }
-    HttpResponse::Ok().json("")
+    Ok(HttpResponse::Ok().json(""))
 }
 
 #[get("/{id}")]
-async fn download(id: web::Path<i32>) -> impl Responder {
+async fn download(_id: web::Path<i32>) -> impl Responder {
     HttpResponse::Ok().json("")
 }

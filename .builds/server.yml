@@ -6,19 +6,31 @@ sources:
   - https://git.sr.ht/~tsumanu/jirs
 environment:
   deploy: adrian.wozniak@ita-prog.pl
+  DATABASE_URL: postgres://build@localhost:5432/jirs
+  DEBUG: true
+  NODE_ENV: development
+  RUST_LOG: debug
+  JIRS_CLIENT_PORT: 7000
+  JIRS_CLIENT_BIND: 0.0.0.0
+  JIRS_SERVER_PORT: 5000
+  JIRS_SERVER_BIND: 0.0.0.0
 secrets:
   - 7ebab768-e5e4-4c9d-ba57-ec41a72c5665
 tasks:
   - build_config: |
-      cd jirs/jirs-server
-      cp ../.builds/db.toml ./
+      cp ~/jirs/.builds/db.toml ~/jirs/jirs-server
   - setup: |
-      sudo systemctl start postgresql || journalctl -xe
+      sudo mkdir -p /var/lib/postgres/data
+      sudo chown build /var/lib/postgres/data
+      initdb -D /var/lib/postgres/data
+      sudo mkdir -p /run/postgresql
+      sudo chown build /run/postgresql
+      pg_ctl -D /var/lib/postgres/data start
       rustup toolchain install nightly
       rustup default nightly
       cargo install diesel_cli --no-default-features --features postgres
       cd jirs/jirs-server
-      diesel migration run
+      /home/build/.cargo/bin/diesel setup
   - test: |
       cd jirs/jirs-server
       cargo test --bin jirs_server

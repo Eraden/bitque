@@ -12,7 +12,7 @@ const INPUT: &str = "./jirs-client/js/styles.css";
 
 type Css = Arc<RwLock<CssFile>>;
 
-mod prop;
+// mod prop;
 
 #[derive(Debug)]
 enum Partial {
@@ -307,6 +307,10 @@ fn main() -> Result<(), String> {
 
     app.parse()?;
     app.print();
+
+    if !matches.is_present("watch") {
+        return Ok(());
+    }
 
     loop {
         match rx.recv() {

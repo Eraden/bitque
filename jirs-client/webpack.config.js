@@ -5,12 +5,19 @@ const dotenv = require('dotenv');
 const webpack = require('webpack');
 const { execSync, exec } = require('child_process');
 
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
 process.env.RUST_LOG = 'info';
 
 execSync('cd .. && cargo build --bin jirs-css');
-exec('cd .. && ./target/debug/jirs-css -O ./jirs-client/tmp/styles.css');
+
+if (process.env.NODE_ENV === "production") {
+    execSync("rm -Rf ./dist");
+    execSync("mkdir -p ./dist");
+    execSync('cd .. && ./target/debug/jirs-css -O ./jirs-client/dist/styles.css');
+    console.log("CSS combined");
+} else {
+    exec('cd .. && ./target/debug/jirs-css --watch -O ./jirs-client/dev/styles.css');
+    console.log("CSS combined, watching for changes...");
+}
 
 dotenv.config();
 
@@ -21,46 +28,33 @@ module.exports = {
         path: path.resolve(__dirname, process.env.NODE_ENV === 'production' ? 'dist' : 'dev'),
         publicPath: '/',
     },
-    devtool: 'source-map',
-    devServer: {
-        contentBase: path.join(__dirname, 'dev'),
-        historyApiFallback: true,
-        hot: true,
-        port: process.env.JIRS_CLIENT_PORT || 6000,
-        host: process.env.JIRS_CLIENT_BIND || '0.0.0.0',
-        allowedHosts: [
-            'localhost:6000',
-            'localhost:8000',
-        ],
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-        }
-    },
-    module: {
-        rules: [
-            {
-                test: /\.css$/i,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    {
-                        loader: 'css-loader',
-                    },
-                ],
-            },
-            {
-                test: /\.svg$/,
-                use: [
-                    { loader: 'file-loader' },
-                    {
-                        loader: 'svgo-loader',
-                        options: {
-                            externalConfig: "svgo-config.yml"
-                        }
-                    }
-                ]
+    ...(
+        process.env.NODE_ENV === "production"
+            ? {
+                mode: "production",
+                watch: false,
+                devtool: false,
             }
-        ],
-    },
+            : {
+                mode: "development",
+                watch: true,
+                devtool: 'source-map',
+                devServer: {
+                    contentBase: path.join(__dirname, 'dev'),
+                    historyApiFallback: true,
+                    hot: true,
+                    port: process.env.JIRS_CLIENT_PORT || 6000,
+                    host: process.env.JIRS_CLIENT_BIND || '0.0.0.0',
+                    allowedHosts: [
+                        'localhost:6000',
+                        'localhost:8000',
+                    ],
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                    }
+                },
+            }
+    ),
     plugins: [
         new WasmPackPlugin({
             crateDirectory: path.resolve(__dirname),
@@ -77,10 +71,5 @@ module.exports = {
             'JIRS_SERVER_PORT',
             'JIRS_SERVER_BIND',
         ]),
-        new MiniCssExtractPlugin({
-            filename: '[name].css',
-            chunkFilename: '[id].css',
-            ignoreOrder: true,
-        }),
-    ]
+    ],
 };
