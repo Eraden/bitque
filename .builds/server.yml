@@ -1,6 +1,7 @@
-image: shepmaster/rust-nightly
+image: archlinux
 packages:
   - postgresql
+  - rustup
 sources:
   - https://git.sr.ht/~tsumanu/jirs
 environment:
@@ -8,8 +9,14 @@ environment:
 secrets:
   - 7ebab768-e5e4-4c9d-ba57-ec41a72c5665
 tasks:
+  - build_config: |
+      cd jirs/jirs-server
+      echo 'concurrency = 2' >> db.test.toml
+      echo 'database_url = "postgres://postgres@localhost:5432/jirs_test"' >> db.test.toml
   - setup: |
       sudo systemctl start postgresql
+      rustup toolchain install nightly
+      rustup default nightly
       cargo install diesel_cli --no-default-features --features postgres
       cd jirs/jirs-server
       diesel migration run

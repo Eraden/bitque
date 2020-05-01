@@ -1,11 +1,40 @@
 # A simplified Jira clone built with seed.rs and actix
 
+[![builds.sr.ht status](https://builds.sr.ht/~tsumanu/jirs.sr.ht.svg)](https://builds.sr.ht/~tsumanu/jirs.sr.ht?)
+
+https://git.sr.ht/~tsumanu/jirs
+
 ## Features
 
 * Actor based asynchronous backend
 * Ultra fast functional frontend build with WASM
 
 ## How to run it
+
+### Config files
+
+```toml
+# web.toml
+concurrency = 2
+port = "5000"
+bind = "0.0.0.0"
+ssl = false
+```
+
+```toml
+# db.toml
+concurrency = 2
+database_url = "postgres://postgres@localhost:5432/jirs"
+```
+
+```toml
+# mail.toml
+concurrency = 2
+user = "apikey"
+pass = "YOUR-TOKEN"
+host = "smtp.sendgrid.net"
+from = "contact@jirs.pl"
+```
 
 ### Local variables
 
