@@ -13,6 +13,7 @@ mod api;
 mod invite;
 mod modal;
 mod model;
+mod profile;
 mod project;
 mod project_settings;
 mod shared;
@@ -37,6 +38,7 @@ pub enum FieldId {
     SignUp(SignUpFieldId),
     Invite(InviteFieldId),
     Users(UsersFieldId),
+    Profile(UsersFieldId),
     // issue
     AddIssueModal(IssueFieldId),
     EditIssueModal(EditIssueModalSection),
@@ -127,6 +129,11 @@ impl std::fmt::Display for FieldId {
                 UsersFieldId::Email => f.write_str("users-email"),
                 UsersFieldId::UserRole => f.write_str("users-userRole"),
             },
+            FieldId::Profile(sub) => match sub {
+                UsersFieldId::Username => f.write_str("profile-username"),
+                UsersFieldId::Email => f.write_str("profile-email"),
+                UsersFieldId::UserRole => f.write_str("profile-userRole"),
+            },
         }
     }
 }
@@ -151,9 +158,15 @@ pub enum ProjectPageChange {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum ProfilePageChange {
+    SubmitForm,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum PageChanged {
     Users(UsersPageChange),
     ProjectSettings(ProjectPageChange),
+    Profile(ProfilePageChange),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -260,6 +273,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         Page::SignUp => sign_up::update(msg, model, orders),
         Page::Invite => invite::update(msg, model, orders),
         Page::Users => users::update(msg, model, orders),
+        Page::Profile => profile::update(msg, model, orders),
     }
     if cfg!(debug_assertions) {
         // debug!(model);
@@ -275,6 +289,7 @@ fn view(model: &model::Model) -> Node<Msg> {
         Page::SignUp => sign_up::view(model),
         Page::Invite => invite::view(model),
         Page::Users => users::view(model),
+        Page::Profile => profile::view(model),
     }
 }
 
@@ -289,6 +304,7 @@ fn routes(url: Url) -> Option<Msg> {
             Some(Ok(id)) => Some(Msg::ChangePage(model::Page::EditIssue(id))),
             _ => None,
         },
+        "profile" => Some(Msg::ChangePage(Page::Profile)),
         "add-issue" => Some(Msg::ChangePage(Page::AddIssue)),
         "project-settings" => Some(Msg::ChangePage(model::Page::ProjectSettings)),
         "login" => Some(Msg::ChangePage(model::Page::SignIn)),

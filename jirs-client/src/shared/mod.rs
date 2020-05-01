@@ -40,7 +40,7 @@ pub trait ToNode {
 }
 
 pub fn divider() -> Node<Msg> {
-    div![attrs![At::Class => "divider"], ""]
+    div![class!["divider"], ""]
 }
 
 pub fn inner_layout(

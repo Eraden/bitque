@@ -20,13 +20,13 @@ impl Handler<LoadCurrentProject> for DbExecutor {
     type Result = Result<Project, ServiceErrors>;
 
     fn handle(&mut self, msg: LoadCurrentProject, _ctx: &mut Self::Context) -> Self::Result {
-        use crate::schema::projects::dsl::{id, projects};
+        use crate::schema::projects::dsl::projects;
         let conn = &self
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
-        let query = projects.filter(id.eq(msg.project_id));
+        let query = projects.find(msg.project_id);
 
         debug!(
             "{}",

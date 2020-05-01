@@ -19,10 +19,6 @@ static TIME_TRACKING_FIBONACCI: &'static str = "Tracking employees’ time carri
 static TIME_TRACKING_HOURLY: &'static str = "Employees may feel intimidated by demands to track their time. Or they could feel that they’re constantly being watched and evaluated. And for overly ambitious managers, employee time tracking may open the doors to excessive micromanaging.";
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
-    if model.user.is_none() {
-        return;
-    }
-
     if model.page != Page::ProjectSettings {
         return;
     }
@@ -32,8 +28,10 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
             send_ws_msg(WsMsg::ProjectRequest);
         }
         Msg::ChangePage(Page::ProjectSettings) => {
-            send_ws_msg(WsMsg::ProjectRequest);
             build_page_content(model);
+            if model.user.is_some() {
+                send_ws_msg(WsMsg::ProjectRequest);
+            }
         }
         Msg::WsMsg(WsMsg::ProjectLoaded(..)) => {
             build_page_content(model);
@@ -41,9 +39,13 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         _ => (),
     }
 
+    if model.user.is_none() || model.project.is_none() {
+        return;
+    }
+
     let page = match &mut model.page_content {
         PageContent::ProjectSettings(page) => page,
-        _ => return,
+        _ => return error!("bad content type"),
     };
     page.project_category_state.update(&msg, orders);
     page.time_tracking.update(&msg);
