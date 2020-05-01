@@ -14,20 +14,17 @@ pub fn render(model: &Model) -> Node<Msg> {
             id!["projectInfo"],
             project_icon,
             div![
-                attrs![At::Class => "projectTexts";],
-                div![attrs![At::Class => "projectName";], project.name],
-                div![
-                    attrs![At::Class => "projectCategory";],
-                    project.category.to_string()
-                ]
+                class!["projectTexts"],
+                div![class!["projectName"], project.name],
+                div![class!["projectCategory"], project.category.to_string()]
             ],
         ],
         _ => li![
             id!["projectInfo"],
             div![
-                attrs![At::Class => "projectTexts";],
-                div![attrs![At::Class => "projectName";], ""],
-                div![attrs![At::Class => "projectCategory";], ""]
+                class!["projectTexts"],
+                div![class!["projectName"], ""],
+                div![class!["projectCategory"], ""]
             ],
         ],
     };

@@ -56,6 +56,12 @@ aside#navbar-left .item > .styledIcon {
     line-height: 42px;
 }
 
+aside#navbar-left .item > .styledIcon > .styledAvatar {
+    margin-top: 7px;
+    width: 27px;
+    height: 27px;
+}
+
 aside#navbar-left > .item > .styledIcon.search {
     font-size: 22px;
     color: #DEEBFE;

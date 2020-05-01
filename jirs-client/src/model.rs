@@ -193,6 +193,7 @@ pub enum Page {
     SignUp,
     Invite,
     Users,
+    Profile,
 }
 
 impl Page {
@@ -206,6 +207,7 @@ impl Page {
             Page::SignUp => "/register".to_string(),
             Page::Invite => "/invite".to_string(),
             Page::Users => "/users".to_string(),
+            Page::Profile => "/profile".to_string(),
         }
     }
 }
@@ -359,6 +361,27 @@ impl Default for UsersPage {
 }
 
 #[derive(Debug)]
+pub struct ProfilePage {
+    pub name: StyledInputState,
+    pub email: StyledInputState,
+}
+
+impl ProfilePage {
+    pub fn new(user: &User) -> Self {
+        Self {
+            name: StyledInputState::new(
+                FieldId::Profile(UsersFieldId::Username),
+                user.name.as_str(),
+            ),
+            email: StyledInputState::new(
+                FieldId::Profile(UsersFieldId::Email),
+                user.email.as_str(),
+            ),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum PageContent {
     SignIn(Box<SignInPage>),
     SignUp(Box<SignUpPage>),
@@ -366,6 +389,7 @@ pub enum PageContent {
     ProjectSettings(Box<ProjectSettingsPage>),
     Invite(Box<InvitePage>),
     Users(Box<UsersPage>),
+    Profile(Box<ProfilePage>),
 }
 
 #[derive(Debug)]

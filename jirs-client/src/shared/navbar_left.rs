@@ -1,6 +1,7 @@
 use seed::{prelude::*, *};
 
 use crate::model::Model;
+use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::Icon;
 use crate::shared::{styled_tooltip, ToNode};
@@ -8,6 +9,19 @@ use crate::Msg;
 
 pub fn render(model: &Model) -> Vec<Node<Msg>> {
     let logo_svg = Node::from_html(include_str!("../../static/logo.svg"));
+
+    let user_icon = match model.user.as_ref() {
+        Some(user) => i![
+            class!["styledIcon"],
+            StyledAvatar::build()
+                .size(27)
+                .name(user.name.as_str())
+                .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
+                .build()
+                .into_node()
+        ],
+        _ => i![attrs![At::Class => format!("styledIcon {}", Icon::Plus)]],
+    };
 
     vec![
         about_tooltip_popup(model),
@@ -24,7 +38,13 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
                 span![attrs![At::Class => "itemText"], "Create Issue"]
             ],
             div![
-                attrs![At::Class => "bottom"],
+                class!["bottom"],
+                div![
+                    class!["item"],
+                    attrs![At::Href=> "/profile"],
+                    user_icon,
+                    span![class!["itemText"], "Profile"]
+                ],
                 about_tooltip(model, navbar_left_item(model, "About", Icon::Help)),
             ],
         ],
@@ -33,9 +53,9 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
 
 fn navbar_left_item(_model: &Model, text: &str, logo: Icon) -> Node<Msg> {
     div![
-        attrs![At::Class => "item"],
+        class!["item"],
         i![attrs![At::Class => format!("styledIcon {}", logo)]],
-        span![attrs![At::Class => "itemText"], text]
+        span![class!["itemText"], text]
     ]
 }
 
