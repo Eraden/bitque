@@ -1,6 +1,7 @@
 # A simplified Jira clone built with seed.rs and actix
 
-[![builds.sr.ht status](https://builds.sr.ht/~tsumanu/jirs.sr.ht.svg)](https://builds.sr.ht/~tsumanu/jirs.sr.ht?)
+Server: [![builds.sr.ht status](https://builds.sr.ht/~tsumanu/jirs/server.yml.svg)](https://builds.sr.ht/~tsumanu/jirs/server.yml?)
+Client: [![builds.sr.ht status](https://builds.sr.ht/~tsumanu/jirs/client.yml.svg)](https://builds.sr.ht/~tsumanu/jirs/client.yml?)
 
 https://git.sr.ht/~tsumanu/jirs
 

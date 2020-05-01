@@ -17,6 +17,8 @@ secrets:
   - 7ebab768-e5e4-4c9d-ba57-ec41a72c5665
 tasks:
   - setup: |
+      rustup toolchain install nightly
+      rustup default nightly
       curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sudo sh
   - test: |
       cd ~/jirs/jirs-client
