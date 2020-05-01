@@ -1,0 +1,23 @@
+image: shepmaster/rust-nightly
+packages:
+  - postgresql
+sources:
+  - https://git.sr.ht/~tsumanu/jirs
+environment:
+  deploy: adrian.wozniak@ita-prog.pl
+secrets:
+  - 7ebab768-e5e4-4c9d-ba57-ec41a72c5665
+tasks:
+  - setup: |
+      sudo systemctl start postgresql
+      cargo install diesel_cli --no-default-features --features postgres
+      cd jirs/jirs-server
+      diesel migration run
+  - test: |
+      cd jirs/jirs-server
+      cargo test --bin jirs_server
+  - build: |
+      cd jirs
+      cargo build --all --release
+  - deploy: |
+      cd jirs

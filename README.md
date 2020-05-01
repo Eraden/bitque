@@ -44,3 +44,7 @@ cd jirs_client
 yarn
 yarn webpack-dev-server
 ```
+
+## Issue trackers
+
+https://todo.sr.ht/~tsumanu/JIRS

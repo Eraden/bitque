@@ -129,6 +129,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-multipart"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4397935fca2a37a5353f94faa758fb176712806f605466b5a60373b204f0d836"
+dependencies = [
+ "actix-service",
+ "actix-utils",
+ "actix-web",
+ "bytes",
+ "derive_more",
+ "futures 0.3.4",
+ "httparse",
+ "log 0.4.8",
+ "mime",
+ "time",
+ "twoway",
+]
+
+[[package]]
 name = "actix-router"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1424,6 +1443,7 @@ version = "0.1.0"
 dependencies = [
  "actix",
  "actix-cors",
+ "actix-multipart",
  "actix-rt",
  "actix-service",
  "actix-web",

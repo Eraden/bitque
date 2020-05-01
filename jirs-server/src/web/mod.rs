@@ -12,6 +12,8 @@ use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 use crate::middleware::authorize::token_from_headers;
 
+pub mod avatar;
+
 pub async fn user_from_request(
     req: HttpRequest,
     db: &Data<Addr<DbExecutor>>,

@@ -1,0 +1,21 @@
+image: archlinux
+packages:
+  - nodejs
+  - rustup
+sources:
+  - https://git.sr.ht/~tsumanu/jirs
+environment:
+  deploy: adrian.wozniak@ita-prog.pl
+secrets:
+  - 7ebab768-e5e4-4c9d-ba57-ec41a72c5665
+tasks:
+  - setup: |
+      curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+  - test: |
+      cd jirs/jirs-client
+      wasm-pack test --node
+  - build: |
+      cd jirs/jirs-client
+      wasm-pack build --release
+  - deploy: |
+      cd jirs
