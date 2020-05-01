@@ -11,9 +11,9 @@ secrets:
 tasks:
   - build_config: |
       cd jirs/jirs-server
-      cp ~/jirs/.builds/db.toml ~/jirs/jirs-server/db.toml
+      cp ../.builds/db.toml ./
   - setup: |
-      1
+      sudo systemctl start postgresql || journalctl -xe
       rustup toolchain install nightly
       rustup default nightly
       cargo install diesel_cli --no-default-features --features postgres
