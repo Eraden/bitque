@@ -26,6 +26,8 @@ tasks:
   - build: |
       cd ~/jirs/jirs-client
       yarn
+      yarn global add webpack-cli
+      yarn add webpack-cli
       yarn webpack-cli -p --config ./webpack.config.js
   - deploy: |
       cd ~/jirs
