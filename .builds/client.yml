@@ -25,7 +25,7 @@ tasks:
       wasm-pack test --node
   - build: |
       cd ~/jirs/jirs-client
-      yarn
+      NODE_ENV=development yarn
       yarn global add webpack-cli
       yarn add webpack-cli
       yarn webpack-cli -p --config ./webpack.config.js
