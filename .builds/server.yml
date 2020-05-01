@@ -11,10 +11,9 @@ secrets:
 tasks:
   - build_config: |
       cd jirs/jirs-server
-      echo 'concurrency = 2' >> db.test.toml
-      echo 'database_url = "postgres://postgres@localhost:5432/jirs_test"' >> db.test.toml
+      cp ~/jirs/.builds/db.toml ~/jirs/jirs-server/db.toml
   - setup: |
-      sudo systemctl start postgresql
+      1
       rustup toolchain install nightly
       rustup default nightly
       cargo install diesel_cli --no-default-features --features postgres

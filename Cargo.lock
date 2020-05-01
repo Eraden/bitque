@@ -1400,24 +1400,6 @@ name = "jirs-cli"
 version = "0.1.0"
 
 [[package]]
-name = "jirs-client"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "chrono",
- "comrak",
- "futures 0.1.29",
- "jirs-data",
- "js-sys",
- "seed",
- "serde",
- "serde_json",
- "uuid 0.8.1",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
 name = "jirs-css"
 version = "0.1.0"
 dependencies = [
@@ -1477,6 +1459,25 @@ dependencies = [
  "toml",
  "url 2.1.1",
  "uuid 0.8.1",
+]
+
+[[package]]
+name = "jirs_client"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "chrono",
+ "comrak",
+ "futures 0.1.29",
+ "jirs-data",
+ "js-sys",
+ "seed",
+ "serde",
+ "serde_json",
+ "uuid 0.8.1",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
+ "web-sys",
 ]
 
 [[package]]
@@ -2340,6 +2341,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "scoped-tls"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea6a9290e3c9cf0f18145ef7ffa62d68ee0bf5fcd651017e586dc7fd5da448c2"
+
+[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2928,6 +2935,30 @@ name = "wasm-bindgen-shared"
 version = "0.2.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "daf76fe7d25ac79748a37538b7daeed1c7a6867c92d3245c12c6222e4a20d639"
+
+[[package]]
+name = "wasm-bindgen-test"
+version = "0.3.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "648da3460c6d2aa04b715a936329e2e311180efe650b2127d6267f4193ccac14"
+dependencies = [
+ "console_error_panic_hook",
+ "js-sys",
+ "scoped-tls",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "wasm-bindgen-test-macro",
+]
+
+[[package]]
+name = "wasm-bindgen-test-macro"
+version = "0.3.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf2f86cd78a2aa7b1fb4bb6ed854eccb7f9263089c79542dca1576a1518a8467"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
 
 [[package]]
 name = "web-sys"

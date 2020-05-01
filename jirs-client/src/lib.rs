@@ -20,7 +20,7 @@ mod shared;
 mod sign_in;
 mod sign_up;
 mod users;
-mod validations;
+pub mod validations;
 mod ws;
 
 pub type AvatarFilterActive = bool;
