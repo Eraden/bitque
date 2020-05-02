@@ -24,10 +24,13 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, _orders: &mut impl Orde
         _ => (),
     }
 
-    let _project_page = match &mut model.page_content {
+    let project_page = match &mut model.page_content {
         PageContent::Profile(profile_page) => profile_page,
         _ => return,
     };
+
+    project_page.name.update(&msg);
+    project_page.email.update(&msg);
 }
 
 pub fn view(model: &Model) -> Node<Msg> {
@@ -39,6 +42,7 @@ pub fn view(model: &Model) -> Node<Msg> {
     let username = StyledInput::build(FieldId::Profile(UsersFieldId::Username))
         .state(&page.name)
         .valid(true)
+        .primary()
         .build()
         .into_node();
     let username_field = StyledField::build()
@@ -50,6 +54,7 @@ pub fn view(model: &Model) -> Node<Msg> {
     let email = StyledInput::build(FieldId::Profile(UsersFieldId::Username))
         .state(&page.email)
         .valid(true)
+        .primary()
         .build()
         .into_node();
     let email_field = StyledField::build()

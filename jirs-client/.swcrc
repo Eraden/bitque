@@ -1,0 +1,23 @@
+{
+  "jsc": {
+    "target": "es2018",
+    "parser": {
+      "syntax": "ecmascript",
+      "jsx": false,
+      "dynamicImport": true,
+      "numericSeparator": true,
+      "classPrivateProperty": false,
+      "privateMethod": false,
+      "classProperty": false,
+      "functionBind": false,
+      "exportDefaultFrom": true,
+      "exportNamespaceFrom": true,
+      "decorators": false,
+      "decoratorsBeforeExport": false,
+      "nullishCoalescing": true,
+      "topLevelAwait": true,
+      "importMeta": false,
+      "optionalChaining": true
+    }
+  }
+}

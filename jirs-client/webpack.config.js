@@ -3,19 +3,47 @@ const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const dotenv = require('dotenv');
 const webpack = require('webpack');
-const { execSync, exec } = require('child_process');
+const { execSync, spawn } = require('child_process');
 
 process.env.RUST_LOG = 'info';
 
-execSync('cd .. && cargo build --bin jirs-css');
+const jirDir = require('path').join(__dirname, '..').normalize();
+console.log('jir dir %s', jirDir)
 
 if (process.env.NODE_ENV === "production") {
+    execSync('cargo build --bin jirs-css --release', {
+        cwd: jirDir,
+    });
     execSync("rm -Rf ./dist");
     execSync("mkdir -p ./dist");
-    execSync('cd .. && ./target/debug/jirs-css -O ./jirs-client/dist/styles.css');
+    execSync('./target/debug/jirs-css -O ./jirs-client/dist/styles.css', {
+        cwd: jirDir,
+    });
     console.log("CSS combined");
 } else {
-    exec('cd .. && ./target/debug/jirs-css --watch -O ./jirs-client/dev/styles.css');
+    execSync('cargo build --bin jirs-css', {
+        cwd: jirDir,
+    });
+    const css = spawn('./target/debug/jirs-css', [
+        '-W',
+        '-O',
+        './jirs-client/dev/styles.css'
+    ], {
+        detached: false,
+        cwd: jirDir,
+    }).on("error", (error) => {
+        console.error(error);
+        process.exit(1);
+    }).on('close', code => {
+        console.error(`CSS watch process finished with code ${ code }`);
+        // process.exit(1);
+    });
+    // css.stdout.on('data', data => {
+    //     console.log(`stdout: ${ data }`);
+    // });
+    // css.stderr.on('data', data => {
+    //     console.log(`stdout: ${ data }`);
+    // });
     console.log("CSS combined, watching for changes...");
 }
 

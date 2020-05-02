@@ -14,6 +14,7 @@ pub mod styled_checkbox;
 pub mod styled_confirm_modal;
 pub mod styled_editor;
 pub mod styled_field;
+pub mod styled_file_input;
 pub mod styled_form;
 pub mod styled_icon;
 pub mod styled_input;

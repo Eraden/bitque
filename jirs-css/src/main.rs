@@ -268,7 +268,7 @@ fn main() -> Result<(), String> {
                 .takes_value(true),
         )
         .arg(clap::Arg::with_name("output").short("O").takes_value(true))
-        .arg(clap::Arg::with_name("watch").short("W"))
+        .arg(clap::Arg::with_name("watch").short("W").takes_value(false))
         .arg(
             clap::Arg::with_name("prelude")
                 .short("p")
@@ -297,7 +297,7 @@ fn main() -> Result<(), String> {
         .and_then(|meta| meta.modified())
         .unwrap_or_else(|_| SystemTime::UNIX_EPOCH);
 
-    if app.check_timestamps(root, output_timestamp)? {
+    if app.check_timestamps(root, output_timestamp)? && !matches.is_present("watch") {
         return Ok(());
     }
 

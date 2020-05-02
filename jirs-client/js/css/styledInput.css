@@ -22,6 +22,11 @@
     padding-left: 32px;
 }
 
+.styledInput > .inputElement.primary {
+    padding: 8px 12px 9px;
+    height: 39px;
+}
+
 .styledInput > i.styledIcon {
     font-size: 15px;
     position: absolute;

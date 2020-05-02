@@ -5,6 +5,22 @@ use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
+pub enum Variant {
+    Normal,
+    Primary,
+}
+
+impl ToString for Variant {
+    fn to_string(&self) -> String {
+        match self {
+            Variant::Normal => "normal",
+            Variant::Primary => "primary",
+        }
+        .to_string()
+    }
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct StyledInputState {
     id: FieldId,
     pub value: String,
@@ -52,6 +68,7 @@ pub struct StyledInput {
     input_type: Option<String>,
     input_class_list: Vec<String>,
     wrapper_class_list: Vec<String>,
+    variant: Variant,
 }
 
 impl StyledInput {
@@ -64,6 +81,7 @@ impl StyledInput {
             input_type: None,
             input_class_list: vec![],
             wrapper_class_list: vec![],
+            variant: Variant::Normal,
         }
     }
 }
@@ -77,6 +95,7 @@ pub struct StyledInputBuilder {
     input_type: Option<String>,
     input_class_list: Vec<String>,
     wrapper_class_list: Vec<String>,
+    variant: Variant,
 }
 
 impl StyledInputBuilder {
@@ -118,6 +137,11 @@ impl StyledInputBuilder {
         self
     }
 
+    pub fn primary(mut self) -> Self {
+        self.variant = Variant::Primary;
+        self
+    }
+
     pub fn build(self) -> StyledInput {
         StyledInput {
             id: self.id,
@@ -127,6 +151,7 @@ impl StyledInputBuilder {
             input_type: self.input_type,
             input_class_list: self.input_class_list,
             wrapper_class_list: self.wrapper_class_list,
+            variant: self.variant,
         }
     }
 }
@@ -146,15 +171,18 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         input_type,
         mut input_class_list,
         mut wrapper_class_list,
+        variant,
     } = values;
 
     wrapper_class_list.push("styledInput".to_string());
+    wrapper_class_list.push(variant.to_string());
     wrapper_class_list.push(format!("{}", id));
     if !valid {
         wrapper_class_list.push("invalid".to_string());
     }
 
     input_class_list.push("inputElement".to_string());
+    input_class_list.push(variant.to_string());
     if icon.is_some() {
         input_class_list.push("withIcon".to_string());
     }
