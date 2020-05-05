@@ -21,6 +21,7 @@ actix-service = { version = "*" }
 actix-rt = "1"
 actix-web-actors = "*"
 actix-multipart = { version = "*" }
+actix-files = { version = "0.2.1" }
 
 dotenv = { version = "*" }
 byteorder = "1.0"
@@ -29,7 +30,7 @@ libc = { version = "0.2.0" }
 pq-sys = { version = ">=0.3.0, <0.5.0" }
 quickcheck = { version = "0.4" }
 serde_json = { version = ">=0.8.0, <2.0" }
-toml = "0.5"
+toml = "0.5.6"
 bincode = "1.2.1"
 time = { version = "0.1" }
 url = { version = "2.1.0" }
@@ -48,6 +49,10 @@ env_logger = "0.7"
 futures = { version = "*" }
 lettre = { version = "*" }
 lettre_email = { version = "*" }
+
+# Amazon S3
+rusoto_s3 = "0.43.0"
+rusoto_core = "0.43.0"
 
 [dependencies.diesel]
 version = "1.4.4"

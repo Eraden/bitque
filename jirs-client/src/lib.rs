@@ -1,6 +1,7 @@
 use std::sync::RwLock;
 
 use seed::{prelude::*, *};
+use web_sys::File;
 
 use jirs_data::*;
 
@@ -128,11 +129,13 @@ impl std::fmt::Display for FieldId {
                 UsersFieldId::Username => f.write_str("users-username"),
                 UsersFieldId::Email => f.write_str("users-email"),
                 UsersFieldId::UserRole => f.write_str("users-userRole"),
+                UsersFieldId::Avatar => f.write_str("users-avatar"),
             },
             FieldId::Profile(sub) => match sub {
                 UsersFieldId::Username => f.write_str("profile-username"),
                 UsersFieldId::Email => f.write_str("profile-email"),
                 UsersFieldId::UserRole => f.write_str("profile-userRole"),
+                UsersFieldId::Avatar => f.write_str("profile-avatar"),
             },
         }
     }
@@ -169,7 +172,7 @@ pub enum PageChanged {
     Profile(ProfilePageChange),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum Msg {
     NoOp,
     GlobalKeyDown {
@@ -179,6 +182,11 @@ pub enum Msg {
         alt: bool,
     },
     PageChanged(PageChanged),
+    ChangePage(model::Page),
+
+    StyledSelectChanged(FieldId, StyledSelectChange),
+    InternalFailure(String),
+    ToggleAboutTooltip,
 
     // Auth Token
     AuthTokenStored,
@@ -194,12 +202,6 @@ pub enum Msg {
 
     // sign up
     SignUpRequest,
-
-    StyledSelectChanged(FieldId, StyledSelectChange),
-
-    ChangePage(model::Page),
-    InternalFailure(String),
-    ToggleAboutTooltip,
 
     // project
     ProjectAvatarFilterChanged(UserId, AvatarFilterActive),
@@ -219,6 +221,7 @@ pub enum Msg {
     // inputs
     StrInputChanged(FieldId, String),
     U32InputChanged(FieldId, u32),
+    FileInputChanged(FieldId, Vec<File>),
 
     // issues
     AddIssue,
@@ -227,6 +230,9 @@ pub enum Msg {
     // comments
     SaveComment,
     DeleteComment(CommentId),
+
+    // profile
+    AvatarUpdateFetched(seed::fetch::FetchObject<String>),
 
     // modals
     ModalOpened(Box<ModalType>),
@@ -237,9 +243,10 @@ pub enum Msg {
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
-    if msg == Msg::NoOp {
-        return;
-    }
+    match msg {
+        Msg::NoOp => return,
+        _ => (),
+    };
     if cfg!(debug_assertions) {
         log!(msg);
     }

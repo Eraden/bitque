@@ -19,10 +19,13 @@ pub fn update(msg: Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>
         return;
     }
 
-    if msg == Msg::ChangePage(Page::SignUp) {
-        model.page_content = PageContent::SignUp(Box::new(SignUpPage::default()));
-        return;
-    }
+    match msg {
+        Msg::ChangePage(Page::SignUp) => {
+            model.page_content = PageContent::SignUp(Box::new(SignUpPage::default()));
+            return;
+        }
+        _ => (),
+    };
 
     let page = match &mut model.page_content {
         PageContent::SignUp(page) => page,

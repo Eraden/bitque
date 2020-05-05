@@ -8,6 +8,7 @@ use jirs_data::*;
 use crate::modal::time_tracking::value_for_time_tracking;
 use crate::shared::styled_checkbox::StyledCheckboxState;
 use crate::shared::styled_editor::Mode;
+use crate::shared::styled_image_input::StyledImageInputState;
 use crate::shared::styled_input::StyledInputState;
 use crate::shared::styled_select::StyledSelectState;
 use crate::{EditIssueModalSection, FieldId, ProjectFieldId, HOST_URL};
@@ -364,6 +365,7 @@ impl Default for UsersPage {
 pub struct ProfilePage {
     pub name: StyledInputState,
     pub email: StyledInputState,
+    pub avatar: StyledImageInputState,
 }
 
 impl ProfilePage {
@@ -376,6 +378,10 @@ impl ProfilePage {
             email: StyledInputState::new(
                 FieldId::Profile(UsersFieldId::Email),
                 user.email.as_str(),
+            ),
+            avatar: StyledImageInputState::new(
+                FieldId::Profile(UsersFieldId::Avatar),
+                user.avatar_url.as_ref().cloned(),
             ),
         }
     }

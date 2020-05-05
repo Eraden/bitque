@@ -8,10 +8,10 @@ use crate::shared::styled_field::StyledField;
 use crate::shared::styled_input::{StyledInput, StyledInputState};
 use crate::shared::styled_modal::StyledModal;
 use crate::shared::styled_select::{StyledSelect, StyledSelectState};
-use crate::shared::styled_select_child::*;
-use crate::shared::tracking_widget::{fibonacci_values, tracking_widget};
 use crate::shared::{find_issue, ToChild, ToNode};
 use crate::{EditIssueModalSection, FieldId, Msg};
+// use crate::shared::styled_select_child::*;
+use crate::shared::tracking_widget::{fibonacci_values, tracking_widget};
 
 pub fn value_for_time_tracking(v: &Option<i32>, time_tracking_type: &TimeTracking) -> String {
     match (time_tracking_type, v.as_ref()) {

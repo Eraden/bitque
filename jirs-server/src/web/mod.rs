@@ -41,11 +41,34 @@ pub enum Protocol {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct FileSystemStorage {
+    pub store_path: String,
+    pub client_path: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AmazonS3Storage {
+    pub access_key_id: String,
+    pub secret_access_key: String,
+    pub bucket: String,
+    pub region: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum Storage {
+    FileSystem,
+    AmazonS3,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Configuration {
     pub concurrency: usize,
     pub port: String,
     pub bind: String,
     pub ssl: bool,
+    pub storage: Storage,
+    pub filesystem: Option<FileSystemStorage>,
+    pub s3: Option<AmazonS3Storage>,
 }
 
 impl Default for Configuration {
@@ -55,6 +78,12 @@ impl Default for Configuration {
             port: "5000".to_string(),
             bind: "0.0.0.0".to_string(),
             ssl: false,
+            storage: Storage::FileSystem,
+            filesystem: Some(FileSystemStorage {
+                store_path: "./tmp".to_string(),
+                client_path: "/img".to_string(),
+            }),
+            s3: None,
         }
     }
 }

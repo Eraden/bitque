@@ -673,6 +673,7 @@ pub enum UsersFieldId {
     Username,
     Email,
     UserRole,
+    Avatar,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]

@@ -50,6 +50,11 @@ features = [
     "BinaryType",
     "Blob",
     "AddEventListenerOptions",
+    "File",
+    "FileList",
+    "FormData",
+    "FileReader",
+    "FileReaderSync",
     # events
     "EventTarget",
     "ErrorEvent",

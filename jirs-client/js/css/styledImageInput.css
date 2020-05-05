@@ -1,0 +1,14 @@
+.styledImageInput {
+}
+
+.styledImageInput > .label > .mask {
+    display: block;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    border-radius: 60px;
+}
+
+.styledImageInput > .input {
+    display: none;
+}

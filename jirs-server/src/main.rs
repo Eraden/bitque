@@ -7,6 +7,7 @@ extern crate log;
 
 use actix::Actor;
 use actix_cors::Cors;
+use actix_files as fs;
 use actix_web::{App, HttpServer};
 
 use crate::ws::WsServer;
@@ -40,7 +41,8 @@ async fn main() -> Result<(), String> {
     let ws_server = WsServer::default().start();
 
     HttpServer::new(move || {
-        App::new()
+        let web_config = web::Configuration::read();
+        let mut app = App::new()
             .wrap(actix_web::middleware::Logger::default())
             .wrap(Cors::default())
             .data(ws_server.clone())
@@ -48,6 +50,14 @@ async fn main() -> Result<(), String> {
             .data(mail_addr.clone())
             .data(crate::db::build_pool())
             .service(crate::ws::index)
+            .service(actix_web::web::scope("/avatar").service(crate::web::avatar::upload));
+        if let Some(file_system) = web_config.filesystem.as_ref() {
+            app = app.service(fs::Files::new(
+                file_system.client_path.as_str(),
+                file_system.store_path.as_str(),
+            ));
+        }
+        app
     })
     .workers(web_config.concurrency)
     .bind(web_config.addr())
