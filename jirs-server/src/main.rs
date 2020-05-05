@@ -7,6 +7,7 @@ extern crate log;
 
 use actix::Actor;
 use actix_cors::Cors;
+#[cfg(feature = "local-storage")]
 use actix_files as fs;
 use actix_web::{App, HttpServer};
 
@@ -29,6 +30,13 @@ async fn main() -> Result<(), String> {
 
     let web_config = web::Configuration::read();
 
+    std::fs::create_dir_all(web_config.tmp_dir.as_str()).map_err(|e| e.to_string())?;
+    #[cfg(feature = "local-storage")]
+    if !web_config.filesystem.is_empty() {
+        let filesystem = &web_config.filesystem;
+        std::fs::create_dir_all(filesystem.store_path.as_str()).map_err(|e| e.to_string())?;
+    }
+
     let db_addr = actix::SyncArbiter::start(
         crate::db::Configuration::read().concurrency,
         crate::db::DbExecutor::default,
@@ -41,8 +49,7 @@ async fn main() -> Result<(), String> {
     let ws_server = WsServer::default().start();
 
     HttpServer::new(move || {
-        let web_config = web::Configuration::read();
-        let mut app = App::new()
+        let app = App::new()
             .wrap(actix_web::middleware::Logger::default())
             .wrap(Cors::default())
             .data(ws_server.clone())
@@ -51,12 +58,19 @@ async fn main() -> Result<(), String> {
             .data(crate::db::build_pool())
             .service(crate::ws::index)
             .service(actix_web::web::scope("/avatar").service(crate::web::avatar::upload));
-        if let Some(file_system) = web_config.filesystem.as_ref() {
-            app = app.service(fs::Files::new(
-                file_system.client_path.as_str(),
-                file_system.store_path.as_str(),
-            ));
-        }
+
+        #[cfg(feature = "local-storage")]
+        let web_config = web::Configuration::read();
+        #[cfg(feature = "local-storage")]
+        let app = if !web_config.filesystem.is_empty() {
+            let filesystem = &web_config.filesystem;
+            app.service(fs::Files::new(
+                filesystem.client_path.as_str(),
+                filesystem.store_path.as_str(),
+            ))
+        } else {
+            app
+        };
         app
     })
     .workers(web_config.concurrency)

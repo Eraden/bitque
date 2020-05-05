@@ -72,10 +72,10 @@ impl Handler<CreateBindToken> for DbExecutor {
             refresh_token,
             bind_token,
         };
-        let row: Token = diesel::insert_into(tokens)
+
+        diesel::insert_into(tokens)
             .values(form)
             .get_result(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))?;
-        Ok(row)
+            .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))
     }
 }

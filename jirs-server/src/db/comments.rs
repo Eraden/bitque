@@ -1,4 +1,5 @@
 use actix::{Handler, Message};
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -26,12 +27,12 @@ impl Handler<LoadIssueComments> for DbExecutor {
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let rows: Vec<Comment> = comments
-            .distinct_on(id)
-            .filter(issue_id.eq(msg.issue_id))
+
+        let comments_query = comments.distinct_on(id).filter(issue_id.eq(msg.issue_id));
+        debug!("{}", diesel::debug_query::<Pg, _>(&comments_query));
+        comments_query
             .load(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))?;
-        Ok(rows)
+            .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))
     }
 }
 
@@ -63,11 +64,12 @@ impl Handler<CreateComment> for DbExecutor {
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let row: Comment = diesel::insert_into(comments)
-            .values(form)
+
+        let comment_query = diesel::insert_into(comments).values(form);
+        debug!("{}", diesel::debug_query::<Pg, _>(&comment_query));
+        comment_query
             .get_result::<Comment>(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))?;
-        Ok(row)
+            .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))
     }
 }
 
@@ -98,7 +100,7 @@ impl Handler<UpdateComment> for DbExecutor {
                 .find(msg.comment_id),
         )
         .set(body.eq(msg.body));
-        info!("{}", diesel::debug_query::<diesel::pg::Pg, _>(&query));
+        info!("{}", diesel::debug_query::<Pg, _>(&query));
         let row: Comment = query
             .get_result::<Comment>(conn)
             .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))?;
@@ -126,13 +128,16 @@ impl Handler<DeleteComment> for DbExecutor {
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        diesel::delete(
+
+        let comment_query = diesel::delete(
             comments
                 .filter(user_id.eq(msg.user_id))
                 .find(msg.comment_id),
-        )
-        .execute(conn)
-        .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))?;
+        );
+        debug!("{}", diesel::debug_query::<Pg, _>(&comment_query));
+        comment_query
+            .execute(conn)
+            .map_err(|_| ServiceErrors::RecordNotFound("issue comments".to_string()))?;
         Ok(())
     }
 }

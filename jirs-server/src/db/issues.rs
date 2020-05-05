@@ -162,11 +162,10 @@ impl Handler<UpdateIssue> for DbExecutor {
                 })?;
         }
 
-        let row = issues
+        issues
             .find(msg.issue_id)
             .first::<Issue>(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        Ok(row)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)
     }
 }
 

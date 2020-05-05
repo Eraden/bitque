@@ -12,6 +12,19 @@ license = "MPL-2.0"
 name = "jirs_server"
 path = "./src/main.rs"
 
+[features]
+aws-s3 = [
+    "rusoto_s3",
+    "rusoto_core"
+]
+local-storage = [
+    "actix-files"
+]
+default = [
+    "aws-s3",
+    "local-storage",
+]
+
 [dependencies]
 serde = { version = "*", features = ["derive"] }
 actix = { version = "*" }
@@ -21,7 +34,6 @@ actix-service = { version = "*" }
 actix-rt = "1"
 actix-web-actors = "*"
 actix-multipart = { version = "*" }
-actix-files = { version = "0.2.1" }
 
 dotenv = { version = "*" }
 byteorder = "1.0"
@@ -50,10 +62,6 @@ futures = { version = "*" }
 lettre = { version = "*" }
 lettre_email = { version = "*" }
 
-# Amazon S3
-rusoto_s3 = "0.43.0"
-rusoto_core = "0.43.0"
-
 [dependencies.diesel]
 version = "1.4.4"
 features = [ "unstable", "postgres", "numeric", "extras", "uuidv07" ]
@@ -61,3 +69,17 @@ features = [ "unstable", "postgres", "numeric", "extras", "uuidv07" ]
 [dependencies.jirs-data]
 path = "../jirs-data"
 features = [ "backend" ]
+
+# Amazon S3
+[dependencies.rusoto_s3]
+optional = true
+version = "0.43.0"
+
+[dependencies.rusoto_core]
+optional = true
+version = "0.43.0"
+
+# Local storage
+[dependencies.actix-files]
+optional = true
+version = "0.2.1"

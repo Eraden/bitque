@@ -3,7 +3,7 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use jirs_data::{IssueAssignee, Project, User, UserId};
+use jirs_data::{Project, User, UserId};
 
 use crate::db::{DbExecutor, DbPooledConn};
 use crate::errors::ServiceErrors;
@@ -29,15 +29,15 @@ impl Handler<FindUser> for DbExecutor {
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let row: User = users
+
+        let users_query = users
             .distinct_on(id)
             .filter(email.eq(msg.email.as_str()))
-            .filter(name.eq(msg.name.as_str()))
+            .filter(name.eq(msg.name.as_str()));
+        debug!("{}", diesel::debug_query::<Pg, _>(&users_query));
+        users_query
             .first(conn)
-            .map_err(|_| {
-                ServiceErrors::RecordNotFound(format!("user {} {}", msg.name, msg.email))
-            })?;
-        Ok(row)
+            .map_err(|_| ServiceErrors::RecordNotFound(format!("user {} {}", msg.name, msg.email)))
     }
 }
 
@@ -60,12 +60,12 @@ impl Handler<LoadProjectUsers> for DbExecutor {
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let rows: Vec<User> = users
-            .distinct_on(id)
-            .filter(project_id.eq(msg.project_id))
+
+        let users_query = users.distinct_on(id).filter(project_id.eq(msg.project_id));
+        debug!("{}", diesel::debug_query::<Pg, _>(&users_query));
+        users_query
             .load(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("project users".to_string()))?;
-        Ok(rows)
+            .map_err(|_| ServiceErrors::RecordNotFound("project users".to_string()))
     }
 }
 
@@ -89,17 +89,16 @@ impl Handler<LoadIssueAssignees> for DbExecutor {
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let rows: Vec<(User, IssueAssignee)> = users
+
+        let users_query = users
             .distinct_on(id)
             .inner_join(issue_assignees.on(user_id.eq(id)))
             .filter(issue_id.eq(msg.issue_id))
+            .select(users::all_columns());
+        debug!("{}", diesel::debug_query::<Pg, _>(&users_query));
+        users_query
             .load(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("issue users".to_string()))?;
-        let mut vec: Vec<User> = vec![];
-        for row in rows {
-            vec.push(row.0);
-        }
-        Ok(vec)
+            .map_err(|_| ServiceErrors::RecordNotFound("issue users".to_string()))
     }
 }
 
@@ -131,21 +130,17 @@ impl Handler<Register> for DbExecutor {
             return Err(ServiceErrors::RegisterCollision);
         }
 
-        let project: Project = match projects.first(conn) {
-            Ok(project) => project,
-            _ => {
-                let form = CreateProjectForm {
-                    name: "initial".to_string(),
-                    url: "".to_string(),
-                    description: "".to_string(),
-                    category: Default::default(),
-                };
-                diesel::insert_into(projects)
-                    .values(form)
-                    .get_result(conn)
-                    .map_err(|_| ServiceErrors::RegisterCollision)?
-            }
+        let form = CreateProjectForm {
+            name: "initial".to_string(),
+            url: "".to_string(),
+            description: "".to_string(),
+            category: Default::default(),
         };
+        let insert_query = diesel::insert_into(projects).values(form);
+        debug!("{}", diesel::debug_query::<Pg, _>(&insert_query));
+        let project: Project = insert_query
+            .get_result(conn)
+            .map_err(|_| ServiceErrors::RegisterCollision)?;
 
         let form = UserForm {
             name: msg.name,
@@ -154,7 +149,9 @@ impl Handler<Register> for DbExecutor {
             project_id: project.id,
         };
 
-        match diesel::insert_into(users).values(form).execute(conn) {
+        let insert_user_query = diesel::insert_into(users).values(form);
+        debug!("{}", diesel::debug_query::<Pg, _>(&insert_user_query));
+        match insert_user_query.execute(conn) {
             Ok(_) => (),
             _ => return Err(ServiceErrors::RegisterCollision),
         };
@@ -188,12 +185,10 @@ impl Handler<LoadInvitedUsers> for DbExecutor {
             .inner_join(invitations.on(i_email.eq(u_email)))
             .filter(invited_by_id.eq(msg.user_id))
             .select(users::all_columns());
-        debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
-
-        let res: Vec<User> = query
+        debug!("{}", diesel::debug_query::<Pg, _>(&query));
+        query
             .load(conn)
-            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
-        Ok(res)
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))
     }
 }
 
@@ -205,13 +200,44 @@ fn count_matching_users(name: &str, email: &str, conn: &DbPooledConn) -> i64 {
         .or_filter(dsl::email.ne(email).and(dsl::name.eq(name)))
         .or_filter(dsl::email.eq(email).and(dsl::name.eq(name)))
         .count();
-
-    info!(
-        "{}",
-        diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
-    );
-
+    info!("{}", diesel::debug_query::<diesel::pg::Pg, _>(&query));
     query.get_result::<i64>(conn).unwrap_or(1)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateAvatarUrl {
+    pub user_id: UserId,
+    pub avatar_url: Option<String>,
+}
+
+impl Message for UpdateAvatarUrl {
+    type Result = Result<User, ServiceErrors>;
+}
+
+impl Handler<UpdateAvatarUrl> for DbExecutor {
+    type Result = Result<User, ServiceErrors>;
+
+    fn handle(&mut self, msg: UpdateAvatarUrl, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::users::dsl::{avatar_url, id, users};
+
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let update_query = diesel::update(users)
+            .set(avatar_url.eq(msg.avatar_url))
+            .filter(id.eq(msg.user_id));
+        debug!("{}", diesel::debug_query::<Pg, _>(&update_query));
+        update_query
+            .execute(conn)
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+
+        let user_query = users.find(msg.user_id);
+        debug!("{}", diesel::debug_query::<Pg, _>(&user_query));
+        user_query
+            .first(conn)
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))
+    }
 }
 
 #[cfg(test)]

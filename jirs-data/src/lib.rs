@@ -767,4 +767,7 @@ pub enum WsMsg {
     UpdateComment(UpdateCommentPayload),
     CommentDeleteRequest(CommentId),
     CommentDeleted(CommentId),
+
+    // users
+    AvatarUrlChanged(UserId, String),
 }

@@ -1,4 +1,5 @@
 use actix::{Handler, Message};
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -27,17 +28,19 @@ impl Handler<AuthorizeUser> for DbExecutor {
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
         let token = tokens
             .filter(access_token.eq(msg.access_token))
             .first::<Token>(conn)
             .map_err(|_e| {
                 ServiceErrors::RecordNotFound(format!("token for {}", msg.access_token))
             })?;
-        let user = users
-            .filter(id.eq(token.user_id))
+
+        let user_query = users.filter(id.eq(token.user_id));
+        debug!("{}", diesel::debug_query::<Pg, _>(&user_query));
+        user_query
             .first::<User>(conn)
-            .map_err(|_e| ServiceErrors::RecordNotFound(format!("user {}", token.user_id)))?;
-        Ok(user)
+            .map_err(|_e| ServiceErrors::RecordNotFound(format!("user {}", token.user_id)))
     }
 }
 
@@ -55,10 +58,11 @@ impl SyncQuery for AuthorizeUser {
             .filter(access_token.eq(self.access_token))
             .first::<Token>(&conn)
             .map_err(|_| crate::errors::ServiceErrors::Unauthorized)?;
-        let user = users
-            .filter(id.eq(token.user_id))
+
+        let user_query = users.filter(id.eq(token.user_id));
+        debug!("{}", diesel::debug_query::<Pg, _>(&user_query));
+        user_query
             .first::<User>(&conn)
-            .map_err(|_| crate::errors::ServiceErrors::Unauthorized)?;
-        Ok(user)
+            .map_err(|_| crate::errors::ServiceErrors::Unauthorized)
     }
 }

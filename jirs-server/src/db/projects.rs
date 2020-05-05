@@ -1,4 +1,5 @@
 use actix::{Handler, Message};
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -63,19 +64,21 @@ impl Handler<UpdateProject> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
-        diesel::update(projects.find(msg.project_id))
-            .set((
-                msg.name.map(|v| name.eq(v)),
-                msg.url.map(|v| url.eq(v)),
-                msg.description.map(|v| description.eq(v)),
-                msg.category.map(|v| category.eq(v)),
-                msg.time_tracking.map(|v| time_tracking.eq(v)),
-            ))
+        let update_query = diesel::update(projects.find(msg.project_id)).set((
+            msg.name.map(|v| name.eq(v)),
+            msg.url.map(|v| url.eq(v)),
+            msg.description.map(|v| description.eq(v)),
+            msg.category.map(|v| category.eq(v)),
+            msg.time_tracking.map(|v| time_tracking.eq(v)),
+        ));
+        debug!("{}", diesel::debug_query::<Pg, _>(&update_query));
+        update_query
             .execute(conn)
             .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
 
-        projects
-            .filter(id.eq(msg.project_id))
+        let project_query = projects.find(msg.project_id);
+        debug!("{}", diesel::debug_query::<Pg, _>(&project_query));
+        project_query
             .first::<Project>(conn)
             .map_err(|_| ServiceErrors::RecordNotFound("Project".to_string()))
     }

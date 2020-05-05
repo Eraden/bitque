@@ -271,6 +271,7 @@ impl Handler<InnerMsg> for WsServer {
                     Some(s) => s,
                     _ => return debug!("  channel not found, aborting..."),
                 };
+                let _s = set.len();
                 for r in set {
                     let recipient = match self.sessions.get(r) {
                         Some(r) => r,

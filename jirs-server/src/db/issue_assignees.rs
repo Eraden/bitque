@@ -1,4 +1,5 @@
 use actix::{Handler, Message};
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -26,9 +27,11 @@ impl Handler<LoadAssignees> for DbExecutor {
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        issue_assignees
+        let issue_assignees_query = issue_assignees
             .distinct_on(id)
-            .filter(issue_id.eq(msg.issue_id))
+            .filter(issue_id.eq(msg.issue_id));
+        debug!("{}", diesel::debug_query::<Pg, _>(&issue_assignees_query));
+        issue_assignees_query
             .load::<IssueAssignee>(conn)
             .map_err(|_| ServiceErrors::RecordNotFound("issue users".to_string()))
     }

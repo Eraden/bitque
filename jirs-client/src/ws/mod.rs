@@ -67,6 +67,18 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
         }
+        Msg::WsMsg(WsMsg::AvatarUrlChanged(user_id, avatar_url)) => {
+            for user in model.users.iter_mut() {
+                if user.id == *user_id {
+                    user.avatar_url = Some(avatar_url.clone());
+                }
+            }
+            if let Some(me) = model.user.as_mut() {
+                if me.id == *user_id {
+                    me.avatar_url = Some(avatar_url.clone());
+                }
+            }
+        }
         _ => (),
     };
     orders.render();

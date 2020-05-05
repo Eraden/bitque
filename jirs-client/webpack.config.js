@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === "production") {
     });
     execSync("rm -Rf ./dist");
     execSync("mkdir -p ./dist");
-    execSync('./target/debug/jirs-css -O ./jirs-client/dist/styles.css', {
+    execSync('./target/release/jirs-css -O ./jirs-client/dist/styles.css', {
         cwd: jirDir,
     });
     console.log("CSS combined");

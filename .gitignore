@@ -7,3 +7,4 @@ db.toml
 db.test.toml
 pkg
 jirs-client/pkg
+tmp
