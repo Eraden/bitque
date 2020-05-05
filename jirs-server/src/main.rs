@@ -1,4 +1,5 @@
 #![feature(async_closure)]
+#![feature(vec_remove_item)]
 
 #[macro_use]
 extern crate diesel;

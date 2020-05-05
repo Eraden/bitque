@@ -1,6 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
-use actix::{Actor, ActorContext, Addr, Context, Handler, Message, Recipient, StreamHandler};
+use actix::{
+    Actor, ActorContext, Addr, AsyncContext, Context, Handler, Message, Recipient, StreamHandler,
+};
 use actix_web::web::Data;
 use actix_web::{get, web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
@@ -201,7 +203,11 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
     fn finished(&mut self, ctx: &mut Self::Context) {
         info!("Disconnected");
         if let Some(user) = self.current_user.as_ref() {
-            self.addr.do_send(InnerMsg::Leave(user.project_id, user.id));
+            self.addr.do_send(InnerMsg::Leave(
+                user.project_id,
+                user.id,
+                ctx.address().recipient(),
+            ));
         }
         ctx.stop()
     }
@@ -218,14 +224,14 @@ where
 #[rtype(result = "()")]
 pub enum InnerMsg {
     Join(ProjectId, UserId, Recipient<InnerMsg>),
-    Leave(ProjectId, UserId),
+    Leave(ProjectId, UserId, Recipient<InnerMsg>),
     BroadcastToChannel(ProjectId, WsMsg),
     Transfer(WsMsg),
 }
 
 pub struct WsServer {
-    sessions: HashMap<i32, Recipient<InnerMsg>>,
-    rooms: HashMap<i32, HashSet<i32>>,
+    sessions: HashMap<UserId, Vec<Recipient<InnerMsg>>>,
+    rooms: HashMap<ProjectId, HashMap<UserId, i32>>,
 }
 
 impl Default for WsServer {
@@ -252,18 +258,29 @@ impl Handler<InnerMsg> for WsServer {
         debug!("receive {:?}", msg);
         match msg {
             InnerMsg::Join(project_id, user_id, recipient) => {
-                self.sessions.insert(user_id, recipient);
+                let v = self.sessions.entry(user_id).or_insert(vec![]);
+                v.push(recipient);
                 self.ensure_room(project_id);
+
                 if let Some(room) = self.rooms.get_mut(&project_id) {
-                    room.insert(user_id);
+                    let n = *room.entry(user_id).or_insert(0);
+                    room.insert(user_id, n + 1);
                 }
             }
-            InnerMsg::Leave(project_id, user_id) => {
+            InnerMsg::Leave(project_id, user_id, recipient) => {
                 self.ensure_room(project_id);
-                if let Some(room) = self.rooms.get_mut(&project_id) {
+                let room = match self.rooms.get_mut(&project_id) {
+                    Some(room) => room,
+                    None => return,
+                };
+                let n = *room.entry(user_id).or_insert(0);
+                if n <= 1 {
                     room.remove(&user_id);
+                    self.sessions.remove(&user_id);
+                } else {
+                    let v = self.sessions.entry(user_id).or_insert(vec![]);
+                    v.remove_item(&recipient);
                 }
-                self.sessions.remove(&user_id);
             }
             InnerMsg::BroadcastToChannel(project_id, msg) => {
                 debug!("Begin broadcast to channel {} msg {:?}", project_id, msg);
@@ -272,17 +289,19 @@ impl Handler<InnerMsg> for WsServer {
                     _ => return debug!("  channel not found, aborting..."),
                 };
                 let _s = set.len();
-                for r in set {
-                    let recipient = match self.sessions.get(r) {
-                        Some(r) => r,
+                for r in set.keys() {
+                    let v = match self.sessions.get(r) {
+                        Some(v) => v,
                         _ => {
                             debug!("recipient is dead, skipping...");
                             continue;
                         }
                     };
-                    match recipient.do_send(InnerMsg::Transfer(msg.clone())) {
-                        Ok(_) => debug!("msg sent"),
-                        Err(e) => error!("{}", e),
+                    for recipient in v.iter() {
+                        match recipient.do_send(InnerMsg::Transfer(msg.clone())) {
+                            Ok(_) => debug!("msg sent"),
+                            Err(e) => error!("{}", e),
+                        };
                     }
                 }
             }
@@ -293,7 +312,7 @@ impl Handler<InnerMsg> for WsServer {
 
 impl WsServer {
     pub fn ensure_room(&mut self, room: i32) {
-        self.rooms.entry(room).or_insert_with(HashSet::new);
+        self.rooms.entry(room).or_insert_with(HashMap::new);
     }
 }
 

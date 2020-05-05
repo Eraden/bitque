@@ -26,18 +26,18 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         _ => (),
     }
 
-    let project_page = match &mut model.page_content {
+    let profile_page = match &mut model.page_content {
         PageContent::Profile(profile_page) => profile_page,
         _ => return,
     };
 
-    project_page.name.update(&msg);
-    project_page.email.update(&msg);
-    project_page.avatar.update(&msg);
+    profile_page.name.update(&msg);
+    profile_page.email.update(&msg);
+    profile_page.avatar.update(&msg);
 
     match msg {
         Msg::FileInputChanged(FieldId::Profile(UsersFieldId::Avatar), ..) => {
-            let file = match project_page.avatar.file.as_ref() {
+            let file = match profile_page.avatar.file.as_ref() {
                 Some(f) => f,
                 _ => return,
             };
@@ -51,6 +51,13 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             fd.set_with_blob("avatar", file).unwrap();
             orders.perform_cmd(update_avatar(fd));
             orders.skip();
+        }
+        Msg::WsMsg(WsMsg::AvatarUrlChanged(user_id, avatar_url)) => {
+            if let Some(me) = model.user.as_mut() {
+                if me.id == user_id {
+                    profile_page.avatar.url = Some(avatar_url.clone());
+                }
+            }
         }
         _ => (),
     }
