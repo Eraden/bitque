@@ -240,6 +240,43 @@ impl Handler<UpdateAvatarUrl> for DbExecutor {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProfileUpdate {
+    pub user_id: UserId,
+    pub name: String,
+    pub email: String,
+}
+
+impl Message for ProfileUpdate {
+    type Result = Result<User, ServiceErrors>;
+}
+
+impl Handler<ProfileUpdate> for DbExecutor {
+    type Result = Result<User, ServiceErrors>;
+
+    fn handle(&mut self, msg: ProfileUpdate, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::users::dsl::{email, id, name, users};
+
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let update_query = diesel::update(users)
+            .set((email.eq(msg.email), name.eq(msg.name)))
+            .filter(id.eq(msg.user_id));
+        debug!("{}", diesel::debug_query::<Pg, _>(&update_query));
+        update_query
+            .execute(conn)
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+
+        let user_query = users.find(msg.user_id);
+        debug!("{}", diesel::debug_query::<Pg, _>(&user_query));
+        user_query
+            .first(conn)
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::db::build_pool;

@@ -145,6 +145,11 @@ impl WebSocketActor {
             WsMsg::InvitationRevokeRequest(id) => self.handle_msg(RevokeInvitation { id }, ctx)?,
             WsMsg::InvitedUsersRequest => self.handle_msg(LoadInvitedUsers, ctx)?,
 
+            // users
+            WsMsg::ProfileUpdate(email, name) => {
+                self.handle_msg(ProfileUpdate { email, name }, ctx)?
+            }
+
             // else fail
             _ => {
                 error!("No handle for {:?} specified", msg);

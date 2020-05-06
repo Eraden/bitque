@@ -708,4 +708,6 @@ pub enum WsMsg {
 
     // users
     AvatarUrlChanged(UserId, String),
+    ProfileUpdate(EmailString, UsernameString),
+    ProfileUpdated,
 }
