@@ -61,3 +61,26 @@ impl WsHandler<LoadInvitedUsers> for WebSocketActor {
         Ok(Some(WsMsg::InvitedUsersLoaded(users)))
     }
 }
+
+pub struct ProfileUpdate {
+    pub name: String,
+    pub email: String,
+}
+
+impl WsHandler<ProfileUpdate> for WebSocketActor {
+    fn handle_msg(&mut self, msg: ProfileUpdate, _ctx: &mut Self::Context) -> WsResult {
+        let user_id = self.require_user()?.id;
+        let ProfileUpdate { name, email } = msg;
+
+        match block_on(self.db.send(crate::db::users::ProfileUpdate {
+            user_id,
+            name,
+            email,
+        })) {
+            Ok(Ok(_users)) => (),
+            _ => return Ok(None),
+        };
+
+        Ok(Some(WsMsg::ProfileUpdated))
+    }
+}

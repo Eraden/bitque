@@ -5,12 +5,13 @@ use jirs_data::*;
 
 use crate::api::send_ws_msg;
 use crate::model::{Model, Page, PageContent, ProfilePage};
+use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_image_input::StyledImageInput;
 use crate::shared::styled_input::StyledInput;
 use crate::shared::{inner_layout, ToNode};
-use crate::{FieldId, Msg, HOST_URL};
+use crate::{FieldId, Msg, PageChanged, ProfilePageChange, HOST_URL};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     let user = match model.user {
@@ -59,6 +60,12 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 }
             }
         }
+        Msg::PageChanged(PageChanged::Profile(ProfilePageChange::SubmitForm)) => {
+            send_ws_msg(WsMsg::ProfileUpdate(
+                profile_page.email.value.clone(),
+                profile_page.name.value.clone(),
+            ))
+        }
         _ => (),
     }
 }
@@ -99,11 +106,27 @@ pub fn view(model: &Model) -> Node<Msg> {
         .build()
         .into_node();
 
+    let submit = StyledButton::build()
+        .primary()
+        .text("Save")
+        .on_click(mouse_ev(Ev::Click, |ev| {
+            ev.prevent_default();
+            Msg::PageChanged(PageChanged::Profile(ProfilePageChange::SubmitForm))
+        }))
+        .build()
+        .into_node();
+    let submit_field = StyledField::build().input(submit).build().into_node();
+
     let content = StyledForm::build()
         .heading("Profile")
+        .on_submit(ev(Ev::Submit, |ev| {
+            ev.prevent_default();
+            Msg::PageChanged(PageChanged::Profile(ProfilePageChange::SubmitForm))
+        }))
         .add_field(avatar)
         .add_field(username_field)
         .add_field(email_field)
+        .add_field(submit_field)
         .build()
         .into_node();
     inner_layout(model, "profile", vec![content], empty![])
