@@ -29,7 +29,7 @@ ADD COLUMN issue_status_id INT REFERENCES issue_statuses ( id );
 UPDATE issues
 SET issue_status_id = issue_statuses.id
 FROM issue_statuses
-WHERE issue_statuses.name = issues.status :: text;
+WHERE issue_statuses.name = issues.status :: text AND issues.project_id = issue_statuses.project_id;
 
 ALTER TABLE issues DROP COLUMN status;
 ALTER TABLE issues ALTER COLUMN issue_status_id SET NOT NULL;

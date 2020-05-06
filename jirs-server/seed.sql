@@ -1,4 +1,8 @@
 insert into projects (name) values ('initial'), ('second'), ('third');
+
+insert into issue_statuses (name, project_id, position)
+values ('backlog', 1, 1), ('selected', 1, 2), ('in_progress', 1, 3), ('done', 1, 4);
+
 insert into users (project_id, email, name, avatar_url) values (
     1,
     'john@example.com',
@@ -65,43 +69,43 @@ insert into tokens (user_id, access_token, refresh_token) values (1, uuid_genera
 insert into issues(
     title,
     issue_type,
-    status,
     priority,
     list_position,
     description,
     description_text,
     reporter_id,
-    project_id
+    project_id,
+    issue_status_id
 ) values (
     'Foo',
-    'task',
     'backlog',
     'low',
     1,
     'hello world',
     'foz baz',
     1,
+    1,
     1
 ), (
     'Foo2',
-    'story',
     'selected',
     'low',
     2,
     'hello world 2',
     'foz baz 2',
     1,
-    1
+    1,
+    2
 ), (
     'Foo3',
-    'bug',
     'in_progress',
     'low',
     3,
     'hello world 3',
     'foz baz 3',
     2,
-    1
+    1,
+    3
 );
 insert into comments (user_id, issue_id, body) values (
     1, 1, 'Vestibulum non neque at dui maximus porttitor fermentum consectetur eros.'
