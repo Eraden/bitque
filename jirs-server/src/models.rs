@@ -3,7 +3,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use jirs_data::{
-    InvitationState, IssuePriority, IssueStatus, IssueType, ProjectCategory, TimeTracking,
+    InvitationState, IssuePriority, IssueStatusId, IssueType, ProjectCategory, ProjectId,
+    TimeTracking, UserId,
 };
 
 use crate::schema::*;
@@ -21,7 +22,6 @@ pub struct Issue {
     pub id: i32,
     pub title: String,
     pub issue_type: IssueType,
-    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub list_position: i32,
     pub description: Option<String>,
@@ -33,6 +33,7 @@ pub struct Issue {
     pub project_id: i32,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub issue_status_id: IssueStatusId,
 }
 
 impl Into<jirs_data::Issue> for Issue {
@@ -41,7 +42,6 @@ impl Into<jirs_data::Issue> for Issue {
             id: self.id,
             title: self.title,
             issue_type: self.issue_type,
-            status: self.status,
             priority: self.priority,
             list_position: self.list_position,
             description: self.description,
@@ -53,6 +53,7 @@ impl Into<jirs_data::Issue> for Issue {
             project_id: self.project_id,
             created_at: self.created_at,
             updated_at: self.updated_at,
+            issue_status_id: self.issue_status_id,
 
             user_ids: vec![],
         }
@@ -64,7 +65,6 @@ impl Into<jirs_data::Issue> for Issue {
 pub struct CreateIssueForm {
     pub title: String,
     pub issue_type: IssueType,
-    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub list_position: i32,
     pub description: Option<String>,
@@ -72,8 +72,9 @@ pub struct CreateIssueForm {
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub reporter_id: i32,
-    pub project_id: i32,
+    pub reporter_id: UserId,
+    pub project_id: ProjectId,
+    pub issue_status_id: IssueStatusId,
 }
 
 #[derive(Debug, Serialize, Deserialize, Insertable)]

@@ -63,7 +63,7 @@ impl std::fmt::Display for FieldId {
                 EditIssueModalSection::Issue(IssueFieldId::Description) => {
                     f.write_str("descriptionIssueEditModal")
                 }
-                EditIssueModalSection::Issue(IssueFieldId::Status) => {
+                EditIssueModalSection::Issue(IssueFieldId::IssueStatusId) => {
                     f.write_str("statusIssueEditModal")
                 }
                 EditIssueModalSection::Issue(IssueFieldId::Assignees) => {
@@ -98,7 +98,7 @@ impl std::fmt::Display for FieldId {
                 IssueFieldId::Reporter => f.write_str("reporterAddIssueModal"),
                 IssueFieldId::Assignees => f.write_str("assigneesAddIssueModal"),
                 IssueFieldId::Priority => f.write_str("issuePriorityAddIssueModal"),
-                IssueFieldId::Status => f.write_str("addIssueModal-status"),
+                IssueFieldId::IssueStatusId => f.write_str("addIssueModal-status"),
                 IssueFieldId::Estimate => f.write_str("addIssueModal-estimate"),
                 IssueFieldId::TimeSpent => f.write_str("addIssueModal-timeSpend"),
                 IssueFieldId::TimeRemaining => f.write_str("addIssueModal-timeRemaining"),
@@ -214,8 +214,8 @@ pub enum Msg {
     IssueDragStopped(IssueId),
     DragLeave(IssueId),
     ExchangePosition(IssueId),
-    IssueDragOverStatus(IssueStatus),
-    IssueDropZone(IssueStatus),
+    IssueDragOverStatus(IssueStatusId),
+    IssueDropZone(IssueStatusId),
     UnlockDragOver,
 
     // inputs

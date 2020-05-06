@@ -4,7 +4,7 @@ use diesel::expression::sql_literal::sql;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use jirs_data::{IssuePriority, IssueStatus, IssueType};
+use jirs_data::{IssuePriority, IssueStatusId, IssueType};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
@@ -74,7 +74,6 @@ pub struct UpdateIssue {
     pub issue_id: i32,
     pub title: Option<String>,
     pub issue_type: Option<IssueType>,
-    pub status: Option<IssueStatus>,
     pub priority: Option<IssuePriority>,
     pub list_position: Option<i32>,
     pub description: Option<String>,
@@ -85,6 +84,7 @@ pub struct UpdateIssue {
     pub project_id: Option<i32>,
     pub user_ids: Option<Vec<i32>>,
     pub reporter_id: Option<i32>,
+    pub issue_status_id: Option<i32>,
 }
 
 impl Message for UpdateIssue {
@@ -107,7 +107,7 @@ impl Handler<UpdateIssue> for DbExecutor {
             msg.title.map(|title| dsl::title.eq(title)),
             msg.issue_type
                 .map(|issue_type| dsl::issue_type.eq(issue_type)),
-            msg.status.map(|status| dsl::status.eq(status)),
+            msg.issue_status_id.map(|id| dsl::issue_status_id.eq(id)),
             msg.priority.map(|priority| dsl::priority.eq(priority)),
             msg.list_position
                 .map(|list_position| dsl::list_position.eq(list_position)),
@@ -204,7 +204,7 @@ impl Handler<DeleteIssue> for DbExecutor {
 pub struct CreateIssue {
     pub title: String,
     pub issue_type: IssueType,
-    pub status: IssueStatus,
+    pub issue_status_id: IssueStatusId,
     pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
@@ -225,7 +225,7 @@ impl Handler<CreateIssue> for DbExecutor {
 
     fn handle(&mut self, msg: CreateIssue, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issue_assignees::dsl;
-        use crate::schema::issues::dsl::{issues, status};
+        use crate::schema::issues::dsl::issues;
 
         let conn = &self
             .pool
@@ -233,7 +233,7 @@ impl Handler<CreateIssue> for DbExecutor {
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
         let list_position = issues
-            .filter(status.eq(IssueStatus::Backlog))
+            // .filter(issue_status_id.eq(IssueStatus::Backlog))
             .select(sql("max(list_position) + 1"))
             .get_result::<i32>(conn)
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
@@ -241,7 +241,7 @@ impl Handler<CreateIssue> for DbExecutor {
         let form = crate::models::CreateIssueForm {
             title: msg.title,
             issue_type: msg.issue_type,
-            status: msg.status,
+            issue_status_id: msg.issue_status_id,
             priority: msg.priority,
             list_position,
             description: msg.description,

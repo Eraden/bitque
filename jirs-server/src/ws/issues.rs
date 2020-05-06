@@ -36,8 +36,8 @@ impl WsHandler<UpdateIssueHandler> for WebSocketActor {
             (IssueFieldId::Description, PayloadVariant::String(s)) => {
                 msg.description = Some(s);
             }
-            (IssueFieldId::Status, PayloadVariant::IssueStatus(s)) => {
-                msg.status = Some(s);
+            (IssueFieldId::IssueStatusId, PayloadVariant::I32(s)) => {
+                msg.issue_status_id = Some(s);
             }
             (IssueFieldId::ListPosition, PayloadVariant::I32(i)) => {
                 msg.list_position = Some(i);
@@ -89,7 +89,7 @@ impl WsHandler<CreateIssuePayload> for WebSocketActor {
         let msg = crate::db::issues::CreateIssue {
             title: msg.title,
             issue_type: msg.issue_type,
-            status: msg.status,
+            issue_status_id: msg.issue_status_id,
             priority: msg.priority,
             description: msg.description,
             description_text: msg.description_text,

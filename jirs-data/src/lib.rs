@@ -23,6 +23,7 @@ pub type ProjectId = i32;
 pub type UserId = i32;
 pub type CommentId = i32;
 pub type TokenId = i32;
+pub type IssueStatusId = i32;
 pub type InvitationId = i32;
 pub type EmailString = String;
 pub type UsernameString = String;
@@ -87,83 +88,6 @@ impl std::fmt::Display for IssueType {
             IssueType::Task => f.write_str("task"),
             IssueType::Bug => f.write_str("bug"),
             IssueType::Story => f.write_str("story"),
-        }
-    }
-}
-
-#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
-#[cfg_attr(feature = "backend", sql_type = "IssueStatusType")]
-#[derive(Clone, Copy, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
-pub enum IssueStatus {
-    Backlog,
-    Selected,
-    InProgress,
-    Done,
-}
-
-impl Default for IssueStatus {
-    fn default() -> Self {
-        IssueStatus::Backlog
-    }
-}
-
-impl Into<u32> for IssueStatus {
-    fn into(self) -> u32 {
-        match self {
-            IssueStatus::Backlog => 0,
-            IssueStatus::Selected => 1,
-            IssueStatus::InProgress => 2,
-            IssueStatus::Done => 3,
-        }
-    }
-}
-
-impl Into<IssueStatus> for u32 {
-    fn into(self) -> IssueStatus {
-        match self {
-            0 => IssueStatus::Backlog,
-            1 => IssueStatus::Selected,
-            2 => IssueStatus::InProgress,
-            3 => IssueStatus::Done,
-            _ => IssueStatus::Backlog,
-        }
-    }
-}
-
-impl FromStr for IssueStatus {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "backlog" => Ok(IssueStatus::Backlog),
-            "selected" => Ok(IssueStatus::Selected),
-            "in_progress" => Ok(IssueStatus::InProgress),
-            "done" => Ok(IssueStatus::Done),
-            _ => Err(format!("Invalid status {:?}", s)),
-        }
-    }
-}
-
-impl ToVec for IssueStatus {
-    type Item = IssueStatus;
-
-    fn ordered() -> Vec<Self> {
-        vec![
-            IssueStatus::Backlog,
-            IssueStatus::Selected,
-            IssueStatus::InProgress,
-            IssueStatus::Done,
-        ]
-    }
-}
-
-impl IssueStatus {
-    pub fn to_label(&self) -> &str {
-        match self {
-            IssueStatus::Backlog => "Backlog",
-            IssueStatus::Selected => "Selected for development",
-            IssueStatus::InProgress => "In Progress",
-            IssueStatus::Done => "Done",
         }
     }
 }
@@ -482,7 +406,6 @@ pub struct Issue {
     pub id: IssueId,
     pub title: String,
     pub issue_type: IssueType,
-    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub list_position: i32,
     pub description: Option<String>,
@@ -494,8 +417,20 @@ pub struct Issue {
     pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub issue_status_id: IssueStatusId,
 
     pub user_ids: Vec<i32>,
+}
+
+#[cfg_attr(feature = "backend", derive(Queryable))]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+pub struct IssueStatus {
+    pub id: IssueStatusId,
+    pub name: String,
+    pub position: ProjectId,
+    pub project_id: ProjectId,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 #[cfg_attr(feature = "backend", derive(Queryable))]
@@ -552,7 +487,6 @@ pub struct Token {
 pub struct UpdateIssuePayload {
     pub title: String,
     pub issue_type: IssueType,
-    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub list_position: i32,
     pub description: Option<String>,
@@ -562,6 +496,7 @@ pub struct UpdateIssuePayload {
     pub time_remaining: Option<i32>,
     pub project_id: ProjectId,
     pub reporter_id: UserId,
+    pub issue_status_id: IssueStatusId,
     pub user_ids: Vec<UserId>,
 }
 
@@ -580,7 +515,6 @@ impl From<Issue> for UpdateIssuePayload {
         Self {
             title: issue.title,
             issue_type: issue.issue_type,
-            status: issue.status,
             priority: issue.priority,
             list_position: issue.list_position,
             description: issue.description,
@@ -591,6 +525,7 @@ impl From<Issue> for UpdateIssuePayload {
             project_id: issue.project_id,
             reporter_id: issue.reporter_id,
             user_ids: issue.user_ids,
+            issue_status_id: issue.issue_status_id,
         }
     }
 }
@@ -612,7 +547,6 @@ pub struct UpdateCommentPayload {
 pub struct CreateIssuePayload {
     pub title: String,
     pub issue_type: IssueType,
-    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
@@ -622,6 +556,7 @@ pub struct CreateIssuePayload {
     pub project_id: ProjectId,
     pub user_ids: Vec<UserId>,
     pub reporter_id: UserId,
+    pub issue_status_id: IssueStatusId,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -641,7 +576,6 @@ pub enum PayloadVariant {
     I32(i32),
     String(String),
     IssueType(IssueType),
-    IssueStatus(IssueStatus),
     IssuePriority(IssuePriority),
     ProjectCategory(ProjectCategory),
 }
@@ -691,7 +625,6 @@ pub enum IssueFieldId {
     Type,
     Title,
     Description,
-    Status,
     ListPosition,
     Assignees,
     Reporter,
@@ -699,6 +632,7 @@ pub enum IssueFieldId {
     Estimate,
     TimeSpent,
     TimeRemaining,
+    IssueStatusId,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -759,6 +693,10 @@ pub enum WsMsg {
     IssueDeleted(IssueId),
     IssueCreateRequest(CreateIssuePayload),
     IssueCreated(Issue),
+
+    // issue status
+    IssueStatusesRequest,
+    IssueStatusesResponse(Vec<IssueStatus>),
 
     // comments
     IssueCommentsRequest(IssueId),

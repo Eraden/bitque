@@ -2,9 +2,7 @@ use std::io::Write;
 
 use diesel::{deserialize::*, pg::*, serialize::*, *};
 
-use crate::{
-    InvitationState, IssuePriority, IssueStatus, IssueType, ProjectCategory, TimeTracking, UserRole,
-};
+use crate::{InvitationState, IssuePriority, IssueType, ProjectCategory, TimeTracking, UserRole};
 
 #[derive(SqlType)]
 #[postgres(type_name = "IssuePriorityType")]
@@ -77,48 +75,6 @@ impl ToSql<IssueTypeType, Pg> for IssueType {
             IssueType::Task => out.write_all(b"task")?,
             IssueType::Story => out.write_all(b"story")?,
             IssueType::Bug => out.write_all(b"bug")?,
-        }
-        Ok(IsNull::No)
-    }
-}
-
-#[derive(SqlType)]
-#[postgres(type_name = "IssueStatusType")]
-pub struct IssueStatusType;
-
-impl diesel::query_builder::QueryId for IssueStatusType {
-    type QueryId = IssueStatus;
-}
-
-fn issue_status_from_sql(bytes: Option<&[u8]>) -> deserialize::Result<IssueStatus> {
-    match not_none!(bytes) {
-        b"backlog" => Ok(IssueStatus::Backlog),
-        b"selected" => Ok(IssueStatus::Selected),
-        b"in_progress" | b"inprogress" => Ok(IssueStatus::InProgress),
-        b"done" => Ok(IssueStatus::Done),
-        _ => Ok(IssueStatus::Backlog),
-    }
-}
-
-impl FromSql<IssueStatusType, Pg> for IssueStatus {
-    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
-        issue_status_from_sql(bytes)
-    }
-}
-
-impl FromSql<sql_types::Text, Pg> for IssueStatus {
-    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
-        issue_status_from_sql(bytes)
-    }
-}
-
-impl ToSql<IssueStatusType, Pg> for IssueStatus {
-    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
-        match *self {
-            IssueStatus::Backlog => out.write_all(b"backlog")?,
-            IssueStatus::Selected => out.write_all(b"selected")?,
-            IssueStatus::InProgress => out.write_all(b"in_progress")?,
-            IssueStatus::Done => out.write_all(b"done")?,
         }
         Ok(IsNull::No)
     }

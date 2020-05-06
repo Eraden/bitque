@@ -13,6 +13,7 @@ pub mod authorize_user;
 pub mod comments;
 pub mod invitations;
 pub mod issue_assignees;
+pub mod issue_statuses;
 pub mod issues;
 pub mod projects;
 pub mod tokens;

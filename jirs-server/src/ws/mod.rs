@@ -14,6 +14,7 @@ use crate::mail::MailExecutor;
 use crate::ws::auth::*;
 use crate::ws::comments::*;
 use crate::ws::invitations::*;
+use crate::ws::issue_statuses::*;
 use crate::ws::issues::*;
 use crate::ws::projects::*;
 use crate::ws::users::*;
@@ -21,6 +22,7 @@ use crate::ws::users::*;
 pub mod auth;
 pub mod comments;
 pub mod invitations;
+pub mod issue_statuses;
 pub mod issues;
 pub mod projects;
 pub mod users;
@@ -81,7 +83,7 @@ impl WebSocketActor {
             WsMsg::Ping => Some(WsMsg::Pong),
             WsMsg::Pong => Some(WsMsg::Ping),
 
-            // Issues
+            // issues
             WsMsg::IssueUpdateRequest(id, field_id, payload) => self.handle_msg(
                 UpdateIssueHandler {
                     id,
@@ -93,6 +95,9 @@ impl WebSocketActor {
             WsMsg::IssueCreateRequest(payload) => self.handle_msg(payload, ctx)?,
             WsMsg::IssueDeleteRequest(id) => self.handle_msg(DeleteIssue { id }, ctx)?,
             WsMsg::ProjectIssuesRequest => self.handle_msg(LoadIssues, ctx)?,
+
+            // issue statuses
+            WsMsg::IssueStatusesRequest => self.handle_msg(LoadIssueStatuses, ctx)?,
 
             // projects
             WsMsg::ProjectRequest => self.handle_msg(CurrentProject, ctx)?,

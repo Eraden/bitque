@@ -214,12 +214,12 @@ impl ToChild for jirs_data::IssueStatus {
     type Builder = StyledSelectChildBuilder;
 
     fn to_child(&self) -> StyledSelectChildBuilder {
-        let text = self.to_label();
+        let text = &self.name;
 
         StyledSelectChild::build()
-            .value(self.clone().into())
+            .value(self.id as u32)
             .add_class(text)
-            .text(text)
+            .text(text.as_str())
     }
 }
 

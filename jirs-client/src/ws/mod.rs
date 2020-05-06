@@ -41,6 +41,13 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
             model.issues = v;
         }
+        // issue statuses
+        Msg::WsMsg(WsMsg::IssueStatusesResponse(v)) => {
+            model.issue_statuses = v.clone();
+            model
+                .issue_statuses
+                .sort_by(|a, b| a.position.cmp(&b.position));
+        }
         // users
         Msg::WsMsg(WsMsg::ProjectUsersLoaded(v)) => {
             model.users = v.clone();

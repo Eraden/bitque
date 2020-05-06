@@ -53,18 +53,18 @@ pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
             return;
         }
     };
-    if dragged.status != below.status {
+    if dragged.issue_status_id != below.issue_status_id {
         let mut issues = vec![];
         std::mem::swap(&mut issues, &mut model.issues);
         for mut c in issues.into_iter() {
-            if c.status == below.status && c.list_position > below.list_position {
+            if c.issue_status_id == below.issue_status_id && c.list_position > below.list_position {
                 c.list_position += 1;
                 mark_dirty(c.id, project_page);
             }
             model.issues.push(c);
         }
         dragged.list_position = below.list_position + 1;
-        dragged.status = below.status;
+        dragged.issue_status_id = below.issue_status_id;
     }
     std::mem::swap(&mut dragged.list_position, &mut below.list_position);
 
@@ -95,8 +95,8 @@ pub fn sync(model: &mut Model) {
 
         send_ws_msg(WsMsg::IssueUpdateRequest(
             issue.id,
-            IssueFieldId::Status,
-            PayloadVariant::IssueStatus(issue.status),
+            IssueFieldId::IssueStatusId,
+            PayloadVariant::I32(issue.issue_status_id),
         ));
         send_ws_msg(WsMsg::IssueUpdateRequest(
             issue.id,
@@ -109,7 +109,7 @@ pub fn sync(model: &mut Model) {
     project_page.dirty_issues.clear();
 }
 
-pub fn change_status(status: IssueStatus, model: &mut Model) {
+pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
     let project_page = match &mut model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return,
@@ -127,7 +127,7 @@ pub fn change_status(status: IssueStatus, model: &mut Model) {
     old.sort_by(|a, b| a.list_position.cmp(&b.list_position));
 
     for mut issue in old.into_iter() {
-        if issue.status == status {
+        if issue.issue_status_id == status_id {
             if issue.list_position != pos {
                 issue.list_position = pos;
                 mark_dirty(issue.id, project_page);
@@ -148,10 +148,10 @@ pub fn change_status(status: IssueStatus, model: &mut Model) {
         }
     };
 
-    if issue.status == status {
+    if issue.issue_status_id == status_id {
         model.issues.push(issue);
     } else {
-        issue.status = status;
+        issue.issue_status_id = status_id;
         issue.list_position = pos + 1;
         model.issues.push(issue);
         mark_dirty(issue_id, project_page);

@@ -40,6 +40,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             send_ws_msg(jirs_data::WsMsg::ProjectRequest);
             send_ws_msg(jirs_data::WsMsg::ProjectIssuesRequest);
             send_ws_msg(jirs_data::WsMsg::ProjectUsersRequest);
+            send_ws_msg(jirs_data::WsMsg::IssueStatusesRequest);
         }
         Msg::WsMsg(WsMsg::IssueUpdated(issue)) => {
             let mut old: Vec<Issue> = vec![];
@@ -254,16 +255,15 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
 }
 
 fn project_board_lists(model: &Model) -> Node<Msg> {
-    div![
-        id!["projectBoardLists"],
-        project_issue_list(model, IssueStatus::Backlog),
-        project_issue_list(model, IssueStatus::Selected),
-        project_issue_list(model, IssueStatus::InProgress),
-        project_issue_list(model, IssueStatus::Done),
-    ]
+    let columns: Vec<Node<Msg>> = model
+        .issue_statuses
+        .iter()
+        .map(|is| project_issue_list(model, is))
+        .collect();
+    div![id!["projectBoardLists"], columns]
 }
 
-fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg> {
+fn project_issue_list(model: &Model, status: &jirs_data::IssueStatus) -> Node<Msg> {
     let project_page = match &model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return empty![],
@@ -293,15 +293,15 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
         })
         .map(|issue| project_issue(model, issue))
         .collect();
-    let label = status.to_label();
+    let label = status.name.clone();
 
-    let send_status = status;
+    let send_status = status.id;
     let drop_handler = drag_ev(Ev::Drop, move |ev| {
         ev.prevent_default();
         Msg::IssueDropZone(send_status)
     });
 
-    let send_status = status;
+    let send_status = status.id;
     let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
         ev.prevent_default();
         Msg::IssueDragOverStatus(send_status)
@@ -324,8 +324,8 @@ fn project_issue_list(model: &Model, status: jirs_data::IssueStatus) -> Node<Msg
 }
 
 #[inline]
-fn issue_filter_status(issue: &Issue, status: IssueStatus) -> bool {
-    issue.status == status
+fn issue_filter_status(issue: &Issue, status: &IssueStatus) -> bool {
+    issue.issue_status_id == status.id
 }
 
 #[inline]

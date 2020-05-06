@@ -61,7 +61,7 @@ impl EditIssueModal {
             payload: UpdateIssuePayload {
                 title: issue.title.clone(),
                 issue_type: issue.issue_type,
-                status: issue.status,
+                issue_status_id: issue.issue_status_id,
                 priority: issue.priority,
                 list_position: issue.list_position,
                 description: issue.description.clone(),
@@ -78,8 +78,8 @@ impl EditIssueModal {
                 issue.estimate.map(|v| vec![v as u32]).unwrap_or_default(),
             ),
             status_state: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Status)),
-                vec![issue.status.into()],
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::IssueStatusId)),
+                vec![issue.issue_status_id as u32],
             ),
             reporter_state: StyledSelectState::new(
                 FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Reporter)),
@@ -134,7 +134,6 @@ impl EditIssueModal {
 pub struct AddIssueModal {
     pub title: String,
     pub issue_type: IssueType,
-    pub status: IssueStatus,
     pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
@@ -144,6 +143,7 @@ pub struct AddIssueModal {
     pub project_id: Option<i32>,
     pub user_ids: Vec<i32>,
     pub reporter_id: Option<i32>,
+    pub issue_status_id: i32,
 
     // modal fields
     pub type_state: StyledSelectState,
@@ -157,7 +157,6 @@ impl Default for AddIssueModal {
         Self {
             title: Default::default(),
             issue_type: Default::default(),
-            status: Default::default(),
             priority: Default::default(),
             description: Default::default(),
             description_text: Default::default(),
@@ -167,6 +166,7 @@ impl Default for AddIssueModal {
             project_id: Default::default(),
             user_ids: Default::default(),
             reporter_id: Default::default(),
+            issue_status_id: Default::default(),
             type_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Type), vec![]),
             reporter_state: StyledSelectState::new(
                 FieldId::AddIssueModal(IssueFieldId::Reporter),
@@ -424,6 +424,7 @@ pub struct Model {
     pub issues: Vec<Issue>,
     pub users: Vec<User>,
     pub comments: Vec<Comment>,
+    pub issue_statuses: Vec<IssueStatus>,
 }
 
 impl Default for Model {
@@ -445,6 +446,7 @@ impl Default for Model {
             project: None,
             comments: vec![],
             about_tooltip_visible: false,
+            issue_statuses: vec![],
         }
     }
 }

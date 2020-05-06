@@ -50,14 +50,14 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         Msg::StyledSelectChanged(
-            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Status)),
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::IssueStatusId)),
             StyledSelectChange::Changed(value),
         ) => {
-            modal.payload.status = (*value).into();
+            modal.payload.issue_status_id = *value as IssueStatusId;
             send_ws_msg(WsMsg::IssueUpdateRequest(
                 modal.id,
-                IssueFieldId::Status,
-                PayloadVariant::IssueStatus(modal.payload.status),
+                IssueFieldId::IssueStatusId,
+                PayloadVariant::I32(modal.payload.issue_status_id),
             ));
         }
         Msg::StyledSelectChanged(
@@ -599,19 +599,27 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     } = modal;
 
     let status = StyledSelect::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-        IssueFieldId::Status,
+        IssueFieldId::IssueStatusId,
     )))
     .name("status")
     .opened(status_state.opened)
     .normal()
     .text_filter(status_state.text_filter.as_str())
     .options(
-        IssueStatus::ordered()
-            .into_iter()
+        model
+            .issue_statuses
+            .iter()
             .map(|opt| opt.to_child().name("status"))
             .collect(),
     )
-    .selected(vec![payload.status.to_child().name("status")])
+    .selected(
+        model
+            .issue_statuses
+            .iter()
+            .filter(|is| is.id == payload.issue_status_id)
+            .map(|is| is.to_child().name("status"))
+            .collect(),
+    )
     .valid(true)
     .build()
     .into_node();
