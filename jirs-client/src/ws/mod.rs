@@ -48,6 +48,39 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
         }
+        Msg::WsMsg(WsMsg::IssueStatusCreated(is)) => {
+            model.issue_statuses.push(is.clone());
+            model
+                .issue_statuses
+                .sort_by(|a, b| a.position.cmp(&b.position));
+        }
+        Msg::WsMsg(WsMsg::IssueStatusUpdated(changed)) => {
+            let mut old = vec![];
+            std::mem::swap(&mut model.issue_statuses, &mut old);
+            for is in old {
+                if is.id == changed.id {
+                    model.issue_statuses.push(changed.clone());
+                } else {
+                    model.issue_statuses.push(is);
+                }
+            }
+            model
+                .issue_statuses
+                .sort_by(|a, b| a.position.cmp(&b.position));
+        }
+        Msg::WsMsg(WsMsg::IssueDeleted(id)) => {
+            let mut old = vec![];
+            std::mem::swap(&mut model.issue_statuses, &mut old);
+            for is in old {
+                if is.id == *id {
+                    continue;
+                }
+                model.issue_statuses.push(is);
+            }
+            model
+                .issue_statuses
+                .sort_by(|a, b| a.position.cmp(&b.position));
+        }
         // users
         Msg::WsMsg(WsMsg::ProjectUsersLoaded(v)) => {
             model.users = v.clone();

@@ -112,6 +112,7 @@ impl std::fmt::Display for FieldId {
                 ProjectFieldId::Description => f.write_str("projectSettings-description"),
                 ProjectFieldId::Category => f.write_str("projectSettings-category"),
                 ProjectFieldId::TimeTracking => f.write_str("projectSettings-timeTracking"),
+                ProjectFieldId::IssueStatusName => f.write_str("projectSettings-issueStatusName"),
             },
             FieldId::SignIn(sub) => match sub {
                 SignInFieldId::Email => f.write_str("login-email"),
@@ -150,6 +151,17 @@ pub enum FieldChange {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum BoardPageChange {
+    // dragging
+    IssueDragStarted(IssueId),
+    IssueDragStopped(IssueId),
+    DragLeave(IssueId),
+    ExchangePosition(IssueId),
+    IssueDragOverStatus(IssueStatusId),
+    IssueDropZone(IssueStatusId),
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum UsersPageChange {
     ResetForm,
 }
@@ -158,6 +170,15 @@ pub enum UsersPageChange {
 pub enum ProjectPageChange {
     ResetForm,
     SubmitForm,
+    // dragging
+    ColumnDragStarted(IssueStatusId),
+    ColumnDragStopped(IssueStatusId),
+    ColumnDragLeave(IssueStatusId),
+    ColumnExchangePosition(IssueStatusId),
+    ColumnDragOverStatus(IssueStatusId),
+    ColumnDropZone(IssueStatusId),
+    // edit issue status name
+    EditIssueStatusName(Option<IssueStatusId>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -170,6 +191,7 @@ pub enum PageChanged {
     Users(UsersPageChange),
     ProjectSettings(ProjectPageChange),
     Profile(ProfilePageChange),
+    Board(BoardPageChange),
 }
 
 #[derive(Clone, Debug)]
@@ -208,15 +230,6 @@ pub enum Msg {
     ProjectToggleOnlyMy,
     ProjectToggleRecentlyUpdated,
     ProjectClearFilters,
-
-    // dragging
-    IssueDragStarted(IssueId),
-    IssueDragStopped(IssueId),
-    DragLeave(IssueId),
-    ExchangePosition(IssueId),
-    IssueDragOverStatus(IssueStatusId),
-    IssueDropZone(IssueStatusId),
-    UnlockDragOver,
 
     // inputs
     StrInputChanged(FieldId, String),

@@ -6,6 +6,7 @@ use uuid::Uuid;
 use jirs_data::*;
 
 use crate::modal::time_tracking::value_for_time_tracking;
+use crate::shared::drag::DragState;
 use crate::shared::styled_checkbox::StyledCheckboxState;
 use crate::shared::styled_editor::Mode;
 use crate::shared::styled_image_input::StyledImageInputState;
@@ -235,9 +236,7 @@ pub struct ProjectPage {
     pub active_avatar_filters: Vec<UserId>,
     pub only_my_filter: bool,
     pub recently_updated_filter: bool,
-    pub dragged_issue_id: Option<IssueId>,
-    pub last_drag_exchange_id: Option<IssueId>,
-    pub dirty_issues: Vec<IssueId>,
+    pub issue_drag: DragState,
 }
 
 #[derive(Debug, Default)]
@@ -252,6 +251,9 @@ pub struct ProjectSettingsPage {
     pub project_category_state: StyledSelectState,
     pub description_mode: crate::shared::styled_editor::Mode,
     pub time_tracking: StyledCheckboxState,
+    pub column_drag: DragState,
+    pub edit_column_id: Option<IssueStatusId>,
+    pub name: StyledInputState,
 }
 
 impl ProjectSettingsPage {
@@ -283,6 +285,12 @@ impl ProjectSettingsPage {
             time_tracking: StyledCheckboxState::new(
                 FieldId::ProjectSettings(ProjectFieldId::TimeTracking),
                 (*time_tracking).into(),
+            ),
+            column_drag: Default::default(),
+            edit_column_id: None,
+            name: StyledInputState::new(
+                FieldId::ProjectSettings(ProjectFieldId::IssueStatusName),
+                "",
             ),
         }
     }

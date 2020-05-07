@@ -4,10 +4,48 @@
 }
 
 #projectSettings > .formContainer .styledForm {
-    max-width: 720px;
+    max-width: 1024px;
     width: 100%;
 }
 
 #projectSettings > .formContainer .styledForm > .formElement > .actionButton {
     margin-top: 30px;
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField.columnsField > .styledLabel {
+    font-size: 14px;
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview {
+    width: auto;
+    min-height: 60px;
+    background: var(--backgroundLightest);
+    margin: 0 5px;
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview > .columnName {
+    display: block;
+    margin: 0 5px;
+    padding: 13px 10px 17px;
+    text-transform: uppercase;
+    color: var(--textMedium);
+    font-size: 12.5px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    user-select: none;
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview > .columnName.addColumn,
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview > .columnName.addColumn > i {
+    color: var(--textMedium);
+    text-align: center;
+    cursor: pointer;
 }

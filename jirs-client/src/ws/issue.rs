@@ -3,15 +3,14 @@ use seed::*;
 use jirs_data::*;
 
 use crate::api::send_ws_msg;
-use crate::model::{Model, PageContent, ProjectPage};
+use crate::model::{Model, PageContent};
 
 pub fn drag_started(issue_id: IssueId, model: &mut Model) {
     let project_page = match &mut model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return,
     };
-    project_page.dragged_issue_id = Some(issue_id);
-    mark_dirty(issue_id, project_page);
+    project_page.issue_drag.drag(issue_id);
 }
 
 pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
@@ -19,12 +18,10 @@ pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
         PageContent::Project(project_page) => project_page,
         _ => return,
     };
-    if project_page.dragged_issue_id == Some(issue_bellow_id)
-        || project_page.last_drag_exchange_id == Some(issue_bellow_id)
-    {
+    if project_page.issue_drag.dragged_or_last(issue_bellow_id) {
         return;
     }
-    let dragged_id = match project_page.dragged_issue_id.as_ref().cloned() {
+    let dragged_id = match project_page.issue_drag.dragged_id.as_ref().cloned() {
         Some(id) => id,
         _ => return error!("Nothing is dragged"),
     };
@@ -59,7 +56,7 @@ pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
         for mut c in issues.into_iter() {
             if c.issue_status_id == below.issue_status_id && c.list_position > below.list_position {
                 c.list_position += 1;
-                mark_dirty(c.id, project_page);
+                project_page.issue_drag.mark_dirty(c.id);
             }
             model.issues.push(c);
         }
@@ -68,15 +65,15 @@ pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
     }
     std::mem::swap(&mut dragged.list_position, &mut below.list_position);
 
-    mark_dirty(dragged.id, project_page);
-    mark_dirty(below.id, project_page);
+    project_page.issue_drag.mark_dirty(dragged.id);
+    project_page.issue_drag.mark_dirty(below.id);
 
     model.issues.push(below);
     model.issues.push(dragged);
     model
         .issues
         .sort_by(|a, b| a.list_position.cmp(&b.list_position));
-    project_page.last_drag_exchange_id = Some(issue_bellow_id);
+    project_page.issue_drag.last_id = Some(issue_bellow_id);
 }
 
 pub fn sync(model: &mut Model) {
@@ -89,7 +86,7 @@ pub fn sync(model: &mut Model) {
     };
 
     for issue in model.issues.iter() {
-        if !project_page.dirty_issues.contains(&issue.id) {
+        if !project_page.issue_drag.dirty.contains(&issue.id) {
             continue;
         }
 
@@ -104,9 +101,7 @@ pub fn sync(model: &mut Model) {
             PayloadVariant::I32(issue.list_position),
         ));
     }
-    project_page.dragged_issue_id = None;
-    project_page.last_drag_exchange_id = None;
-    project_page.dirty_issues.clear();
+    project_page.issue_drag.clear();
 }
 
 pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
@@ -115,7 +110,7 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
         _ => return,
     };
 
-    let issue_id = match project_page.dragged_issue_id.as_ref().cloned() {
+    let issue_id = match project_page.issue_drag.dragged_id.as_ref().cloned() {
         Some(issue_id) => issue_id,
         _ => return error!("Nothing is dragged"),
     };
@@ -130,7 +125,7 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
         if issue.issue_status_id == status_id {
             if issue.list_position != pos {
                 issue.list_position = pos;
-                mark_dirty(issue.id, project_page);
+                project_page.issue_drag.mark_dirty(issue.id);
             }
             pos += 1;
         }
@@ -154,13 +149,6 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
         issue.issue_status_id = status_id;
         issue.list_position = pos + 1;
         model.issues.push(issue);
-        mark_dirty(issue_id, project_page);
-    }
-}
-
-#[inline]
-fn mark_dirty(id: IssueId, project_page: &mut ProjectPage) {
-    if !project_page.dirty_issues.contains(&id) {
-        project_page.dirty_issues.push(id);
+        project_page.issue_drag.mark_dirty(issue_id);
     }
 }

@@ -25,8 +25,10 @@ pub type CommentId = i32;
 pub type TokenId = i32;
 pub type IssueStatusId = i32;
 pub type InvitationId = i32;
+pub type Position = i32;
 pub type EmailString = String;
 pub type UsernameString = String;
+pub type TitleString = String;
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
@@ -587,6 +589,7 @@ pub enum ProjectFieldId {
     Description,
     Category,
     TimeTracking,
+    IssueStatusName,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
@@ -697,6 +700,12 @@ pub enum WsMsg {
     // issue status
     IssueStatusesRequest,
     IssueStatusesResponse(Vec<IssueStatus>),
+    IssueStatusUpdate(IssueStatusId, TitleString, Position),
+    IssueStatusUpdated(IssueStatus),
+    IssueStatusCreate(TitleString, Position),
+    IssueStatusCreated(IssueStatus),
+    IssueStatusDelete(IssueStatusId),
+    IssueStatusDeleted(IssueStatusId),
 
     // comments
     IssueCommentsRequest(IssueId),

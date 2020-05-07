@@ -13,6 +13,11 @@ rustflags = [
     "-C", "link-arg=-fuse-ld=lld",
 ]
 
+[target.nightly-x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "link-arg=-fuse-ld=lld",
+]
+
 [[bin]]
 name = "jirs_server"
 path = "./src/main.rs"

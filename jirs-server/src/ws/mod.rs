@@ -98,6 +98,20 @@ impl WebSocketActor {
 
             // issue statuses
             WsMsg::IssueStatusesRequest => self.handle_msg(LoadIssueStatuses, ctx)?,
+            WsMsg::IssueStatusDelete(issue_status_id) => {
+                self.handle_msg(DeleteIssueStatus { issue_status_id }, ctx)?
+            }
+            WsMsg::IssueStatusUpdate(issue_status_id, name, position) => self.handle_msg(
+                UpdateIssueStatus {
+                    issue_status_id,
+                    name,
+                    position,
+                },
+                ctx,
+            )?,
+            WsMsg::IssueStatusCreate(name, position) => {
+                self.handle_msg(CreateIssueStatus { name, position }, ctx)?
+            }
 
             // projects
             WsMsg::ProjectRequest => self.handle_msg(CurrentProject, ctx)?,

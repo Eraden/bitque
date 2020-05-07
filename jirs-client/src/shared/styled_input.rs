@@ -69,6 +69,7 @@ pub struct StyledInput {
     input_class_list: Vec<String>,
     wrapper_class_list: Vec<String>,
     variant: Variant,
+    auto_focus: bool,
 }
 
 impl StyledInput {
@@ -82,6 +83,7 @@ impl StyledInput {
             input_class_list: vec![],
             wrapper_class_list: vec![],
             variant: Variant::Normal,
+            auto_focus: false,
         }
     }
 }
@@ -96,6 +98,7 @@ pub struct StyledInputBuilder {
     input_class_list: Vec<String>,
     wrapper_class_list: Vec<String>,
     variant: Variant,
+    auto_focus: bool,
 }
 
 impl StyledInputBuilder {
@@ -119,6 +122,7 @@ impl StyledInputBuilder {
 
     pub fn state(self, state: &StyledInputState) -> Self {
         self.value(state.value.as_str())
+            .valid(!state.value.is_empty())
     }
 
     pub fn add_input_class<S>(mut self, name: S) -> Self
@@ -142,6 +146,11 @@ impl StyledInputBuilder {
         self
     }
 
+    pub fn auto_focus(mut self) -> Self {
+        self.auto_focus = true;
+        self
+    }
+
     pub fn build(self) -> StyledInput {
         StyledInput {
             id: self.id,
@@ -152,6 +161,7 @@ impl StyledInputBuilder {
             input_class_list: self.input_class_list,
             wrapper_class_list: self.wrapper_class_list,
             variant: self.variant,
+            auto_focus: self.auto_focus,
         }
     }
 }
@@ -172,6 +182,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         mut input_class_list,
         mut wrapper_class_list,
         variant,
+        auto_focus,
     } = values;
 
     wrapper_class_list.push("styledInput".to_string());
@@ -213,6 +224,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
                 At::Class => input_class_list.join(" "),
                 At::Value => value.unwrap_or_default(),
                 At::Type => input_type.unwrap_or_else(|| "text".to_string()),
+                At::AutoFocus => auto_focus,
             ],
             change_handler,
             key_handler,

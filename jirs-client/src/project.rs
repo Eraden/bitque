@@ -11,7 +11,7 @@ use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{drag_ev, inner_layout, ToNode};
-use crate::{EditIssueModalSection, FieldId, Msg};
+use crate::{BoardPageChange, EditIssueModalSection, FieldId, Msg, PageChanged};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     if model.user.is_none() {
@@ -104,16 +104,24 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             project_page.recently_updated_filter = false;
             project_page.only_my_filter = false;
         }
-        Msg::IssueDragStarted(issue_id) => crate::ws::issue::drag_started(issue_id, model),
-        Msg::IssueDragStopped(_) => {
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStarted(issue_id))) => {
+            crate::ws::issue::drag_started(issue_id, model)
+        }
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStopped(_))) => {
             crate::ws::issue::sync(model);
         }
-        Msg::ExchangePosition(issue_bellow_id) => {
-            crate::ws::issue::exchange_position(issue_bellow_id, model)
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::ExchangePosition(
+            issue_bellow_id,
+        ))) => crate::ws::issue::exchange_position(issue_bellow_id, model),
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragOverStatus(status))) => {
+            crate::ws::issue::change_status(status, model)
         }
-        Msg::IssueDragOverStatus(status) => crate::ws::issue::change_status(status, model),
-        Msg::IssueDropZone(_status) => crate::ws::issue::sync(model),
-        Msg::DragLeave(_id) => project_page.last_drag_exchange_id = None,
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDropZone(_status))) => {
+            crate::ws::issue::sync(model)
+        }
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::DragLeave(_id))) => {
+            project_page.issue_drag.clear_last();
+        }
         Msg::DeleteIssue(issue_id) => {
             send_ws_msg(jirs_data::WsMsg::IssueDeleteRequest(issue_id));
         }
@@ -298,13 +306,17 @@ fn project_issue_list(model: &Model, status: &jirs_data::IssueStatus) -> Node<Ms
     let send_status = status.id;
     let drop_handler = drag_ev(Ev::Drop, move |ev| {
         ev.prevent_default();
-        Msg::IssueDropZone(send_status)
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDropZone(
+            send_status,
+        )))
     });
 
     let send_status = status.id;
     let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
         ev.prevent_default();
-        Msg::IssueDragOverStatus(send_status)
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragOverStatus(
+            send_status,
+        )))
     });
 
     div![
@@ -382,15 +394,27 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
     };
 
     let issue_id = issue.id;
-    let drag_started = drag_ev(Ev::DragStart, move |_| Msg::IssueDragStarted(issue_id));
-    let drag_stopped = drag_ev(Ev::DragEnd, move |_| Msg::IssueDragStopped(issue_id));
+    let drag_started = drag_ev(Ev::DragStart, move |_| {
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStarted(
+            issue_id,
+        )))
+    });
+    let drag_stopped = drag_ev(Ev::DragEnd, move |_| {
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStopped(
+            issue_id,
+        )))
+    });
     let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
         ev.prevent_default();
         ev.stop_propagation();
-        Msg::ExchangePosition(issue_id)
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::ExchangePosition(
+            issue_id,
+        )))
     });
     let issue_id = issue.id;
-    let drag_out = drag_ev(Ev::DragLeave, move |_| Msg::DragLeave(issue_id));
+    let drag_out = drag_ev(Ev::DragLeave, move |_| {
+        Msg::PageChanged(PageChanged::Board(BoardPageChange::DragLeave(issue_id)))
+    });
 
     let class_list = vec!["issue"];
 

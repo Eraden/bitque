@@ -7,6 +7,7 @@ use crate::model::Model;
 use crate::Msg;
 
 pub mod aside;
+pub mod drag;
 pub mod navbar_left;
 pub mod styled_avatar;
 pub mod styled_button;
