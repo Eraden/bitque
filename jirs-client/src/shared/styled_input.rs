@@ -70,6 +70,7 @@ pub struct StyledInput {
     wrapper_class_list: Vec<String>,
     variant: Variant,
     auto_focus: bool,
+    input_handlers: Vec<EventHandler<Msg>>,
 }
 
 impl StyledInput {
@@ -84,6 +85,7 @@ impl StyledInput {
             wrapper_class_list: vec![],
             variant: Variant::Normal,
             auto_focus: false,
+            input_handlers: vec![],
         }
     }
 }
@@ -99,6 +101,7 @@ pub struct StyledInputBuilder {
     wrapper_class_list: Vec<String>,
     variant: Variant,
     auto_focus: bool,
+    input_handlers: Vec<EventHandler<Msg>>,
 }
 
 impl StyledInputBuilder {
@@ -151,6 +154,11 @@ impl StyledInputBuilder {
         self
     }
 
+    pub fn on_input_ev(mut self, handler: EventHandler<Msg>) -> Self {
+        self.input_handlers.push(handler);
+        self
+    }
+
     pub fn build(self) -> StyledInput {
         StyledInput {
             id: self.id,
@@ -162,6 +170,7 @@ impl StyledInputBuilder {
             wrapper_class_list: self.wrapper_class_list,
             variant: self.variant,
             auto_focus: self.auto_focus,
+            input_handlers: self.input_handlers,
         }
     }
 }
@@ -183,6 +192,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         mut wrapper_class_list,
         variant,
         auto_focus,
+        mut input_handlers,
     } = values;
 
     wrapper_class_list.push("styledInput".to_string());
@@ -203,17 +213,21 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         _ => empty![],
     };
     let field_id = id.clone();
-    let change_handler = ev(Ev::Input, move |event| {
+    input_handlers.push(ev(Ev::Input, move |event| {
         event.stop_propagation();
         let target = event.target().unwrap();
         let input = seed::to_input(&target);
         let value = input.value();
         Msg::StrInputChanged(field_id, value)
-    });
-    let key_handler = ev(Ev::KeyUp, move |event| {
+    }));
+    input_handlers.push(ev(Ev::KeyUp, move |event| {
         event.stop_propagation();
         Msg::NoOp
-    });
+    }));
+    input_handlers.push(ev(Ev::Click, move |event| {
+        event.stop_propagation();
+        Msg::NoOp
+    }));
 
     div![
         attrs!(At::Class => wrapper_class_list.join(" ")),
@@ -226,8 +240,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
                 At::Type => input_type.unwrap_or_else(|| "text".to_string()),
                 At::AutoFocus => auto_focus,
             ],
-            change_handler,
-            key_handler,
+            input_handlers,
         ],
     ]
 }

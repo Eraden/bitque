@@ -55,6 +55,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     };
     page.project_category_state.update(&msg, orders);
     page.time_tracking.update(&msg);
+    page.name.update(&msg);
 
     match msg {
         Msg::StrInputChanged(FieldId::ProjectSettings(ProjectFieldId::Name), text) => {
@@ -260,21 +261,23 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
             let name = if page.edit_column_id == Some(id) {
                 let blur = ev("focusout", |_| {
+                    log!("asdasdasd");
                     Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(None)))
                 });
                 let input = StyledInput::build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
                     .state(&page.name)
                     .primary()
                     .auto_focus()
+                    .on_input_ev(blur)
                     .build()
                     .into_node();
 
-                div![class!["columnName"], input, blur]
+                div![class!["columnName"], input]
             } else {
                 let edit = mouse_ev(Ev::Click, move |_| {
                     Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(Some(id))))
                 });
-                div![class!["columnName"], is.name, edit]
+                div![class!["columnName"], span![is.name], edit]
             };
             div![
                 class!["columnPreview"],

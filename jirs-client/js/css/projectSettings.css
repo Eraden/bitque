@@ -39,8 +39,14 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview > .columnName > span {
     cursor: pointer;
     user-select: none;
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview > .columnName > .styledInput {
 }
 
 #projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview > .columnName.addColumn,
