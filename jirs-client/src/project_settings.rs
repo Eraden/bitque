@@ -114,6 +114,18 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(
             id,
         ))) => {
+            if page.edit_column_id.is_some() && id.is_none() {
+                let old_id = page.edit_column_id.as_ref().cloned();
+                let name = page.name.value.clone();
+                if let Some((id, pos)) = model
+                    .issue_statuses
+                    .iter()
+                    .find(|is| Some(is.id) == old_id)
+                    .map(|is| (is.id, is.position))
+                {
+                    send_ws_msg(WsMsg::IssueStatusUpdate(id, name.to_string(), pos))
+                }
+            }
             page.name.value = model
                 .issue_statuses
                 .iter()
@@ -259,9 +271,8 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                 Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDragLeave(id)))
             });
 
-            let name = if page.edit_column_id == Some(id) {
+            if page.edit_column_id == Some(id) {
                 let blur = ev("focusout", |_| {
-                    log!("asdasdasd");
                     Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(None)))
                 });
                 let input = StyledInput::build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
@@ -272,22 +283,24 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                     .build()
                     .into_node();
 
+                div![
+                class!["columnPreview"],
                 div![class!["columnName"], input]
+                ]
             } else {
                 let edit = mouse_ev(Ev::Click, move |_| {
                     Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(Some(id))))
                 });
-                div![class!["columnName"], span![is.name], edit]
-            };
-            div![
+                div![
                 class!["columnPreview"],
                 attrs![At::Style => column_style.as_str(), At::Draggable => "true", At::DropZone => "true"],
-                name,
+                div![class!["columnName"], span![is.name], edit],
                 drag_started,
                 drag_stopped,
                 drag_over_handler,
                 drag_out,
-            ]
+                ]
+            }
         })
         .collect();
     let add_column = StyledIcon::build(Icon::Plus).build().into_node();
@@ -307,6 +320,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .add_class("columnsField")
         .input(columns_section)
         .label("Columns")
+        .tip("Double-click on name to change it.")
         .build()
         .into_node();
 

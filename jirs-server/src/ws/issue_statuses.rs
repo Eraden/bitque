@@ -88,6 +88,9 @@ impl WsHandler<UpdateIssueStatus> for WebSocketActor {
             Ok(Ok(is)) => Some(WsMsg::IssueStatusUpdated(is)),
             _ => None,
         };
+        if let Some(ws_msg) = msg.as_ref() {
+            self.broadcast(ws_msg)
+        }
         Ok(msg)
     }
 }
