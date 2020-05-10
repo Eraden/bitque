@@ -240,6 +240,9 @@ pub enum Msg {
     AddIssue,
     DeleteIssue(IssueId),
 
+    // issue statuses
+    DeleteIssueStatus(IssueStatusId),
+
     // comments
     SaveComment,
     DeleteComment(CommentId),

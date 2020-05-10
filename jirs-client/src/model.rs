@@ -21,6 +21,7 @@ pub enum ModalType {
     DeleteIssueConfirm(IssueId),
     DeleteCommentConfirm(CommentId),
     TimeTracking(IssueId),
+    DeleteIssueStatusModal(Box<DeleteIssueStatusModal>),
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
@@ -31,8 +32,23 @@ pub struct CommentForm {
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
+pub struct DeleteIssueStatusModal {
+    pub delete_id: IssueStatusId,
+    pub receiver_id: Option<IssueStatusId>,
+}
+
+impl DeleteIssueStatusModal {
+    pub fn new(delete_id: IssueStatusId) -> Self {
+        Self {
+            delete_id,
+            receiver_id: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct EditIssueModal {
-    pub id: i32,
+    pub id: IssueId,
     pub link_copied: bool,
     pub payload: UpdateIssuePayload,
     pub top_type_state: StyledSelectState,

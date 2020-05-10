@@ -292,10 +292,10 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
 pub fn view(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     div![
-        attrs![At::Class => "issueDetails"],
+        class!["issueDetails"],
         top_modal_row(model, modal),
         div![
-            attrs![At::Class => "content"],
+            class!["content"],
             left_modal_column(model, modal),
             right_modal_column(model, modal),
         ],

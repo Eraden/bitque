@@ -1,11 +1,14 @@
 use seed::{prelude::*, *};
+use wasm_bindgen::__rt::std::collections::HashMap;
 
 use jirs_data::{
     IssueStatus, IssueStatusId, ProjectCategory, TimeTracking, ToVec, UpdateProjectPayload, WsMsg,
 };
 
 use crate::api::send_ws_msg;
-use crate::model::{Model, Page, PageContent, ProjectSettingsPage};
+use crate::model::{
+    DeleteIssueStatusModal, ModalType, Model, Page, PageContent, ProjectSettingsPage,
+};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_checkbox::StyledCheckbox;
 use crate::shared::styled_editor::StyledEditor;
@@ -31,12 +34,14 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         Msg::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
             send_ws_msg(WsMsg::ProjectRequest);
             send_ws_msg(WsMsg::IssueStatusesRequest);
+            send_ws_msg(WsMsg::ProjectIssuesRequest);
         }
         Msg::ChangePage(Page::ProjectSettings) => {
             build_page_content(model);
             if model.user.is_some() {
                 send_ws_msg(WsMsg::ProjectRequest);
                 send_ws_msg(WsMsg::IssueStatusesRequest);
+                send_ws_msg(WsMsg::ProjectIssuesRequest);
             }
         }
         Msg::WsMsg(WsMsg::ProjectLoaded(..)) => {
@@ -245,6 +250,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let width = 100f64 / (model.issue_statuses.len() + 1) as f64;
     let column_style = format!("width: calc({width}% - 10px)", width = width);
+    let mut per_column_issue_count = HashMap::new();
+    for issue in model.issues.iter() {
+        *per_column_issue_count
+            .entry(issue.issue_status_id)
+            .or_insert(0) += 1;
+    }
     let columns: Vec<Node<Msg>> = model
         .issue_statuses
         .iter()
@@ -284,21 +295,40 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                     .into_node();
 
                 div![
-                class!["columnPreview"],
-                div![class!["columnName"], input]
+                    class!["columnPreview"],
+                    div![class!["columnName"], input]
                 ]
             } else {
-                let edit = mouse_ev(Ev::Click, move |_| {
+                let on_edit = mouse_ev(Ev::Click, move |_| {
                     Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(Some(id))))
                 });
+                let issue_count_in_column = per_column_issue_count.get(&id).cloned().unwrap_or_default();
+                let delete_row = if issue_count_in_column == 0 {
+                    let on_delete = mouse_ev(Ev::Click, move |ev| {
+                        ev.prevent_default();
+                        ev.stop_propagation();
+                        Msg::ModalOpened(Box::new(ModalType::DeleteIssueStatusModal(Box::new(DeleteIssueStatusModal::new(id)))))
+                    });
+                    let delete = StyledButton::build()
+                        .primary()
+                        .add_class("removeColumn")
+                        .icon(Icon::Trash)
+                        .on_click(on_delete)
+                        .build()
+                        .into_node();
+                    div![class!["removeColumn"], delete]
+                } else {
+                    div![class!["issueCount"], format!("Issues in column: {}", issue_count_in_column)]
+                };
+
                 div![
-                class!["columnPreview"],
-                attrs![At::Style => column_style.as_str(), At::Draggable => "true", At::DropZone => "true"],
-                div![class!["columnName"], span![is.name], edit],
-                drag_started,
-                drag_stopped,
-                drag_over_handler,
-                drag_out,
+                    class!["columnPreview"],
+                    attrs![At::Style => column_style.as_str(), At::Draggable => "true", At::DropZone => "true"],
+                    div![class!["columnName"], span![is.name], on_edit, delete_row],
+                    drag_started,
+                    drag_stopped,
+                    drag_over_handler,
+                    drag_out,
                 ]
             }
         })
@@ -352,7 +382,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let project_section = vec![div![class!["formContainer"], form]];
 
-    inner_layout(model, "projectSettings", project_section, empty![])
+    inner_layout(
+        model,
+        "projectSettings",
+        project_section,
+        crate::modal::view(model),
+    )
 }
 
 fn exchange_position(bellow_id: IssueStatusId, model: &mut Model) {

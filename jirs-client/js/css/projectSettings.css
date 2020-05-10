@@ -55,3 +55,21 @@
     text-align: center;
     cursor: pointer;
 }
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview > .columnName > .removeColumn {
+    text-align: center;
+    display: flex;
+    justify-content: space-around;
+    padding-top: 15px;
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview:hover > .columnName > .removeColumn,
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview:focus > .columnName > .removeColumn,
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview:active > .columnName > .removeColumn {
+
+}
+
+#projectSettings > .formContainer .styledForm > .formElement > .styledField > .columnsSection > .columns > .columnPreview > .columnName > .issueCount {
+    text-transform: none;
+    padding-top: 15px;
+}

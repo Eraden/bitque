@@ -67,7 +67,7 @@
     --font-black: "CircularStdBlack";
 }
 
-:root {
+:root { /* user without avatar */
     --avatar-color-1: rgb(218, 118, 87);
     --avatar-color-2: rgb(106, 218, 87);
     --avatar-color-3: rgb(87, 132, 218);

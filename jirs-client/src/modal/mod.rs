@@ -11,6 +11,7 @@ use crate::{model, FieldChange, FieldId, Msg};
 
 mod add_issue;
 mod confirm_delete_issue;
+mod delete_issue_status;
 mod issue_details;
 pub mod time_tracking;
 
@@ -57,6 +58,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
     }
     add_issue::update(msg, model, orders);
     issue_details::update(msg, model, orders);
+    delete_issue_status::update(msg, model, orders);
 }
 
 pub fn view(model: &model::Model) -> Node<Msg> {
@@ -90,6 +92,9 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                     .into_node()
             }
             ModalType::TimeTracking(issue_id) => time_tracking::view(model, *issue_id),
+            ModalType::DeleteIssueStatusModal(delete_issue_modal) => {
+                delete_issue_status::view(model, delete_issue_modal.delete_id)
+            }
         })
         .collect();
     section![id!["modals"], modals]

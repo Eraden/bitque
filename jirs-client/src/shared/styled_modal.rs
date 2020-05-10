@@ -29,11 +29,11 @@ impl Variant {
 
 #[derive(Debug)]
 pub struct StyledModal {
-    pub variant: Variant,
-    pub width: usize,
-    pub with_icon: bool,
-    pub children: Vec<Node<Msg>>,
-    pub class_list: Vec<String>,
+    variant: Variant,
+    width: usize,
+    with_icon: bool,
+    children: Vec<Node<Msg>>,
+    class_list: Vec<String>,
 }
 
 impl ToNode for StyledModal {
@@ -62,6 +62,10 @@ impl StyledModalBuilder {
         self.variant = Some(variant);
         self
     }
+
+    // pub fn center(mut self) -> Self {
+    //     self.variant(Variant::Center)
+    // }
 
     pub fn width(mut self, width: usize) -> Self {
         self.width = Some(width);
