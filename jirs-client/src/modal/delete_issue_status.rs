@@ -23,7 +23,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             send_ws_msg(WsMsg::IssueStatusDelete(*issue_status_id));
         }
         Msg::WsMsg(WsMsg::IssueStatusDelete(_)) => {
-            orders.skip().perform_cmd(Msg::ModalDropped);
+            orders.skip().send_msg(Msg::ModalDropped);
         }
         _ => (),
     };
