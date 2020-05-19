@@ -26,15 +26,10 @@ tasks:
       wasm-pack test --node
   - build: |
       cd ~/jirs/jirs-client
-      export NODE_ENV=development
-      yarn
-      yarn global add webpack-cli
-      yarn add webpack-cli
       export NODE_ENV=production
-      yarn webpack-cli -p --config ./webpack.config.js --progress
-      cp -R ./dev/* ./dist
+      ./scripts/prod.sh
       export TAR_NAME=$(date -u +"%Y%m%d%H%M%s")
-      tar -czvf ~/${TAR_NAME}.tar.gz ./dist
+      tar -czvf ~/${TAR_NAME}.tar.gz ./build
       cp ~/${TAR_NAME}.tar.gz ~/latest.tar.gz
 artifacts:
   - latest.tar.gz

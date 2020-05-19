@@ -4,3 +4,4 @@ dist
 .yarn-error.log
 tmp
 dev/styles.css
+build

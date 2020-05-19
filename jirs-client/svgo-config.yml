@@ -1,5 +1,0 @@
-plugins:
-  - removeTitle: true
-  - convertPathData: true
-  - convertColors:
-      shorthex: true

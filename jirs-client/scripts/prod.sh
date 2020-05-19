@@ -2,15 +2,15 @@
 
 . .env
 
-rm -Rf tmp
-mkdir tmp
+rm -Rf build
+mkdir build
 
-wasm-pack build --mode normal --release --out-name jirs --out-dir ./tmp --target web
+wasm-pack build --mode normal --release --out-name jirs --out-dir ./build --target web
 ../target/debug/jirs-css -i ./js/styles.css -O ./tmp/styles.css
 
-cat ./js/index.js \
+cp -r ./static/* ./build
+cat ./static/index.js \
 | sed -e "s/process.env.JIRS_SERVER_BIND/'$JIRS_SERVER_BIND'/g" \
-| sed -e "s/process.env.JIRS_SERVER_PORT/'$JIRS_SERVER_PORT'/g" &> ./tmp/index.js
-cp ./js/template.html ./tmp/index.html
+| sed -e "s/process.env.JIRS_SERVER_PORT/'$JIRS_SERVER_PORT'/g" &> ./build/index.js
 
-cp -r ./dev/* ./tmp
+cp ./js/template.html ./build/index.html
