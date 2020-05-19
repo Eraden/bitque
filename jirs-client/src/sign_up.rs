@@ -2,7 +2,6 @@ use seed::{prelude::*, *};
 
 use jirs_data::{SignUpFieldId, WsMsg};
 
-use crate::api::send_ws_msg;
 use crate::model::{Page, PageContent, SignUpPage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
@@ -12,7 +11,8 @@ use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_link::StyledLink;
 use crate::shared::{outer_layout, ToNode};
 use crate::validations::is_email;
-use crate::{model, FieldId, Msg};
+use crate::ws::send_ws_msg;
+use crate::{model, FieldId, Msg, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>) {
     if model.page != Page::SignUp {
@@ -42,17 +42,20 @@ pub fn update(msg: Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>
             page.email_touched = true;
         }
         Msg::SignUpRequest => {
-            send_ws_msg(WsMsg::SignUpRequest(
-                page.email.clone(),
-                page.username.clone(),
-            ));
+            send_ws_msg(
+                WsMsg::SignUpRequest(page.email.clone(), page.username.clone()),
+                model.ws.as_ref(),
+            );
         }
-        Msg::WsMsg(WsMsg::SignUpSuccess) => {
-            page.sign_up_success = true;
-        }
-        Msg::WsMsg(WsMsg::SignUpPairTaken) => {
-            page.error = "Pair you give is either taken or is not matching".to_string();
-        }
+        Msg::WebSocketChange(change) => match change {
+            WebSocketChanged::WsMsg(WsMsg::SignUpSuccess) => {
+                page.sign_up_success = true;
+            }
+            WebSocketChanged::WsMsg(WsMsg::SignUpPairTaken) => {
+                page.error = "Pair you give is either taken or is not matching".to_string();
+            }
+            _ => (),
+        },
         _ => (),
     }
 }
@@ -126,7 +129,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     let error_row = if page.error.is_empty() {
         empty![]
     } else {
-        div![class!["error"], p![page.error]]
+        div![class!["error"], p![page.error.as_str()]]
     };
 
     let sign_up_form = StyledForm::build()

@@ -1,9 +1,8 @@
 use seed::{prelude::*, *};
 
-use jirs_data::IssueFieldId;
+use jirs_data::{IssueFieldId, WsMsg};
 use jirs_data::{IssuePriority, IssueType, ToVec};
 
-use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, ModalType, Model};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
@@ -14,7 +13,8 @@ use crate::shared::styled_select::StyledSelect;
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::{ToChild, ToNode};
-use crate::{FieldId, Msg};
+use crate::ws::send_ws_msg;
+use crate::{FieldId, Msg, WebSocketChanged};
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     let modal = model.modals.iter_mut().find(|modal| match modal {
@@ -50,9 +50,12 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
                 user_ids: modal.user_ids.clone(),
                 reporter_id: modal.reporter_id.unwrap_or_else(|| user_id),
             };
-            send_ws_msg(jirs_data::WsMsg::IssueCreateRequest(payload));
+            send_ws_msg(
+                jirs_data::WsMsg::IssueCreateRequest(payload),
+                model.ws.as_ref(),
+            );
         }
-        Msg::WsMsg(jirs_data::WsMsg::IssueCreated(issue)) => {
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueCreated(issue))) => {
             model.issues.push(issue.clone());
             orders.skip().send_msg(Msg::ModalDropped);
         }

@@ -15,7 +15,7 @@ pub fn render(model: &Model) -> Node<Msg> {
             project_icon,
             div![
                 class!["projectTexts"],
-                div![class!["projectName"], project.name],
+                div![class!["projectName"], project.name.as_str()],
                 div![class!["projectCategory"], project.category.to_string()]
             ],
         ],

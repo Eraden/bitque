@@ -12,7 +12,8 @@ use crate::shared::styled_editor::Mode;
 use crate::shared::styled_image_input::StyledImageInputState;
 use crate::shared::styled_input::StyledInputState;
 use crate::shared::styled_select::StyledSelectState;
-use crate::{EditIssueModalSection, FieldId, ProjectFieldId, HOST_URL};
+use crate::{EditIssueModalSection, FieldId, ProjectFieldId /*HOST_URL*/};
+use seed::browser::web_socket::WebSocket;
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
@@ -269,6 +270,7 @@ pub struct ProjectSettingsPage {
     pub time_tracking: StyledCheckboxState,
     pub column_drag: DragState,
     pub edit_column_id: Option<IssueStatusId>,
+    pub creating_issue_status: bool,
     pub name: StyledInputState,
 }
 
@@ -304,6 +306,7 @@ impl ProjectSettingsPage {
             ),
             column_drag: Default::default(),
             edit_column_id: None,
+            creating_issue_status: false,
             name: StyledInputState::new(
                 FieldId::ProjectSettings(ProjectFieldId::IssueStatusName),
                 "",
@@ -424,7 +427,9 @@ pub enum PageContent {
 
 #[derive(Debug)]
 pub struct Model {
+    pub ws: Option<WebSocket>,
     pub host_url: String,
+    pub ws_url: String,
     pub access_token: Option<Uuid>,
     pub about_tooltip_visible: bool,
 
@@ -451,10 +456,10 @@ pub struct Model {
     pub issue_statuses: Vec<IssueStatus>,
 }
 
-impl Default for Model {
-    fn default() -> Self {
-        let host_url = unsafe { HOST_URL.clone() };
+impl Model {
+    pub fn new(host_url: String, ws_url: String) -> Self {
         Self {
+            ws: None,
             access_token: None,
             user: None,
             issue_form: None,
@@ -465,6 +470,7 @@ impl Default for Model {
             comments_by_project_id: Default::default(),
             page: Page::Project,
             host_url,
+            ws_url,
             page_content: PageContent::Project(Box::new(ProjectPage::default())),
             modals: vec![],
             project: None,

@@ -2,11 +2,10 @@ use seed::prelude::*;
 
 use jirs_data::{IssueStatusId, WsMsg};
 
-use crate::api::send_ws_msg;
 use crate::model::{DeleteIssueStatusModal, ModalType, Model};
 use crate::shared::styled_confirm_modal::StyledConfirmModal;
 use crate::shared::ToNode;
-use crate::{model, Msg};
+use crate::{model, Msg, WebSocketChanged};
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     let _modal: &mut Box<DeleteIssueStatusModal> =
@@ -20,9 +19,12 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
     match msg {
         Msg::DeleteIssueStatus(issue_status_id) => {
-            send_ws_msg(WsMsg::IssueStatusDelete(*issue_status_id));
+            crate::ws::send_ws_msg(
+                WsMsg::IssueStatusDelete(*issue_status_id),
+                model.ws.as_ref(),
+            );
         }
-        Msg::WsMsg(WsMsg::IssueStatusDelete(_)) => {
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueStatusDelete(_))) => {
             orders.skip().send_msg(Msg::ModalDropped);
         }
         _ => (),

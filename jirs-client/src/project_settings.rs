@@ -5,7 +5,6 @@ use jirs_data::{
     IssueStatus, IssueStatusId, ProjectCategory, TimeTracking, ToVec, UpdateProjectPayload, WsMsg,
 };
 
-use crate::api::send_ws_msg;
 use crate::model::{
     DeleteIssueStatusModal, ModalType, Model, Page, PageContent, ProjectSettingsPage,
 };
@@ -18,9 +17,12 @@ use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
 use crate::shared::styled_textarea::StyledTextarea;
-use crate::shared::{drag_ev, inner_layout, ToChild, ToNode};
+use crate::shared::{inner_layout, ToChild, ToNode};
+use crate::ws::send_ws_msg;
 use crate::FieldChange::TabChanged;
-use crate::{model, FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange};
+use crate::{
+    model, FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange, WebSocketChanged,
+};
 
 static TIME_TRACKING_FIBONACCI: &'static str = "Tracking employees’ time carries the risk of having them feel like they are being spied on. This is one of the most common fears that employees have when a time tracking system is implemented. No one likes to feel like they’re always being watched.";
 static TIME_TRACKING_HOURLY: &'static str = "Employees may feel intimidated by demands to track their time. Or they could feel that they’re constantly being watched and evaluated. And for overly ambitious managers, employee time tracking may open the doors to excessive micromanaging.";
@@ -31,21 +33,24 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     }
 
     match msg {
-        Msg::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
-            send_ws_msg(WsMsg::ProjectRequest);
-            send_ws_msg(WsMsg::IssueStatusesRequest);
-            send_ws_msg(WsMsg::ProjectIssuesRequest);
-        }
+        Msg::WebSocketChange(ref change) => match change {
+            WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
+                send_ws_msg(WsMsg::ProjectRequest, model.ws.as_ref());
+                send_ws_msg(WsMsg::IssueStatusesRequest, model.ws.as_ref());
+                send_ws_msg(WsMsg::ProjectIssuesRequest, model.ws.as_ref());
+            }
+            WebSocketChanged::WsMsg(WsMsg::ProjectLoaded(..)) => {
+                build_page_content(model);
+            }
+            _ => (),
+        },
         Msg::ChangePage(Page::ProjectSettings) => {
             build_page_content(model);
             if model.user.is_some() {
-                send_ws_msg(WsMsg::ProjectRequest);
-                send_ws_msg(WsMsg::IssueStatusesRequest);
-                send_ws_msg(WsMsg::ProjectIssuesRequest);
+                send_ws_msg(WsMsg::ProjectRequest, model.ws.as_ref());
+                send_ws_msg(WsMsg::IssueStatusesRequest, model.ws.as_ref());
+                send_ws_msg(WsMsg::ProjectIssuesRequest, model.ws.as_ref());
             }
-        }
-        Msg::WsMsg(WsMsg::ProjectLoaded(..)) => {
-            build_page_content(model);
         }
         _ => (),
     }
@@ -86,14 +91,17 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
             page.description_mode = mode;
         }
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::SubmitForm)) => {
-            send_ws_msg(WsMsg::ProjectUpdateRequest(UpdateProjectPayload {
-                id: page.payload.id,
-                name: page.payload.name.clone(),
-                url: page.payload.url.clone(),
-                description: page.payload.description.clone(),
-                category: page.payload.category.clone(),
-                time_tracking: Some(page.time_tracking.value.into()),
-            }));
+            send_ws_msg(
+                WsMsg::ProjectUpdateRequest(UpdateProjectPayload {
+                    id: page.payload.id,
+                    name: page.payload.name.clone(),
+                    url: page.payload.url.clone(),
+                    description: page.payload.description.clone(),
+                    category: page.payload.category.clone(),
+                    time_tracking: Some(page.time_tracking.value.into()),
+                }),
+                model.ws.as_ref(),
+            );
         }
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDragStarted(
             issue_status_id,
@@ -128,7 +136,10 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
                     .find(|is| Some(is.id) == old_id)
                     .map(|is| (is.id, is.position))
                 {
-                    send_ws_msg(WsMsg::IssueStatusUpdate(id, name.to_string(), pos))
+                    send_ws_msg(
+                        WsMsg::IssueStatusUpdate(id, name.to_string(), pos),
+                        model.ws.as_ref(),
+                    );
                 }
             }
             page.name.value = model
@@ -259,91 +270,15 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     let columns: Vec<Node<Msg>> = model
         .issue_statuses
         .iter()
-        .map(|is| {
-            let id = is.id;
-            let drag_started = drag_ev(Ev::DragStart, move |_| {
-                Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDragStarted(
-                    id,
-                )))
-            });
-            let drag_stopped = drag_ev(Ev::DragEnd, move |_| {
-                Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDragStopped(
-                    id,
-                )))
-            });
-            let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
-                ev.prevent_default();
-                ev.stop_propagation();
-                Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnExchangePosition(
-                    id,
-                )))
-            });
-            let drag_out = drag_ev(Ev::DragLeave, move |_| {
-                Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDragLeave(id)))
-            });
-
-            if page.edit_column_id == Some(id) {
-                let blur = ev("focusout", |_| {
-                    Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(None)))
-                });
-                let input = StyledInput::build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
-                    .state(&page.name)
-                    .primary()
-                    .auto_focus()
-                    .on_input_ev(blur)
-                    .build()
-                    .into_node();
-
-                div![
-                    class!["columnPreview"],
-                    div![class!["columnName"], input]
-                ]
-            } else {
-                let on_edit = mouse_ev(Ev::Click, move |_| {
-                    Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(Some(id))))
-                });
-                let issue_count_in_column = per_column_issue_count.get(&id).cloned().unwrap_or_default();
-                let delete_row = if issue_count_in_column == 0 {
-                    let on_delete = mouse_ev(Ev::Click, move |ev| {
-                        ev.prevent_default();
-                        ev.stop_propagation();
-                        Msg::ModalOpened(Box::new(ModalType::DeleteIssueStatusModal(Box::new(DeleteIssueStatusModal::new(id)))))
-                    });
-                    let delete = StyledButton::build()
-                        .primary()
-                        .add_class("removeColumn")
-                        .icon(Icon::Trash)
-                        .on_click(on_delete)
-                        .build()
-                        .into_node();
-                    div![class!["removeColumn"], delete]
-                } else {
-                    div![class!["issueCount"], format!("Issues in column: {}", issue_count_in_column)]
-                };
-
-                div![
-                    class!["columnPreview"],
-                    attrs![At::Style => column_style.as_str(), At::Draggable => "true", At::DropZone => "true"],
-                    div![class!["columnName"], span![is.name], on_edit, delete_row],
-                    drag_started,
-                    drag_stopped,
-                    drag_over_handler,
-                    drag_out,
-                ]
-            }
-        })
+        .map(|is| column_preview(is, page, &per_column_issue_count, column_style.as_str()))
         .collect();
-    let add_column = StyledIcon::build(Icon::Plus).build().into_node();
+
     let columns_section = section![
         class!["columnsSection"],
         div![
             class!["columns"],
             columns,
-            div![
-                class!["columnPreview"],
-                attrs![At::Style => column_style.as_str()],
-                div![class!["columnName addColumn"], add_column]
-            ]
+            add_column(page, column_style.as_str())
         ]
     ];
     let columns_field = StyledField::build()
@@ -451,7 +386,10 @@ fn sync(model: &mut Model) {
                 Some(is) => is,
                 _ => continue,
             };
-        send_ws_msg(WsMsg::IssueStatusUpdate(*id, name.clone(), *position))
+        send_ws_msg(
+            WsMsg::IssueStatusUpdate(*id, name.clone(), *position),
+            model.ws.as_ref(),
+        );
     }
 }
 
@@ -461,4 +399,138 @@ fn build_page_content(model: &mut Model) {
         _ => return,
     };
     model.page_content = PageContent::ProjectSettings(Box::new(ProjectSettingsPage::new(project)));
+}
+
+fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
+    let on_click = mouse_ev(Ev::Click, move |_| {
+        Msg::PageChanged(PageChanged::ProjectSettings(
+            ProjectPageChange::EditIssueStatusName(Some(0)),
+        ))
+    });
+
+    if page.edit_column_id == Some(0) {
+        let blur = ev("focusout", |_| {
+            Msg::PageChanged(PageChanged::ProjectSettings(
+                ProjectPageChange::EditIssueStatusName(None),
+            ))
+        });
+
+        let input = StyledInput::build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
+            .state(&page.name)
+            .primary()
+            .auto_focus()
+            .on_input_ev(blur)
+            .build()
+            .into_node();
+
+        div![class!["columnPreview"], div![class!["columnName"], input]]
+    } else {
+        let add_column = StyledIcon::build(Icon::Plus).build().into_node();
+        div![
+            class!["columnPreview"],
+            attrs![At::Style => column_style],
+            div![class!["columnName addColumn"], add_column],
+            on_click,
+        ]
+    }
+}
+
+fn column_preview(
+    is: &IssueStatus,
+    page: &ProjectSettingsPage,
+    per_column_issue_count: &HashMap<i32, i32>,
+    column_style: &str,
+) -> Node<Msg> {
+    if page.edit_column_id == Some(is.id) {
+        let blur = ev("focusout", |_| {
+            Msg::PageChanged(PageChanged::ProjectSettings(
+                ProjectPageChange::EditIssueStatusName(None),
+            ))
+        });
+        let input = StyledInput::build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
+            .state(&page.name)
+            .primary()
+            .auto_focus()
+            .on_input_ev(blur)
+            .build()
+            .into_node();
+
+        div![class!["columnPreview"], div![class!["columnName"], input]]
+    } else {
+        show_column_preview(is, per_column_issue_count, column_style)
+    }
+}
+
+fn show_column_preview(
+    is: &IssueStatus,
+    per_column_issue_count: &HashMap<i32, i32>,
+    column_style: &str,
+) -> Node<Msg> {
+    let id = is.id;
+    let drag_started = drag_ev(Ev::DragStart, move |_| {
+        Some(Msg::PageChanged(PageChanged::ProjectSettings(
+            ProjectPageChange::ColumnDragStarted(id),
+        )))
+    });
+    let drag_stopped = drag_ev(Ev::DragEnd, move |_| {
+        Some(Msg::PageChanged(PageChanged::ProjectSettings(
+            ProjectPageChange::ColumnDragStopped(id),
+        )))
+    });
+    let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
+        ev.prevent_default();
+        ev.stop_propagation();
+        Some(Msg::PageChanged(PageChanged::ProjectSettings(
+            ProjectPageChange::ColumnExchangePosition(id),
+        )))
+    });
+    let drag_out = drag_ev(Ev::DragLeave, move |_| {
+        Some(Msg::PageChanged(PageChanged::ProjectSettings(
+            ProjectPageChange::ColumnDragLeave(id),
+        )))
+    });
+
+    let on_edit = mouse_ev(Ev::Click, move |_| {
+        Msg::PageChanged(PageChanged::ProjectSettings(
+            ProjectPageChange::EditIssueStatusName(Some(id)),
+        ))
+    });
+    let issue_count_in_column = per_column_issue_count.get(&id).cloned().unwrap_or_default();
+    let delete_row = if issue_count_in_column == 0 {
+        let on_delete = mouse_ev(Ev::Click, move |ev| {
+            ev.prevent_default();
+            ev.stop_propagation();
+            Msg::ModalOpened(Box::new(ModalType::DeleteIssueStatusModal(Box::new(
+                DeleteIssueStatusModal::new(id),
+            ))))
+        });
+        let delete = StyledButton::build()
+            .primary()
+            .add_class("removeColumn")
+            .icon(Icon::Trash)
+            .on_click(on_delete)
+            .build()
+            .into_node();
+        div![class!["removeColumn"], delete]
+    } else {
+        div![
+            class!["issueCount"],
+            format!("Issues in column: {}", issue_count_in_column)
+        ]
+    };
+
+    div![
+        class!["columnPreview"],
+        attrs![At::Style => column_style, At::Draggable => "true", At::DropZone => "true"],
+        div![
+            class!["columnName"],
+            span![is.name.as_str()],
+            on_edit,
+            delete_row
+        ],
+        drag_started,
+        drag_stopped,
+        drag_over_handler,
+        drag_out,
+    ]
 }

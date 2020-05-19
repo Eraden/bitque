@@ -1,5 +1,5 @@
 use seed::{prelude::*, *};
-use wasm_bindgen::JsCast;
+use std::str::FromStr;
 
 use jirs_data::*;
 
@@ -31,6 +31,18 @@ pub trait ToChild {
     type Builder;
 
     fn to_child(&self) -> Self::Builder;
+}
+
+pub fn go_to_board() {
+    go_to("/board");
+}
+
+pub fn go_to_login() {
+    go_to("/login");
+}
+
+pub fn go_to(url: &str) {
+    seed::push_route(Url::from_str(url).unwrap());
 }
 
 pub fn find_issue(model: &Model, issue_id: IssueId) -> Option<&Issue> {
@@ -106,14 +118,4 @@ pub fn read_auth_token() -> Result<uuid::Uuid, String> {
         .ok_or_else(|| "Auth token not found".to_string())?
         .parse()
         .map_err(|_| "Bad token format".to_string())
-}
-
-pub fn drag_ev<Ms>(
-    trigger: impl Into<Ev>,
-    handler: impl FnOnce(web_sys::DragEvent) -> Ms + 'static + Clone,
-) -> EventHandler<Ms> {
-    let closure_handler = move |event: web_sys::Event| {
-        (handler.clone())(event.dyn_ref::<web_sys::DragEvent>().unwrap().clone())
-    };
-    EventHandler::new(trigger, closure_handler)
 }

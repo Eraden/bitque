@@ -2,12 +2,12 @@ use seed::{prelude::*, *};
 
 use jirs_data::{TimeTracking, WsMsg};
 
-use crate::api::send_ws_msg;
 use crate::model::{AddIssueModal, EditIssueModal, ModalType, Model, Page};
 use crate::shared::styled_confirm_modal::StyledConfirmModal;
 use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
-use crate::shared::{find_issue, ToNode};
-use crate::{model, FieldChange, FieldId, Msg};
+use crate::shared::{find_issue, go_to_board, ToNode};
+use crate::ws::send_ws_msg;
+use crate::{model, FieldChange, FieldId, Msg, WebSocketChanged};
 
 mod add_issue;
 mod confirm_delete_issue;
@@ -19,7 +19,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
     match msg {
         Msg::ModalDropped => match model.modals.pop() {
             Some(ModalType::EditIssue(..)) | Some(ModalType::AddIssue(..)) => {
-                seed::push_route(vec!["board"]);
+                go_to_board();
                 orders.send_msg(Msg::ChangePage(Page::Project));
             }
             _ => (),
@@ -37,12 +37,14 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
             model.modals.push(modal_type.as_ref().clone());
         }
 
-        Msg::WsMsg(jirs_data::WsMsg::ProjectIssuesLoaded(_issues)) => match model.page {
-            Page::EditIssue(issue_id) if model.modals.is_empty() => {
-                push_edit_modal(issue_id, model)
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::ProjectIssuesLoaded(_issues))) => {
+            match model.page {
+                Page::EditIssue(issue_id) if model.modals.is_empty() => {
+                    push_edit_modal(issue_id, model)
+                }
+                _ => (),
             }
-            _ => (),
-        },
+        }
 
         Msg::ChangePage(Page::EditIssue(issue_id)) => {
             push_edit_modal(*issue_id, model);
@@ -116,6 +118,6 @@ fn push_edit_modal(issue_id: i32, model: &mut Model) {
             Box::new(EditIssueModal::new(issue, time_tracking_type)),
         )
     };
-    send_ws_msg(WsMsg::IssueCommentsRequest(issue_id));
+    send_ws_msg(WsMsg::IssueCommentsRequest(issue_id), model.ws.as_ref());
     model.modals.push(modal);
 }

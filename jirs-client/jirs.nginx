@@ -1,0 +1,21 @@
+server {
+    listen       80;
+    server_name  jirs.lvh.me;
+
+    charset utf-8;
+    root   /home/eraden/code/eraden/jirs/jirs-client/tmp;
+
+    location ~ .wasm {
+	    default_type application/wasm;
+    }
+
+    location *.js {
+	    default_type application/javascript;
+    }
+
+    location / {
+        index  index.html index.htm;
+    }
+
+    error_page 404 =200 /index.html;
+}

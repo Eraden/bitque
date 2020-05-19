@@ -343,7 +343,7 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
         attrs![At::Class => select_class.join(" "), At::Style => dropdown_style.as_str()],
         keyboard_ev(Ev::KeyUp, |ev| {
             ev.stop_propagation();
-            Msg::NoOp
+            None as Option<Msg>
         }),
         div![
             attrs![At::Class => format!("valueContainer {}", variant)],

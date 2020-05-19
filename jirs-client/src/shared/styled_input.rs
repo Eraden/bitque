@@ -222,11 +222,11 @@ pub fn render(values: StyledInput) -> Node<Msg> {
     }));
     input_handlers.push(ev(Ev::KeyUp, move |event| {
         event.stop_propagation();
-        Msg::NoOp
+        None as Option<Msg>
     }));
     input_handlers.push(ev(Ev::Click, move |event| {
         event.stop_propagation();
-        Msg::NoOp
+        None as Option<Msg>
     }));
 
     div![

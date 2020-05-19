@@ -2,7 +2,6 @@ use seed::{prelude::*, *};
 
 use jirs_data::{InvitationState, ToVec, UserRole, UsersFieldId, WsMsg};
 
-use crate::api::send_ws_msg;
 use crate::model::*;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
@@ -11,7 +10,8 @@ use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::*;
 use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::validations::is_email;
-use crate::{FieldId, Msg, PageChanged, UsersPageChange};
+use crate::ws::send_ws_msg;
+use crate::{FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     if let Msg::ChangePage(Page::Users) = msg {
@@ -27,18 +27,50 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     page.user_role_state.update(&msg, orders);
 
     match msg {
-        Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) | Msg::ChangePage(Page::Users)
-            if model.user.is_some() =>
-        {
-            send_ws_msg(WsMsg::InvitationListRequest);
-            send_ws_msg(WsMsg::InvitedUsersRequest);
+        Msg::ChangePage(Page::Users) if model.user.is_some() => {
+            send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref());
+            send_ws_msg(WsMsg::InvitedUsersRequest, model.ws.as_ref());
         }
-        Msg::WsMsg(WsMsg::InvitedUsersLoaded(users)) => {
-            page.invited_users = users;
-        }
-        Msg::WsMsg(WsMsg::InvitationListLoaded(invitations)) => {
-            page.invitations = invitations;
-        }
+        Msg::WebSocketChange(change) => match change {
+            WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) if model.user.is_some() => {
+                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref());
+                send_ws_msg(WsMsg::InvitedUsersRequest, model.ws.as_ref());
+            }
+            WebSocketChanged::WsMsg(WsMsg::InvitedUsersLoaded(users)) => {
+                page.invited_users = users;
+            }
+            WebSocketChanged::WsMsg(WsMsg::InvitationListLoaded(invitations)) => {
+                page.invitations = invitations;
+            }
+            WebSocketChanged::WsMsg(WsMsg::InvitationRevokeSuccess(id)) => {
+                let mut old = vec![];
+                std::mem::swap(&mut page.invitations, &mut old);
+                for mut invitation in old {
+                    if id == invitation.id {
+                        invitation.state = InvitationState::Revoked;
+                    }
+                    page.invitations.push(invitation);
+                }
+                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref());
+            }
+            WebSocketChanged::WsMsg(WsMsg::InvitedUserRemoveSuccess(email)) => {
+                let mut old = vec![];
+                std::mem::swap(&mut page.invited_users, &mut old);
+                for user in old {
+                    if user.email != email {
+                        page.invited_users.push(user);
+                    }
+                }
+            }
+            WebSocketChanged::WsMsg(WsMsg::InvitationSendSuccess) => {
+                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref());
+                page.form_state = InvitationFormState::Succeed;
+            }
+            WebSocketChanged::WsMsg(WsMsg::InvitationSendFailure) => {
+                page.form_state = InvitationFormState::Failed;
+            }
+            _ => (),
+        },
         Msg::PageChanged(PageChanged::Users(UsersPageChange::ResetForm)) => {
             page.name.clear();
             page.name_touched = false;
@@ -64,43 +96,22 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::InviteRequest => {
             page.form_state = InvitationFormState::Sent;
-            send_ws_msg(WsMsg::InvitationSendRequest {
-                name: page.name.clone(),
-                email: page.email.clone(),
-            })
-        }
-        Msg::WsMsg(WsMsg::InvitationRevokeSuccess(id)) => {
-            let mut old = vec![];
-            std::mem::swap(&mut page.invitations, &mut old);
-            for mut invitation in old {
-                if id == invitation.id {
-                    invitation.state = InvitationState::Revoked;
-                }
-                page.invitations.push(invitation);
-            }
-            send_ws_msg(WsMsg::InvitationListRequest);
+            send_ws_msg(
+                WsMsg::InvitationSendRequest {
+                    name: page.name.clone(),
+                    email: page.email.clone(),
+                },
+                model.ws.as_ref(),
+            );
         }
         Msg::InviteRevokeRequest(invitation_id) => {
-            send_ws_msg(WsMsg::InvitationRevokeRequest(invitation_id));
+            send_ws_msg(
+                WsMsg::InvitationRevokeRequest(invitation_id),
+                model.ws.as_ref(),
+            );
         }
         Msg::InvitedUserRemove(email) => {
-            send_ws_msg(WsMsg::InvitedUserRemoveRequest(email));
-        }
-        Msg::WsMsg(WsMsg::InvitedUserRemoveSuccess(email)) => {
-            let mut old = vec![];
-            std::mem::swap(&mut page.invited_users, &mut old);
-            for user in old {
-                if user.email != email {
-                    page.invited_users.push(user);
-                }
-            }
-        }
-        Msg::WsMsg(WsMsg::InvitationSendSuccess) => {
-            send_ws_msg(WsMsg::InvitationListRequest);
-            page.form_state = InvitationFormState::Succeed;
-        }
-        Msg::WsMsg(WsMsg::InvitationSendFailure) => {
-            page.form_state = InvitationFormState::Failed;
+            send_ws_msg(WsMsg::InvitedUserRemoveRequest(email), model.ws.as_ref());
         }
         _ => (),
     }
@@ -210,8 +221,8 @@ pub fn view(model: &Model) -> Node<Msg> {
                 .into_node();
             li![
                 class!["user"],
-                span![user.name],
-                span![user.email],
+                span![user.name.as_str()],
+                span![user.email.as_str()],
                 span![format!("{}", user.user_role)],
                 remove,
             ]
@@ -238,8 +249,8 @@ pub fn view(model: &Model) -> Node<Msg> {
             li![
                 class!["invitation"],
                 attrs![At::Class => format!("{}", invitation.state)],
-                span![invitation.name],
-                span![invitation.email],
+                span![invitation.name.as_str()],
+                span![invitation.email.as_str()],
                 span![format!("{}", invitation.state)],
                 revoke,
             ]

@@ -1,11 +1,12 @@
 .styledInput {
     position: relative;
     display: inline-block;
-    height: 32px;
+    min-height: 32px;
     width: 100%;
 }
 
 .styledInput > .inputElement {
+    min-height: 32px;
     height: 100%;
     width: 100%;
     padding: 0 7px;

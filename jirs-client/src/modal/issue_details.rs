@@ -2,7 +2,6 @@ use seed::{prelude::*, *};
 
 use jirs_data::*;
 
-use crate::api::send_ws_msg;
 use crate::modal::time_tracking::time_tracking_field;
 use crate::model::{CommentForm, EditIssueModal, ModalType, Model};
 use crate::shared::styled_avatar::StyledAvatar;
@@ -15,7 +14,8 @@ use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::tracking_widget::tracking_link;
 use crate::shared::{ToChild, ToNode};
-use crate::{EditIssueModalSection, FieldChange, FieldId, Msg};
+use crate::ws::send_ws_msg;
+use crate::{EditIssueModalSection, FieldChange, FieldId, Msg, WebSocketChanged};
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     let modal: &mut EditIssueModal = match model.modals.get_mut(0) {
@@ -35,7 +35,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     modal.time_remaining_select.update(msg, orders);
 
     match msg {
-        Msg::WsMsg(WsMsg::IssueUpdated(issue)) => {
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueUpdated(issue))) => {
             modal.payload = issue.clone().into();
         }
         Msg::StyledSelectChanged(
@@ -43,44 +43,56 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.issue_type = (*value).into();
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Type,
-                PayloadVariant::IssueType(modal.payload.issue_type),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::Type,
+                    PayloadVariant::IssueType(modal.payload.issue_type),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::IssueStatusId)),
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.issue_status_id = *value as IssueStatusId;
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::IssueStatusId,
-                PayloadVariant::I32(modal.payload.issue_status_id),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::IssueStatusId,
+                    PayloadVariant::I32(modal.payload.issue_status_id),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Reporter)),
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.reporter_id = *value as i32;
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Reporter,
-                PayloadVariant::I32(modal.payload.reporter_id),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::Reporter,
+                    PayloadVariant::I32(modal.payload.reporter_id),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.user_ids.push(*value as i32);
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Assignees,
-                PayloadVariant::VecI32(modal.payload.user_ids.clone()),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::Assignees,
+                    PayloadVariant::VecI32(modal.payload.user_ids.clone()),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
@@ -94,33 +106,42 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     modal.payload.user_ids.push(id);
                 }
             }
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Assignees,
-                PayloadVariant::VecI32(modal.payload.user_ids.clone()),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::Assignees,
+                    PayloadVariant::VecI32(modal.payload.user_ids.clone()),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Priority)),
             StyledSelectChange::Changed(value),
         ) => {
             modal.payload.priority = (*value).into();
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Priority,
-                PayloadVariant::IssuePriority(modal.payload.priority),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::Priority,
+                    PayloadVariant::IssuePriority(modal.payload.priority),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Title)),
             value,
         ) => {
             modal.payload.title = value.clone();
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Title,
-                PayloadVariant::String(modal.payload.title.clone()),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::Title,
+                    PayloadVariant::String(modal.payload.title.clone()),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Description)),
@@ -128,18 +149,21 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.description = Some(value.clone());
             modal.payload.description_text = Some(value.clone());
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Description,
-                PayloadVariant::String(
-                    modal
-                        .payload
-                        .description
-                        .as_ref()
-                        .cloned()
-                        .unwrap_or_default(),
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::Description,
+                    PayloadVariant::String(
+                        modal
+                            .payload
+                            .description
+                            .as_ref()
+                            .cloned()
+                            .unwrap_or_default(),
+                    ),
                 ),
-            ));
+                model.ws.as_ref(),
+            );
         }
         // TimeSpent
         Msg::StrInputChanged(
@@ -147,22 +171,28 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ..,
         ) => {
             modal.payload.time_spent = modal.time_spent.represent_f64_as_i32();
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::TimeSpent,
-                PayloadVariant::OptionI32(modal.payload.time_spent),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::TimeSpent,
+                    PayloadVariant::OptionI32(modal.payload.time_spent),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
             StyledSelectChange::Changed(..),
         ) => {
             modal.payload.time_spent = modal.time_spent_select.values.get(0).map(|n| *n as i32);
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::TimeSpent,
-                PayloadVariant::OptionI32(modal.payload.time_spent),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::TimeSpent,
+                    PayloadVariant::OptionI32(modal.payload.time_spent),
+                ),
+                model.ws.as_ref(),
+            );
         }
         // Time Remaining
         Msg::StrInputChanged(
@@ -170,11 +200,14 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ..,
         ) => {
             modal.payload.time_remaining = modal.time_remaining.represent_f64_as_i32();
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::TimeRemaining,
-                PayloadVariant::OptionI32(modal.payload.time_remaining),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::TimeRemaining,
+                    PayloadVariant::OptionI32(modal.payload.time_remaining),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
@@ -182,11 +215,14 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.time_remaining =
                 modal.time_remaining_select.values.get(0).map(|n| *n as i32);
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::TimeRemaining,
-                PayloadVariant::OptionI32(modal.payload.time_remaining),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::TimeRemaining,
+                    PayloadVariant::OptionI32(modal.payload.time_remaining),
+                ),
+                model.ws.as_ref(),
+            );
         }
         // Estimate
         Msg::StrInputChanged(
@@ -194,22 +230,28 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ..,
         ) => {
             modal.payload.estimate = modal.estimate.represent_f64_as_i32();
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Estimate,
-                PayloadVariant::OptionI32(modal.payload.estimate),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::Estimate,
+                    PayloadVariant::OptionI32(modal.payload.estimate),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
             StyledSelectChange::Changed(..),
         ) => {
             modal.payload.estimate = modal.estimate_select.values.get(0).map(|n| *n as i32);
-            send_ws_msg(WsMsg::IssueUpdateRequest(
-                modal.id,
-                IssueFieldId::Estimate,
-                PayloadVariant::OptionI32(modal.payload.estimate),
-            ));
+            send_ws_msg(
+                WsMsg::IssueUpdateRequest(
+                    modal.id,
+                    IssueFieldId::Estimate,
+                    PayloadVariant::OptionI32(modal.payload.estimate),
+                ),
+                model.ws.as_ref(),
+            );
         }
         Msg::ModalChanged(FieldChange::TabChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Description)),
@@ -248,7 +290,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     issue_id: modal.id,
                 }),
             };
-            send_ws_msg(msg);
+            send_ws_msg(msg, model.ws.as_ref());
             orders
                 .skip()
                 .send_msg(Msg::ModalChanged(FieldChange::ToggleCommentForm(
@@ -272,7 +314,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             modal.comment_form.creating = true;
         }
         Msg::DeleteComment(comment_id) => {
-            send_ws_msg(WsMsg::CommentDeleteRequest(*comment_id));
+            send_ws_msg(WsMsg::CommentDeleteRequest(*comment_id), model.ws.as_ref());
             orders.skip().send_msg(Msg::ModalDropped);
         }
 
@@ -314,15 +356,13 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let issue_id = *id;
 
     let click_handler = mouse_ev(Ev::Click, move |_| {
-        use wasm_bindgen::JsCast;
-
         let link = format!("http://localhost:7000/issues/{id}", id = issue_id);
         let el = match seed::html_document().create_element("textarea") {
             Ok(el) => el
                 .dyn_ref::<web_sys::HtmlTextAreaElement>()
                 .unwrap()
                 .clone(),
-            _ => return Msg::NoOp,
+            _ => return None as Option<Msg>,
         };
         seed::body().append_child(&el).unwrap();
         el.set_text_content(Some(link.as_str()));
@@ -330,7 +370,10 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         el.set_selection_range(0, 9999).unwrap();
         seed::html_document().exec_command("copy").unwrap();
         seed::body().remove_child(&el).unwrap();
-        Msg::ModalChanged(FieldChange::LinkCopied(FieldId::CopyButtonLabel, true))
+        Some(Msg::ModalChanged(FieldChange::LinkCopied(
+            FieldId::CopyButtonLabel,
+            true,
+        )))
     });
     let close_handler = mouse_ev(Ev::Click, |_| Msg::ModalDropped);
     let delete_confirmation_handler = mouse_ev(Ev::Click, move |_| {
@@ -579,7 +622,7 @@ fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Option<N
         div![
             class!["content"],
             div![class!["userName"], user.name.as_str()],
-            p![class!["body"], comment.body],
+            p![class!["body"], comment.body.as_str()],
             buttons,
         ]
     };

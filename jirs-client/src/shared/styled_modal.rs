@@ -122,7 +122,7 @@ pub fn render(values: StyledModal) -> Node<Msg> {
     let close_handler = mouse_ev(Ev::Click, |_| Msg::ModalDropped);
     let body_handler = mouse_ev(Ev::Click, |ev| {
         ev.stop_propagation();
-        Msg::NoOp
+        None as Option<Msg>
     });
 
     let clickable_class = format!("clickableOverlay {}", variant.to_class_name());

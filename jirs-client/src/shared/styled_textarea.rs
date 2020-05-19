@@ -161,7 +161,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
     let resize_handler = ev(Ev::KeyUp, move |event| {
         event.stop_propagation();
         if handler_disable_auto_resize {
-            return Msg::NoOp;
+            return None as Option<Msg>;
         }
 
         let target = event.target().unwrap();
@@ -172,7 +172,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         textarea
             .style()
             .set_css_text(format!("height: {min_height}px", min_height = min_height).as_str());
-        Msg::NoOp
+        None as Option<Msg>
     });
 
     let handler_disable_auto_resize = disable_auto_resize;

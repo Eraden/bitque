@@ -102,11 +102,10 @@ impl ToNode for ChildBuilder {
         } = self;
 
         let id = field_id.as_ref().map(|f| f.to_string()).unwrap_or_default();
-        let handler = if let Some(field_id) = field_id {
-            mouse_ev(Ev::Click, move |_| Msg::U32InputChanged(field_id, value))
-        } else {
-            ev(Ev::FullScreenError, move |_| Msg::NoOp)
-        };
+        let field_id_clone = field_id.clone();
+        let handler: EventHandler<Msg> = mouse_ev(Ev::Click, move |_| {
+            field_id_clone.map(|field_id| Msg::U32InputChanged(field_id, value))
+        });
 
         class_list.push("styledCheckboxChild".to_string());
         class_list.push(if selected { "selected" } else { "" }.to_string());

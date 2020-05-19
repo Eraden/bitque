@@ -24,7 +24,7 @@ if (process.env.NODE_ENV === "production") {
     execSync('cargo build --bin jirs-css', {
         cwd: jirDir,
     });
-    const css = spawn('./target/debug/jirs-css', [
+    spawn('./target/debug/jirs-css', [
         '-W',
         '-O',
         './jirs-client/dev/styles.css'
@@ -70,7 +70,7 @@ module.exports = {
                 devServer: {
                     contentBase: path.join(__dirname, 'dev'),
                     historyApiFallback: true,
-                    hot: true,
+                    hot: false,
                     port: process.env.JIRS_CLIENT_PORT || 6000,
                     host: process.env.JIRS_CLIENT_BIND || '0.0.0.0',
                     allowedHosts: [

@@ -5,7 +5,6 @@ use uuid::Uuid;
 
 use jirs_data::WsMsg;
 
-use crate::api::send_ws_msg;
 use crate::model::{Page, PageContent, SignInPage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
@@ -15,7 +14,8 @@ use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_link::StyledLink;
 use crate::shared::{outer_layout, write_auth_token, ToNode};
 use crate::validations::{is_email, is_token};
-use crate::{model, FieldId, Msg, SignInFieldId};
+use crate::ws::send_ws_msg;
+use crate::{model, FieldId, Msg, SignInFieldId, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::SignIn {
@@ -49,10 +49,10 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
             page.token_touched = true;
         }
         Msg::SignInRequest => {
-            send_ws_msg(WsMsg::AuthenticateRequest(
-                page.email.clone(),
-                page.username.clone(),
-            ));
+            send_ws_msg(
+                WsMsg::AuthenticateRequest(page.email.clone(), page.username.clone()),
+                model.ws.as_ref(),
+            );
         }
         Msg::BindClientRequest => {
             let bind_token: uuid::Uuid = match Uuid::from_str(page.token.as_str()) {
@@ -62,21 +62,24 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
                     return;
                 }
             };
-            send_ws_msg(WsMsg::BindTokenCheck(bind_token));
+            send_ws_msg(WsMsg::BindTokenCheck(bind_token), model.ws.as_ref());
         }
-        Msg::WsMsg(WsMsg::AuthenticateSuccess) => {
-            page.login_success = true;
-        }
-        Msg::WsMsg(WsMsg::BindTokenOk(access_token)) => {
-            match write_auth_token(Some(access_token)) {
-                Ok(msg) => {
-                    orders.skip().send_msg(msg);
-                }
-                Err(e) => {
-                    error!(e);
+        Msg::WebSocketChange(change) => match change {
+            WebSocketChanged::WsMsg(WsMsg::AuthenticateSuccess) => {
+                page.login_success = true;
+            }
+            WebSocketChanged::WsMsg(WsMsg::BindTokenOk(access_token)) => {
+                match write_auth_token(Some(access_token)) {
+                    Ok(msg) => {
+                        orders.skip().send_msg(msg);
+                    }
+                    Err(e) => {
+                        error!(e);
+                    }
                 }
             }
-        }
+            _ => (),
+        },
         _ => (),
     };
 }

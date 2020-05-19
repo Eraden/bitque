@@ -4,57 +4,75 @@ use jirs_data::WsMsg;
 
 use crate::model::*;
 use crate::shared::write_auth_token;
-use crate::{Msg, APP};
+use crate::{Msg, WebSocketChanged};
 
 pub mod issue;
 
-pub fn handle(msg: WsMsg) {
-    let app = match unsafe { APP.as_mut().unwrap() }.write() {
-        Ok(app) => app,
+pub fn send_ws_msg(msg: WsMsg, ws: Option<&WebSocket>) {
+    let ws = match ws {
+        Some(ws) => ws,
         _ => return,
     };
-
-    match msg {
-        WsMsg::Ping | WsMsg::Pong => {}
-        _ => app.update(Msg::WsMsg(msg)),
-    }
+    let binary = bincode::serialize(&msg).unwrap();
+    ws.send_bytes(binary.as_slice())
+        .expect("Failed to send ws msg");
 }
 
-pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
+pub fn open_socket(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    if model.host_url.is_empty() {
+        return;
+    }
+    let url = model.ws_url.as_str();
+
+    model.ws = WebSocket::builder(url, orders)
+        .on_message(|msg| Msg::WebSocketChange(WebSocketChanged::WebSocketMessage(msg)))
+        .on_open(|| Msg::WebSocketChange(WebSocketChanged::WebSocketOpened))
+        .on_close(|_| Msg::WebSocketChange(WebSocketChanged::WebSocketClosed))
+        .on_error(|| {})
+        .build_and_open()
+        .ok();
+}
+
+pub async fn read_incoming(msg: WebSocketMessage) -> Msg {
+    let bytes = msg.bytes().await.unwrap_or_default();
+    Msg::WebSocketChange(WebSocketChanged::WebSocketMessageLoaded(bytes))
+}
+
+pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         // auth
-        Msg::WsMsg(WsMsg::AuthorizeLoaded(Ok(user))) => {
+        WsMsg::AuthorizeLoaded(Ok(user)) => {
             model.user = Some(user.clone());
         }
-        Msg::WsMsg(WsMsg::AuthorizeExpired) => {
+        WsMsg::AuthorizeExpired => {
             if let Ok(msg) = write_auth_token(None) {
                 orders.skip().send_msg(msg);
             }
         }
         // project
-        Msg::WsMsg(WsMsg::ProjectLoaded(project)) => {
+        WsMsg::ProjectLoaded(project) => {
             model.project = Some(project.clone());
         }
         // issues
-        Msg::WsMsg(WsMsg::ProjectIssuesLoaded(v)) => {
+        WsMsg::ProjectIssuesLoaded(v) => {
             let mut v = v.clone();
             v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
             model.issues = v;
         }
         // issue statuses
-        Msg::WsMsg(WsMsg::IssueStatusesResponse(v)) => {
+        WsMsg::IssueStatusesResponse(v) => {
             model.issue_statuses = v.clone();
             model
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
         }
-        Msg::WsMsg(WsMsg::IssueStatusCreated(is)) => {
+        WsMsg::IssueStatusCreated(is) => {
             model.issue_statuses.push(is.clone());
             model
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
         }
-        Msg::WsMsg(WsMsg::IssueStatusUpdated(changed)) => {
+        WsMsg::IssueStatusUpdated(changed) => {
             let mut old = vec![];
             std::mem::swap(&mut model.issue_statuses, &mut old);
             for is in old {
@@ -68,7 +86,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
         }
-        Msg::WsMsg(WsMsg::IssueDeleted(id)) => {
+        WsMsg::IssueDeleted(id) => {
             let mut old = vec![];
             std::mem::swap(&mut model.issue_statuses, &mut old);
             for is in old {
@@ -82,11 +100,11 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 .sort_by(|a, b| a.position.cmp(&b.position));
         }
         // users
-        Msg::WsMsg(WsMsg::ProjectUsersLoaded(v)) => {
+        WsMsg::ProjectUsersLoaded(v) => {
             model.users = v.clone();
         }
         // comments
-        Msg::WsMsg(WsMsg::IssueCommentsLoaded(comments)) => {
+        WsMsg::IssueCommentsLoaded(comments) => {
             let issue_id = match model.modals.get(0) {
                 Some(ModalType::EditIssue(issue_id, _)) => *issue_id,
                 _ => return,
@@ -98,7 +116,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             v.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
             model.comments = v;
         }
-        Msg::WsMsg(WsMsg::CommentDeleted(comment_id)) => {
+        WsMsg::CommentDeleted(comment_id) => {
             let mut old = vec![];
             std::mem::swap(&mut model.comments, &mut old);
             for comment in old.into_iter() {
@@ -107,7 +125,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
         }
-        Msg::WsMsg(WsMsg::AvatarUrlChanged(user_id, avatar_url)) => {
+        WsMsg::AvatarUrlChanged(user_id, avatar_url) => {
             for user in model.users.iter_mut() {
                 if user.id == *user_id {
                     user.avatar_url = Some(avatar_url.clone());

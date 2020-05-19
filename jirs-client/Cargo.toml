@@ -19,7 +19,7 @@ opt-level = 's'
 
 [dependencies]
 jirs-data = { path = "../jirs-data" }
-seed = { version = "*" }
+seed = { version = "0.7.0" }
 serde = "*"
 serde_json = "*"
 bincode = "1.2.1"

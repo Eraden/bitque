@@ -2,8 +2,8 @@ use seed::*;
 
 use jirs_data::*;
 
-use crate::api::send_ws_msg;
 use crate::model::{Model, PageContent};
+use crate::ws::send_ws_msg;
 
 pub fn drag_started(issue_id: IssueId, model: &mut Model) {
     let project_page = match &mut model.page_content {
@@ -90,16 +90,22 @@ pub fn sync(model: &mut Model) {
             continue;
         }
 
-        send_ws_msg(WsMsg::IssueUpdateRequest(
-            issue.id,
-            IssueFieldId::IssueStatusId,
-            PayloadVariant::I32(issue.issue_status_id),
-        ));
-        send_ws_msg(WsMsg::IssueUpdateRequest(
-            issue.id,
-            IssueFieldId::ListPosition,
-            PayloadVariant::I32(issue.list_position),
-        ));
+        send_ws_msg(
+            WsMsg::IssueUpdateRequest(
+                issue.id,
+                IssueFieldId::IssueStatusId,
+                PayloadVariant::I32(issue.issue_status_id),
+            ),
+            model.ws.as_ref(),
+        );
+        send_ws_msg(
+            WsMsg::IssueUpdateRequest(
+                issue.id,
+                IssueFieldId::ListPosition,
+                PayloadVariant::I32(issue.list_position),
+            ),
+            model.ws.as_ref(),
+        );
     }
     project_page.issue_drag.clear();
 }

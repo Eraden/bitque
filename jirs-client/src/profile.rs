@@ -3,7 +3,6 @@ use web_sys::FormData;
 
 use jirs_data::*;
 
-use crate::api::send_ws_msg;
 use crate::model::{Model, Page, PageContent, ProfilePage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
@@ -11,7 +10,8 @@ use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_image_input::StyledImageInput;
 use crate::shared::styled_input::StyledInput;
 use crate::shared::{inner_layout, ToNode};
-use crate::{FieldId, Msg, PageChanged, ProfilePageChange, HOST_URL};
+use crate::ws::send_ws_msg;
+use crate::{FieldId, Msg, PageChanged, ProfilePageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     let user = match model.user {
@@ -20,8 +20,9 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
     };
 
     match msg {
-        Msg::WsMsg(WsMsg::AuthorizeLoaded(..)) | Msg::ChangePage(Page::Profile) => {
-            send_ws_msg(WsMsg::ProjectRequest);
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)))
+        | Msg::ChangePage(Page::Profile) => {
+            send_ws_msg(WsMsg::ProjectRequest, model.ws.as_ref());
             model.page_content = PageContent::Profile(Box::new(ProfilePage::new(user)));
         }
         _ => (),
@@ -50,10 +51,13 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             fd.set_with_str("token", format!("{}", token).as_str())
                 .unwrap();
             fd.set_with_blob("avatar", file).unwrap();
-            orders.perform_cmd(update_avatar(fd));
+            orders.perform_cmd(update_avatar(fd, model.host_url.clone()));
             orders.skip();
         }
-        Msg::WsMsg(WsMsg::AvatarUrlChanged(user_id, avatar_url)) => {
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AvatarUrlChanged(
+            user_id,
+            avatar_url,
+        ))) => {
             if let Some(me) = model.user.as_mut() {
                 if me.id == user_id {
                     profile_page.avatar.url = Some(avatar_url.clone());
@@ -61,10 +65,13 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             }
         }
         Msg::PageChanged(PageChanged::Profile(ProfilePageChange::SubmitForm)) => {
-            send_ws_msg(WsMsg::ProfileUpdate(
-                profile_page.email.value.clone(),
-                profile_page.name.value.clone(),
-            ))
+            send_ws_msg(
+                WsMsg::ProfileUpdate(
+                    profile_page.email.value.clone(),
+                    profile_page.name.value.clone(),
+                ),
+                model.ws.as_ref(),
+            );
         }
         _ => (),
     }
@@ -132,12 +139,17 @@ pub fn view(model: &Model) -> Node<Msg> {
     inner_layout(model, "profile", vec![content], empty![])
 }
 
-async fn update_avatar(data: FormData) -> Result<Msg, Msg> {
-    let host_url = unsafe { HOST_URL.clone() };
+async fn update_avatar(data: FormData, host_url: String) -> Option<Msg> {
     let path = format!("{}/avatar/", host_url);
-    Request::new(path)
+    let result = Request::new(path)
         .method(Method::Post)
         .body(data.into())
-        .fetch_string(Msg::AvatarUpdateFetched)
-        .await
+        .fetch()
+        .await;
+    let response = match result {
+        Ok(r) => r,
+        Err(_) => return None,
+    };
+    let text = response.text().await.ok()?;
+    Some(Msg::AvatarUpdateFetched(text))
 }

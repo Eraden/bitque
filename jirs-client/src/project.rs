@@ -3,15 +3,15 @@ use seed::{prelude::*, *};
 
 use jirs_data::*;
 
-use crate::api::send_ws_msg;
 use crate::model::{ModalType, Model, Page, PageContent, ProjectPage};
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::StyledSelectChange;
-use crate::shared::{drag_ev, inner_layout, ToNode};
-use crate::{BoardPageChange, EditIssueModalSection, FieldId, Msg, PageChanged};
+use crate::shared::{inner_layout, ToNode};
+use crate::ws::send_ws_msg;
+use crate::{BoardPageChange, EditIssueModalSection, FieldId, Msg, PageChanged, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     if model.user.is_none() {
@@ -33,16 +33,16 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
     };
 
     match msg {
-        Msg::WsMsg(WsMsg::AuthorizeLoaded(..))
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)))
         | Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
         | Msg::ChangePage(Page::EditIssue(..)) => {
-            send_ws_msg(jirs_data::WsMsg::ProjectRequest);
-            send_ws_msg(jirs_data::WsMsg::ProjectIssuesRequest);
-            send_ws_msg(jirs_data::WsMsg::ProjectUsersRequest);
-            send_ws_msg(jirs_data::WsMsg::IssueStatusesRequest);
+            send_ws_msg(jirs_data::WsMsg::ProjectRequest, model.ws.as_ref());
+            send_ws_msg(jirs_data::WsMsg::ProjectIssuesRequest, model.ws.as_ref());
+            send_ws_msg(jirs_data::WsMsg::ProjectUsersRequest, model.ws.as_ref());
+            send_ws_msg(jirs_data::WsMsg::IssueStatusesRequest, model.ws.as_ref());
         }
-        Msg::WsMsg(WsMsg::IssueUpdated(issue)) => {
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueUpdated(issue))) => {
             let mut old: Vec<Issue> = vec![];
             std::mem::swap(&mut old, &mut model.issues);
             for is in old {
@@ -53,7 +53,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 }
             }
         }
-        Msg::WsMsg(WsMsg::IssueDeleted(id)) => {
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueDeleted(id))) => {
             let mut old: Vec<Issue> = vec![];
             std::mem::swap(&mut old, &mut model.issues);
             for is in old {
@@ -123,7 +123,10 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             project_page.issue_drag.clear_last();
         }
         Msg::DeleteIssue(issue_id) => {
-            send_ws_msg(jirs_data::WsMsg::IssueDeleteRequest(issue_id));
+            send_ws_msg(
+                jirs_data::WsMsg::IssueDeleteRequest(issue_id),
+                model.ws.as_ref(),
+            );
         }
         _ => (),
     }
@@ -306,16 +309,16 @@ fn project_issue_list(model: &Model, status: &jirs_data::IssueStatus) -> Node<Ms
     let send_status = status.id;
     let drop_handler = drag_ev(Ev::Drop, move |ev| {
         ev.prevent_default();
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDropZone(
-            send_status,
+        Some(Msg::PageChanged(PageChanged::Board(
+            BoardPageChange::IssueDropZone(send_status),
         )))
     });
 
     let send_status = status.id;
     let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
         ev.prevent_default();
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragOverStatus(
-            send_status,
+        Some(Msg::PageChanged(PageChanged::Board(
+            BoardPageChange::IssueDragOverStatus(send_status),
         )))
     });
 
@@ -395,25 +398,27 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
 
     let issue_id = issue.id;
     let drag_started = drag_ev(Ev::DragStart, move |_| {
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStarted(
-            issue_id,
+        Some(Msg::PageChanged(PageChanged::Board(
+            BoardPageChange::IssueDragStarted(issue_id),
         )))
     });
     let drag_stopped = drag_ev(Ev::DragEnd, move |_| {
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStopped(
-            issue_id,
+        Some(Msg::PageChanged(PageChanged::Board(
+            BoardPageChange::IssueDragStopped(issue_id),
         )))
     });
     let drag_over_handler = drag_ev(Ev::DragOver, move |ev| {
         ev.prevent_default();
         ev.stop_propagation();
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::ExchangePosition(
-            issue_id,
+        Some(Msg::PageChanged(PageChanged::Board(
+            BoardPageChange::ExchangePosition(issue_id),
         )))
     });
     let issue_id = issue.id;
     let drag_out = drag_ev(Ev::DragLeave, move |_| {
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::DragLeave(issue_id)))
+        Some(Msg::PageChanged(PageChanged::Board(
+            BoardPageChange::DragLeave(issue_id),
+        )))
     });
 
     let class_list = vec!["issue"];
@@ -428,7 +433,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
             drag_stopped,
             drag_over_handler,
             drag_out,
-            p![attrs![At::Class => "title"], issue.title,],
+            p![attrs![At::Class => "title"], issue.title.as_str()],
             div![
                 attrs![At::Class => "bottom"],
                 div![
