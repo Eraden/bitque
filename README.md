@@ -124,7 +124,12 @@ cargo run --bin jirs_server
 curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 cd jirs_client
 yarn
-yarn webpack-dev-server
+./scripts/prod.sh
+```
+
+```bash
+sudo ln -s ./jirs.nginx /etc/nginx/sites-enabled/
+sudo nginx -s reload
 ```
 
 ## Issue trackers
