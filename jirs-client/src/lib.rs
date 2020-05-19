@@ -1,6 +1,8 @@
 use seed::{prelude::*, *};
 use web_sys::File;
 
+pub use changes::*;
+pub use fields::*;
 use jirs_data::*;
 
 use crate::model::{ModalType, Model, Page};
@@ -22,9 +24,6 @@ mod sign_up;
 mod users;
 pub mod validations;
 mod ws;
-
-pub use changes::*;
-pub use fields::*;
 
 pub type AppType = App<Msg, Model, Node<Msg>>;
 
@@ -235,30 +234,10 @@ pub fn render(host_url: String, ws_url: String) {
         WS_URL = ws_url;
     }
 
-    // if let Some(body) = seed::html_document().body() {
-    // use wasm_bindgen::JsCast;
-    // let body = body.dyn_ref::<web_sys::HtmlBodyElement>().unwrap().clone();
-    // let key_up_closure =
-    //     wasm_bindgen::closure::Closure::wrap(Box::new(|event: web_sys::KeyboardEvent| {
-    //         if let Some(Ok(app)) = unsafe { APP.as_mut().map(|app| app.write()) } {
-    //             let msg = Msg::GlobalKeyDown {
-    //                 key: event.key(),
-    //                 shift: event.shift_key(),
-    //                 ctrl: event.ctrl_key(),
-    //                 alt: event.alt_key(),
-    //             };
-    //             app.update(msg);
-    //         }
-    //     })
-    //         as Box<dyn Fn(web_sys::KeyboardEvent)>);
-    // body.add_event_listener_with_callback("keyup", key_up_closure.as_ref().unchecked_ref())
-    //     .unwrap();
-    // key_up_closure.forget();
-    // }
-
     let _app = seed::App::builder(update, view)
         .routes(routes)
         .after_mount(after_mount)
+        .window_events(window_events)
         .build_and_start();
 }
 
@@ -274,6 +253,29 @@ fn after_mount(url: Url, orders: &mut impl Orders<Msg>) -> AfterMount<Model> {
     log!(model);
     open_socket(&mut model, orders);
     AfterMount::new(model).url_handling(UrlHandling::PassToRoutes)
+}
+
+fn window_events(_model: &Model) -> Vec<EventHandler<Msg>> {
+    vec![keyboard_ev(
+        Ev::KeyDown,
+        move |event: web_sys::KeyboardEvent| {
+            let tag_name: String = seed::document()
+                .active_element()
+                .map(|el| el.tag_name().to_string())
+                .unwrap_or_default();
+            let key = match tag_name.to_lowercase().as_str() {
+                "input" | "textarea" => "".to_string(),
+                _ => event.key(),
+            };
+
+            Msg::GlobalKeyDown {
+                key,
+                shift: event.shift_key(),
+                ctrl: event.ctrl_key(),
+                alt: event.alt_key(),
+            }
+        },
+    )]
 }
 
 #[inline]

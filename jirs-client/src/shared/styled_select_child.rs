@@ -89,8 +89,8 @@ impl StyledSelectChildBuilder {
     pub fn match_text(&self, text: &str) -> bool {
         self.text
             .as_ref()
-            .map(|t| t.contains(text))
-            .unwrap_or_default()
+            .map(|t| t.contains(text.to_lowercase().as_str()))
+            .unwrap_or(true)
     }
 
     pub fn add_class<S>(mut self, name: S) -> Self
