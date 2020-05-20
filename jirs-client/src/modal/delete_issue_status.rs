@@ -24,7 +24,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 model.ws.as_ref(),
             );
         }
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueStatusDelete(_))) => {
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueStatusDeleted(_))) => {
             orders.skip().send_msg(Msg::ModalDropped);
         }
         _ => (),

@@ -31,7 +31,7 @@ pub enum UsersPageChange {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ProjectPageChange {
     ResetForm,
-    SubmitForm,
+    SubmitProjectSettingsForm,
     // dragging
     ColumnDragStarted(IssueStatusId),
     ColumnDragStopped(IssueStatusId),
@@ -41,6 +41,7 @@ pub enum ProjectPageChange {
     ColumnDropZone(IssueStatusId),
     // edit issue status name
     EditIssueStatusName(Option<IssueStatusId>),
+    SubmitIssueStatusForm,
 }
 
 #[derive(Clone, Debug, PartialEq)]

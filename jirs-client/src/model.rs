@@ -313,6 +313,12 @@ impl ProjectSettingsPage {
             ),
         }
     }
+
+    pub fn reset(&mut self) {
+        self.edit_column_id = None;
+        self.name.reset();
+        self.creating_issue_status = false;
+    }
 }
 
 #[derive(Debug, Default)]

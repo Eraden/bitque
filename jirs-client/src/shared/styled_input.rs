@@ -57,6 +57,10 @@ impl StyledInputState {
             _ => (),
         }
     }
+
+    pub fn reset(&mut self) {
+        self.value.clear();
+    }
 }
 
 #[derive(Debug)]

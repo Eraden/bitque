@@ -86,6 +86,18 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
         }
+        WsMsg::IssueStatusDeleted(dropped_id) => {
+            let mut old = vec![];
+            std::mem::swap(&mut model.issue_statuses, &mut old);
+            for is in old {
+                if is.id != *dropped_id {
+                    model.issue_statuses.push(is);
+                }
+            }
+            model
+                .issue_statuses
+                .sort_by(|a, b| a.position.cmp(&b.position));
+        }
         WsMsg::IssueDeleted(id) => {
             let mut old = vec![];
             std::mem::swap(&mut model.issue_statuses, &mut old);
