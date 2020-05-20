@@ -52,6 +52,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
             send_ws_msg(
                 WsMsg::AuthenticateRequest(page.email.clone(), page.username.clone()),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::BindClientRequest => {
@@ -62,7 +63,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
                     return;
                 }
             };
-            send_ws_msg(WsMsg::BindTokenCheck(bind_token), model.ws.as_ref());
+            send_ws_msg(WsMsg::BindTokenCheck(bind_token), model.ws.as_ref(), orders);
         }
         Msg::WebSocketChange(change) => match change {
             WebSocketChanged::WsMsg(WsMsg::AuthenticateSuccess) => {

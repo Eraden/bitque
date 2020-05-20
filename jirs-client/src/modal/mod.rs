@@ -19,8 +19,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
     match msg {
         Msg::ModalDropped => match model.modals.pop() {
             Some(ModalType::EditIssue(..)) | Some(ModalType::AddIssue(..)) => {
-                go_to_board();
-                orders.send_msg(Msg::ChangePage(Page::Project));
+                go_to_board(orders);
             }
             _ => (),
         },
@@ -40,14 +39,14 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::ProjectIssuesLoaded(_issues))) => {
             match model.page {
                 Page::EditIssue(issue_id) if model.modals.is_empty() => {
-                    push_edit_modal(issue_id, model)
+                    push_edit_modal(issue_id, model, orders)
                 }
                 _ => (),
             }
         }
 
         Msg::ChangePage(Page::EditIssue(issue_id)) => {
-            push_edit_modal(*issue_id, model);
+            push_edit_modal(*issue_id, model, orders);
         }
 
         Msg::ChangePage(Page::AddIssue) => {
@@ -102,7 +101,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     section![id!["modals"], modals]
 }
 
-fn push_edit_modal(issue_id: i32, model: &mut Model) {
+fn push_edit_modal(issue_id: i32, model: &mut Model, orders: &mut impl Orders<Msg>) {
     let time_tracking_type = model
         .project
         .as_ref()
@@ -118,6 +117,10 @@ fn push_edit_modal(issue_id: i32, model: &mut Model) {
             Box::new(EditIssueModal::new(issue, time_tracking_type)),
         )
     };
-    send_ws_msg(WsMsg::IssueCommentsRequest(issue_id), model.ws.as_ref());
+    send_ws_msg(
+        WsMsg::IssueCommentsRequest(issue_id),
+        model.ws.as_ref(),
+        orders,
+    );
     model.modals.push(modal);
 }

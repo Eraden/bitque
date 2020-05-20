@@ -10,7 +10,7 @@ use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::{inner_layout, ToNode};
-use crate::ws::send_ws_msg;
+use crate::ws::{enqueue_ws_msg, send_ws_msg};
 use crate::{BoardPageChange, EditIssueModalSection, FieldId, Msg, PageChanged, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
@@ -37,10 +37,16 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         | Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
         | Msg::ChangePage(Page::EditIssue(..)) => {
-            send_ws_msg(jirs_data::WsMsg::ProjectRequest, model.ws.as_ref());
-            send_ws_msg(jirs_data::WsMsg::ProjectIssuesRequest, model.ws.as_ref());
-            send_ws_msg(jirs_data::WsMsg::ProjectUsersRequest, model.ws.as_ref());
-            send_ws_msg(jirs_data::WsMsg::IssueStatusesRequest, model.ws.as_ref());
+            enqueue_ws_msg(
+                vec![
+                    jirs_data::WsMsg::ProjectRequest,
+                    jirs_data::WsMsg::ProjectIssuesRequest,
+                    jirs_data::WsMsg::ProjectUsersRequest,
+                    jirs_data::WsMsg::IssueStatusesRequest,
+                ],
+                model.ws.as_ref(),
+                orders,
+            );
         }
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueUpdated(issue))) => {
             let mut old: Vec<Issue> = vec![];
@@ -108,7 +114,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             crate::ws::issue::drag_started(issue_id, model)
         }
         Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStopped(_))) => {
-            crate::ws::issue::sync(model);
+            crate::ws::issue::sync(model, orders);
         }
         Msg::PageChanged(PageChanged::Board(BoardPageChange::ExchangePosition(
             issue_bellow_id,
@@ -117,7 +123,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             crate::ws::issue::change_status(status, model)
         }
         Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDropZone(_status))) => {
-            crate::ws::issue::sync(model)
+            crate::ws::issue::sync(model, orders)
         }
         Msg::PageChanged(PageChanged::Board(BoardPageChange::DragLeave(_id))) => {
             project_page.issue_drag.clear_last();
@@ -126,6 +132,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             send_ws_msg(
                 jirs_data::WsMsg::IssueDeleteRequest(issue_id),
                 model.ws.as_ref(),
+                orders,
             );
         }
         _ => (),

@@ -1,9 +1,11 @@
+use seed::prelude::Orders;
 use seed::*;
 
 use jirs_data::*;
 
 use crate::model::{Model, PageContent};
 use crate::ws::send_ws_msg;
+use crate::Msg;
 
 pub fn drag_started(issue_id: IssueId, model: &mut Model) {
     let project_page = match &mut model.page_content {
@@ -76,7 +78,7 @@ pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
     project_page.issue_drag.last_id = Some(issue_bellow_id);
 }
 
-pub fn sync(model: &mut Model) {
+pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
     // log!("------------------------------------------------------------------");
     // log!("|                SYNC                                            |");
     // log!("------------------------------------------------------------------");
@@ -97,6 +99,7 @@ pub fn sync(model: &mut Model) {
                 PayloadVariant::I32(issue.issue_status_id),
             ),
             model.ws.as_ref(),
+            orders,
         );
         send_ws_msg(
             WsMsg::IssueUpdateRequest(
@@ -105,6 +108,7 @@ pub fn sync(model: &mut Model) {
                 PayloadVariant::I32(issue.list_position),
             ),
             model.ws.as_ref(),
+            orders,
         );
     }
     project_page.issue_drag.clear();

@@ -3,15 +3,41 @@ use seed::prelude::*;
 use jirs_data::WsMsg;
 
 use crate::model::*;
-use crate::shared::write_auth_token;
+use crate::shared::{go_to_board, write_auth_token};
 use crate::{Msg, WebSocketChanged};
 
 pub mod issue;
 
-pub fn send_ws_msg(msg: WsMsg, ws: Option<&WebSocket>) {
+pub fn flush_queue(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    use seed::browser::web_socket::State;
+    match model.ws.as_ref() {
+        Some(ws) if ws.state() != State::Open => return,
+        None => return,
+        _ => (),
+    };
+    let mut old = vec![];
+    std::mem::swap(&mut model.ws_queue, &mut old);
+    for msg in old {
+        send_ws_msg(msg, model.ws.as_ref(), orders);
+    }
+}
+
+pub fn enqueue_ws_msg(v: Vec<WsMsg>, ws: Option<&WebSocket>, orders: &mut impl Orders<Msg>) {
+    for msg in v {
+        send_ws_msg(msg, ws.clone(), orders);
+    }
+}
+
+pub fn send_ws_msg(msg: WsMsg, ws: Option<&WebSocket>, orders: &mut impl Orders<Msg>) {
+    use seed::browser::web_socket::State;
     let ws = match ws {
-        Some(ws) => ws,
-        _ => return,
+        Some(ws) if ws.state() == State::Open => ws,
+        _ => {
+            orders
+                .skip()
+                .send_msg(Msg::WebSocketChange(WebSocketChanged::Bounced(msg)));
+            return;
+        }
     };
     let binary = bincode::serialize(&msg).unwrap();
     ws.send_bytes(binary.as_slice())
@@ -19,6 +45,16 @@ pub fn send_ws_msg(msg: WsMsg, ws: Option<&WebSocket>) {
 }
 
 pub fn open_socket(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    use seed::browser::web_socket::State;
+    use seed::{prelude::*, *};
+    log!(model.ws.as_ref().map(|ws| ws.state()));
+
+    match model.ws.as_ref() {
+        Some(ws) if ws.state() != State::Closed => {
+            return;
+        }
+        _ => (),
+    };
     if model.host_url.is_empty() {
         return;
     }
@@ -43,6 +79,7 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         // auth
         WsMsg::AuthorizeLoaded(Ok(user)) => {
             model.user = Some(user.clone());
+            go_to_board(orders);
         }
         WsMsg::AuthorizeExpired => {
             if let Ok(msg) = write_auth_token(None) {

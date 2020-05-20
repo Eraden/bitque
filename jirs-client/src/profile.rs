@@ -14,15 +14,14 @@ use crate::ws::send_ws_msg;
 use crate::{FieldId, Msg, PageChanged, ProfilePageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
-    let user = match model.user {
-        Some(ref user) => user,
-        _ => return,
-    };
-
     match msg {
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)))
         | Msg::ChangePage(Page::Profile) => {
-            send_ws_msg(WsMsg::ProjectRequest, model.ws.as_ref());
+            send_ws_msg(WsMsg::ProjectRequest, model.ws.as_ref(), orders);
+            let user = match model.user {
+                Some(ref user) => user,
+                _ => return,
+            };
             model.page_content = PageContent::Profile(Box::new(ProfilePage::new(user)));
         }
         _ => (),
@@ -71,6 +70,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                     profile_page.name.value.clone(),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         _ => (),

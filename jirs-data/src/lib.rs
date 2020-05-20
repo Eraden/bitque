@@ -736,4 +736,8 @@ pub enum WsMsg {
 
     // messages
     Message(Message),
+    MessagesRequest,
+    MessagesResponse(Vec<Message>),
+    MessageMarkSeen(MessageId),
+    MessageMarkedSeen(MessageId),
 }

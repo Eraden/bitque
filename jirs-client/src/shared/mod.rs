@@ -1,9 +1,11 @@
-use seed::{prelude::*, *};
 use std::str::FromStr;
+
+use seed::{prelude::*, *};
 
 use jirs_data::*;
 
 use crate::model::Model;
+use crate::model::Page;
 use crate::Msg;
 
 pub mod aside;
@@ -33,12 +35,14 @@ pub trait ToChild {
     fn to_child(&self) -> Self::Builder;
 }
 
-pub fn go_to_board() {
+pub fn go_to_board(orders: &mut impl Orders<Msg>) {
     go_to("/board");
+    orders.skip().send_msg(Msg::ChangePage(Page::Project));
 }
 
-pub fn go_to_login() {
+pub fn go_to_login(orders: &mut impl Orders<Msg>) {
     go_to("/login");
+    orders.skip().send_msg(Msg::ChangePage(Page::SignIn));
 }
 
 pub fn go_to(url: &str) {

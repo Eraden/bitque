@@ -53,6 +53,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             send_ws_msg(
                 jirs_data::WsMsg::IssueCreateRequest(payload),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueCreated(issue))) => {

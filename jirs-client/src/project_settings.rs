@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use seed::{prelude::*, *};
 use wasm_bindgen::__rt::std::collections::HashMap;
 
@@ -18,7 +20,7 @@ use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::{inner_layout, ToChild, ToNode};
-use crate::ws::send_ws_msg;
+use crate::ws::{enqueue_ws_msg, send_ws_msg};
 use crate::FieldChange::TabChanged;
 use crate::{
     model, FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange, WebSocketChanged,
@@ -389,9 +391,15 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     match msg {
         Msg::WebSocketChange(ref change) => match change {
             WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
-                send_ws_msg(WsMsg::ProjectRequest, model.ws.as_ref());
-                send_ws_msg(WsMsg::IssueStatusesRequest, model.ws.as_ref());
-                send_ws_msg(WsMsg::ProjectIssuesRequest, model.ws.as_ref());
+                enqueue_ws_msg(
+                    vec![
+                        WsMsg::ProjectRequest,
+                        WsMsg::IssueStatusesRequest,
+                        WsMsg::ProjectIssuesRequest,
+                    ],
+                    model.ws.as_ref(),
+                    orders,
+                );
             }
             WebSocketChanged::WsMsg(WsMsg::ProjectLoaded(..)) => {
                 build_page_content(model);
@@ -409,9 +417,15 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         Msg::ChangePage(Page::ProjectSettings) => {
             build_page_content(model);
             if model.user.is_some() {
-                send_ws_msg(WsMsg::ProjectRequest, model.ws.as_ref());
-                send_ws_msg(WsMsg::IssueStatusesRequest, model.ws.as_ref());
-                send_ws_msg(WsMsg::ProjectIssuesRequest, model.ws.as_ref());
+                enqueue_ws_msg(
+                    vec![
+                        WsMsg::ProjectRequest,
+                        WsMsg::IssueStatusesRequest,
+                        WsMsg::ProjectIssuesRequest,
+                    ],
+                    model.ws.as_ref(),
+                    orders,
+                );
             }
         }
         _ => (),
@@ -465,6 +479,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
                     time_tracking: Some(page.time_tracking.value.into()),
                 }),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDragStarted(
@@ -475,7 +490,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDragStopped(
             _issue_status_id,
         ))) => {
-            sync(model);
+            sync(model, orders);
         }
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDragLeave(
             _issue_status_id,
@@ -486,7 +501,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDropZone(
             _issue_status_id,
         ))) => {
-            sync(model);
+            sync(model, orders);
         }
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(
             id,
@@ -503,6 +518,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
                     send_ws_msg(
                         WsMsg::IssueStatusUpdate(id, name.to_string(), pos),
                         model.ws.as_ref(),
+                        orders,
                     );
                 }
             }
@@ -525,7 +541,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
             let name = page.name.value.clone();
             let position = model.issue_statuses.len();
             let ws_msg = WsMsg::IssueStatusCreate(name, position as i32);
-            send_ws_msg(ws_msg, model.ws.as_ref());
+            send_ws_msg(ws_msg, model.ws.as_ref(), orders);
         }
         _ => (),
     }
@@ -581,20 +597,25 @@ fn exchange_position(bellow_id: IssueStatusId, model: &mut Model) {
     page.column_drag.last_id = Some(bellow_id);
 }
 
-fn sync(model: &mut Model) {
-    let page = match &mut model.page_content {
-        PageContent::ProjectSettings(page) => page,
+fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    let dirty = match &mut model.page_content {
+        PageContent::ProjectSettings(page) => {
+            let mut old = HashSet::new();
+            std::mem::swap(&mut old, &mut page.column_drag.dirty);
+            old
+        }
         _ => return error!("bad content type"),
     };
-    for id in page.column_drag.dirty.iter() {
+    for id in dirty {
         let IssueStatus { name, position, .. } =
-            match model.issue_statuses.iter().find(|is| is.id == *id) {
+            match model.issue_statuses.iter().find(|is| is.id == id) {
                 Some(is) => is,
                 _ => continue,
             };
         send_ws_msg(
-            WsMsg::IssueStatusUpdate(*id, name.clone(), *position),
+            WsMsg::IssueStatusUpdate(id, name.clone(), *position),
             model.ws.as_ref(),
+            orders,
         );
     }
 }

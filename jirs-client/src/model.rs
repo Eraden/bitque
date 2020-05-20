@@ -434,10 +434,12 @@ pub enum PageContent {
 #[derive(Debug)]
 pub struct Model {
     pub ws: Option<WebSocket>,
+    pub ws_queue: Vec<WsMsg>,
     pub host_url: String,
     pub ws_url: String,
     pub access_token: Option<Uuid>,
     pub about_tooltip_visible: bool,
+    pub messages_tooltip_visible: bool,
 
     // mapped
     pub comments_by_project_id: HashMap<ProjectId, Vec<Comment>>,
@@ -467,6 +469,7 @@ impl Model {
     pub fn new(host_url: String, ws_url: String) -> Self {
         Self {
             ws: None,
+            ws_queue: vec![],
             access_token: None,
             user: None,
             issue_form: None,
@@ -483,6 +486,7 @@ impl Model {
             project: None,
             comments: vec![],
             about_tooltip_visible: false,
+            messages_tooltip_visible: false,
             issue_statuses: vec![],
             messages: vec![Message {
                 id: 0,

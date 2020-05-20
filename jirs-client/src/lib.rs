@@ -7,8 +7,9 @@ use jirs_data::*;
 
 use crate::model::{ModalType, Model, Page};
 use crate::shared::styled_select::StyledSelectChange;
-use crate::shared::{go_to_board, go_to_login};
-use crate::ws::{open_socket, read_incoming, send_ws_msg};
+use crate::shared::styled_tooltip::Variant as StyledTooltip;
+use crate::shared::{go_to_board, go_to_login, styled_tooltip};
+use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
 
 mod changes;
 mod fields;
@@ -40,7 +41,7 @@ pub enum Msg {
 
     StyledSelectChanged(FieldId, StyledSelectChange),
     InternalFailure(String),
-    ToggleAboutTooltip,
+    ToggleTooltip(StyledTooltip),
 
     // Auth Token
     AuthTokenStored,
@@ -100,12 +101,13 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         Msg::WebSocketChange(change) => {
             match change {
                 WebSocketChanged::WebSocketOpened => {
-                    authorize_or_redirect(model);
-                    send_ws_msg(WsMsg::Ping, model.ws.as_ref());
+                    flush_queue(model, orders);
+                    send_ws_msg(WsMsg::Ping, model.ws.as_ref(), orders);
+                    authorize_or_redirect(model, orders);
                     return;
                 }
                 WebSocketChanged::SendPing => {
-                    send_ws_msg(WsMsg::Ping, model.ws.as_ref());
+                    send_ws_msg(WsMsg::Ping, model.ws.as_ref(), orders);
                     return;
                 }
                 WebSocketChanged::WebSocketMessage(incoming) => {
@@ -135,6 +137,11 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                 WebSocketChanged::WebSocketClosed => {
                     open_socket(model, orders);
                 }
+                WebSocketChanged::Bounced(ws_msg) => {
+                    model.ws_queue.push(ws_msg);
+                    open_socket(model, orders);
+                    return;
+                }
             };
             Msg::WebSocketChange(change)
         }
@@ -147,23 +154,24 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
 
     match &msg {
         Msg::AuthTokenStored => {
-            go_to_board();
-            orders.skip().send_msg(Msg::ChangePage(Page::Project));
-            authorize_or_redirect(model);
+            go_to_board(orders);
             return;
         }
         Msg::AuthTokenErased => {
-            go_to_login();
-            orders.skip().send_msg(Msg::ChangePage(Page::SignIn));
-            authorize_or_redirect(model);
+            go_to_login(orders);
             return;
         }
         Msg::ChangePage(page) => {
             model.page = *page;
         }
-        Msg::ToggleAboutTooltip => {
-            model.about_tooltip_visible = !model.about_tooltip_visible;
-        }
+        Msg::ToggleTooltip(variant) => match variant {
+            styled_tooltip::Variant::About => {
+                model.about_tooltip_visible = !model.about_tooltip_visible;
+            }
+            styled_tooltip::Variant::Messages => {
+                model.messages_tooltip_visible = !model.messages_tooltip_visible;
+            }
+        },
         _ => (),
     }
     crate::modal::update(&msg, model, orders);
@@ -250,7 +258,6 @@ fn after_mount(url: Url, orders: &mut impl Orders<Msg>) -> AfterMount<Model> {
         WS_URL = "".to_string();
     }
     model.page = resolve_page(url).unwrap_or_else(|| Page::Project);
-    log!(model);
     open_socket(&mut model, orders);
     AfterMount::new(model).url_handling(UrlHandling::PassToRoutes)
 }
@@ -279,17 +286,17 @@ fn window_events(_model: &Model) -> Vec<EventHandler<Msg>> {
 }
 
 #[inline]
-fn authorize_or_redirect(model: &Model) {
+fn authorize_or_redirect(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    let pathname = seed::document().location().unwrap().pathname().unwrap();
     match crate::shared::read_auth_token() {
         Ok(token) => {
-            send_ws_msg(WsMsg::AuthorizeRequest(token), model.ws.as_ref());
+            send_ws_msg(WsMsg::AuthorizeRequest(token), model.ws.as_ref(), orders);
         }
         Err(..) => {
-            let pathname = seed::document().location().unwrap().pathname().unwrap();
             match pathname.as_str() {
                 "/login" | "/register" | "/invite" => {}
                 _ => {
-                    go_to_login();
+                    go_to_login(orders);
                 }
             };
         }

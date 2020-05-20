@@ -50,6 +50,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::IssueType(modal.payload.issue_type),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StyledSelectChanged(
@@ -64,6 +65,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::I32(modal.payload.issue_status_id),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StyledSelectChanged(
@@ -78,6 +80,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::I32(modal.payload.reporter_id),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StyledSelectChanged(
@@ -92,6 +95,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::VecI32(modal.payload.user_ids.clone()),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StyledSelectChanged(
@@ -113,6 +117,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::VecI32(modal.payload.user_ids.clone()),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StyledSelectChanged(
@@ -127,6 +132,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::IssuePriority(modal.payload.priority),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StrInputChanged(
@@ -141,6 +147,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::String(modal.payload.title.clone()),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StrInputChanged(
@@ -163,6 +170,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     ),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         // TimeSpent
@@ -178,6 +186,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::OptionI32(modal.payload.time_spent),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StyledSelectChanged(
@@ -192,6 +201,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::OptionI32(modal.payload.time_spent),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         // Time Remaining
@@ -207,6 +217,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::OptionI32(modal.payload.time_remaining),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StyledSelectChanged(
@@ -222,6 +233,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::OptionI32(modal.payload.time_remaining),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         // Estimate
@@ -237,6 +249,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::OptionI32(modal.payload.estimate),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::StyledSelectChanged(
@@ -251,6 +264,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::OptionI32(modal.payload.estimate),
                 ),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::ModalChanged(FieldChange::TabChanged(
@@ -290,7 +304,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     issue_id: modal.id,
                 }),
             };
-            send_ws_msg(msg, model.ws.as_ref());
+            send_ws_msg(msg, model.ws.as_ref(), orders);
             orders
                 .skip()
                 .send_msg(Msg::ModalChanged(FieldChange::ToggleCommentForm(
@@ -314,7 +328,11 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             modal.comment_form.creating = true;
         }
         Msg::DeleteComment(comment_id) => {
-            send_ws_msg(WsMsg::CommentDeleteRequest(*comment_id), model.ws.as_ref());
+            send_ws_msg(
+                WsMsg::CommentDeleteRequest(*comment_id),
+                model.ws.as_ref(),
+                orders,
+            );
             orders.skip().send_msg(Msg::ModalDropped);
         }
 

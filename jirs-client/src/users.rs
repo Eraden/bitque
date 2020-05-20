@@ -10,7 +10,7 @@ use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::*;
 use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::validations::is_email;
-use crate::ws::send_ws_msg;
+use crate::ws::{enqueue_ws_msg, send_ws_msg};
 use crate::{FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
@@ -28,13 +28,19 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
     match msg {
         Msg::ChangePage(Page::Users) if model.user.is_some() => {
-            send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref());
-            send_ws_msg(WsMsg::InvitedUsersRequest, model.ws.as_ref());
+            enqueue_ws_msg(
+                vec![WsMsg::InvitationListRequest, WsMsg::InvitedUsersRequest],
+                model.ws.as_ref(),
+                orders,
+            );
         }
         Msg::WebSocketChange(change) => match change {
             WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) if model.user.is_some() => {
-                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref());
-                send_ws_msg(WsMsg::InvitedUsersRequest, model.ws.as_ref());
+                enqueue_ws_msg(
+                    vec![WsMsg::InvitationListRequest, WsMsg::InvitedUsersRequest],
+                    model.ws.as_ref(),
+                    orders,
+                );
             }
             WebSocketChanged::WsMsg(WsMsg::InvitedUsersLoaded(users)) => {
                 page.invited_users = users;
@@ -51,7 +57,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     }
                     page.invitations.push(invitation);
                 }
-                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref());
+                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref(), orders);
             }
             WebSocketChanged::WsMsg(WsMsg::InvitedUserRemoveSuccess(email)) => {
                 let mut old = vec![];
@@ -63,7 +69,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
             WebSocketChanged::WsMsg(WsMsg::InvitationSendSuccess) => {
-                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref());
+                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref(), orders);
                 page.form_state = InvitationFormState::Succeed;
             }
             WebSocketChanged::WsMsg(WsMsg::InvitationSendFailure) => {
@@ -102,16 +108,22 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     email: page.email.clone(),
                 },
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::InviteRevokeRequest(invitation_id) => {
             send_ws_msg(
                 WsMsg::InvitationRevokeRequest(invitation_id),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::InvitedUserRemove(email) => {
-            send_ws_msg(WsMsg::InvitedUserRemoveRequest(email), model.ws.as_ref());
+            send_ws_msg(
+                WsMsg::InvitedUserRemoveRequest(email),
+                model.ws.as_ref(),
+                orders,
+            );
         }
         _ => (),
     }

@@ -22,6 +22,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             crate::ws::send_ws_msg(
                 WsMsg::IssueStatusDelete(*issue_status_id),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueStatusDeleted(_))) => {

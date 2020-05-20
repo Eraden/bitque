@@ -14,7 +14,7 @@ use crate::validations::is_email;
 use crate::ws::send_ws_msg;
 use crate::{model, FieldId, Msg, WebSocketChanged};
 
-pub fn update(msg: Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>) {
+pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::SignUp {
         return;
     }
@@ -45,6 +45,7 @@ pub fn update(msg: Msg, model: &mut model::Model, _orders: &mut impl Orders<Msg>
             send_ws_msg(
                 WsMsg::SignUpRequest(page.email.clone(), page.username.clone()),
                 model.ws.as_ref(),
+                orders,
             );
         }
         Msg::WebSocketChange(change) => match change {

@@ -1,8 +1,9 @@
-use crate::FieldId;
-use jirs_data::{IssueId, IssueStatusId};
+use seed::prelude::WebSocketMessage;
+
+use jirs_data::{IssueId, IssueStatusId, WsMsg};
 
 use crate::shared::styled_editor::Mode as TabMode;
-use seed::prelude::WebSocketMessage;
+use crate::FieldId;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum FieldChange {
@@ -59,10 +60,11 @@ pub enum PageChanged {
 
 #[derive(Debug)]
 pub enum WebSocketChanged {
-    WsMsg(jirs_data::WsMsg),
+    WsMsg(WsMsg),
     WebSocketMessage(WebSocketMessage),
     WebSocketMessageLoaded(Vec<u8>),
     WebSocketOpened,
     WebSocketClosed,
     SendPing,
+    Bounced(WsMsg),
 }
