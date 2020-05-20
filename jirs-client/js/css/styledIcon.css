@@ -168,3 +168,11 @@ i.styledIcon.arrowRight:before {
     font-family: "jira";
     content: "\e91f";
 }
+
+i.styledIcon.user:before {
+    content: "\ec8e";
+}
+
+i.styledIcon.message:before {
+    content: "\efac";
+}

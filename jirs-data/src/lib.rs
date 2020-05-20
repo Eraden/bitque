@@ -26,6 +26,7 @@ pub type TokenId = i32;
 pub type IssueStatusId = i32;
 pub type InvitationId = i32;
 pub type Position = i32;
+pub type MessageId = i32;
 pub type EmailString = String;
 pub type UsernameString = String;
 pub type TitleString = String;
@@ -506,8 +507,8 @@ pub struct UpdateIssuePayload {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct IssueAssignee {
     pub id: i32,
-    pub issue_id: i32,
-    pub user_id: i32,
+    pub issue_id: IssueId,
+    pub user_id: UserId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -533,6 +534,19 @@ impl From<Issue> for UpdateIssuePayload {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct Message {
+    pub id: MessageId,
+    pub receiver_id: UserId,
+    pub sender_id: UserId,
+    pub summary: String,
+    pub description: String,
+    pub message_type: String,
+    pub hyper_link: String,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct CreateCommentPayload {
     pub user_id: Option<UserId>,
     pub issue_id: IssueId,
@@ -541,7 +555,7 @@ pub struct CreateCommentPayload {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct UpdateCommentPayload {
-    pub id: i32,
+    pub id: CommentId,
     pub body: String,
 }
 
@@ -719,4 +733,7 @@ pub enum WsMsg {
     AvatarUrlChanged(UserId, String),
     ProfileUpdate(EmailString, UsernameString),
     ProfileUpdated,
+
+    // messages
+    Message(Message),
 }

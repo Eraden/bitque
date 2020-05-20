@@ -3,9 +3,25 @@ use seed::{prelude::*, *};
 use crate::model::Model;
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
-use crate::shared::styled_icon::Icon;
+use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::{styled_tooltip, ToNode};
 use crate::Msg;
+
+trait IntoNavItemIcon {
+    fn into_nav_item_icon(self) -> Node<Msg>;
+}
+
+impl IntoNavItemIcon for Node<Msg> {
+    fn into_nav_item_icon(self) -> Node<Msg> {
+        self
+    }
+}
+
+impl IntoNavItemIcon for Icon {
+    fn into_nav_item_icon(self) -> Node<Msg> {
+        StyledIcon::build(self).size(21).build().into_node()
+    }
+}
 
 pub fn render(model: &Model) -> Vec<Node<Msg>> {
     let logo_svg = Node::from_html(include_str!("../../static/logo.svg"));
@@ -20,7 +36,13 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
                 .build()
                 .into_node()
         ],
-        _ => i![attrs![At::Class => format!("styledIcon {}", Icon::Plus)]],
+        _ => StyledIcon::build(Icon::User).size(21).build().into_node(),
+    };
+
+    let messages = if model.messages.is_empty() {
+        empty![]
+    } else {
+        navbar_left_item("Messages", Icon::Message, None)
     };
 
     vec![
@@ -31,30 +53,28 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
                 attrs![At::Class => "logoLink", At::Href => "/"],
                 div![attrs![At::Class => "styledLogo"], logo_svg]
             ],
-            navbar_left_item(model, "Search issues", Icon::Search),
-            a![
-                attrs![At::Class => "item"; At::Href=> "/add-issue"; ],
-                i![attrs![At::Class => format!("styledIcon {}", Icon::Plus)]],
-                span![attrs![At::Class => "itemText"], "Create Issue"]
-            ],
+            navbar_left_item("Search issues", Icon::Search, None),
+            navbar_left_item("Create Issue", Icon::Plus, Some("/add-issue")),
             div![
                 class!["bottom"],
-                div![
-                    class!["item"],
-                    attrs![At::Href=> "/profile"],
-                    user_icon,
-                    span![class!["itemText"], "Profile"]
-                ],
-                about_tooltip(model, navbar_left_item(model, "About", Icon::Help)),
+                navbar_left_item("Profile", user_icon, Some("/profile")),
+                messages,
+                about_tooltip(model, navbar_left_item("About", Icon::Help, None)),
             ],
         ],
     ]
 }
 
-fn navbar_left_item(_model: &Model, text: &str, logo: Icon) -> Node<Msg> {
-    div![
+fn navbar_left_item<I>(text: &str, icon: I, href: Option<&str>) -> Node<Msg>
+where
+    I: IntoNavItemIcon,
+{
+    let styled_icon = icon.into_nav_item_icon();
+    let href = href.unwrap_or_else(|| "#");
+    a![
         class!["item"],
-        i![attrs![At::Class => format!("styledIcon {}", logo)]],
+        attrs![At::Href => href],
+        styled_icon,
         span![class!["itemText"], text]
     ]
 }

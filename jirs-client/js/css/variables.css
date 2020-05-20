@@ -18,6 +18,7 @@
     --borderLightest: rgb(223, 225, 230);
     --borderLight: rgb(193, 199, 208);
     --borderInputFocus: rgb(76, 154, 255);
+    --asideIcon: rgb(222, 235, 254);
 }
 
 :root {

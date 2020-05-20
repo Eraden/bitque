@@ -62,19 +62,15 @@ aside#navbar-left .item > .styledIcon > .styledAvatar {
     height: 27px;
 }
 
-aside#navbar-left > .item > .styledIcon.search {
+aside#navbar-left > .item > i.styledIcon.search {
     font-size: 22px;
-    color: #DEEBFE;
+    color: var(--asideIcon);
 }
 
-aside#navbar-left > .item > .styledIcon.plus {
+aside#navbar-left > .item > i.styledIcon,
+aside#navbar-left > .bottom > .item > i.styledIcon {
     font-size: 27px;
-    color: #DEEBFE;
-}
-
-aside#navbar-left .item > .styledIcon.help {
-    font-size: 27px;
-    color: #DEEBFE;
+    color: var(--asideIcon);
 }
 
 aside#navbar-left .item > .itemText {
@@ -97,7 +93,8 @@ aside#navbar-left > .bottom {
     width: 100%;
 }
 
-aside#navbar-left > .bottom > .aboutTooltip {
+aside#navbar-left > .bottom > .aboutTooltip > .item > i.styledIcon {
+    color: var(--asideIcon);
 }
 
 aside#navbar-left:hover .item > .itemText {

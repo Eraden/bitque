@@ -73,6 +73,12 @@ nav#sidebar .linkItem > a {
 
 nav#sidebar .linkItem.notAllowed, nav#sidebar .linkItem.notAllowed > a {
     cursor: not-allowed;
+    color: var(--textDark);
+}
+
+nav#sidebar .linkItem.notAllowed, nav#sidebar .linkItem.notAllowed > a > .styledIcon {
+    cursor: not-allowed;
+    color: var(--textDark);
 }
 
 nav#sidebar .linkItem:hover {

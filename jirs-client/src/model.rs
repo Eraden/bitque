@@ -1,5 +1,6 @@
 use std::collections::hash_map::HashMap;
 
+use seed::browser::web_socket::WebSocket;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -13,7 +14,6 @@ use crate::shared::styled_image_input::StyledImageInputState;
 use crate::shared::styled_input::StyledInputState;
 use crate::shared::styled_select::StyledSelectState;
 use crate::{EditIssueModalSection, FieldId, ProjectFieldId /*HOST_URL*/};
-use seed::browser::web_socket::WebSocket;
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
@@ -460,6 +460,7 @@ pub struct Model {
     pub users: Vec<User>,
     pub comments: Vec<Comment>,
     pub issue_statuses: Vec<IssueStatus>,
+    pub messages: Vec<Message>,
 }
 
 impl Model {
@@ -483,6 +484,17 @@ impl Model {
             comments: vec![],
             about_tooltip_visible: false,
             issue_statuses: vec![],
+            messages: vec![Message {
+                id: 0,
+                receiver_id: 1,
+                sender_id: 2,
+                summary: "You have been invited".to_string(),
+                description: "You have been invited to project A".to_string(),
+                message_type: "project-invitation".to_string(),
+                hyper_link: "/project/1".to_string(),
+                created_at: chrono::NaiveDateTime::from_timestamp(4567890, 123),
+                updated_at: chrono::NaiveDateTime::from_timestamp(1234567, 098),
+            }],
         }
     }
 }
