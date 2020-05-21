@@ -71,7 +71,14 @@ impl WsHandler<UpdateIssueHandler> for WebSocketActor {
         let assignees: Vec<IssueAssignee> =
             match block_on(self.db.send(LoadAssignees { issue_id: issue.id })) {
                 Ok(Ok(v)) => v,
-                _ => return Ok(None),
+                Ok(Err(e)) => {
+                    error!("{:?}", e);
+                    return Ok(None);
+                }
+                Err(e) => {
+                    error!("{}", e);
+                    return Ok(None);
+                }
             };
 
         for assignee in assignees {
@@ -102,7 +109,14 @@ impl WsHandler<CreateIssuePayload> for WebSocketActor {
         };
         let m = match block_on(self.db.send(msg)) {
             Ok(Ok(issue)) => Some(WsMsg::IssueCreated(issue.into())),
-            _ => None,
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
         Ok(m)
     }
@@ -120,7 +134,14 @@ impl WsHandler<DeleteIssue> for WebSocketActor {
                 .send(crate::db::issues::DeleteIssue { issue_id: msg.id }),
         ) {
             Ok(Ok(_)) => Some(WsMsg::IssueDeleted(msg.id)),
-            _ => None,
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
         Ok(m)
     }
@@ -130,7 +151,7 @@ pub struct LoadIssues;
 
 impl WsHandler<LoadIssues> for WebSocketActor {
     fn handle_msg(&mut self, _msg: LoadIssues, _ctx: &mut Self::Context) -> WsResult {
-        let project_id = self.require_user()?.project_id;
+        let project_id = self.require_user_project()?.project_id;
 
         let issues: Vec<jirs_data::Issue> =
             match block_on(self.db.send(LoadProjectIssues { project_id })) {

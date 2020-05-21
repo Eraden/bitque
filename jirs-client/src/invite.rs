@@ -12,7 +12,7 @@ use crate::{FieldId, Msg};
 
 pub fn update(msg: Msg, model: &mut Model, _orders: &mut impl Orders<Msg>) {
     if let Msg::ChangePage(Page::Project) = msg {
-        model.page_content = PageContent::Invite(Box::new(InvitePage::default()));
+        build_page_content(model);
         return;
     }
 
@@ -25,6 +25,10 @@ pub fn update(msg: Msg, model: &mut Model, _orders: &mut impl Orders<Msg>) {
         page.token_touched = true;
         page.token = text;
     }
+}
+
+fn build_page_content(model: &mut Model) {
+    model.page_content = PageContent::Invite(Box::new(InvitePage::default()));
 }
 
 pub fn view(model: &Model) -> Node<Msg> {

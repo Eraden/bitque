@@ -16,7 +16,14 @@ impl WsHandler<LoadIssueComments> for WebSocketActor {
             issue_id: msg.issue_id,
         })) {
             Ok(Ok(comments)) => comments,
-            _ => return Ok(None),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
 
         Ok(Some(WsMsg::IssueCommentsLoaded(comments)))
@@ -38,7 +45,14 @@ impl WsHandler<CreateCommentPayload> for WebSocketActor {
             body: msg.body,
         })) {
             Ok(Ok(_)) => (),
-            _ => return Ok(None),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
         self.handle_msg(LoadIssueComments { issue_id }, ctx)
     }
@@ -62,7 +76,14 @@ impl WsHandler<UpdateCommentPayload> for WebSocketActor {
             body,
         })) {
             Ok(Ok(comment)) => comment.issue_id,
-            _ => return Ok(None),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
         if let Some(v) = self.handle_msg(LoadIssueComments { issue_id }, ctx)? {
             self.broadcast(&v);
@@ -87,7 +108,14 @@ impl WsHandler<DeleteComment> for WebSocketActor {
         };
         match block_on(self.db.send(m)) {
             Ok(Ok(_)) => (),
-            _ => return Ok(None),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
 
         Ok(Some(WsMsg::CommentDeleted(msg.comment_id)))

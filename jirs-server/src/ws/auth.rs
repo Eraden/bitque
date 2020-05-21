@@ -78,6 +78,9 @@ impl WsHandler<CheckAuthToken> for WebSocketActor {
             _ => return Ok(Some(WsMsg::AuthorizeExpired)),
         };
         self.current_user = Some(user.clone());
+        self.current_user_project = self.load_user_project().ok();
+        self.current_project = self.load_project().ok();
+
         block_on(self.join_channel(ctx.address().recipient()));
         Ok(Some(WsMsg::AuthorizeLoaded(Ok(user))))
     }

@@ -2,7 +2,7 @@ use seed::{prelude::*, *};
 
 use jirs_data::{SignUpFieldId, WsMsg};
 
-use crate::model::{Page, PageContent, SignUpPage};
+use crate::model::{Model, Page, PageContent, SignUpPage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
@@ -21,7 +21,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
 
     match msg {
         Msg::ChangePage(Page::SignUp) => {
-            model.page_content = PageContent::SignUp(Box::new(SignUpPage::default()));
+            build_page_content(model);
             return;
         }
         _ => (),
@@ -59,6 +59,10 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         },
         _ => (),
     }
+}
+
+fn build_page_content(model: &mut Model) {
+    model.page_content = PageContent::SignUp(Box::new(SignUpPage::default()));
 }
 
 pub fn view(model: &model::Model) -> Node<Msg> {

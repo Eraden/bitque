@@ -17,6 +17,7 @@ pub mod issue_statuses;
 pub mod issues;
 pub mod projects;
 pub mod tokens;
+pub mod user_projects;
 pub mod users;
 
 #[cfg(debug_assertions)]

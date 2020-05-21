@@ -21,6 +21,7 @@ pub trait ToVec {
 pub type IssueId = i32;
 pub type ProjectId = i32;
 pub type UserId = i32;
+pub type UserProjectId = i32;
 pub type CommentId = i32;
 pub type TokenId = i32;
 pub type IssueStatusId = i32;
@@ -468,10 +469,21 @@ pub struct User {
     pub name: String,
     pub email: String,
     pub avatar_url: Option<String>,
-    pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-    pub user_role: UserRole,
+}
+
+#[cfg_attr(feature = "backend", derive(Queryable))]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct UserProject {
+    pub id: UserProjectId,
+    pub user_id: UserId,
+    pub project_id: ProjectId,
+    pub is_default: bool,
+    pub is_current: bool,
+    pub role: UserRole,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 #[cfg_attr(feature = "backend", derive(Queryable))]
@@ -533,6 +545,7 @@ impl From<Issue> for UpdateIssuePayload {
     }
 }
 
+#[cfg_attr(feature = "backend", derive(Queryable))]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Message {
     pub id: MessageId,
@@ -656,6 +669,7 @@ pub enum IssueFieldId {
 pub enum WsMsg {
     Ping,
     Pong,
+    Die,
 
     // auth
     AuthorizeRequest(Uuid),
@@ -697,6 +711,9 @@ pub enum WsMsg {
     // project page
     ProjectRequest,
     ProjectLoaded(Project),
+    ProjectsLoad,
+    ProjectsLoaded(Vec<Project>),
+
     ProjectIssuesRequest,
     ProjectIssuesLoaded(Vec<Issue>),
     ProjectUsersRequest,
@@ -733,6 +750,12 @@ pub enum WsMsg {
     AvatarUrlChanged(UserId, String),
     ProfileUpdate(EmailString, UsernameString),
     ProfileUpdated,
+
+    // user projects
+    UserProjectLoad,
+    UserProjectLoaded(Vec<UserProject>),
+    UserProjectSetCurrent(UserProjectId),
+    UserProjectCurrentChanged(UserProject),
 
     // messages
     Message(Message),

@@ -458,11 +458,14 @@ pub struct Model {
 
     pub project: Option<Project>,
     pub user: Option<User>,
+    pub current_user_project: Option<UserProject>,
     pub issues: Vec<Issue>,
     pub users: Vec<User>,
     pub comments: Vec<Comment>,
     pub issue_statuses: Vec<IssueStatus>,
     pub messages: Vec<Message>,
+    pub user_projects: Vec<UserProject>,
+    pub projects: Vec<Project>,
 }
 
 impl Model {
@@ -475,8 +478,6 @@ impl Model {
             issue_form: None,
             project_form: None,
             comment_form: None,
-            issues: vec![],
-            users: vec![],
             comments_by_project_id: Default::default(),
             page: Page::Project,
             host_url,
@@ -484,9 +485,12 @@ impl Model {
             page_content: PageContent::Project(Box::new(ProjectPage::default())),
             modals: vec![],
             project: None,
-            comments: vec![],
+            current_user_project: None,
             about_tooltip_visible: false,
             messages_tooltip_visible: false,
+            issues: vec![],
+            users: vec![],
+            comments: vec![],
             issue_statuses: vec![],
             messages: vec![Message {
                 id: 0,
@@ -499,6 +503,22 @@ impl Model {
                 created_at: chrono::NaiveDateTime::from_timestamp(4567890, 123),
                 updated_at: chrono::NaiveDateTime::from_timestamp(1234567, 098),
             }],
+            user_projects: vec![],
+            projects: vec![],
         }
+    }
+
+    pub fn current_user_role(&self) -> UserRole {
+        self.current_user_project
+            .as_ref()
+            .map(|up| up.role)
+            .unwrap_or_default()
+    }
+
+    pub fn current_project_id(&self) -> ProjectId {
+        self.current_user_project
+            .as_ref()
+            .map(|up| up.project_id)
+            .unwrap_or_default()
     }
 }

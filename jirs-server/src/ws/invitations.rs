@@ -15,7 +15,14 @@ impl WsHandler<ListInvitation> for WebSocketActor {
         };
         let res = match block_on(self.db.send(invitations::ListInvitation { user_id })) {
             Ok(Ok(v)) => Some(WsMsg::InvitationListLoaded(v)),
-            _ => None,
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
         Ok(res)
     }
@@ -28,14 +35,15 @@ pub struct CreateInvitation {
 
 impl WsHandler<CreateInvitation> for WebSocketActor {
     fn handle_msg(&mut self, msg: CreateInvitation, _ctx: &mut Self::Context) -> WsResult {
-        let (user_id, inviter_name, project_id) = match self
-            .current_user
-            .as_ref()
-            .map(|u| (u.id, u.name.clone(), u.project_id))
-        {
-            Some(id) => id,
+        let project_id = match self.current_user_project.as_ref() {
+            Some(up) => up.project_id,
             _ => return Ok(None),
         };
+        let (user_id, inviter_name) =
+            match self.current_user.as_ref().map(|u| (u.id, u.name.clone())) {
+                Some(id) => id,
+                _ => return Ok(None),
+            };
 
         let CreateInvitation { email, name } = msg;
         let invitation = match block_on(self.db.send(invitations::CreateInvitation {
@@ -84,7 +92,14 @@ impl WsHandler<DeleteInvitation> for WebSocketActor {
         let DeleteInvitation { id } = msg;
         let res = match block_on(self.db.send(invitations::DeleteInvitation { id })) {
             Ok(Ok(_)) => None,
-            _ => None,
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
         Ok(res)
     }
@@ -100,7 +115,14 @@ impl WsHandler<RevokeInvitation> for WebSocketActor {
         let RevokeInvitation { id } = msg;
         let res = match block_on(self.db.send(invitations::RevokeInvitation { id })) {
             Ok(Ok(_)) => Some(WsMsg::InvitationRevokeSuccess(id)),
-            _ => None,
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
         Ok(res)
     }
@@ -116,7 +138,14 @@ impl WsHandler<AcceptInvitation> for WebSocketActor {
         let AcceptInvitation { id } = msg;
         let res = match block_on(self.db.send(invitations::AcceptInvitation { id })) {
             Ok(Ok(_)) => Some(WsMsg::InvitationAcceptSuccess(id)),
-            _ => None,
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
         Ok(res)
     }

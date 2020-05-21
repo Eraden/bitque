@@ -22,7 +22,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
         | Msg::ChangePage(Page::EditIssue(..)) => {
-            model.page_content = PageContent::Project(Box::new(ProjectPage::default()));
+            build_page_content(model);
         }
         _ => (),
     }
@@ -37,16 +37,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         | Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
         | Msg::ChangePage(Page::EditIssue(..)) => {
-            enqueue_ws_msg(
-                vec![
-                    jirs_data::WsMsg::ProjectRequest,
-                    jirs_data::WsMsg::ProjectIssuesRequest,
-                    jirs_data::WsMsg::ProjectUsersRequest,
-                    jirs_data::WsMsg::IssueStatusesRequest,
-                ],
-                model.ws.as_ref(),
-                orders,
-            );
+            init_load(model, orders);
         }
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueUpdated(issue))) => {
             let mut old: Vec<Issue> = vec![];
@@ -137,6 +128,23 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         _ => (),
     }
+}
+
+fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    enqueue_ws_msg(
+        vec![
+            jirs_data::WsMsg::ProjectRequest,
+            jirs_data::WsMsg::ProjectIssuesRequest,
+            jirs_data::WsMsg::ProjectUsersRequest,
+            jirs_data::WsMsg::IssueStatusesRequest,
+        ],
+        model.ws.as_ref(),
+        orders,
+    );
+}
+
+fn build_page_content(model: &mut Model) {
+    model.page_content = PageContent::Project(Box::new(ProjectPage::default()));
 }
 
 pub fn view(model: &Model) -> Node<Msg> {

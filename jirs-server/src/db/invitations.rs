@@ -8,7 +8,7 @@ use jirs_data::{
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
-use crate::models::{InvitationForm, UserForm};
+use crate::models::InvitationForm;
 
 pub struct ListInvitation {
     pub user_id: UserId,
@@ -150,7 +150,6 @@ impl Handler<AcceptInvitation> for DbExecutor {
 
     fn handle(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::invitations::dsl::*;
-        use crate::schema::users::dsl::users;
 
         let conn = &self
             .pool
@@ -181,17 +180,26 @@ impl Handler<AcceptInvitation> for DbExecutor {
             .execute(conn)
             .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
 
-        let form = UserForm {
-            name: invitation.name,
-            email: invitation.email,
-            avatar_url: None,
-            project_id: invitation.project_id,
+        let user: User = {
+            use crate::schema::users::dsl::*;
+
+            let query = diesel::insert_into(users)
+                .values((name.eq(invitation.name), email.eq(invitation.email)));
+            debug!("{}", diesel::debug_query::<Pg, _>(&query));
+            query
+                .get_result(conn)
+                .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?
         };
-        let query = diesel::insert_into(users).values(form);
-        debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
-        let user: User = query
-            .get_result(conn)
-            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+        {
+            use crate::schema::user_projects::dsl::*;
+
+            let query = diesel::insert_into(user_projects)
+                .values((user_id.eq(user.id), project_id.eq(invitation.project_id)));
+            debug!("{}", diesel::debug_query::<Pg, _>(&query));
+            query
+                .execute(conn)
+                .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+        };
 
         Ok(user)
     }

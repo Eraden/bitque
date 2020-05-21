@@ -7,7 +7,8 @@ use jirs_data::{Project, User, UserId};
 
 use crate::db::{DbExecutor, DbPooledConn};
 use crate::errors::ServiceErrors;
-use crate::models::{CreateProjectForm, UserForm};
+use crate::models::CreateProjectForm;
+use crate::schema::users::all_columns;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FindUser {
@@ -54,6 +55,7 @@ impl Handler<LoadProjectUsers> for DbExecutor {
     type Result = Result<Vec<User>, ServiceErrors>;
 
     fn handle(&mut self, msg: LoadProjectUsers, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::user_projects::dsl::{project_id, user_id, user_projects};
         use crate::schema::users::dsl::*;
 
         let conn = &self
@@ -61,7 +63,11 @@ impl Handler<LoadProjectUsers> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
-        let users_query = users.distinct_on(id).filter(project_id.eq(msg.project_id));
+        let users_query = users
+            .distinct_on(id)
+            .inner_join(user_projects.on(user_id.eq(id)))
+            .filter(project_id.eq(msg.project_id))
+            .select(all_columns);
         debug!("{}", diesel::debug_query::<Pg, _>(&users_query));
         users_query
             .load(conn)
@@ -142,19 +148,31 @@ impl Handler<Register> for DbExecutor {
             .get_result(conn)
             .map_err(|_| ServiceErrors::RegisterCollision)?;
 
-        let form = UserForm {
-            name: msg.name,
-            email: msg.email,
-            avatar_url: None,
-            project_id: project.id,
+        let user: User = {
+            let insert_user_query =
+                diesel::insert_into(users).values((name.eq(msg.name), email.eq(msg.email)));
+            debug!("{}", diesel::debug_query::<Pg, _>(&insert_user_query));
+            insert_user_query
+                .get_result(conn)
+                .map_err(|_| ServiceErrors::RegisterCollision)?
         };
 
-        let insert_user_query = diesel::insert_into(users).values(form);
-        debug!("{}", diesel::debug_query::<Pg, _>(&insert_user_query));
-        match insert_user_query.execute(conn) {
-            Ok(_) => (),
-            _ => return Err(ServiceErrors::RegisterCollision),
-        };
+        {
+            use crate::schema::user_projects::dsl::*;
+            let insert_user_project_query = diesel::insert_into(user_projects).values((
+                user_id.eq(user.id),
+                project_id.eq(project.id),
+                is_current.eq(true),
+                is_default.eq(true),
+            ));
+            debug!(
+                "{}",
+                diesel::debug_query::<Pg, _>(&insert_user_project_query)
+            );
+            insert_user_project_query
+                .execute(conn)
+                .map_err(|_| ServiceErrors::RegisterCollision)?;
+        }
 
         Ok(())
     }
@@ -287,11 +305,13 @@ mod tests {
     #[test]
     fn check_collision() {
         use crate::schema::projects::dsl::projects;
+        use crate::schema::user_projects::dsl::user_projects;
         use crate::schema::users::dsl::users;
 
         let pool = build_pool();
         let conn = &pool.get().unwrap();
 
+        diesel::delete(user_projects).execute(conn).unwrap();
         diesel::delete(users).execute(conn).unwrap();
         diesel::delete(projects).execute(conn).unwrap();
 
@@ -306,16 +326,28 @@ mod tests {
             .get_result(conn)
             .unwrap();
 
-        let user_form = UserForm {
-            name: "Foo".to_string(),
-            email: "foo@example.com".to_string(),
-            avatar_url: None,
-            project_id: project.id,
+        let user: User = {
+            use crate::schema::users::dsl::*;
+            diesel::insert_into(users)
+                .values((
+                    name.eq("Foo".to_string()),
+                    email.eq("foo@example.com".to_string()),
+                ))
+                .get_result(conn)
+                .unwrap()
         };
-        diesel::insert_into(users)
-            .values(user_form)
-            .execute(conn)
-            .unwrap();
+        {
+            use crate::schema::user_projects::dsl::*;
+            diesel::insert_into(user_projects)
+                .values((
+                    user_id.eq(user.id),
+                    project_id.eq(project.id),
+                    is_current.eq(true),
+                    is_default.eq(true),
+                ))
+                .execute(conn)
+                .unwrap();
+        }
 
         assert_eq!(count_matching_users("Foo", "bar@example.com", conn), 1);
         assert_eq!(count_matching_users("Bar", "foo@example.com", conn), 1);

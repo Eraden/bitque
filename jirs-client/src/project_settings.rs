@@ -391,15 +391,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
     match msg {
         Msg::WebSocketChange(ref change) => match change {
             WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
-                enqueue_ws_msg(
-                    vec![
-                        WsMsg::ProjectRequest,
-                        WsMsg::IssueStatusesRequest,
-                        WsMsg::ProjectIssuesRequest,
-                    ],
-                    model.ws.as_ref(),
-                    orders,
-                );
+                init_load(model, orders);
             }
             WebSocketChanged::WsMsg(WsMsg::ProjectLoaded(..)) => {
                 build_page_content(model);
@@ -417,15 +409,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         Msg::ChangePage(Page::ProjectSettings) => {
             build_page_content(model);
             if model.user.is_some() {
-                enqueue_ws_msg(
-                    vec![
-                        WsMsg::ProjectRequest,
-                        WsMsg::IssueStatusesRequest,
-                        WsMsg::ProjectIssuesRequest,
-                    ],
-                    model.ws.as_ref(),
-                    orders,
-                );
+                init_load(model, orders);
             }
         }
         _ => (),
@@ -545,6 +529,18 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         }
         _ => (),
     }
+}
+
+fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    enqueue_ws_msg(
+        vec![
+            WsMsg::ProjectRequest,
+            WsMsg::IssueStatusesRequest,
+            WsMsg::ProjectIssuesRequest,
+        ],
+        model.ws.as_ref(),
+        orders,
+    );
 }
 
 fn exchange_position(bellow_id: IssueStatusId, model: &mut Model) {

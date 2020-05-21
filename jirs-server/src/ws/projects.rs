@@ -9,7 +9,7 @@ pub struct CurrentProject;
 
 impl WsHandler<CurrentProject> for WebSocketActor {
     fn handle_msg(&mut self, _msg: CurrentProject, _ctx: &mut Self::Context) -> WsResult {
-        let project_id = self.require_user()?.project_id;
+        let project_id = self.require_user_project()?.project_id;
 
         let m = match block_on(self.db.send(LoadCurrentProject { project_id })) {
             Ok(Ok(project)) => Some(WsMsg::ProjectLoaded(project)),
@@ -28,7 +28,7 @@ impl WsHandler<CurrentProject> for WebSocketActor {
 
 impl WsHandler<UpdateProjectPayload> for WebSocketActor {
     fn handle_msg(&mut self, msg: UpdateProjectPayload, _ctx: &mut Self::Context) -> WsResult {
-        let project_id = self.require_user()?.project_id;
+        let project_id = self.require_user_project()?.project_id;
         let project = match block_on(self.db.send(crate::db::projects::UpdateProject {
             project_id,
             name: msg.name,

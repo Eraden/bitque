@@ -12,10 +12,17 @@ impl WsHandler<LoadProjectUsers> for WebSocketActor {
     fn handle_msg(&mut self, _msg: LoadProjectUsers, _ctx: &mut Self::Context) -> WsResult {
         use crate::db::users::LoadProjectUsers as Msg;
 
-        let project_id = self.require_user()?.project_id;
+        let project_id = self.require_user_project()?.project_id;
         let m = match block_on(self.db.send(Msg { project_id })) {
             Ok(Ok(v)) => Some(WsMsg::ProjectUsersLoaded(v)),
-            _ => None,
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
         Ok(m)
     }
@@ -35,7 +42,10 @@ impl WsHandler<Register> for WebSocketActor {
         })) {
             Ok(Ok(_)) => Some(WsMsg::SignUpSuccess),
             Ok(Err(_)) => Some(WsMsg::SignUpPairTaken),
-            _ => None,
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
 
         match self.handle_msg(Authenticate { name, email }, ctx) {
@@ -78,7 +88,14 @@ impl WsHandler<ProfileUpdate> for WebSocketActor {
             email,
         })) {
             Ok(Ok(_users)) => (),
-            _ => return Ok(None),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
         };
 
         Ok(Some(WsMsg::ProfileUpdated))

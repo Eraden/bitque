@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use jirs_data::WsMsg;
 
-use crate::model::{Page, PageContent, SignInPage};
+use crate::model::{Model, Page, PageContent, SignInPage};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
@@ -24,7 +24,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
 
     match msg {
         Msg::ChangePage(Page::SignIn) => {
-            model.page_content = PageContent::SignIn(Box::new(SignInPage::default()));
+            build_page_content(model);
             return;
         }
         _ => (),
@@ -83,6 +83,10 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         },
         _ => (),
     };
+}
+
+fn build_page_content(model: &mut Model) {
+    model.page_content = PageContent::SignIn(Box::new(SignInPage::default()));
 }
 
 pub fn view(model: &model::Model) -> Node<Msg> {

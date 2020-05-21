@@ -9,6 +9,7 @@ use actix_multipart::{Field, Multipart};
 use actix_web::http::header::ContentDisposition;
 use actix_web::web::Data;
 use actix_web::{post, web, Error, HttpResponse};
+use futures::executor::block_on;
 use futures::{StreamExt, TryStreamExt};
 #[cfg(feature = "aws-s3")]
 use rusoto_s3::{PutObjectRequest, S3Client, S3};
@@ -16,6 +17,7 @@ use rusoto_s3::{PutObjectRequest, S3Client, S3};
 use jirs_data::{User, UserId, WsMsg};
 
 use crate::db::authorize_user::AuthorizeUser;
+use crate::db::user_projects::CurrentUserProject;
 use crate::db::users::UpdateAvatarUrl;
 use crate::db::DbExecutor;
 #[cfg(feature = "aws-s3")]
@@ -51,11 +53,21 @@ pub async fn upload(
             _ => continue,
         };
     }
+    let user_id = match user_id {
+        Some(id) => id,
+        _ => return Ok(HttpResponse::Unauthorized().finish()),
+    };
+
+    let project_id = match block_on(db.send(CurrentUserProject { user_id })) {
+        Ok(Ok(user_project)) => user_project.project_id,
+        _ => return Ok(HttpResponse::UnprocessableEntity().finish()),
+    };
+
     match (user_id, avatar_url) {
-        (Some(user_id), Some(avatar_url)) => {
+        (user_id, Some(avatar_url)) => {
             let user = update_user_avatar(user_id, avatar_url.clone(), db).await?;
             ws.send(BroadcastToChannel(
-                user.project_id,
+                project_id,
                 WsMsg::AvatarUrlChanged(user.id, avatar_url),
             ))
             .await

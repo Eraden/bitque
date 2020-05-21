@@ -109,7 +109,6 @@ pub struct UserForm {
     pub name: String,
     pub email: String,
     pub avatar_url: Option<String>,
-    pub project_id: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Insertable)]

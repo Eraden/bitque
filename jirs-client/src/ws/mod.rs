@@ -90,6 +90,33 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         WsMsg::ProjectLoaded(project) => {
             model.project = Some(project.clone());
         }
+        WsMsg::ProjectsLoaded(v) => {
+            model.projects = v.clone();
+            if !model.projects.is_empty() {
+                model.project = model.current_user_project.as_ref().and_then(|up| {
+                    model
+                        .projects
+                        .iter()
+                        .find(|p| p.id == up.project_id)
+                        .cloned()
+                });
+            }
+        }
+        // user projects
+        WsMsg::UserProjectLoaded(v) => {
+            model.user_projects = v.clone();
+            model.current_user_project = v.iter().find(|up| up.is_current).cloned();
+            if !model.projects.is_empty() {
+                model.project = model.current_user_project.as_ref().and_then(|up| {
+                    model
+                        .projects
+                        .iter()
+                        .find(|p| p.id == up.project_id)
+                        .cloned()
+                });
+            }
+        }
+
         // issues
         WsMsg::ProjectIssuesLoaded(v) => {
             let mut v = v.clone();

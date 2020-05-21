@@ -17,12 +17,8 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
     match msg {
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)))
         | Msg::ChangePage(Page::Profile) => {
-            send_ws_msg(WsMsg::ProjectRequest, model.ws.as_ref(), orders);
-            let user = match model.user {
-                Some(ref user) => user,
-                _ => return,
-            };
-            model.page_content = PageContent::Profile(Box::new(ProfilePage::new(user)));
+            init_load(model, orders);
+            build_page_content(model);
         }
         _ => (),
     }
@@ -75,6 +71,18 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         _ => (),
     }
+}
+
+fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    send_ws_msg(WsMsg::ProjectRequest, model.ws.as_ref(), orders);
+}
+
+fn build_page_content(model: &mut Model) {
+    let user = match model.user {
+        Some(ref user) => user,
+        _ => return,
+    };
+    model.page_content = PageContent::Profile(Box::new(ProfilePage::new(user)));
 }
 
 pub fn view(model: &Model) -> Node<Msg> {

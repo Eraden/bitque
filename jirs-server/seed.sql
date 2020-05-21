@@ -3,23 +3,27 @@ insert into projects (name) values ('initial'), ('second'), ('third');
 insert into issue_statuses (name, project_id, position)
 values ('backlog', 1, 1), ('selected', 1, 2), ('in_progress', 1, 3), ('done', 1, 4);
 
-insert into users (project_id, email, name, avatar_url) values (
-    1,
+insert into users (email, name, avatar_url) values (
     'john@example.com',
     'John Doe',
     'http://cdn.onlinewebfonts.com/svg/img_553934.png'
 ), (
-    1,
     'kate@exampe.com',
     'Kate Snow',
     'http://www.asthmamd.org/images/icon_user_6.png'
 ), (
-    1,
     'mike@example.com',
     'Mike Keningham',
     'https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman1-512.png'
 );
-insert into invitations ( email, name, state, project_id, invited_by_id) values (
+insert into user_projects (user_id, project_id, role, is_current, is_default) values (
+    1, 1, 'owner', true, true
+), (
+    2, 1, 'owner', true, true
+), (
+    3, 1, 'owner', true, true
+);
+insert into invitations (email, name, state, project_id, invited_by_id) values (
     'foo1@example.com',
     'Foo1',
     'sent',

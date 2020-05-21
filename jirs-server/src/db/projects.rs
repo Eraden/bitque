@@ -3,10 +3,11 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use jirs_data::{Project, ProjectCategory, TimeTracking};
+use jirs_data::{Project, ProjectCategory, TimeTracking, UserId};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
+use crate::schema::projects::all_columns;
 
 #[derive(Serialize, Deserialize)]
 pub struct LoadCurrentProject {
@@ -80,6 +81,37 @@ impl Handler<UpdateProject> for DbExecutor {
         debug!("{}", diesel::debug_query::<Pg, _>(&project_query));
         project_query
             .first::<Project>(conn)
+            .map_err(|_| ServiceErrors::RecordNotFound("Project".to_string()))
+    }
+}
+
+pub struct LoadProjects {
+    pub user_id: UserId,
+}
+
+impl Message for LoadProjects {
+    type Result = Result<Vec<Project>, ServiceErrors>;
+}
+
+impl Handler<LoadProjects> for DbExecutor {
+    type Result = Result<Vec<Project>, ServiceErrors>;
+
+    fn handle(&mut self, msg: LoadProjects, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::projects::dsl::*;
+        use crate::schema::user_projects::dsl::{project_id, user_id, user_projects};
+
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let query = projects
+            .inner_join(user_projects.on(project_id.eq(id)))
+            .filter(user_id.eq(msg.user_id))
+            .select(all_columns);
+        debug!("{}", diesel::debug_query::<diesel::pg::Pg, _>(&query));
+        query
+            .load::<Project>(conn)
             .map_err(|_| ServiceErrors::RecordNotFound("Project".to_string()))
     }
 }

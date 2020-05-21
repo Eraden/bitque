@@ -6,9 +6,12 @@ use actix::{
 use actix_web::web::Data;
 use actix_web::{get, web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
+use futures::executor::block_on;
 
-use jirs_data::{ProjectId, UserId, WsMsg};
+use jirs_data::{Project, ProjectId, User, UserId, UserProject, WsMsg};
 
+use crate::db::projects::LoadCurrentProject;
+use crate::db::user_projects::CurrentUserProject;
 use crate::db::DbExecutor;
 use crate::mail::MailExecutor;
 use crate::ws::auth::*;
@@ -25,6 +28,7 @@ pub mod invitations;
 pub mod issue_statuses;
 pub mod issues;
 pub mod projects;
+pub mod user_projects;
 pub mod users;
 
 pub type WsResult = std::result::Result<Option<WsMsg>, WsMsg>;
@@ -36,8 +40,10 @@ trait WsMessageSender {
 struct WebSocketActor {
     db: Data<Addr<DbExecutor>>,
     mail: Data<Addr<MailExecutor>>,
-    current_user: Option<jirs_data::User>,
     addr: Addr<WsServer>,
+    current_user: Option<jirs_data::User>,
+    current_user_project: Option<jirs_data::UserProject>,
+    current_project: Option<jirs_data::Project>,
 }
 
 impl Actor for WebSocketActor {
@@ -62,12 +68,12 @@ impl Handler<InnerMsg> for WebSocketActor {
 
 impl WebSocketActor {
     fn broadcast(&self, msg: &WsMsg) {
-        let user = match self.current_user.as_ref() {
-            Some(u) => u,
+        let project_id = match self.require_user_project() {
+            Ok(up) => up.project_id,
             _ => return,
         };
         self.addr
-            .do_send(InnerMsg::BroadcastToChannel(user.project_id, msg.clone()));
+            .do_send(InnerMsg::BroadcastToChannel(project_id, msg.clone()));
     }
 
     fn handle_ws_msg(
@@ -179,13 +185,18 @@ impl WebSocketActor {
     async fn join_channel(&self, addr: Recipient<InnerMsg>) {
         info!("joining channel...");
         info!("  current user {:?}", self.current_user);
+
         let user = match self.current_user.as_ref() {
             None => return,
             Some(u) => u,
         };
+        let project_id = match self.require_user_project() {
+            Ok(user_project) => user_project.project_id,
+            _ => return,
+        };
         match self
             .addr
-            .send(InnerMsg::Join(user.project_id, user.id, addr))
+            .send(InnerMsg::Join(project_id, user.id, addr))
             .await
         {
             Err(e) => error!("{}", e),
@@ -193,11 +204,41 @@ impl WebSocketActor {
         };
     }
 
-    fn require_user(&self) -> Result<&jirs_data::User, WsMsg> {
+    fn require_user(&self) -> Result<&User, WsMsg> {
         self.current_user
             .as_ref()
             .map(|u| u)
             .ok_or_else(|| WsMsg::AuthorizeExpired)
+    }
+
+    fn require_user_project(&self) -> Result<&UserProject, WsMsg> {
+        self.current_user_project
+            .as_ref()
+            .map(|u| u)
+            .ok_or_else(|| WsMsg::AuthorizeExpired)
+    }
+
+    // fn require_project(&self) -> Result<&Project, WsMsg> {
+    //     self.current_project
+    //         .as_ref()
+    //         .map(|u| u)
+    //         .ok_or_else(|| WsMsg::AuthorizeExpired)
+    // }
+
+    fn load_user_project(&self) -> Result<UserProject, WsMsg> {
+        let user_id = self.require_user().map_err(|_| WsMsg::AuthorizeExpired)?.id;
+        match block_on(self.db.send(CurrentUserProject { user_id })) {
+            Ok(Ok(user_project)) => Ok(user_project),
+            _ => Err(WsMsg::AuthorizeExpired),
+        }
+    }
+
+    fn load_project(&self) -> Result<Project, WsMsg> {
+        let project_id = self.require_user_project()?.project_id;
+        match block_on(self.db.send(LoadCurrentProject { project_id })) {
+            Ok(Ok(project)) => Ok(project),
+            _ => Err(WsMsg::AuthorizeExpired),
+        }
     }
 }
 
@@ -226,9 +267,12 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
 
     fn finished(&mut self, ctx: &mut Self::Context) {
         info!("Disconnected");
-        if let Some(user) = self.current_user.as_ref() {
+        if let (Some(user), Some(up)) = (
+            self.current_user.as_ref(),
+            self.current_user_project.as_ref(),
+        ) {
             self.addr.do_send(InnerMsg::Leave(
-                user.project_id,
+                up.project_id,
                 user.id,
                 ctx.address().recipient(),
             ));
@@ -353,6 +397,8 @@ pub async fn index(
             db,
             mail,
             current_user: None,
+            current_user_project: None,
+            current_project: None,
             addr: ws_server.get_ref().clone(),
         },
         &req,

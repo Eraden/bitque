@@ -1,11 +1,25 @@
 use seed::{prelude::*, *};
 
-use jirs_data::UserRole;
+use jirs_data::{UserRole, WsMsg};
 
 use crate::model::{Model, Page};
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::{divider, ToNode};
-use crate::Msg;
+use crate::ws::enqueue_ws_msg;
+use crate::{Msg, WebSocketChanged};
+
+pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
+    match msg {
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_)))) => {
+            enqueue_ws_msg(
+                vec![WsMsg::UserProjectLoad, WsMsg::ProjectsLoad],
+                model.ws.as_ref(),
+                orders,
+            );
+        }
+        _ => (),
+    }
+}
 
 pub fn render(model: &Model) -> Node<Msg> {
     let project_icon = Node::from_html(include_str!("../../static/project-avatar.svg"));
@@ -36,7 +50,7 @@ pub fn render(model: &Model) -> Node<Msg> {
         sidebar_link_item(model, "Components", Icon::Component, None),
     ];
 
-    if model.user.as_ref().map(|u| u.user_role).unwrap_or_default() > UserRole::User {
+    if model.current_user_role() > UserRole::User {
         links.push(sidebar_link_item(
             model,
             "Users",

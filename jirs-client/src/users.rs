@@ -231,11 +231,12 @@ pub fn view(model: &Model) -> Node<Msg> {
                 .on_click(mouse_ev(Ev::Click, move |_| Msg::InvitedUserRemove(email)))
                 .build()
                 .into_node();
+
+            // span![format!("{}", user.user_role)],
             li![
                 class!["user"],
                 span![user.name.as_str()],
                 span![user.email.as_str()],
-                span![format!("{}", user.user_role)],
                 remove,
             ]
         })
