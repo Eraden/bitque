@@ -1,133 +1,16 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{InvitationState, ToVec, UserRole, UsersFieldId, WsMsg};
+use jirs_data::{InvitationState, ToVec, UserRole, UsersFieldId};
 
-use crate::model::*;
+use crate::model::{InvitationFormState, Model, PageContent};
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_input::StyledInput;
-use crate::shared::styled_select::*;
+use crate::shared::styled_select::StyledSelect;
 use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::validations::is_email;
-use crate::ws::{enqueue_ws_msg, send_ws_msg};
-use crate::{FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged};
-
-pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
-    if let Msg::ChangePage(Page::Users) = msg {
-        model.page_content = PageContent::Users(Box::new(UsersPage::default()));
-        // return;
-    }
-
-    let page = match &mut model.page_content {
-        PageContent::Users(page) => page,
-        _ => return,
-    };
-
-    page.user_role_state.update(&msg, orders);
-
-    match msg {
-        Msg::ChangePage(Page::Users) if model.user.is_some() => {
-            enqueue_ws_msg(
-                vec![WsMsg::InvitationListRequest, WsMsg::InvitedUsersRequest],
-                model.ws.as_ref(),
-                orders,
-            );
-        }
-        Msg::WebSocketChange(change) => match change {
-            WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) if model.user.is_some() => {
-                enqueue_ws_msg(
-                    vec![WsMsg::InvitationListRequest, WsMsg::InvitedUsersRequest],
-                    model.ws.as_ref(),
-                    orders,
-                );
-            }
-            WebSocketChanged::WsMsg(WsMsg::InvitedUsersLoaded(users)) => {
-                page.invited_users = users;
-            }
-            WebSocketChanged::WsMsg(WsMsg::InvitationListLoaded(invitations)) => {
-                page.invitations = invitations;
-            }
-            WebSocketChanged::WsMsg(WsMsg::InvitationRevokeSuccess(id)) => {
-                let mut old = vec![];
-                std::mem::swap(&mut page.invitations, &mut old);
-                for mut invitation in old {
-                    if id == invitation.id {
-                        invitation.state = InvitationState::Revoked;
-                    }
-                    page.invitations.push(invitation);
-                }
-                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref(), orders);
-            }
-            WebSocketChanged::WsMsg(WsMsg::InvitedUserRemoveSuccess(email)) => {
-                let mut old = vec![];
-                std::mem::swap(&mut page.invited_users, &mut old);
-                for user in old {
-                    if user.email != email {
-                        page.invited_users.push(user);
-                    }
-                }
-            }
-            WebSocketChanged::WsMsg(WsMsg::InvitationSendSuccess) => {
-                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref(), orders);
-                page.form_state = InvitationFormState::Succeed;
-            }
-            WebSocketChanged::WsMsg(WsMsg::InvitationSendFailure) => {
-                page.form_state = InvitationFormState::Failed;
-            }
-            _ => (),
-        },
-        Msg::PageChanged(PageChanged::Users(UsersPageChange::ResetForm)) => {
-            page.name.clear();
-            page.name_touched = false;
-            page.email.clear();
-            page.email_touched = false;
-            page.user_role = UserRole::User;
-            page.user_role_state.reset();
-            page.form_state = InvitationFormState::Initial;
-        }
-        Msg::StyledSelectChanged(
-            FieldId::Users(UsersFieldId::UserRole),
-            StyledSelectChange::Changed(role),
-        ) => {
-            page.user_role = role.into();
-        }
-        Msg::StrInputChanged(FieldId::Users(UsersFieldId::Username), name) => {
-            page.name = name;
-            page.name_touched = true;
-        }
-        Msg::StrInputChanged(FieldId::Users(UsersFieldId::Email), email) => {
-            page.email = email;
-            page.email_touched = true;
-        }
-        Msg::InviteRequest => {
-            page.form_state = InvitationFormState::Sent;
-            send_ws_msg(
-                WsMsg::InvitationSendRequest {
-                    name: page.name.clone(),
-                    email: page.email.clone(),
-                },
-                model.ws.as_ref(),
-                orders,
-            );
-        }
-        Msg::InviteRevokeRequest(invitation_id) => {
-            send_ws_msg(
-                WsMsg::InvitationRevokeRequest(invitation_id),
-                model.ws.as_ref(),
-                orders,
-            );
-        }
-        Msg::InvitedUserRemove(email) => {
-            send_ws_msg(
-                WsMsg::InvitedUserRemoveRequest(email),
-                model.ws.as_ref(),
-                orders,
-            );
-        }
-        _ => (),
-    }
-}
+use crate::{FieldId, Msg, PageChanged, UsersPageChange};
 
 pub fn view(model: &Model) -> Node<Msg> {
     if model.user.is_none() {
@@ -231,12 +114,18 @@ pub fn view(model: &Model) -> Node<Msg> {
                 .on_click(mouse_ev(Ev::Click, move |_| Msg::InvitedUserRemove(email)))
                 .build()
                 .into_node();
+            let role = page
+                .invitations
+                .iter()
+                .find(|iv| iv.email.eq(user.email.as_str()) && iv.name.eq(user.name.as_str()))
+                .map(|iv| iv.role)
+                .unwrap_or_default();
 
-            // span![format!("{}", user.user_role)],
             li![
                 class!["user"],
                 span![user.name.as_str()],
                 span![user.email.as_str()],
+                span![format!("{}", role)],
                 remove,
             ]
         })

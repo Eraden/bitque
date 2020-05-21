@@ -20,6 +20,7 @@ use crate::ws::invitations::*;
 use crate::ws::issue_statuses::*;
 use crate::ws::issues::*;
 use crate::ws::projects::*;
+use crate::ws::user_projects::LoadUserProjects;
 use crate::ws::users::*;
 
 pub mod auth;
@@ -121,7 +122,11 @@ impl WebSocketActor {
 
             // projects
             WsMsg::ProjectRequest => self.handle_msg(CurrentProject, ctx)?,
+            WsMsg::ProjectsLoad => self.handle_msg(LoadProjects, ctx)?,
             WsMsg::ProjectUpdateRequest(payload) => self.handle_msg(payload, ctx)?,
+
+            // user projects
+            WsMsg::UserProjectLoad => self.handle_msg(LoadUserProjects, ctx)?,
 
             // auth
             WsMsg::AuthorizeRequest(uuid) => {
@@ -157,8 +162,8 @@ impl WebSocketActor {
             }
 
             // invitations
-            WsMsg::InvitationSendRequest { name, email } => {
-                self.handle_msg(CreateInvitation { name, email }, ctx)?
+            WsMsg::InvitationSendRequest { name, email, role } => {
+                self.handle_msg(CreateInvitation { name, email, role }, ctx)?
             }
             WsMsg::InvitationListRequest => self.handle_msg(ListInvitation, ctx)?,
             WsMsg::InvitationAcceptRequest(id) => self.handle_msg(AcceptInvitation { id }, ctx)?,

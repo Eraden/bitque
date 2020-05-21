@@ -103,3 +103,7 @@
 .modal > .clickableOverlay > .styledModal.confirmModal > .actions > .styledButton {
     margin-right: 10px;
 }
+
+.modal > .clickableOverlay > .styledModal.debugModal {
+    padding-left: 15px;
+}

@@ -11,6 +11,8 @@ use crate::{model, FieldChange, FieldId, Msg, WebSocketChanged};
 
 mod add_issue;
 mod confirm_delete_issue;
+#[cfg(debug_assertions)]
+mod debug_modal;
 mod delete_issue_status;
 mod issue_details;
 pub mod time_tracking;
@@ -55,6 +57,11 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
             model.modals.push(ModalType::AddIssue(Box::new(modal)));
         }
 
+        #[cfg(debug_assertions)]
+        Msg::GlobalKeyDown { key, .. } if key.eq("#") => {
+            model.modals.push(ModalType::DebugModal);
+        }
+
         _ => (),
     }
     add_issue::update(msg, model, orders);
@@ -96,6 +103,8 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             ModalType::DeleteIssueStatusModal(delete_issue_modal) => {
                 delete_issue_status::view(model, delete_issue_modal.delete_id)
             }
+            #[cfg(debug_assertions)]
+            ModalType::DebugModal => debug_modal::view(model),
         })
         .collect();
     section![id!["modals"], modals]

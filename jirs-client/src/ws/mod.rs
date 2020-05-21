@@ -79,7 +79,9 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         // auth
         WsMsg::AuthorizeLoaded(Ok(user)) => {
             model.user = Some(user.clone());
-            go_to_board(orders);
+            if is_non_logged_area() {
+                go_to_board(orders);
+            }
         }
         WsMsg::AuthorizeExpired => {
             if let Ok(msg) = write_auth_token(None) {
@@ -216,4 +218,12 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         _ => (),
     };
     orders.render();
+}
+
+fn is_non_logged_area() -> bool {
+    let pathname = seed::document().location().unwrap().pathname().unwrap();
+    match pathname.as_str() {
+        "/login" | "/register" | "/invite" => true,
+        _ => false,
+    }
 }

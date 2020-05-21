@@ -23,6 +23,8 @@ pub enum ModalType {
     DeleteCommentConfirm(CommentId),
     TimeTracking(IssueId),
     DeleteIssueStatusModal(Box<DeleteIssueStatusModal>),
+    #[cfg(debug_assertions)]
+    DebugModal,
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]

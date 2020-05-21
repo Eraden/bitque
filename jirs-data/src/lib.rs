@@ -449,6 +449,7 @@ pub struct Invitation {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub bind_token: Uuid,
+    pub role: UserRole,
 }
 
 #[cfg_attr(feature = "backend", derive(Queryable))]
@@ -696,6 +697,7 @@ pub enum WsMsg {
     InvitationSendRequest {
         name: UsernameString,
         email: EmailString,
+        role: UserRole,
     },
     InvitationSendSuccess,
     InvitationSendFailure,

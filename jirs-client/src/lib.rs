@@ -174,8 +174,8 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         },
         _ => (),
     }
-    crate::modal::update(&msg, model, orders);
     crate::shared::aside::update(&msg, model, orders);
+    crate::modal::update(&msg, model, orders);
     match model.page {
         Page::Project | Page::AddIssue | Page::EditIssue(..) => project::update(msg, model, orders),
         Page::ProjectSettings => project_settings::update(msg, model, orders),

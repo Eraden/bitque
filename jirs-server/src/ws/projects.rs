@@ -2,6 +2,7 @@ use futures::executor::block_on;
 
 use jirs_data::{UpdateProjectPayload, WsMsg};
 
+use crate::db;
 use crate::db::projects::LoadCurrentProject;
 use crate::ws::{WebSocketActor, WsHandler, WsResult};
 
@@ -48,5 +49,24 @@ impl WsHandler<UpdateProjectPayload> for WebSocketActor {
             }
         };
         Ok(Some(WsMsg::ProjectLoaded(project)))
+    }
+}
+
+pub struct LoadProjects;
+
+impl WsHandler<LoadProjects> for WebSocketActor {
+    fn handle_msg(&mut self, _msg: LoadProjects, _ctx: &mut Self::Context) -> WsResult {
+        let user_id = self.require_user()?.id;
+        match block_on(self.db.send(db::projects::LoadProjects { user_id })) {
+            Ok(Ok(v)) => Ok(Some(WsMsg::ProjectsLoaded(v))),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                Ok(None)
+            }
+            Err(e) => {
+                error!("{:?}", e);
+                Ok(None)
+            }
+        }
     }
 }

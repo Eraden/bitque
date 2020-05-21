@@ -1,6 +1,6 @@
 use futures::executor::block_on;
 
-use jirs_data::{EmailString, InvitationId, UsernameString, WsMsg};
+use jirs_data::{EmailString, InvitationId, UserRole, UsernameString, WsMsg};
 
 use crate::db::invitations;
 use crate::ws::{WebSocketActor, WsHandler, WsResult};
@@ -31,6 +31,7 @@ impl WsHandler<ListInvitation> for WebSocketActor {
 pub struct CreateInvitation {
     pub email: EmailString,
     pub name: UsernameString,
+    pub role: UserRole,
 }
 
 impl WsHandler<CreateInvitation> for WebSocketActor {
@@ -45,12 +46,13 @@ impl WsHandler<CreateInvitation> for WebSocketActor {
                 _ => return Ok(None),
             };
 
-        let CreateInvitation { email, name } = msg;
+        let CreateInvitation { email, name, role } = msg;
         let invitation = match block_on(self.db.send(invitations::CreateInvitation {
             user_id,
             project_id,
             email,
             name,
+            role,
         })) {
             Ok(Ok(invitation)) => invitation,
             Ok(Err(e)) => {

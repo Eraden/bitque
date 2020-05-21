@@ -63,9 +63,9 @@ impl StyledModalBuilder {
         self
     }
 
-    // pub fn center(mut self) -> Self {
-    //     self.variant(Variant::Center)
-    // }
+    pub fn center(self) -> Self {
+        self.variant(Variant::Center)
+    }
 
     pub fn width(mut self, width: usize) -> Self {
         self.width = Some(width);

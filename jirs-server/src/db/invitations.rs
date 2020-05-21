@@ -3,12 +3,12 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 
 use jirs_data::{
-    EmailString, Invitation, InvitationId, InvitationState, ProjectId, User, UserId, UsernameString,
+    EmailString, Invitation, InvitationId, InvitationState, ProjectId, User, UserId, UserRole,
+    UsernameString,
 };
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
-use crate::models::InvitationForm;
 
 pub struct ListInvitation {
     pub user_id: UserId,
@@ -46,6 +46,7 @@ pub struct CreateInvitation {
     pub project_id: ProjectId,
     pub email: EmailString,
     pub name: UsernameString,
+    pub role: UserRole,
 }
 
 impl Message for CreateInvitation {
@@ -63,14 +64,14 @@ impl Handler<CreateInvitation> for DbExecutor {
             .get()
             .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
 
-        let form = InvitationForm {
-            name: msg.name,
-            email: msg.email,
-            state: InvitationState::Sent,
-            project_id: msg.project_id,
-            invited_by_id: msg.user_id,
-        };
-        let query = diesel::insert_into(invitations).values(form);
+        let query = diesel::insert_into(invitations).values((
+            name.eq(msg.name),
+            email.eq(msg.email),
+            state.eq(InvitationState::Sent),
+            project_id.eq(msg.project_id),
+            invited_by_id.eq(msg.user_id),
+            role.eq(msg.role),
+        ));
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         query
             .get_result(conn)
@@ -183,18 +184,22 @@ impl Handler<AcceptInvitation> for DbExecutor {
         let user: User = {
             use crate::schema::users::dsl::*;
 
-            let query = diesel::insert_into(users)
-                .values((name.eq(invitation.name), email.eq(invitation.email)));
+            let query = users
+                .filter(name.eq(invitation.name).and(email.eq(invitation.email)))
+                .limit(1);
             debug!("{}", diesel::debug_query::<Pg, _>(&query));
             query
-                .get_result(conn)
+                .first(conn)
                 .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?
         };
         {
             use crate::schema::user_projects::dsl::*;
 
-            let query = diesel::insert_into(user_projects)
-                .values((user_id.eq(user.id), project_id.eq(invitation.project_id)));
+            let query = diesel::insert_into(user_projects).values((
+                user_id.eq(user.id),
+                project_id.eq(invitation.project_id),
+                role.eq(invitation.role),
+            ));
             debug!("{}", diesel::debug_query::<Pg, _>(&query));
             query
                 .execute(conn)
