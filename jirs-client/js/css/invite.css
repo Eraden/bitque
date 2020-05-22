@@ -18,3 +18,8 @@
 #invite > .styledForm:last-of-type {
     box-shadow: rgba(0, 0, 0, 0.1) 0 10px 10px;
 }
+
+#invite .error {
+    color: var(--danger);
+    margin-top: 15px;
+}

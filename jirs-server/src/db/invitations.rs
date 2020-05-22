@@ -7,6 +7,8 @@ use jirs_data::{
     User, UserId, UserRole, UsernameString,
 };
 
+use crate::db::tokens::CreateBindToken;
+use crate::db::users::{FindUser, Register};
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 
@@ -149,7 +151,7 @@ impl Message for AcceptInvitation {
 impl Handler<AcceptInvitation> for DbExecutor {
     type Result = Result<Token, ServiceErrors>;
 
-    fn handle(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: AcceptInvitation, ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::invitations::dsl::*;
 
         let conn = &self
@@ -177,21 +179,32 @@ impl Handler<AcceptInvitation> for DbExecutor {
             .filter(id.eq(invitation.id))
             .filter(state.eq(InvitationState::Sent));
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
-        query
-            .execute(conn)
-            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+        query.execute(conn).map_err(|e| {
+            ServiceErrors::DatabaseQueryFailed(format!("update invitation {} {}", invitation.id, e))
+        })?;
 
-        let user: User = {
-            use crate::schema::users::dsl::*;
-
-            let query = users
-                .filter(name.eq(invitation.name).and(email.eq(invitation.email)))
-                .limit(1);
-            debug!("{}", diesel::debug_query::<Pg, _>(&query));
-            query
-                .first(conn)
-                .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?
+        match self.handle(
+            Register {
+                name: invitation.name.clone(),
+                email: invitation.email.clone(),
+                project_id: Some(invitation.project_id),
+            },
+            ctx,
+        ) {
+            Ok(_) => (),
+            Err(ServiceErrors::RegisterCollision) => (),
+            Err(e) => return Err(e),
         };
+
+        let user: User = self.handle(
+            FindUser {
+                name: invitation.name.clone(),
+                email: invitation.email.clone(),
+            },
+            ctx,
+        )?;
+        self.handle(CreateBindToken { user_id: user.id }, ctx)?;
+
         {
             use crate::schema::user_projects::dsl::*;
 
@@ -208,11 +221,12 @@ impl Handler<AcceptInvitation> for DbExecutor {
 
         let token = {
             use crate::schema::tokens::dsl::*;
-            let query = tokens.filter(user_id.eq(user.id));
+
+            let query = tokens.filter(user_id.eq(user.id)).order_by(id.desc());
             debug!("{}", diesel::debug_query::<Pg, _>(&query));
-            query
-                .first(conn)
-                .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?
+            query.first(conn).map_err(|e| {
+                ServiceErrors::DatabaseQueryFailed(format!("token for user {} {}", user.id, e))
+            })?
         };
 
         Ok(token)

@@ -40,6 +40,7 @@ impl WsHandler<Register> for WebSocketActor {
         let msg = match block_on(self.db.send(DbRegister {
             name: name.clone(),
             email: email.clone(),
+            project_id: None,
         })) {
             Ok(Ok(_)) => Some(WsMsg::SignUpSuccess),
             Ok(Err(_)) => Some(WsMsg::SignUpPairTaken),

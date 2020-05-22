@@ -3,11 +3,11 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use jirs_data::{Project, User, UserId};
+use jirs_data::{ProjectId, User, UserId};
 
+use crate::db::projects::CreateProject;
 use crate::db::{DbExecutor, DbPooledConn};
 use crate::errors::ServiceErrors;
-use crate::models::CreateProjectForm;
 use crate::schema::users::all_columns;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -112,6 +112,7 @@ impl Handler<LoadIssueAssignees> for DbExecutor {
 pub struct Register {
     pub name: String,
     pub email: String,
+    pub project_id: Option<ProjectId>,
 }
 
 impl Message for Register {
@@ -121,8 +122,7 @@ impl Message for Register {
 impl Handler<Register> for DbExecutor {
     type Result = Result<(), ServiceErrors>;
 
-    fn handle(&mut self, msg: Register, _ctx: &mut Self::Context) -> Self::Result {
-        use crate::schema::projects::dsl::projects;
+    fn handle(&mut self, msg: Register, ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::users::dsl::*;
 
         let conn = &self
@@ -136,17 +136,22 @@ impl Handler<Register> for DbExecutor {
             return Err(ServiceErrors::RegisterCollision);
         }
 
-        let form = CreateProjectForm {
-            name: "initial".to_string(),
-            url: "".to_string(),
-            description: "".to_string(),
-            category: Default::default(),
+        let current_project_id: ProjectId = match msg.project_id.as_ref().cloned() {
+            Some(current_project_id) => current_project_id,
+            _ => {
+                self.handle(
+                    CreateProject {
+                        name: "initial".to_string(),
+                        url: None,
+                        description: None,
+                        category: None,
+                        time_tracking: None,
+                    },
+                    ctx,
+                )?
+                .id
+            }
         };
-        let insert_query = diesel::insert_into(projects).values(form);
-        debug!("{}", diesel::debug_query::<Pg, _>(&insert_query));
-        let project: Project = insert_query
-            .get_result(conn)
-            .map_err(|_| ServiceErrors::RegisterCollision)?;
 
         let user: User = {
             let insert_user_query =
@@ -161,7 +166,7 @@ impl Handler<Register> for DbExecutor {
             use crate::schema::user_projects::dsl::*;
             let insert_user_project_query = diesel::insert_into(user_projects).values((
                 user_id.eq(user.id),
-                project_id.eq(project.id),
+                project_id.eq(current_project_id),
                 is_current.eq(true),
                 is_default.eq(true),
             ));

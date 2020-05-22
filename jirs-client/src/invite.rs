@@ -9,7 +9,7 @@ use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_input::StyledInput;
-use crate::shared::{outer_layout, ToNode};
+use crate::shared::{go_to_board, outer_layout, write_auth_token, ToNode};
 use crate::validations::is_token;
 use crate::ws::send_ws_msg;
 use crate::{FieldId, InvitationPageChange, Msg, PageChanged, WebSocketChanged};
@@ -27,12 +27,21 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     };
 
     match msg {
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::InvitationAcceptFailure(_))) => {
-            page.error = Some("Invalid token".to_string());
-        }
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(ws_msg)) => match ws_msg {
+            WsMsg::InvitationAcceptFailure(_) => {
+                page.error = Some("Invalid token".to_string());
+            }
+            WsMsg::InvitationAcceptSuccess(token) => {
+                if let Ok(_) = write_auth_token(Some(token)) {
+                    go_to_board(orders);
+                }
+            }
+            _ => (),
+        },
         Msg::StrInputChanged(FieldId::Invite(InviteFieldId::Token), text) => {
             page.token_touched = true;
             page.token = text;
+            page.error = None;
         }
         Msg::PageChanged(PageChanged::Invitation(InvitationPageChange::SubmitForm)) => {
             if let Ok(token) = uuid::Uuid::from_str(page.token.as_str()) {
@@ -97,10 +106,11 @@ fn submit(_page: &Box<InvitePage>) -> Node<Msg> {
 
 fn token_field(page: &Box<InvitePage>) -> Node<Msg> {
     let token = StyledInput::build(FieldId::Invite(InviteFieldId::Token))
-        .valid(!page.token_touched || is_token(page.token.as_str()))
+        .valid(!page.token_touched || is_token(page.token.as_str()) && page.error.is_none())
         .value(page.token.as_str())
         .build()
         .into_node();
+
     StyledField::build()
         .input(token)
         .label("Your invite token")

@@ -42,6 +42,45 @@ impl Handler<LoadCurrentProject> for DbExecutor {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct CreateProject {
+    pub name: String,
+    pub url: Option<String>,
+    pub description: Option<String>,
+    pub category: Option<ProjectCategory>,
+    pub time_tracking: Option<TimeTracking>,
+}
+
+impl Message for CreateProject {
+    type Result = Result<Project, ServiceErrors>;
+}
+
+impl Handler<CreateProject> for DbExecutor {
+    type Result = Result<Project, ServiceErrors>;
+
+    fn handle(&mut self, msg: CreateProject, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::projects::dsl::*;
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let query = diesel::insert_into(projects)
+            .values((
+                name.eq(msg.name),
+                msg.url.map(|v| url.eq(v)),
+                msg.description.map(|v| description.eq(v)),
+                msg.category.map(|v| category.eq(v)),
+                msg.time_tracking.map(|v| time_tracking.eq(v)),
+            ))
+            .returning(all_columns);
+        debug!("{}", diesel::debug_query::<Pg, _>(&query));
+        query
+            .get_result::<Project>(conn)
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct UpdateProject {
     pub project_id: i32,
     pub name: Option<String>,
