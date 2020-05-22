@@ -51,11 +51,17 @@ pub enum ProfilePageChange {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum InvitationPageChange {
+    SubmitForm,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum PageChanged {
     Users(UsersPageChange),
     ProjectSettings(ProjectPageChange),
     Profile(ProfilePageChange),
     Board(BoardPageChange),
+    Invitation(InvitationPageChange),
 }
 
 #[derive(Debug)]

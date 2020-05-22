@@ -262,6 +262,7 @@ pub struct ProjectPage {
 pub struct InvitePage {
     pub token: String,
     pub token_touched: bool,
+    pub error: Option<String>,
 }
 
 #[derive(Debug)]

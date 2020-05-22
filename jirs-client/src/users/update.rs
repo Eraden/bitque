@@ -45,11 +45,11 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
                 send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref(), orders);
             }
-            WebSocketChanged::WsMsg(WsMsg::InvitedUserRemoveSuccess(email)) => {
+            WebSocketChanged::WsMsg(WsMsg::InvitedUserRemoveSuccess(removed_id)) => {
                 let mut old = vec![];
                 std::mem::swap(&mut page.invited_users, &mut old);
                 for user in old {
-                    if user.email != email {
+                    if user.id != removed_id {
                         page.invited_users.push(user);
                     }
                 }
@@ -110,9 +110,9 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 orders,
             );
         }
-        Msg::InvitedUserRemove(email) => {
+        Msg::InvitedUserRemove(user_id) => {
             send_ws_msg(
-                WsMsg::InvitedUserRemoveRequest(email),
+                WsMsg::InvitedUserRemoveRequest(user_id),
                 model.ws.as_ref(),
                 orders,
             );

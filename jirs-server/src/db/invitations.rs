@@ -3,8 +3,8 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 
 use jirs_data::{
-    EmailString, Invitation, InvitationId, InvitationState, ProjectId, User, UserId, UserRole,
-    UsernameString,
+    EmailString, Invitation, InvitationId, InvitationState, InvitationToken, ProjectId, Token,
+    User, UserId, UserRole, UsernameString,
 };
 
 use crate::db::DbExecutor;
@@ -139,15 +139,15 @@ impl Handler<RevokeInvitation> for DbExecutor {
 }
 
 pub struct AcceptInvitation {
-    pub id: InvitationId,
+    pub invitation_token: InvitationToken,
 }
 
 impl Message for AcceptInvitation {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<Token, ServiceErrors>;
 }
 
 impl Handler<AcceptInvitation> for DbExecutor {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<Token, ServiceErrors>;
 
     fn handle(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::invitations::dsl::*;
@@ -157,7 +157,7 @@ impl Handler<AcceptInvitation> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
-        let query = invitations.find(msg.id);
+        let query = invitations.filter(bind_token.eq(msg.invitation_token));
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         let invitation: Invitation = query
             .first(conn)
@@ -206,6 +206,15 @@ impl Handler<AcceptInvitation> for DbExecutor {
                 .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
         };
 
-        Ok(user)
+        let token = {
+            use crate::schema::tokens::dsl::*;
+            let query = tokens.filter(user_id.eq(user.id));
+            debug!("{}", diesel::debug_query::<Pg, _>(&query));
+            query
+                .first(conn)
+                .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?
+        };
+
+        Ok(token)
     }
 }

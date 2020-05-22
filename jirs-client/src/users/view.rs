@@ -108,10 +108,12 @@ pub fn view(model: &Model) -> Node<Msg> {
         .invited_users
         .iter()
         .map(|user| {
-            let email = user.email.clone();
+            let user_id = user.id;
             let remove = StyledButton::build()
                 .text("Remove")
-                .on_click(mouse_ev(Ev::Click, move |_| Msg::InvitedUserRemove(email)))
+                .on_click(mouse_ev(Ev::Click, move |_| {
+                    Msg::InvitedUserRemove(user_id)
+                }))
                 .build()
                 .into_node();
             let role = page

@@ -31,6 +31,8 @@ pub type MessageId = i32;
 pub type EmailString = String;
 pub type UsernameString = String;
 pub type TitleString = String;
+pub type BindToken = Uuid;
+pub type InvitationToken = Uuid;
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
@@ -705,10 +707,11 @@ pub enum WsMsg {
     InvitationRevokeRequest(InvitationId),
     InvitationRevokeSuccess(InvitationId),
     //
-    InvitationAcceptRequest(InvitationId),
-    InvitationAcceptSuccess(InvitationId),
-    InvitedUserRemoveRequest(EmailString),
-    InvitedUserRemoveSuccess(EmailString),
+    InvitationAcceptRequest(InvitationToken),
+    InvitationAcceptSuccess(BindToken),
+    InvitationAcceptFailure(InvitationToken),
+    InvitedUserRemoveRequest(UserId),
+    InvitedUserRemoveSuccess(UserId),
 
     // project page
     ProjectRequest,

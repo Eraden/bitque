@@ -1,6 +1,6 @@
 use futures::executor::block_on;
 
-use jirs_data::{EmailString, InvitationId, UserRole, UsernameString, WsMsg};
+use jirs_data::{EmailString, InvitationId, InvitationToken, UserRole, UsernameString, WsMsg};
 
 use crate::db::invitations;
 use crate::ws::{WebSocketActor, WsHandler, WsResult};
@@ -131,22 +131,23 @@ impl WsHandler<RevokeInvitation> for WebSocketActor {
 }
 
 pub struct AcceptInvitation {
-    pub id: InvitationId,
+    pub invitation_token: InvitationToken,
 }
 
 impl WsHandler<AcceptInvitation> for WebSocketActor {
     fn handle_msg(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> WsResult {
-        self.require_user()?;
-        let AcceptInvitation { id } = msg;
-        let res = match block_on(self.db.send(invitations::AcceptInvitation { id })) {
-            Ok(Ok(_)) => Some(WsMsg::InvitationAcceptSuccess(id)),
+        let AcceptInvitation { invitation_token } = msg;
+        let res = match block_on(self.db.send(invitations::AcceptInvitation {
+            invitation_token: invitation_token.clone(),
+        })) {
+            Ok(Ok(token)) => Some(WsMsg::InvitationAcceptSuccess(token.access_token)),
             Ok(Err(e)) => {
                 error!("{:?}", e);
-                return Ok(None);
+                Some(WsMsg::InvitationAcceptFailure(invitation_token))
             }
             Err(e) => {
                 error!("{}", e);
-                return Ok(None);
+                Some(WsMsg::InvitationAcceptFailure(invitation_token))
             }
         };
         Ok(res)

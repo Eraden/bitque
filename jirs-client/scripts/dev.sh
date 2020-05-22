@@ -3,9 +3,10 @@
 . .env
 
 rm -Rf tmp
-mkdir tmp
+mkdir -p tmp
+mkdir -p target
 
-wasm-pack build --mode normal --dev --out-name jirs --out-dir ./tmp --target web
+wasm-pack build --mode normal --dev --out-name jirs --out-dir ./tmp --target web -- --verbose
 ../target/debug/jirs-css -i ./js/styles.css -O ./tmp/styles.css
 
 cp -r ./static/* ./tmp

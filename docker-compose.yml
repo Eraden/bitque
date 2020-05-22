@@ -5,3 +5,7 @@ services:
     image: postgres:latest
     ports:
       - 5432:5432
+  server:
+    build:
+      dockerfile: ./jirs-server/Dockerfile
+      context: .

@@ -77,10 +77,12 @@ pub fn inner_layout(
     ]
 }
 
-pub fn outer_layout(_model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
+pub fn outer_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
+    let modal = crate::modal::view(model);
     article![
         class!["outer-layout", "outerPage"],
         id![page_name],
+        modal,
         children
     ]
 }

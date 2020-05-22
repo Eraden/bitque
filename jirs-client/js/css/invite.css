@@ -1,0 +1,20 @@
+#invite > .styledForm {
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto 24px;
+    width: 400px;
+    background: rgb(255, 255, 255) none repeat scroll 0 0;
+    border-radius: 3px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0 0 10px;
+    box-sizing: border-box;
+    color: var(--textMedium);
+}
+
+#invite > .styledForm:first-of-type {
+    margin-top: 124.5px;
+    margin-bottom: 0;
+}
+
+#invite > .styledForm:last-of-type {
+    box-shadow: rgba(0, 0, 0, 0.1) 0 10px 10px;
+}

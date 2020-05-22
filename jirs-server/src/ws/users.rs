@@ -1,7 +1,8 @@
 use futures::executor::block_on;
 
-use jirs_data::WsMsg;
+use jirs_data::{UserId, UserProject, WsMsg};
 
+use crate::db;
 use crate::db::users::Register as DbRegister;
 use crate::ws::auth::Authenticate;
 use crate::ws::{WebSocketActor, WsHandler, WsResult};
@@ -99,5 +100,37 @@ impl WsHandler<ProfileUpdate> for WebSocketActor {
         };
 
         Ok(Some(WsMsg::ProfileUpdated))
+    }
+}
+
+pub struct RemoveInvitedUser {
+    pub user_id: UserId,
+}
+
+impl WsHandler<RemoveInvitedUser> for WebSocketActor {
+    fn handle_msg(&mut self, msg: RemoveInvitedUser, _ctx: &mut Self::Context) -> WsResult {
+        let RemoveInvitedUser {
+            user_id: invited_id,
+        } = msg;
+        let UserProject {
+            user_id: inviter_id,
+            project_id,
+            ..
+        } = self.require_user_project()?.clone();
+        match block_on(self.db.send(db::user_projects::RemoveInvitedUser {
+            invited_id,
+            inviter_id,
+            project_id,
+        })) {
+            Ok(Ok(_users)) => Ok(Some(WsMsg::InvitedUserRemoveSuccess(invited_id))),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
+        }
     }
 }

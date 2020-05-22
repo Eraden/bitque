@@ -53,7 +53,7 @@ pub enum Msg {
     InviteRequest,
     InviteRevokeRequest(InvitationId),
     InviteApproveRequest(InvitationId),
-    InvitedUserRemove(EmailString),
+    InvitedUserRemove(UserId),
 
     // sign up
     SignUpRequest,

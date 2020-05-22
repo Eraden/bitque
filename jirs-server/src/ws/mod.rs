@@ -150,6 +150,9 @@ impl WebSocketActor {
 
             // users
             WsMsg::ProjectUsersRequest => self.handle_msg(LoadProjectUsers, ctx)?,
+            WsMsg::InvitedUserRemoveRequest(user_id) => {
+                self.handle_msg(RemoveInvitedUser { user_id }, ctx)?
+            }
 
             // comments
             WsMsg::IssueCommentsRequest(issue_id) => {
@@ -166,7 +169,9 @@ impl WebSocketActor {
                 self.handle_msg(CreateInvitation { name, email, role }, ctx)?
             }
             WsMsg::InvitationListRequest => self.handle_msg(ListInvitation, ctx)?,
-            WsMsg::InvitationAcceptRequest(id) => self.handle_msg(AcceptInvitation { id }, ctx)?,
+            WsMsg::InvitationAcceptRequest(invitation_token) => {
+                self.handle_msg(AcceptInvitation { invitation_token }, ctx)?
+            }
             WsMsg::InvitationRevokeRequest(id) => self.handle_msg(RevokeInvitation { id }, ctx)?,
             WsMsg::InvitedUsersRequest => self.handle_msg(LoadInvitedUsers, ctx)?,
 

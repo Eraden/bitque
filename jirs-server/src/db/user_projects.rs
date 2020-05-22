@@ -2,7 +2,7 @@ use actix::{Handler, Message};
 use diesel::pg::Pg;
 use diesel::prelude::*;
 
-use jirs_data::{UserId, UserProject, UserProjectId};
+use jirs_data::{ProjectId, UserId, UserProject, UserProjectId, UserRole};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
@@ -107,5 +107,63 @@ impl Handler<ChangeCurrentUserProject> for DbExecutor {
 
         user_project.is_current = true;
         Ok(user_project)
+    }
+}
+
+pub struct RemoveInvitedUser {
+    pub invited_id: UserId,
+    pub inviter_id: UserId,
+    pub project_id: ProjectId,
+}
+
+impl Message for RemoveInvitedUser {
+    type Result = Result<(), ServiceErrors>;
+}
+
+impl Handler<RemoveInvitedUser> for DbExecutor {
+    type Result = Result<(), ServiceErrors>;
+
+    fn handle(&mut self, msg: RemoveInvitedUser, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::user_projects::dsl::*;
+
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        if msg.invited_id == msg.inviter_id {
+            return Err(ServiceErrors::Unauthorized);
+        }
+
+        {
+            let owner = UserRole::Owner;
+            let query = user_projects.filter(
+                user_id
+                    .eq(msg.inviter_id)
+                    .and(project_id.eq(msg.project_id))
+                    .and(role.eq(owner)),
+            );
+            debug!("{}", diesel::debug_query::<Pg, _>(&query));
+            query
+                .first::<UserProject>(conn)
+                .map_err(|_e| ServiceErrors::Unauthorized)?;
+        }
+
+        {
+            let query = diesel::delete(user_projects).filter(
+                user_id
+                    .eq(msg.invited_id)
+                    .and(project_id.eq(msg.project_id)),
+            );
+            debug!("{}", diesel::debug_query::<Pg, _>(&query));
+            query.execute(conn).map_err(|_e| {
+                ServiceErrors::RecordNotFound(format!(
+                    "user project user with id {} for project {}",
+                    msg.invited_id, msg.project_id
+                ))
+            })?;
+        }
+
+        Ok(())
     }
 }

@@ -62,6 +62,11 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
             model.modals.push(ModalType::DebugModal);
         }
 
+        #[cfg(debug_assertions)]
+        Msg::GlobalKeyDown { key, .. } if key.eq(">") => {
+            log!(model);
+        }
+
         _ => (),
     }
     add_issue::update(msg, model, orders);
