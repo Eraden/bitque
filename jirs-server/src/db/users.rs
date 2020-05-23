@@ -303,9 +303,10 @@ impl Handler<ProfileUpdate> for DbExecutor {
 #[cfg(test)]
 mod tests {
     use crate::db::build_pool;
-    use crate::models::CreateProjectForm;
 
     use super::*;
+    use diesel::connection::TransactionManager;
+    use jirs_data::{Project, ProjectCategory};
 
     #[test]
     fn check_collision() {
@@ -316,23 +317,31 @@ mod tests {
         let pool = build_pool();
         let conn = &pool.get().unwrap();
 
+        let tm = conn.transaction_manager();
+
+        tm.begin_transaction(conn).unwrap();
+
         diesel::delete(user_projects).execute(conn).unwrap();
         diesel::delete(users).execute(conn).unwrap();
         diesel::delete(projects).execute(conn).unwrap();
 
-        let project_form = CreateProjectForm {
-            name: "baz".to_string(),
-            url: "/uz".to_string(),
-            description: "None".to_string(),
-            category: Default::default(),
+        let project: Project = {
+            use crate::schema::projects::dsl::*;
+
+            diesel::insert_into(projects)
+                .values((
+                    name.eq("baz".to_string()),
+                    url.eq("/uz".to_string()),
+                    description.eq("None".to_string()),
+                    category.eq(ProjectCategory::Software),
+                ))
+                .get_result::<Project>(conn)
+                .unwrap()
         };
-        let project: Project = diesel::insert_into(projects)
-            .values(project_form)
-            .get_result(conn)
-            .unwrap();
 
         let user: User = {
             use crate::schema::users::dsl::*;
+
             diesel::insert_into(users)
                 .values((
                     name.eq("Foo".to_string()),
@@ -354,8 +363,14 @@ mod tests {
                 .unwrap();
         }
 
-        assert_eq!(count_matching_users("Foo", "bar@example.com", conn), 1);
-        assert_eq!(count_matching_users("Bar", "foo@example.com", conn), 1);
-        assert_eq!(count_matching_users("Foo", "foo@example.com", conn), 1);
+        let res1 = count_matching_users("Foo", "bar@example.com", conn);
+        let res2 = count_matching_users("Bar", "foo@example.com", conn);
+        let res3 = count_matching_users("Foo", "foo@example.com", conn);
+
+        tm.rollback_transaction(conn).unwrap();
+
+        assert_eq!(res1, 1);
+        assert_eq!(res2, 1);
+        assert_eq!(res3, 1);
     }
 }

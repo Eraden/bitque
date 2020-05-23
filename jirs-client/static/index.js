@@ -4,7 +4,6 @@ const wsUrl = () => `${ getProtocol() }//${ getWsHostName() }:${ process.env.JIR
 
 import("/jirs.js").then(async module => {
     window.module = module;
-    console.log(module)
     await module.default();
     const host_url = `${ location.protocol }//${ process.env.JIRS_SERVER_BIND }:${ process.env.JIRS_SERVER_PORT }`;
     module.render(host_url, wsUrl());
