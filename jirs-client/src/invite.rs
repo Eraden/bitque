@@ -9,10 +9,12 @@ use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_input::StyledInput;
-use crate::shared::{go_to_board, outer_layout, write_auth_token, ToNode};
+use crate::shared::{outer_layout, write_auth_token, ToNode};
 use crate::validations::is_token;
 use crate::ws::send_ws_msg;
-use crate::{FieldId, InvitationPageChange, Msg, PageChanged, WebSocketChanged};
+use crate::{
+    authorize_or_redirect, FieldId, InvitationPageChange, Msg, PageChanged, WebSocketChanged,
+};
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match model.page_content {
@@ -32,8 +34,8 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 page.error = Some("Invalid token".to_string());
             }
             WsMsg::InvitationAcceptSuccess(token) => {
-                if let Ok(_) = write_auth_token(Some(token)) {
-                    go_to_board(orders);
+                if let Ok(Msg::AuthTokenStored) = write_auth_token(Some(token)) {
+                    authorize_or_redirect(model, orders);
                 }
             }
             _ => (),
