@@ -9,6 +9,7 @@ use crate::db::projects::CreateProject;
 use crate::db::{DbExecutor, DbPooledConn};
 use crate::errors::ServiceErrors;
 use crate::schema::users::all_columns;
+use diesel::connection::TransactionManager;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FindUser {
@@ -130,6 +131,10 @@ impl Handler<Register> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
+        let tm = conn.transaction_manager();
+
+        tm.begin_transaction(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
         let matching = count_matching_users(msg.name.as_str(), msg.email.as_str(), conn);
 
         if matching > 0 {
@@ -178,6 +183,8 @@ impl Handler<Register> for DbExecutor {
                 .execute(conn)
                 .map_err(|_| ServiceErrors::RegisterCollision)?;
         }
+        tm.commit_transaction(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
         Ok(())
     }
