@@ -2,7 +2,9 @@ use std::io::Write;
 
 use diesel::{deserialize::*, pg::*, serialize::*, *};
 
-use crate::{InvitationState, IssuePriority, IssueType, ProjectCategory, TimeTracking, UserRole};
+use crate::{
+    InvitationState, IssuePriority, IssueType, MessageType, ProjectCategory, TimeTracking, UserRole,
+};
 
 #[derive(SqlType)]
 #[postgres(type_name = "IssuePriorityType")]
@@ -235,6 +237,46 @@ impl ToSql<TimeTrackingType, Pg> for TimeTracking {
             TimeTracking::Untracked => out.write_all(b"untracked")?,
             TimeTracking::Fibonacci => out.write_all(b"fibonacci")?,
             TimeTracking::Hourly => out.write_all(b"hourly")?,
+        }
+        Ok(IsNull::No)
+    }
+}
+
+#[derive(SqlType)]
+#[postgres(type_name = "MessageTypeType")]
+pub struct MessageTypeType;
+
+impl diesel::query_builder::QueryId for MessageTypeType {
+    type QueryId = MessageType;
+}
+
+fn message_type_type_from_sql(bytes: Option<&[u8]>) -> deserialize::Result<MessageType> {
+    match not_none!(bytes) {
+        b"received_invitation" => Ok(MessageType::ReceivedInvitation),
+        b"assigned_to_issue" => Ok(MessageType::AssignedToIssue),
+        b"mention" => Ok(MessageType::Mention),
+        _ => Ok(MessageType::Mention),
+    }
+}
+
+impl FromSql<MessageTypeType, Pg> for MessageType {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<MessageType> {
+        message_type_type_from_sql(bytes)
+    }
+}
+
+impl FromSql<sql_types::Text, Pg> for MessageType {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<MessageType> {
+        message_type_type_from_sql(bytes)
+    }
+}
+
+impl ToSql<MessageTypeType, Pg> for MessageType {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        match *self {
+            MessageType::ReceivedInvitation => out.write_all(b"received_invitation")?,
+            MessageType::AssignedToIssue => out.write_all(b"assigned_to_issue")?,
+            MessageType::Mention => out.write_all(b"mention")?,
         }
         Ok(IsNull::No)
     }

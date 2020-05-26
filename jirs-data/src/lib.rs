@@ -548,6 +548,46 @@ impl From<Issue> for UpdateIssuePayload {
     }
 }
 
+#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
+#[cfg_attr(feature = "backend", sql_type = "MessageTypeType")]
+#[derive(Clone, Copy, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash)]
+pub enum MessageType {
+    ReceivedInvitation,
+    AssignedToIssue,
+    Mention,
+}
+
+impl Into<u32> for MessageType {
+    fn into(self) -> u32 {
+        match self {
+            MessageType::ReceivedInvitation => 0,
+            MessageType::AssignedToIssue => 1,
+            MessageType::Mention => 2,
+        }
+    }
+}
+
+impl Into<MessageType> for u32 {
+    fn into(self) -> MessageType {
+        match self {
+            0 => MessageType::ReceivedInvitation,
+            1 => MessageType::AssignedToIssue,
+            2 => MessageType::Mention,
+            _ => MessageType::Mention,
+        }
+    }
+}
+
+impl std::fmt::Display for MessageType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MessageType::ReceivedInvitation => f.write_str("ReceivedInvitation"),
+            MessageType::AssignedToIssue => f.write_str("AssignedToIssue"),
+            MessageType::Mention => f.write_str("Mention"),
+        }
+    }
+}
+
 #[cfg_attr(feature = "backend", derive(Queryable))]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Message {
@@ -556,7 +596,7 @@ pub struct Message {
     pub sender_id: UserId,
     pub summary: String,
     pub description: String,
-    pub message_type: String,
+    pub message_type: MessageType,
     pub hyper_link: String,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,

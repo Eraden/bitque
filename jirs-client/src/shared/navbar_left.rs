@@ -126,7 +126,7 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
             } = message;
             div![
                 class!["message"],
-                class![message_type.as_str()],
+                attrs![At::Class => format!("{}", message_type)],
                 div![class!["summary"], summary],
                 div![class!["description"], description],
                 div![class!["hyperlink"], hyper_link],

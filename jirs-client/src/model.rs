@@ -501,7 +501,7 @@ impl Model {
                 sender_id: 2,
                 summary: "You have been invited".to_string(),
                 description: "You have been invited to project A".to_string(),
-                message_type: "project-invitation".to_string(),
+                message_type: MessageType::ReceivedInvitation,
                 hyper_link: "/project/1".to_string(),
                 created_at: chrono::NaiveDateTime::from_timestamp(4567890, 123),
                 updated_at: chrono::NaiveDateTime::from_timestamp(1234567, 098),

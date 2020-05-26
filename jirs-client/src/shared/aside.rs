@@ -42,13 +42,25 @@ pub fn render(model: &Model) -> Node<Msg> {
             ],
         ],
     };
-    let mut links = vec![
+    let mut links = vec![];
+
+    if model.current_user_role() > UserRole::User {
+        links.push(sidebar_link_item(
+            model,
+            "Project settings",
+            Icon::Settings,
+            Some(Page::ProjectSettings),
+        ));
+    }
+
+    links.extend(vec![
+        li![divider()],
         sidebar_link_item(model, "Releases", Icon::Shipping, None),
         sidebar_link_item(model, "Issue and Filters", Icon::Issues, None),
         sidebar_link_item(model, "Pages", Icon::Page, None),
         sidebar_link_item(model, "Reports", Icon::Reports, None),
         sidebar_link_item(model, "Components", Icon::Component, None),
-    ];
+    ]);
 
     if model.current_user_role() > UserRole::User {
         links.push(sidebar_link_item(
@@ -64,13 +76,6 @@ pub fn render(model: &Model) -> Node<Msg> {
         ul![
             project_info,
             sidebar_link_item(model, "Kanban Board", Icon::Board, Some(Page::Project)),
-            sidebar_link_item(
-                model,
-                "Project settings",
-                Icon::Settings,
-                Some(Page::ProjectSettings)
-            ),
-            li![divider()],
             links,
         ]
     ]

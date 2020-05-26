@@ -16,6 +16,10 @@
     margin-top: 20px;
 }
 
+#users > .usersSection > .usersList > .user > span {
+    width: 25%;
+}
+
 #users > .invitationsSection > .invitationsList > .invitation.revoked {
     color: var(--textLight);
 }
