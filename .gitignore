@@ -11,3 +11,4 @@ jirs-client/tmp
 jirs-client/build
 tmp
 jirs-server/target
+jirs-cli/target
