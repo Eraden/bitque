@@ -109,12 +109,14 @@ impl std::fmt::Display for FieldId {
                 UsersFieldId::Email => f.write_str("users-email"),
                 UsersFieldId::UserRole => f.write_str("users-userRole"),
                 UsersFieldId::Avatar => f.write_str("users-avatar"),
+                UsersFieldId::CurrentProject => f.write_str("users-currentProject"),
             },
             FieldId::Profile(sub) => match sub {
                 UsersFieldId::Username => f.write_str("profile-username"),
                 UsersFieldId::Email => f.write_str("profile-email"),
                 UsersFieldId::UserRole => f.write_str("profile-userRole"),
                 UsersFieldId::Avatar => f.write_str("profile-avatar"),
+                UsersFieldId::CurrentProject => f.write_str("profile-currentProject"),
             },
         }
     }

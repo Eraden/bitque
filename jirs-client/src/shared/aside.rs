@@ -12,7 +12,11 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_)))) => {
             enqueue_ws_msg(
-                vec![WsMsg::UserProjectLoad, WsMsg::ProjectsLoad],
+                vec![
+                    WsMsg::UserProjectsLoad,
+                    WsMsg::ProjectsLoad,
+                    WsMsg::MessagesRequest,
+                ],
                 model.ws.as_ref(),
                 orders,
             );

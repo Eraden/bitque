@@ -550,8 +550,6 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
 }
 
 fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
-    use crate::shared::styled_button::Variant as ButtonVariant;
-
     let submit_comment_form = mouse_ev(Ev::Click, move |ev| {
         ev.stop_propagation();
         Msg::SaveComment
@@ -573,13 +571,13 @@ fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
     .into_node();
 
     let submit = StyledButton::build()
-        .variant(ButtonVariant::Primary)
+        .primary()
         .on_click(submit_comment_form)
         .text("Save")
         .build()
         .into_node();
     let cancel = StyledButton::build()
-        .variant(ButtonVariant::Empty)
+        .empty()
         .on_click(close_comment_form)
         .text("Cancel")
         .build()
@@ -589,8 +587,6 @@ fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
 }
 
 fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Option<Node<Msg>> {
-    use crate::shared::styled_button::Variant as ButtonVariant;
-
     let show_form = modal.comment_form.creating && modal.comment_form.id == Some(comment.id);
 
     let user = model.users.iter().find(|u| u.id == comment.user_id)?;
@@ -617,7 +613,7 @@ fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Option<N
                 ))
             }))
             .text("Edit")
-            .variant(ButtonVariant::Empty)
+            .empty()
             .build()
             .into_node();
 
@@ -625,7 +621,7 @@ fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Option<N
             .add_class("deleteButton")
             .on_click(delete_comment_handler)
             .text("Delete")
-            .variant(ButtonVariant::Empty)
+            .empty()
             .build()
             .into_node();
 

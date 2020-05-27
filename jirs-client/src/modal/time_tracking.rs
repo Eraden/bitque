@@ -99,7 +99,7 @@ pub fn time_tracking_field(
                     .map(|n| (*n).to_child())
                     .collect(),
             )
-            .with_state(select_state)
+            .state(select_state)
             .options(
                 fibonacci_values()
                     .into_iter()

@@ -160,5 +160,33 @@ insert into comments (user_id, issue_id, body) values (
     2, 3, 'Praesent et orci ut metus interdum sollicitudin.'
 );
 
+/*
+'received_invitation',
+'assigned_to_issue',
+'mention'
+*/
+INSERT INTO messages (receiver_id, sender_id, summary, description, message_type, hyper_link, created_at, updated_at)
+VALUES (
+    1, 1,
+    'Foo',
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec elit ligula, tempor non nunc eget, maximus elementum enim. Nam ut elit nibh. Nunc aliquet lectus mi, venenatis porttitor turpis rhoncus a. Aliquam tempus, eros lobortis fermentum dapibus, felis sapien tristique mi, ut porta odio lectus quis nisi. Etiam laoreet quis quam vitae iaculis. Vivamus sagittis luctus urna, porttitor fermentum ligula aliquam in. Suspendisse scelerisque nunc id congue elementum. Aliquam erat volutpat. Integer pretium mi in quam varius lacinia. Nullam vitae justo eu mauris congue posuere. Morbi leo mi, varius eu nisl nec, laoreet scelerisque nisl. Fusce in nisi in felis varius fermentum et ac odio. Curabitur sit amet suscipit quam.',
+    'received_invitation',
+    '',
+    now(), now()
+), (
+    1, 2,
+    'Bar',
+    'Suspendisse tincidunt euismod justo, at porttitor dolor fermentum ut. Interdum et malesuada fames ac ante ipsum primis in faucibus. Suspendisse maximus sed ex ut sollicitudin. Etiam volutpat ultricies vehicula. Sed at est in mauris cursus fermentum. Duis et lacus metus. Sed ut egestas ipsum, ac consectetur metus. In felis diam, cursus eu felis non, tincidunt elementum lacus. Etiam et massa odio. Vestibulum ornare felis maximus facilisis semper.',
+    'assigned_to_issue',
+    '/issue/1',
+    now(), now()
+), (
+    2, 1,
+    'Foz Baz',
+    'Suspendisse quam ligula, @<John Doe> auctor vel diam sit amet, tincidunt venenatis justo. Vestibulum tincidunt mauris et est iaculis, vel consequat turpis porta. Integer eu urna quis diam pharetra lobortis vel nec lacus. Donec ac mollis risus. Morbi pellentesque pulvinar libero, sit amet finibus risus fermentum ac. Vivamus imperdiet mi congue ligula luctus condimentum. Duis arcu turpis, dignissim quis purus eget, dignissim elementum risus. Donec mattis rhoncus lorem quis blandit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec dignissim tellus eu cursus finibus. Ut pellentesque mi at eros maximus, eu tempor est sodales. Mauris vel feugiat ligula. Integer quis interdum velit, at iaculis arcu. Duis leo sapien, egestas eget erat id, fringilla pulvinar nulla. Nam sollicitudin ullamcorper finibus.',
+    'mention',
+    '',
+    now(), now()
+);
 
 select * from tokens;

@@ -4,7 +4,7 @@ use crate::shared::ToNode;
 use crate::Msg;
 
 #[allow(dead_code)]
-pub enum Variant {
+enum Variant {
     Primary,
     Success,
     Danger,
@@ -39,7 +39,7 @@ pub struct StyledButtonBuilder {
 }
 
 impl StyledButtonBuilder {
-    pub fn variant(mut self, value: Variant) -> Self {
+    fn variant(mut self, value: Variant) -> Self {
         self.variant = Some(value);
         self
     }

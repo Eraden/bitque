@@ -681,6 +681,7 @@ pub enum UsersFieldId {
     Email,
     UserRole,
     Avatar,
+    CurrentProject,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
@@ -754,8 +755,6 @@ pub enum WsMsg {
     InvitedUserRemoveSuccess(UserId),
 
     // project page
-    ProjectRequest,
-    ProjectLoaded(Project),
     ProjectsLoad,
     ProjectsLoaded(Vec<Project>),
 
@@ -797,8 +796,8 @@ pub enum WsMsg {
     ProfileUpdated,
 
     // user projects
-    UserProjectLoad,
-    UserProjectLoaded(Vec<UserProject>),
+    UserProjectsLoad,
+    UserProjectsLoaded(Vec<UserProject>),
     UserProjectSetCurrent(UserProjectId),
     UserProjectCurrentChanged(UserProject),
 

@@ -402,10 +402,11 @@ pub struct ProfilePage {
     pub name: StyledInputState,
     pub email: StyledInputState,
     pub avatar: StyledImageInputState,
+    pub current_project: StyledSelectState,
 }
 
 impl ProfilePage {
-    pub fn new(user: &User) -> Self {
+    pub fn new(user: &User, project_ids: Vec<ProjectId>) -> Self {
         Self {
             name: StyledInputState::new(
                 FieldId::Profile(UsersFieldId::Username),
@@ -418,6 +419,10 @@ impl ProfilePage {
             avatar: StyledImageInputState::new(
                 FieldId::Profile(UsersFieldId::Avatar),
                 user.avatar_url.as_ref().cloned(),
+            ),
+            current_project: StyledSelectState::new(
+                FieldId::Profile(UsersFieldId::CurrentProject),
+                project_ids.into_iter().map(|n| n as u32).collect(),
             ),
         }
     }
@@ -495,17 +500,7 @@ impl Model {
             users: vec![],
             comments: vec![],
             issue_statuses: vec![],
-            messages: vec![Message {
-                id: 0,
-                receiver_id: 1,
-                sender_id: 2,
-                summary: "You have been invited".to_string(),
-                description: "You have been invited to project A".to_string(),
-                message_type: MessageType::ReceivedInvitation,
-                hyper_link: "/project/1".to_string(),
-                created_at: chrono::NaiveDateTime::from_timestamp(4567890, 123),
-                updated_at: chrono::NaiveDateTime::from_timestamp(1234567, 098),
-            }],
+            messages: vec![],
             user_projects: vec![],
             projects: vec![],
         }

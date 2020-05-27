@@ -103,3 +103,23 @@ nav#sidebar .linkItem > a > .linkText {
     padding-top: 2px;
     font-size: 14.7px;
 }
+
+.styledTooltip.messages {
+    min-width: 800px;
+}
+
+.styledTooltip.messages > .messagesList {}
+
+.styledTooltip.messages > .messagesList > .message {
+    padding: 15px;
+}
+
+.styledTooltip.messages > .messagesList > .message > .summary {
+    font-family: var(--font-bold);
+}
+
+.styledTooltip.messages > .messagesList > .message > .description {
+    font-family: var(--font-regular);
+}
+
+.styledTooltip.messages > .messagesList > .message > .hyperlink {}

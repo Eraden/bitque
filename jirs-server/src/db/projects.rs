@@ -147,6 +147,7 @@ impl Handler<LoadProjects> for DbExecutor {
         let query = projects
             .inner_join(user_projects.on(project_id.eq(id)))
             .filter(user_id.eq(msg.user_id))
+            .distinct_on(id)
             .select(all_columns);
         debug!("{}", diesel::debug_query::<diesel::pg::Pg, _>(&query));
         query

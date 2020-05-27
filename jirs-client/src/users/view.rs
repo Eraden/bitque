@@ -48,7 +48,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         .name("user_role")
         .valid(true)
         .normal()
-        .with_state(&page.user_role_state)
+        .state(&page.user_role_state)
         .selected(vec![page.user_role.to_child()])
         .options(
             UserRole::ordered()

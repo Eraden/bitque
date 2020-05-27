@@ -82,41 +82,28 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             if is_non_logged_area() {
                 go_to_board(orders);
             }
+            orders
+                .skip()
+                .send_msg(Msg::UserChanged(model.user.as_ref().cloned()));
         }
         WsMsg::AuthorizeExpired => {
+            use seed::*;
+
+            log!("Received token expired");
             if let Ok(msg) = write_auth_token(None) {
                 orders.skip().send_msg(msg);
             }
         }
         // project
-        WsMsg::ProjectLoaded(project) => {
-            model.project = Some(project.clone());
-        }
         WsMsg::ProjectsLoaded(v) => {
             model.projects = v.clone();
-            if !model.projects.is_empty() {
-                model.project = model.current_user_project.as_ref().and_then(|up| {
-                    model
-                        .projects
-                        .iter()
-                        .find(|p| p.id == up.project_id)
-                        .cloned()
-                });
-            }
+            init_current_project(model, orders);
         }
         // user projects
-        WsMsg::UserProjectLoaded(v) => {
+        WsMsg::UserProjectsLoaded(v) => {
             model.user_projects = v.clone();
             model.current_user_project = v.iter().find(|up| up.is_current).cloned();
-            if !model.projects.is_empty() {
-                model.project = model.current_user_project.as_ref().and_then(|up| {
-                    model
-                        .projects
-                        .iter()
-                        .find(|p| p.id == up.project_id)
-                        .cloned()
-                });
-            }
+            init_current_project(model, orders);
         }
 
         // issues
@@ -215,9 +202,29 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
         }
+        // messages
+        WsMsg::MessagesResponse(v) => {
+            model.messages = v.clone();
+        }
         _ => (),
     };
     orders.render();
+}
+
+fn init_current_project(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    if model.projects.is_empty() {
+        return;
+    }
+    model.project = model.current_user_project.as_ref().and_then(|up| {
+        model
+            .projects
+            .iter()
+            .find(|p| p.id == up.project_id)
+            .cloned()
+    });
+    orders
+        .skip()
+        .send_msg(Msg::ProjectChanged(model.project.as_ref().cloned()));
 }
 
 fn is_non_logged_area() -> bool {

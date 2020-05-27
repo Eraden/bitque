@@ -6,6 +6,7 @@ use jirs_data::{ProjectId, UserId, UserProject, UserProjectId, UserRole};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
+use diesel::connection::TransactionManager;
 
 pub struct CurrentUserProject {
     pub user_id: UserId,
@@ -81,11 +82,20 @@ impl Handler<ChangeCurrentUserProject> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
+        let tm = conn.transaction_manager();
+
+        tm.begin_transaction(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
         let query = user_projects.filter(id.eq(msg.id).and(user_id.eq(msg.user_id)));
         debug!("{}", diesel::debug_query::<Pg, _>(&query));
-        let mut user_project: UserProject = query
-            .first(conn)
-            .map_err(|_e| ServiceErrors::RecordNotFound(format!("user project {}", msg.user_id)))?;
+        let mut user_project: UserProject =
+            query
+                .first(conn)
+                .map_err(|_e| match tm.rollback_transaction(conn) {
+                    Err(_) => ServiceErrors::DatabaseConnectionLost,
+                    _ => ServiceErrors::RecordNotFound(format!("user project {}", msg.user_id)),
+                })?;
 
         let query = diesel::update(user_projects)
             .set(is_current.eq(false))
@@ -94,7 +104,13 @@ impl Handler<ChangeCurrentUserProject> for DbExecutor {
         query
             .execute(conn)
             .map(|_| ())
-            .map_err(|_e| ServiceErrors::RecordNotFound(format!("user project {}", msg.user_id)))?;
+            .map_err(|_e| match tm.rollback_transaction(conn) {
+                Err(_) => ServiceErrors::DatabaseConnectionLost,
+                _ => ServiceErrors::DatabaseQueryFailed(format!(
+                    "setting current flag to false while updating current project {}",
+                    msg.user_id
+                )),
+            })?;
 
         let query = diesel::update(user_projects)
             .set(is_current.eq(true))
@@ -103,7 +119,16 @@ impl Handler<ChangeCurrentUserProject> for DbExecutor {
         query
             .execute(conn)
             .map(|_| ())
-            .map_err(|_e| ServiceErrors::RecordNotFound(format!("user project {}", msg.user_id)))?;
+            .map_err(|_e| match tm.rollback_transaction(conn) {
+                Err(_) => ServiceErrors::DatabaseConnectionLost,
+                _ => ServiceErrors::DatabaseQueryFailed(format!(
+                    "set current flag on project while updating current project {}",
+                    msg.user_id
+                )),
+            })?;
+
+        tm.commit_transaction(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
         user_project.is_current = true;
         Ok(user_project)

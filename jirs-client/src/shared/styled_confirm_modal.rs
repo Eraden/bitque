@@ -1,7 +1,7 @@
 use seed::EventHandler;
 use seed::{prelude::*, *};
 
-use crate::shared::styled_button::{StyledButton, Variant as ButtonVariant};
+use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_modal::StyledModal;
 use crate::shared::ToNode;
 use crate::Msg;
@@ -116,7 +116,7 @@ pub fn render(values: StyledConfirmModal) -> Node<Msg> {
     };
     let cancel_button = StyledButton::build()
         .text(cancel_text)
-        .variant(ButtonVariant::Secondary)
+        .secondary()
         .on_click(mouse_ev(Ev::Click, |_| Msg::ModalDropped))
         .build()
         .into_node();

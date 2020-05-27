@@ -19,6 +19,7 @@ use crate::ws::comments::*;
 use crate::ws::invitations::*;
 use crate::ws::issue_statuses::*;
 use crate::ws::issues::*;
+use crate::ws::messages::*;
 use crate::ws::projects::*;
 use crate::ws::user_projects::LoadUserProjects;
 use crate::ws::users::*;
@@ -28,6 +29,7 @@ pub mod comments;
 pub mod invitations;
 pub mod issue_statuses;
 pub mod issues;
+pub mod messages;
 pub mod projects;
 pub mod user_projects;
 pub mod users;
@@ -121,12 +123,11 @@ impl WebSocketActor {
             }
 
             // projects
-            WsMsg::ProjectRequest => self.handle_msg(CurrentProject, ctx)?,
             WsMsg::ProjectsLoad => self.handle_msg(LoadProjects, ctx)?,
             WsMsg::ProjectUpdateRequest(payload) => self.handle_msg(payload, ctx)?,
 
             // user projects
-            WsMsg::UserProjectLoad => self.handle_msg(LoadUserProjects, ctx)?,
+            WsMsg::UserProjectsLoad => self.handle_msg(LoadUserProjects, ctx)?,
 
             // auth
             WsMsg::AuthorizeRequest(uuid) => {
@@ -180,6 +181,9 @@ impl WebSocketActor {
                 self.handle_msg(ProfileUpdate { email, name }, ctx)?
             }
 
+            // messages
+            WsMsg::MessagesRequest => self.handle_msg(LoadMessages, ctx)?,
+
             // else fail
             _ => {
                 error!("No handle for {:?} specified", msg);
@@ -215,17 +219,20 @@ impl WebSocketActor {
     }
 
     fn require_user(&self) -> Result<&User, WsMsg> {
-        self.current_user
-            .as_ref()
-            .map(|u| u)
-            .ok_or_else(|| WsMsg::AuthorizeExpired)
+        self.current_user.as_ref().map(|u| u).ok_or_else(|| {
+            let _x = 1;
+            WsMsg::AuthorizeExpired
+        })
     }
 
     fn require_user_project(&self) -> Result<&UserProject, WsMsg> {
         self.current_user_project
             .as_ref()
             .map(|u| u)
-            .ok_or_else(|| WsMsg::AuthorizeExpired)
+            .ok_or_else(|| {
+                let _x = 1;
+                WsMsg::AuthorizeExpired
+            })
     }
 
     // fn require_project(&self) -> Result<&Project, WsMsg> {
@@ -236,10 +243,17 @@ impl WebSocketActor {
     // }
 
     fn load_user_project(&self) -> Result<UserProject, WsMsg> {
-        let user_id = self.require_user().map_err(|_| WsMsg::AuthorizeExpired)?.id;
+        let user_id = self.require_user()?.id;
         match block_on(self.db.send(CurrentUserProject { user_id })) {
             Ok(Ok(user_project)) => Ok(user_project),
-            _ => Err(WsMsg::AuthorizeExpired),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                Err(WsMsg::AuthorizeExpired)
+            }
+            Err(e) => {
+                error!("{}", e);
+                Err(WsMsg::AuthorizeExpired)
+            }
         }
     }
 
@@ -247,7 +261,14 @@ impl WebSocketActor {
         let project_id = self.require_user_project()?.project_id;
         match block_on(self.db.send(LoadCurrentProject { project_id })) {
             Ok(Ok(project)) => Ok(project),
-            _ => Err(WsMsg::AuthorizeExpired),
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                Err(WsMsg::AuthorizeExpired)
+            }
+            Err(e) => {
+                error!("{}", e);
+                Err(WsMsg::AuthorizeExpired)
+            }
         }
     }
 }

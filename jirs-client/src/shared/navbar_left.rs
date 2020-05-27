@@ -6,7 +6,7 @@ use crate::model::Model;
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
-use crate::shared::{styled_tooltip, ToNode};
+use crate::shared::{divider, styled_tooltip, ToNode};
 use crate::Msg;
 
 trait IntoNavItemIcon {
@@ -109,32 +109,34 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
     let on_click: EventHandler<Msg> = ev(Ev::Click, move |_| {
         Some(Msg::ToggleTooltip(styled_tooltip::Variant::Messages))
     });
-    let messages: Vec<Node<Msg>> = model
-        .messages
-        .iter()
-        .map(|message| {
-            let Message {
-                id: _,
-                receiver_id: _,
-                sender_id: _,
-                summary,
-                description,
-                message_type,
-                hyper_link,
-                created_at: _,
-                updated_at: _,
-            } = message;
-            div![
-                class!["message"],
-                attrs![At::Class => format!("{}", message_type)],
-                div![class!["summary"], summary],
-                div![class!["description"], description],
-                div![class!["hyperlink"], hyper_link],
-            ]
-        })
-        .collect();
+    let mut messages: Vec<Node<Msg>> = vec![];
+    for (idx, message) in model.messages.iter().enumerate() {
+        let Message {
+            id: _,
+            receiver_id: _,
+            sender_id: _,
+            summary,
+            description,
+            message_type,
+            hyper_link,
+            created_at: _,
+            updated_at: _,
+        } = message;
+
+        messages.push(div![
+            class!["message"],
+            attrs![At::Class => format!("{}", message_type)],
+            div![class!["summary"], summary],
+            div![class!["description"], description],
+            div![class!["hyperlink"], hyper_link],
+        ]);
+        if idx != model.messages.len() - 1 {
+            messages.push(divider());
+        }
+    }
     let body = div![on_click, class!["messagesList"], messages];
     styled_tooltip::StyledTooltip::build()
+        .add_class("messagesPopup")
         .visible(model.messages_tooltip_visible)
         .messages_tooltip()
         .add_child(body)

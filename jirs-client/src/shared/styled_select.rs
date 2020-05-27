@@ -167,7 +167,7 @@ impl StyledSelectBuilder {
         }
     }
 
-    pub fn with_state(self, state: &StyledSelectState) -> Self {
+    pub fn state(self, state: &StyledSelectState) -> Self {
         self.opened(state.opened)
             .text_filter(state.text_filter.as_str())
     }

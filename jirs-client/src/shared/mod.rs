@@ -97,18 +97,18 @@ pub fn write_auth_token(token: Option<uuid::Uuid>) -> Result<Msg, String> {
         Some(token) => {
             store
                 .set_item("authToken", format!("{}", token).as_str())
-                .map_err(|_e| "Failed to read auth token".to_string())?;
+                .map_err(|e| format!("Failed to read auth token. {:?}", e))?;
         }
         _ => {
             store
                 .remove_item("authToken")
-                .map_err(|_e| "Failed to read auth token".to_string())?;
+                .map_err(|e| format!("Failed to read auth token. {:?}", e))?;
         }
     }
 
     Ok(match token {
         Some(_) => Msg::AuthTokenStored,
-        _ => Msg::AuthTokenErased,
+        None => Msg::AuthTokenErased,
     })
 }
 

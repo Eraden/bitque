@@ -30,12 +30,15 @@ impl Handler<LoadIssue> for DbExecutor {
             .pool
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let record = issues
-            .filter(id.eq(msg.issue_id))
-            .distinct()
+
+        let query = issues.filter(id.eq(msg.issue_id)).distinct();
+        debug!(
+            "{}",
+            diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
+        );
+        query
             .first::<Issue>(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("project issues".to_string()))?;
-        Ok(record)
+            .map_err(|_| ServiceErrors::RecordNotFound("project issues".to_string()))
     }
 }
 

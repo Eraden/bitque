@@ -39,6 +39,9 @@ pub enum Msg {
     PageChanged(PageChanged),
     ChangePage(model::Page),
 
+    UserChanged(Option<User>),
+    ProjectChanged(Option<Project>),
+
     StyledSelectChanged(FieldId, StyledSelectChange),
     InternalFailure(String),
     ToggleTooltip(StyledTooltip),

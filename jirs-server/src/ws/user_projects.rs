@@ -14,7 +14,7 @@ impl WsHandler<LoadUserProjects> for WebSocketActor {
             self.db
                 .send(db::user_projects::LoadUserProjects { user_id }),
         ) {
-            Ok(Ok(v)) => Ok(Some(WsMsg::UserProjectLoaded(v))),
+            Ok(Ok(v)) => Ok(Some(WsMsg::UserProjectsLoaded(v))),
             Ok(Err(e)) => {
                 error!("{:?}", e);
                 return Ok(None);
