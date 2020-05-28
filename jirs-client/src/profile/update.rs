@@ -1,9 +1,12 @@
-use crate::model::{Model, Page, PageContent, ProfilePage};
-use crate::ws::{enqueue_ws_msg, send_ws_msg};
-use crate::{FieldId, Msg, PageChanged, ProfilePageChange, WebSocketChanged};
-use jirs_data::{UsersFieldId, WsMsg};
 use seed::prelude::{Method, Orders, Request};
 use web_sys::FormData;
+
+use jirs_data::{UsersFieldId, WsMsg};
+
+use crate::model::{Model, Page, PageContent, ProfilePage};
+use crate::shared::styled_select::StyledSelectChange;
+use crate::ws::{enqueue_ws_msg, send_ws_msg};
+use crate::{FieldId, Msg, PageChanged, ProfilePageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -64,6 +67,22 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 model.ws.as_ref(),
                 orders,
             );
+        }
+        Msg::StyledSelectChanged(
+            FieldId::Profile(UsersFieldId::CurrentProject),
+            StyledSelectChange::Changed(id),
+        ) => {
+            if let Some(up) = model
+                .user_projects
+                .iter()
+                .find(|up| up.project_id == id as i32)
+            {
+                send_ws_msg(
+                    WsMsg::UserProjectSetCurrent(up.id),
+                    model.ws.as_ref(),
+                    orders,
+                );
+            }
         }
         _ => (),
     }

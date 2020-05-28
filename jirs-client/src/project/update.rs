@@ -1,9 +1,11 @@
+use seed::prelude::Orders;
+
+use jirs_data::{Issue, IssueFieldId, WsMsg};
+
 use crate::model::{ModalType, Model, Page, PageContent, ProjectPage};
 use crate::shared::styled_select::StyledSelectChange;
 use crate::ws::{enqueue_ws_msg, send_ws_msg};
 use crate::{BoardPageChange, EditIssueModalSection, FieldId, Msg, PageChanged, WebSocketChanged};
-use jirs_data::{Issue, IssueFieldId, WsMsg};
-use seed::prelude::Orders;
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     if model.user.is_none() {
@@ -26,6 +28,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
 
     match msg {
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)))
+        | Msg::ProjectChanged(Some(..))
         | Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
         | Msg::ChangePage(Page::EditIssue(..)) => {

@@ -38,7 +38,10 @@ impl WsHandler<SetCurrentUserProject> for WebSocketActor {
             user_id,
             id: msg.id,
         })) {
-            Ok(Ok(user_project)) => Ok(Some(WsMsg::UserProjectCurrentChanged(user_project))),
+            Ok(Ok(user_project)) => {
+                self.current_user_project = Some(user_project.clone());
+                Ok(Some(WsMsg::UserProjectCurrentChanged(user_project)))
+            }
             Ok(Err(e)) => {
                 error!("{:?}", e);
                 return Ok(None);

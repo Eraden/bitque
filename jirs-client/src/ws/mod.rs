@@ -105,6 +105,16 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             model.current_user_project = v.iter().find(|up| up.is_current).cloned();
             init_current_project(model, orders);
         }
+        WsMsg::UserProjectCurrentChanged(user_project) => {
+            let mut old = vec![];
+            std::mem::swap(&mut old, &mut model.user_projects);
+            for mut up in old {
+                up.is_current = up.id == user_project.id;
+                model.user_projects.push(up);
+            }
+            model.current_user_project = Some(user_project.clone());
+            init_current_project(model, orders);
+        }
 
         // issues
         WsMsg::ProjectIssuesLoaded(v) => {

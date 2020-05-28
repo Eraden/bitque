@@ -21,7 +21,7 @@ use crate::ws::issue_statuses::*;
 use crate::ws::issues::*;
 use crate::ws::messages::*;
 use crate::ws::projects::*;
-use crate::ws::user_projects::LoadUserProjects;
+use crate::ws::user_projects::{LoadUserProjects, SetCurrentUserProject};
 use crate::ws::users::*;
 
 pub mod auth;
@@ -128,6 +128,12 @@ impl WebSocketActor {
 
             // user projects
             WsMsg::UserProjectsLoad => self.handle_msg(LoadUserProjects, ctx)?,
+            WsMsg::UserProjectSetCurrent(user_project_id) => self.handle_msg(
+                SetCurrentUserProject {
+                    id: user_project_id,
+                },
+                ctx,
+            )?,
 
             // auth
             WsMsg::AuthorizeRequest(uuid) => {
