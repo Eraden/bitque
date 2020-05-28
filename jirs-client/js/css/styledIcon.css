@@ -176,3 +176,7 @@ i.styledIcon.user:before {
 i.styledIcon.message:before {
     content: "\efac";
 }
+
+i.styledIcon.check:before {
+    content: "\ec4b";
+}

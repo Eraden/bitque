@@ -122,4 +122,22 @@ nav#sidebar .linkItem > a > .linkText {
     font-family: var(--font-regular);
 }
 
-.styledTooltip.messages > .messagesList > .message > .hyperlink {}
+.styledTooltip.messages > .messagesList > .message > .hyperlink {
+    margin-top: 15px;
+}
+
+.styledTooltip.messages > .messagesList > .message > .hyperlink > a {
+    color: var(--primary);
+}
+
+.styledTooltip.messages > .messagesList > .message > .hyperlink > a > .styledIcon {
+    padding-right: 15px;
+}
+
+.styledTooltip.messages > .messagesList > .message > .actions {
+    margin-top: 15px;
+}
+
+.styledTooltip.messages > .messagesList > .message > .actions > .styledButton {
+    margin-right: 15px;
+}

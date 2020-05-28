@@ -178,12 +178,19 @@ VALUES (
     'Bar',
     'Suspendisse tincidunt euismod justo, at porttitor dolor fermentum ut. Interdum et malesuada fames ac ante ipsum primis in faucibus. Suspendisse maximus sed ex ut sollicitudin. Etiam volutpat ultricies vehicula. Sed at est in mauris cursus fermentum. Duis et lacus metus. Sed ut egestas ipsum, ac consectetur metus. In felis diam, cursus eu felis non, tincidunt elementum lacus. Etiam et massa odio. Vestibulum ornare felis maximus facilisis semper.',
     'assigned_to_issue',
-    '/issue/1',
+    '/issues/1',
+    now(), now()
+), (
+    1, 1,
+    'Foz Baz',
+    'Suspendisse quam ligula, @<John Doe> auctor vel diam sit amet, tincidunt venenatis justo. Vestibulum tincidunt mauris et est iaculis, vel consequat turpis porta. Integer eu urna quis diam pharetra lobortis vel nec lacus. Donec ac mollis risus. Morbi pellentesque pulvinar libero, sit amet finibus risus fermentum ac. Vivamus imperdiet mi congue ligula luctus condimentum. Duis arcu turpis, dignissim quis purus eget, dignissim elementum risus. Donec mattis rhoncus lorem quis blandit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec dignissim tellus eu cursus finibus. Ut pellentesque mi at eros maximus, eu tempor est sodales. Mauris vel feugiat ligula. Integer quis interdum velit, at iaculis arcu. Duis leo sapien, egestas eget erat id, fringilla pulvinar nulla. Nam sollicitudin ullamcorper finibus.',
+    'mention',
+    '',
     now(), now()
 ), (
     2, 1,
-    'Foz Baz',
-    'Suspendisse quam ligula, @<John Doe> auctor vel diam sit amet, tincidunt venenatis justo. Vestibulum tincidunt mauris et est iaculis, vel consequat turpis porta. Integer eu urna quis diam pharetra lobortis vel nec lacus. Donec ac mollis risus. Morbi pellentesque pulvinar libero, sit amet finibus risus fermentum ac. Vivamus imperdiet mi congue ligula luctus condimentum. Duis arcu turpis, dignissim quis purus eget, dignissim elementum risus. Donec mattis rhoncus lorem quis blandit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec dignissim tellus eu cursus finibus. Ut pellentesque mi at eros maximus, eu tempor est sodales. Mauris vel feugiat ligula. Integer quis interdum velit, at iaculis arcu. Duis leo sapien, egestas eget erat id, fringilla pulvinar nulla. Nam sollicitudin ullamcorper finibus.',
+    'Hello world',
+    'Suspendisse quam ligula, @<kate@exampe.com> auctor vel diam sit amet, tincidunt venenatis justo. Vestibulum tincidunt mauris et est iaculis, vel consequat turpis porta. Integer eu urna quis diam pharetra lobortis vel nec lacus. Donec ac mollis risus. Morbi pellentesque pulvinar libero, sit amet finibus risus fermentum ac. Vivamus imperdiet mi congue ligula luctus condimentum. Duis arcu turpis, dignissim quis purus eget, dignissim elementum risus. Donec mattis rhoncus lorem quis blandit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec dignissim tellus eu cursus finibus. Ut pellentesque mi at eros maximus, eu tempor est sodales. Mauris vel feugiat ligula. Integer quis interdum velit, at iaculis arcu. Duis leo sapien, egestas eget erat id, fringilla pulvinar nulla. Nam sollicitudin ullamcorper finibus.',
     'mention',
     '',
     now(), now()

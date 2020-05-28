@@ -127,11 +127,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
 
 fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {
     enqueue_ws_msg(
-        vec![
-            WsMsg::ProjectIssuesRequest,
-            WsMsg::ProjectUsersRequest,
-            WsMsg::IssueStatusesRequest,
-        ],
+        vec![WsMsg::ProjectIssuesRequest, WsMsg::IssueStatusesRequest],
         model.ws.as_ref(),
         orders,
     );

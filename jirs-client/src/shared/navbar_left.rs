@@ -1,6 +1,6 @@
 use seed::{prelude::*, *};
 
-use jirs_data::Message;
+use jirs_data::{Message, MessageType};
 
 use crate::model::Model;
 use crate::shared::styled_avatar::StyledAvatar;
@@ -111,25 +111,9 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
     });
     let mut messages: Vec<Node<Msg>> = vec![];
     for (idx, message) in model.messages.iter().enumerate() {
-        let Message {
-            id: _,
-            receiver_id: _,
-            sender_id: _,
-            summary,
-            description,
-            message_type,
-            hyper_link,
-            created_at: _,
-            updated_at: _,
-        } = message;
+        let message_ui = message_ui(model, message);
 
-        messages.push(div![
-            class!["message"],
-            attrs![At::Class => format!("{}", message_type)],
-            div![class!["summary"], summary],
-            div![class!["description"], description],
-            div![class!["hyperlink"], hyper_link],
-        ]);
+        messages.push(message_ui);
         if idx != model.messages.len() - 1 {
             messages.push(divider());
         }
@@ -142,6 +126,70 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
         .add_child(body)
         .build()
         .into_node()
+}
+
+fn message_ui(model: &Model, message: &Message) -> Node<Msg> {
+    let Message {
+        id: _,
+        receiver_id: _,
+        sender_id: _,
+        summary,
+        description,
+        message_type,
+        hyper_link,
+        created_at: _,
+        updated_at: _,
+    } = message;
+
+    let hyperlink = if hyper_link.is_empty() {
+        empty![]
+    } else {
+        let link_icon = StyledIcon::build(Icon::Link).build().into_node();
+        div![
+            class!["hyperlink"],
+            a![attrs![At::Href => hyper_link], link_icon, hyper_link]
+        ]
+    };
+
+    let message_description = parse_description(model, description.as_str());
+
+    match message_type {
+        MessageType::ReceivedInvitation => {
+            let accept = StyledButton::build()
+                .primary()
+                .text("Accept")
+                .active(true)
+                .icon(Icon::Check)
+                .build()
+                .into_node();
+            let reject = StyledButton::build()
+                .danger()
+                .text("Dismiss")
+                .icon(Icon::Close)
+                .active(true)
+                .build()
+                .into_node();
+            div![
+                class!["message"],
+                attrs![At::Class => format!("{}", message_type)],
+                div![class!["summary"], summary],
+                div![class!["description"], message_description],
+                div![class!["actions"], accept, reject],
+            ]
+        }
+        MessageType::AssignedToIssue => div![
+            class!["message assignedToIssue"],
+            div![class!["summary"], summary],
+            div![class!["description"], message_description],
+            hyperlink,
+        ],
+        MessageType::Mention => div![
+            class!["message mention"],
+            div![class!["summary"], summary],
+            div![class!["description"], message_description],
+            hyperlink,
+        ],
+    }
 }
 
 fn about_tooltip_popup(model: &Model) -> Node<Msg> {
@@ -206,4 +254,38 @@ fn about_tooltip_popup(model: &Model) -> Node<Msg> {
         .add_child(body)
         .build()
         .into_node()
+}
+
+fn parse_description(model: &Model, desc: &str) -> Node<Msg> {
+    let mut container: Node<Msg> = div![];
+    for word in desc.split(' ') {
+        let child = parse_email(word)
+            .and_then(|email| {
+                model
+                    .users
+                    .iter()
+                    .enumerate()
+                    .find(|(_, user)| user.email == email)
+            })
+            .map(|(index, user)| {
+                let avatar = StyledAvatar::build()
+                    .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
+                    .user_index(index)
+                    .size(16)
+                    .build()
+                    .into_node();
+                span![class!["mention"], avatar, user.name.as_str()]
+            })
+            .unwrap_or_else(|| span![word]);
+        container.add_child(child).add_text(" ");
+    }
+    container
+}
+
+fn parse_email(word: &str) -> Option<&str> {
+    if word.starts_with("@<") && word.ends_with(">") {
+        Some(&word[2..(word.len() - 1)])
+    } else {
+        None
+    }
 }

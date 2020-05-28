@@ -52,9 +52,9 @@ impl StyledButtonBuilder {
         self.variant(Variant::Success)
     }
 
-    // pub fn danger(self) -> Self {
-    //     self.variant(Variant::Danger)
-    // }
+    pub fn danger(self) -> Self {
+        self.variant(Variant::Danger)
+    }
 
     pub fn secondary(self) -> Self {
         self.variant(Variant::Secondary)
