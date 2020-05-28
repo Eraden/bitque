@@ -1,12 +1,13 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{Message, MessageType};
+use jirs_data::{InvitationToken, Message, MessageType, WsMsg};
 
 use crate::model::Model;
 use crate::shared::styled_avatar::StyledAvatar;
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::{divider, styled_tooltip, ToNode};
+use crate::ws::send_ws_msg;
 use crate::Msg;
 
 trait IntoNavItemIcon {
@@ -22,6 +23,26 @@ impl IntoNavItemIcon for Node<Msg> {
 impl IntoNavItemIcon for Icon {
     fn into_nav_item_icon(self) -> Node<Msg> {
         StyledIcon::build(self).size(21).build().into_node()
+    }
+}
+
+pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
+    match msg {
+        Msg::MessageInvitationApproved(token) => {
+            send_ws_msg(
+                WsMsg::InvitationAcceptRequest(token.clone()),
+                model.ws.as_ref(),
+                orders,
+            );
+        }
+        Msg::MessageInvitationDismiss(token) => {
+            send_ws_msg(
+                WsMsg::InvitationRejectRequest(token.clone()),
+                model.ws.as_ref(),
+                orders,
+            );
+        }
+        _ => (),
     }
 }
 
@@ -111,12 +132,15 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
     });
     let mut messages: Vec<Node<Msg>> = vec![];
     for (idx, message) in model.messages.iter().enumerate() {
-        let message_ui = message_ui(model, message);
-
-        messages.push(message_ui);
-        if idx != model.messages.len() - 1 {
-            messages.push(divider());
-        }
+        match message_ui(model, message) {
+            Some(message_ui) => {
+                messages.push(message_ui);
+                if idx != model.messages.len() - 1 {
+                    messages.push(divider());
+                }
+            }
+            None => (),
+        };
     }
     let body = div![on_click, class!["messagesList"], messages];
     styled_tooltip::StyledTooltip::build()
@@ -128,7 +152,7 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
         .into_node()
 }
 
-fn message_ui(model: &Model, message: &Message) -> Node<Msg> {
+fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
     let Message {
         id: _,
         receiver_id: _,
@@ -141,31 +165,50 @@ fn message_ui(model: &Model, message: &Message) -> Node<Msg> {
         updated_at: _,
     } = message;
 
-    let hyperlink = if hyper_link.is_empty() {
+    let hyperlink = if hyper_link.is_empty() && !hyper_link.starts_with("#") {
         empty![]
     } else {
         let link_icon = StyledIcon::build(Icon::Link).build().into_node();
         div![
             class!["hyperlink"],
-            a![attrs![At::Href => hyper_link], link_icon, hyper_link]
+            a![
+                class!["styledLink"],
+                attrs![At::Href => hyper_link],
+                link_icon,
+                hyper_link
+            ]
         ]
     };
 
     let message_description = parse_description(model, description.as_str());
 
-    match message_type {
+    let node = match message_type {
         MessageType::ReceivedInvitation => {
+            let token: InvitationToken = match hyper_link.trim_start_matches("#").parse() {
+                Err(_) => return None,
+                Ok(n) => n,
+            };
             let accept = StyledButton::build()
                 .primary()
                 .text("Accept")
                 .active(true)
                 .icon(Icon::Check)
+                .on_click(mouse_ev(Ev::Click, move |ev| {
+                    ev.stop_propagation();
+                    ev.prevent_default();
+                    Some(Msg::MessageInvitationApproved(token.clone()))
+                }))
                 .build()
                 .into_node();
             let reject = StyledButton::build()
                 .danger()
                 .text("Dismiss")
                 .icon(Icon::Close)
+                .on_click(mouse_ev(Ev::Click, move |ev| {
+                    ev.stop_propagation();
+                    ev.prevent_default();
+                    Some(Msg::MessageInvitationDismiss(token))
+                }))
                 .active(true)
                 .build()
                 .into_node();
@@ -189,7 +232,8 @@ fn message_ui(model: &Model, message: &Message) -> Node<Msg> {
             div![class!["description"], message_description],
             hyperlink,
         ],
-    }
+    };
+    Some(node)
 }
 
 fn about_tooltip_popup(model: &Model) -> Node<Msg> {

@@ -91,6 +91,11 @@ pub enum Msg {
     ModalDropped,
     ModalChanged(FieldChange),
 
+    // popups
+    MessageSeen(MessageId),
+    MessageInvitationApproved(InvitationToken),
+    MessageInvitationDismiss(InvitationToken),
+
     // WebSocket
     WebSocketChange(WebSocketChanged),
 }
@@ -178,6 +183,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         _ => (),
     }
     crate::shared::aside::update(&msg, model, orders);
+    crate::shared::navbar_left::update(&msg, model, orders);
     crate::modal::update(&msg, model, orders);
     match model.page {
         Page::Project | Page::AddIssue | Page::EditIssue(..) => project::update(msg, model, orders),

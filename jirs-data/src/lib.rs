@@ -751,6 +751,11 @@ pub enum WsMsg {
     InvitationAcceptRequest(InvitationToken),
     InvitationAcceptSuccess(BindToken),
     InvitationAcceptFailure(InvitationToken),
+    //
+    InvitationRejectRequest(InvitationToken),
+    InvitationRejectSuccess,
+    InvitationRejectFailure(InvitationToken),
+    //
     InvitedUserRemoveRequest(UserId),
     InvitedUserRemoveSuccess(UserId),
 

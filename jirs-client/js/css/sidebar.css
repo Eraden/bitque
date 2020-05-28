@@ -108,10 +108,17 @@ nav#sidebar .linkItem > a > .linkText {
     min-width: 800px;
 }
 
-.styledTooltip.messages > .messagesList {}
+.styledTooltip.messages > .messagesList {
+}
 
 .styledTooltip.messages > .messagesList > .message {
     padding: 15px;
+    max-height: 90px;
+    overflow: hidden;
+}
+
+.styledTooltip.messages > .messagesList > .message:hover {
+    max-height: 100%;
 }
 
 .styledTooltip.messages > .messagesList > .message > .summary {
@@ -130,8 +137,13 @@ nav#sidebar .linkItem > a > .linkText {
     color: var(--primary);
 }
 
+.styledTooltip.messages > .messagesList > .message > .hyperlink > a:hover {
+    text-decoration: underline;
+}
+
 .styledTooltip.messages > .messagesList > .message > .hyperlink > a > .styledIcon {
-    padding-right: 15px;
+    padding-right: 5px;
+    font-size: 14.5px;
 }
 
 .styledTooltip.messages > .messagesList > .message > .actions {
