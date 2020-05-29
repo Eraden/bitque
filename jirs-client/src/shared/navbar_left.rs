@@ -42,6 +42,9 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 orders,
             );
         }
+        Msg::MessageSeen(id) => {
+            send_ws_msg(WsMsg::MessageMarkSeen(*id), model.ws.as_ref(), orders);
+        }
         _ => (),
     }
 }
@@ -154,7 +157,7 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
 
 fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
     let Message {
-        id: _,
+        id,
         receiver_id: _,
         sender_id: _,
         summary,
@@ -164,6 +167,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
         created_at: _,
         updated_at: _,
     } = message;
+    let message_id = *id;
 
     let hyperlink = if hyper_link.is_empty() && !hyper_link.starts_with("#") {
         empty![]
@@ -181,6 +185,21 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
     };
 
     let message_description = parse_description(model, description.as_str());
+    let close_button = StyledButton::build()
+        .icon(Icon::Close)
+        .empty()
+        .on_click(mouse_ev(Ev::Click, move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Some(Msg::MessageSeen(message_id))
+        }))
+        .build()
+        .into_node();
+    let top = div![
+        class!["top"],
+        div![class!["summary"], summary],
+        div![class!["action"], close_button],
+    ];
 
     let node = match message_type {
         MessageType::ReceivedInvitation => {
@@ -215,20 +234,20 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
             div![
                 class!["message"],
                 attrs![At::Class => format!("{}", message_type)],
-                div![class!["summary"], summary],
+                top,
                 div![class!["description"], message_description],
                 div![class!["actions"], accept, reject],
             ]
         }
         MessageType::AssignedToIssue => div![
             class!["message assignedToIssue"],
-            div![class!["summary"], summary],
+            top,
             div![class!["description"], message_description],
             hyperlink,
         ],
         MessageType::Mention => div![
             class!["message mention"],
-            div![class!["summary"], summary],
+            top,
             div![class!["description"], message_description],
             hyperlink,
         ],

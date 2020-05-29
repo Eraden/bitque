@@ -216,6 +216,15 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         WsMsg::MessagesResponse(v) => {
             model.messages = v.clone();
         }
+        WsMsg::MessageMarkedSeen(id) => {
+            let mut old = vec![];
+            std::mem::swap(&mut old, &mut model.messages);
+            for m in old {
+                if m.id != *id {
+                    model.messages.push(m);
+                }
+            }
+        }
         _ => (),
     };
     orders.render();

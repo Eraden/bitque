@@ -189,6 +189,7 @@ impl WebSocketActor {
 
             // messages
             WsMsg::MessagesRequest => self.handle_msg(LoadMessages, ctx)?,
+            WsMsg::MessageMarkSeen(id) => self.handle_msg(MarkMessageSeen { id }, ctx)?,
 
             // else fail
             _ => {
@@ -240,13 +241,6 @@ impl WebSocketActor {
                 WsMsg::AuthorizeExpired
             })
     }
-
-    // fn require_project(&self) -> Result<&Project, WsMsg> {
-    //     self.current_project
-    //         .as_ref()
-    //         .map(|u| u)
-    //         .ok_or_else(|| WsMsg::AuthorizeExpired)
-    // }
 
     fn load_user_project(&self) -> Result<UserProject, WsMsg> {
         let user_id = self.require_user()?.id;

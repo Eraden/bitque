@@ -1,4 +1,5 @@
 use actix::{Handler, Message};
+use diesel::connection::TransactionManager;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 
@@ -108,6 +109,40 @@ impl Handler<DeleteInvitation> for DbExecutor {
     }
 }
 
+struct UpdateInvitationState {
+    pub id: InvitationId,
+    pub state: InvitationState,
+}
+
+impl Message for UpdateInvitationState {
+    type Result = Result<(), ServiceErrors>;
+}
+
+impl Handler<UpdateInvitationState> for DbExecutor {
+    type Result = Result<(), ServiceErrors>;
+
+    fn handle(&mut self, msg: UpdateInvitationState, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::invitations::dsl::*;
+
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let query = diesel::update(invitations)
+            .set((
+                state.eq(msg.state),
+                updated_at.eq(chrono::Utc::now().naive_utc()),
+            ))
+            .filter(id.eq(msg.id));
+        debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
+        query
+            .execute(conn)
+            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+        Ok(())
+    }
+}
+
 pub struct RevokeInvitation {
     pub id: InvitationId,
 }
@@ -119,24 +154,14 @@ impl Message for RevokeInvitation {
 impl Handler<RevokeInvitation> for DbExecutor {
     type Result = Result<(), ServiceErrors>;
 
-    fn handle(&mut self, msg: RevokeInvitation, _ctx: &mut Self::Context) -> Self::Result {
-        use crate::schema::invitations::dsl::*;
-
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let query = diesel::update(invitations)
-            .set((
-                state.eq(InvitationState::Revoked),
-                updated_at.eq(chrono::Utc::now().naive_utc()),
-            ))
-            .filter(id.eq(msg.id));
-        debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
-        query
-            .execute(conn)
-            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
-        Ok(())
+    fn handle(&mut self, msg: RevokeInvitation, ctx: &mut Self::Context) -> Self::Result {
+        self.handle(
+            UpdateInvitationState {
+                id: msg.id,
+                state: InvitationState::Revoked,
+            },
+            ctx,
+        )
     }
 }
 
@@ -159,13 +184,24 @@ impl Handler<AcceptInvitation> for DbExecutor {
             .get()
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
+        let tm = conn.transaction_manager();
+
+        tm.begin_transaction(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
         let query = invitations.filter(bind_token.eq(msg.invitation_token));
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
-        let invitation: Invitation = query
-            .first(conn)
-            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+        let invitation: Invitation = query.first(conn).map_err(|e| {
+            if tm.rollback_transaction(conn).is_err() {
+                return ServiceErrors::DatabaseConnectionLost;
+            }
+            ServiceErrors::DatabaseQueryFailed(format!("{}", e))
+        })?;
 
         if invitation.state == InvitationState::Revoked {
+            if tm.rollback_transaction(conn).is_err() {
+                return Err(ServiceErrors::DatabaseConnectionLost);
+            }
             return Err(ServiceErrors::DatabaseQueryFailed(
                 "This invitation is no longer valid".to_string(),
             ));
@@ -180,6 +216,9 @@ impl Handler<AcceptInvitation> for DbExecutor {
             .filter(state.eq(InvitationState::Sent));
         debug!("{}", diesel::debug_query::<Pg, _>(&query).to_string());
         query.execute(conn).map_err(|e| {
+            if tm.rollback_transaction(conn).is_err() {
+                return ServiceErrors::DatabaseConnectionLost;
+            }
             ServiceErrors::DatabaseQueryFailed(format!("update invitation {} {}", invitation.id, e))
         })?;
 
@@ -214,9 +253,12 @@ impl Handler<AcceptInvitation> for DbExecutor {
                 role.eq(invitation.role),
             ));
             debug!("{}", diesel::debug_query::<Pg, _>(&query));
-            query
-                .execute(conn)
-                .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+            query.execute(conn).map_err(|e| {
+                if tm.rollback_transaction(conn).is_err() {
+                    return ServiceErrors::DatabaseConnectionLost;
+                }
+                ServiceErrors::DatabaseQueryFailed(format!("{}", e))
+            })?;
         };
 
         let token = {
@@ -225,9 +267,15 @@ impl Handler<AcceptInvitation> for DbExecutor {
             let query = tokens.filter(user_id.eq(user.id)).order_by(id.desc());
             debug!("{}", diesel::debug_query::<Pg, _>(&query));
             query.first(conn).map_err(|e| {
+                if tm.rollback_transaction(conn).is_err() {
+                    return ServiceErrors::DatabaseConnectionLost;
+                }
                 ServiceErrors::DatabaseQueryFailed(format!("token for user {} {}", user.id, e))
             })?
         };
+
+        tm.commit_transaction(conn)
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
         Ok(token)
     }
