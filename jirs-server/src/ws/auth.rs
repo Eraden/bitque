@@ -5,7 +5,7 @@ use jirs_data::{Token, WsMsg};
 
 use crate::db::authorize_user::AuthorizeUser;
 use crate::db::tokens::{CreateBindToken, FindBindToken};
-use crate::db::users::FindUser;
+use crate::db::users::LookupUser;
 use crate::mail::welcome::Welcome;
 use crate::ws::{WebSocketActor, WsHandler, WsResult};
 
@@ -18,7 +18,7 @@ impl WsHandler<Authenticate> for WebSocketActor {
     fn handle_msg(&mut self, msg: Authenticate, _ctx: &mut Self::Context) -> WsResult {
         let Authenticate { name, email } = msg;
         // TODO check attempt number, allow only 5 times per day
-        let user = match block_on(self.db.send(FindUser { name, email })) {
+        let user = match block_on(self.db.send(LookupUser { name, email })) {
             Ok(Ok(user)) => user,
             Ok(Err(e)) => {
                 error!("{:?}", e);

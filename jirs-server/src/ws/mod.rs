@@ -325,6 +325,7 @@ pub enum InnerMsg {
     Join(ProjectId, UserId, Recipient<InnerMsg>),
     Leave(ProjectId, UserId, Recipient<InnerMsg>),
     BroadcastToChannel(ProjectId, WsMsg),
+    SendToUser(UserId, WsMsg),
     Transfer(WsMsg),
 }
 
@@ -381,13 +382,17 @@ impl Handler<InnerMsg> for WsServer {
                     v.remove_item(&recipient);
                 }
             }
+            InnerMsg::SendToUser(user_id, msg) => {
+                if let Some(v) = self.sessions.get(&user_id) {
+                    self.send_to_recipients(v, &msg);
+                }
+            }
             InnerMsg::BroadcastToChannel(project_id, msg) => {
                 debug!("Begin broadcast to channel {} msg {:?}", project_id, msg);
                 let set = match self.rooms.get(&project_id) {
                     Some(s) => s,
                     _ => return debug!("  channel not found, aborting..."),
                 };
-                let _s = set.len();
                 for r in set.keys() {
                     let v = match self.sessions.get(r) {
                         Some(v) => v,
@@ -396,12 +401,7 @@ impl Handler<InnerMsg> for WsServer {
                             continue;
                         }
                     };
-                    for recipient in v.iter() {
-                        match recipient.do_send(InnerMsg::Transfer(msg.clone())) {
-                            Ok(_) => debug!("msg sent"),
-                            Err(e) => error!("{}", e),
-                        };
-                    }
+                    self.send_to_recipients(v, &msg);
                 }
             }
             _ => (),
@@ -412,6 +412,15 @@ impl Handler<InnerMsg> for WsServer {
 impl WsServer {
     pub fn ensure_room(&mut self, room: i32) {
         self.rooms.entry(room).or_insert_with(HashMap::new);
+    }
+
+    fn send_to_recipients(&self, recipients: &Vec<Recipient<InnerMsg>>, msg: &WsMsg) {
+        for recipient in recipients.iter() {
+            match recipient.do_send(InnerMsg::Transfer(msg.clone())) {
+                Ok(_) => debug!("msg sent"),
+                Err(e) => error!("{}", e),
+            };
+        }
     }
 }
 

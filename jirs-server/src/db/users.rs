@@ -1,4 +1,5 @@
 use actix::{Handler, Message};
+use diesel::connection::TransactionManager;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -9,12 +10,10 @@ use crate::db::projects::CreateProject;
 use crate::db::{DbExecutor, DbPooledConn};
 use crate::errors::ServiceErrors;
 use crate::schema::users::all_columns;
-use diesel::connection::TransactionManager;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub struct FindUser {
-    pub name: String,
-    pub email: String,
+    pub user_id: UserId,
 }
 
 impl Message for FindUser {
@@ -25,6 +24,35 @@ impl Handler<FindUser> for DbExecutor {
     type Result = Result<User, ServiceErrors>;
 
     fn handle(&mut self, msg: FindUser, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::schema::users::dsl::*;
+
+        let conn = &self
+            .pool
+            .get()
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let query = users.find(msg.user_id);
+        debug!("{}", diesel::debug_query::<Pg, _>(&query));
+        query
+            .first(conn)
+            .map_err(|_| ServiceErrors::RecordNotFound(format!("user with id = {}", msg.user_id)))
+    }
+}
+
+#[derive(Debug)]
+pub struct LookupUser {
+    pub name: String,
+    pub email: String,
+}
+
+impl Message for LookupUser {
+    type Result = Result<User, ServiceErrors>;
+}
+
+impl Handler<LookupUser> for DbExecutor {
+    type Result = Result<User, ServiceErrors>;
+
+    fn handle(&mut self, msg: LookupUser, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::users::dsl::*;
 
         let conn = &self
@@ -43,7 +71,7 @@ impl Handler<FindUser> for DbExecutor {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct LoadProjectUsers {
     pub project_id: i32,
 }
@@ -76,7 +104,7 @@ impl Handler<LoadProjectUsers> for DbExecutor {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct LoadIssueAssignees {
     pub issue_id: i32,
 }
@@ -109,7 +137,7 @@ impl Handler<LoadIssueAssignees> for DbExecutor {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub struct Register {
     pub name: String,
     pub email: String,
@@ -309,11 +337,13 @@ impl Handler<ProfileUpdate> for DbExecutor {
 
 #[cfg(test)]
 mod tests {
+    use diesel::connection::TransactionManager;
+
+    use jirs_data::{Project, ProjectCategory};
+
     use crate::db::build_pool;
 
     use super::*;
-    use diesel::connection::TransactionManager;
-    use jirs_data::{Project, ProjectCategory};
 
     #[test]
     fn check_collision() {

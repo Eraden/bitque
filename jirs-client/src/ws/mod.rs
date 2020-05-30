@@ -213,8 +213,21 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             }
         }
         // messages
+        WsMsg::Message(received) => {
+            let mut old = vec![];
+            std::mem::swap(&mut old, &mut model.messages);
+            for m in old {
+                if m.id != received.id {
+                    model.messages.push(m);
+                } else {
+                    model.messages.push(received.clone());
+                }
+            }
+            model.messages.sort_by(|a, b| a.id.cmp(&b.id));
+        }
         WsMsg::MessagesResponse(v) => {
             model.messages = v.clone();
+            model.messages.sort_by(|a, b| a.id.cmp(&b.id));
         }
         WsMsg::MessageMarkedSeen(id) => {
             let mut old = vec![];
@@ -224,6 +237,7 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     model.messages.push(m);
                 }
             }
+            model.messages.sort_by(|a, b| a.id.cmp(&b.id));
         }
         _ => (),
     };

@@ -113,13 +113,13 @@ nav#sidebar .linkItem > a > .linkText {
 
 .styledTooltip.messages > .messagesList > .message {
     padding: 15px;
-    max-height: 90px;
-    overflow: hidden;
+    /*max-height: 90px;*/
+    /*overflow: hidden;*/
 }
 
-.styledTooltip.messages > .messagesList > .message:hover {
-    max-height: 100%;
-}
+/*.styledTooltip.messages > .messagesList > .message:hover {*/
+/*    max-height: 100%;*/
+/*}*/
 
 .styledTooltip.messages > .messagesList > .message > .top {
     display: flex;

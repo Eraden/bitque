@@ -1,9 +1,12 @@
 use futures::executor::block_on;
 
-use jirs_data::{EmailString, InvitationId, InvitationToken, UserRole, UsernameString, WsMsg};
+use jirs_data::{
+    EmailString, InvitationId, InvitationToken, MessageType, UserRole, UsernameString, WsMsg,
+};
 
 use crate::db::invitations;
-use crate::ws::{WebSocketActor, WsHandler, WsResult};
+use crate::db::messages::CreateMessageReceiver;
+use crate::ws::{InnerMsg, WebSocketActor, WsHandler, WsMessageSender, WsResult};
 
 pub struct ListInvitation;
 
@@ -40,18 +43,14 @@ impl WsHandler<CreateInvitation> for WebSocketActor {
             Some(up) => up.project_id,
             _ => return Ok(None),
         };
-        let (user_id, inviter_name) =
-            match self.current_user.as_ref().map(|u| (u.id, u.name.clone())) {
-                Some(id) => id,
-                _ => return Ok(None),
-            };
+        let (user_id, inviter_name) = self.require_user().map(|u| (u.id, u.name.clone()))?;
 
         let CreateInvitation { email, name, role } = msg;
-        let invitation = match block_on(self.db.send(invitations::CreateInvitation {
+        let invitation = match block_on(self.db.send(crate::db::invitations::CreateInvitation {
             user_id,
             project_id,
-            email,
-            name,
+            email: email.clone(),
+            name: name.clone(),
             role,
         })) {
             Ok(Ok(invitation)) => invitation,
@@ -78,6 +77,24 @@ impl WsHandler<CreateInvitation> for WebSocketActor {
                 error!("{}", e);
                 return Ok(Some(WsMsg::InvitationSendFailure));
             }
+        }
+
+        // If user exists then send message to him
+        match block_on(self.db.send(crate::db::messages::CreateMessage {
+            receiver: CreateMessageReceiver::Lookup { name, email },
+            sender_id: user_id,
+            summary: "You have been invited to project".to_string(),
+            description: "You have been invited to project".to_string(),
+            message_type: MessageType::ReceivedInvitation,
+            hyper_link: format!("#{}", invitation.bind_token),
+        })) {
+            Ok(Ok(message)) => {
+                self.addr.do_send(InnerMsg::SendToUser(
+                    message.receiver_id,
+                    WsMsg::Message(message),
+                ));
+            }
+            _ => {}
         }
 
         Ok(Some(WsMsg::InvitationSendSuccess))
@@ -135,21 +152,45 @@ pub struct AcceptInvitation {
 }
 
 impl WsHandler<AcceptInvitation> for WebSocketActor {
-    fn handle_msg(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> WsResult {
+    fn handle_msg(&mut self, msg: AcceptInvitation, ctx: &mut Self::Context) -> WsResult {
         let AcceptInvitation { invitation_token } = msg;
-        let res = match block_on(self.db.send(invitations::AcceptInvitation {
+        let token = match block_on(self.db.send(invitations::AcceptInvitation {
             invitation_token: invitation_token.clone(),
         })) {
-            Ok(Ok(token)) => Some(WsMsg::InvitationAcceptSuccess(token.access_token)),
+            Ok(Ok(token)) => token,
             Ok(Err(e)) => {
                 error!("{:?}", e);
-                Some(WsMsg::InvitationAcceptFailure(invitation_token))
+                return Ok(Some(WsMsg::InvitationAcceptFailure(invitation_token)));
             }
             Err(e) => {
                 error!("{}", e);
-                Some(WsMsg::InvitationAcceptFailure(invitation_token))
+                return Ok(Some(WsMsg::InvitationAcceptFailure(invitation_token)));
             }
         };
-        Ok(res)
+
+        for message in block_on(self.db.send(crate::db::messages::LookupMessagesByToken {
+            token: invitation_token,
+            user_id: token.user_id,
+        }))
+        .unwrap_or(Ok(vec![]))
+        .unwrap_or_default()
+        {
+            match block_on(self.db.send(crate::db::messages::MarkMessageSeen {
+                user_id: token.user_id,
+                message_id: message.id,
+            })) {
+                Ok(Ok(id)) => {
+                    ctx.send_msg(&WsMsg::MessageMarkedSeen(id));
+                }
+                Ok(Err(e)) => {
+                    error!("{:?}", e);
+                }
+                Err(e) => {
+                    error!("{}", e);
+                }
+            }
+        }
+
+        Ok(Some(WsMsg::InvitationAcceptSuccess(token.access_token)))
     }
 }

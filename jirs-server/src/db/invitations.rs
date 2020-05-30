@@ -9,7 +9,7 @@ use jirs_data::{
 };
 
 use crate::db::tokens::CreateBindToken;
-use crate::db::users::{FindUser, Register};
+use crate::db::users::{LookupUser, Register};
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
 
@@ -236,7 +236,7 @@ impl Handler<AcceptInvitation> for DbExecutor {
         };
 
         let user: User = self.handle(
-            FindUser {
+            LookupUser {
                 name: invitation.name.clone(),
                 email: invitation.email.clone(),
             },
