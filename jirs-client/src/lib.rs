@@ -19,6 +19,7 @@ mod model;
 mod profile;
 mod project;
 mod project_settings;
+mod reports;
 mod shared;
 mod sign_in;
 mod sign_up;
@@ -193,6 +194,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         Page::Invite => invite::update(msg, model, orders),
         Page::Users => users::update(msg, model, orders),
         Page::Profile => profile::update(msg, model, orders),
+        Page::Reports => reports::update(msg, model, orders),
     }
     if cfg!(debug_assertions) {
         // debug!(model);
@@ -209,6 +211,7 @@ fn view(model: &model::Model) -> Node<Msg> {
         Page::Invite => invite::view(model),
         Page::Users => users::view(model),
         Page::Profile => profile::view(model),
+        Page::Reports => reports::view(model),
     }
 }
 
@@ -237,6 +240,7 @@ fn resolve_page(url: Url) -> Option<Page> {
         "register" => Page::SignUp,
         "invite" => Page::Invite,
         "users" => Page::Users,
+        "reports" => Page::Reports,
         _ => Page::Project,
     };
     Some(page)

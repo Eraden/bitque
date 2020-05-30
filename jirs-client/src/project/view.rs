@@ -19,12 +19,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         project_board_lists(model),
     ];
 
-    inner_layout(
-        model,
-        "projectPage",
-        project_section,
-        crate::modal::view(model),
-    )
+    inner_layout(model, "projectPage", project_section)
 }
 
 fn breadcrumbs(model: &Model) -> Node<Msg> {

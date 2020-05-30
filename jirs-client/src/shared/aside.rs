@@ -63,7 +63,7 @@ pub fn render(model: &Model) -> Node<Msg> {
         sidebar_link_item(model, "Releases", Icon::Shipping, None),
         sidebar_link_item(model, "Issue and Filters", Icon::Issues, None),
         sidebar_link_item(model, "Pages", Icon::Page, None),
-        sidebar_link_item(model, "Reports", Icon::Reports, None),
+        sidebar_link_item(model, "Reports", Icon::Reports, Some(Page::Reports)),
         sidebar_link_item(model, "Components", Icon::Component, None),
     ]);
 

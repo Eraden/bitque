@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use seed::{prelude::*, *};
 
 use jirs_data::*;
@@ -11,7 +13,6 @@ use crate::shared::styled_input::StyledInput;
 use crate::shared::styled_select::StyledSelect;
 use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::{FieldId, Msg, PageChanged, ProfilePageChange};
-use std::collections::HashMap;
 
 pub fn view(model: &Model) -> Node<Msg> {
     let page = match &model.page_content {
@@ -75,7 +76,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         .add_field(submit_field)
         .build()
         .into_node();
-    inner_layout(model, "profile", vec![content], crate::modal::view(model))
+    inner_layout(model, "profile", vec![content])
 }
 
 fn build_current_project(model: &Model, page: &Box<ProfilePage>) -> Node<Msg> {

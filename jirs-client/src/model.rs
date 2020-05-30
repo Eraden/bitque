@@ -215,6 +215,7 @@ pub enum Page {
     Invite,
     Users,
     Profile,
+    Reports,
 }
 
 impl Page {
@@ -229,6 +230,7 @@ impl Page {
             Page::Invite => "/invite".to_string(),
             Page::Users => "/users".to_string(),
             Page::Profile => "/profile".to_string(),
+            Page::Reports => "/reports".to_string(),
         }
     }
 }
@@ -429,6 +431,9 @@ impl ProfilePage {
 }
 
 #[derive(Debug)]
+pub struct ReportsPage {}
+
+#[derive(Debug)]
 pub enum PageContent {
     SignIn(Box<SignInPage>),
     SignUp(Box<SignUpPage>),
@@ -437,6 +442,7 @@ pub enum PageContent {
     Invite(Box<InvitePage>),
     Users(Box<UsersPage>),
     Profile(Box<ProfilePage>),
+    Reports(Box<ReportsPage>),
 }
 
 #[derive(Debug)]

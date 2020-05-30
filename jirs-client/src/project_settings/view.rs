@@ -1,5 +1,6 @@
-use seed::{prelude::*, *};
 use std::collections::HashMap;
+
+use seed::{prelude::*, *};
 
 use jirs_data::{IssueStatus, ProjectCategory, TimeTracking, ToVec};
 
@@ -88,12 +89,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let project_section = vec![div![class!["formContainer"], form]];
 
-    inner_layout(
-        model,
-        "projectSettings",
-        project_section,
-        crate::modal::view(model),
-    )
+    inner_layout(model, "projectSettings", project_section)
 }
 
 /// Build project name input with styled field wrapper

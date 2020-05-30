@@ -171,6 +171,5 @@ pub fn view(model: &Model) -> Node<Msg> {
         model,
         "users",
         vec![form, users_section, invitations_section],
-        empty![],
     )
 }
