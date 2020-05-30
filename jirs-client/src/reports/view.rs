@@ -69,7 +69,7 @@ fn this_month_graph(model: &Model) -> Node<Msg> {
         columns.push(seed::rect![attrs![
             At::X => x,
             At::Y => SVG_DRAWABLE_HEIGHT - height, // reverse draw origin
-            At::Width => "10",
+            At::Width => SVG_BAR_WIDTH,
             At::Height => height,
             At::Style => "fill: rgb(255,0,0);",
             At::Title => format!("Number of issues: {}", num_issues),
