@@ -9,6 +9,13 @@ https://git.sr.ht/~tsumanu/jirs
 
 * Actor based asynchronous backend
 * Ultra fast functional frontend build with WASM
+* Showing message when person is invited to project
+* Send e-mail with invitation to project
+* Switch project in profile page
+* Choose time tracking in project
+* Edit, delete and move issues
+* Comment issue
+* Add people to project
 
 ## How to run it
 
