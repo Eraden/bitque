@@ -1,6 +1,8 @@
 .styledEditor {
-    display: grid;
-    grid-template-areas: "tab1 tab2" "view view";
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    max-width: 100%;
 }
 
 .styledEditor > input[type="radio"] {
@@ -45,12 +47,12 @@
     border-color: var(--borderInputFocus);
 }
 
-.styledEditor > .navbar.editor {
-    grid-area: tab1;
+.styledEditor > .navbar.editorTab {
+    min-width: 50%;
 }
 
-.styledEditor > .navbar.view {
-    grid-area: tab2;
+.styledEditor > .navbar.viewTab {
+    min-width: 50%;
 }
 
 .styledEditor > .styledTextArea {
@@ -59,7 +61,7 @@
 }
 
 .styledEditor > .view {
-    grid-area: view;
+    min-width: 100%;
     display: none;
     min-height: 40px;
     padding-top: 15px;

@@ -43,11 +43,19 @@ fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -
         }
     }
 
+    // take log10 from largest amount of issue to calculate how long text will be
     let legend_margin_width = (dominant as f64).log10() * SVG_MARGIN_X as f64;
-    let mut columns: Vec<Node<Msg>> = vec![];
 
+    // shapes, groups and texts
+    let mut svg_parts: Vec<Node<Msg>> = vec![];
+
+    // each piece is part of column drawable view where number of parts depends on number of issues which have largest amount of issues
     let piece_height = SVG_DRAWABLE_HEIGHT as f64 / dominant as f64;
-    let piece_width = (SVG_WIDTH as f64 - (legend_margin_width + SVG_MARGIN_X as f64))
+    // width reduces by legend divided by number of days
+    let piece_width = (SVG_WIDTH as f64
+        - legend_margin_width
+        - SVG_MARGIN_X as f64
+        - (SVG_BAR_MARGIN as f64 * page.last_day.day() as f64))
         / page.last_day.day() as f64;
 
     let resolution = 10;
@@ -71,13 +79,10 @@ fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -
             At::Style => "fill: var(--textLight);",
         ],]);
     }
-    columns.push(seed::g![legend_parts]);
+    svg_parts.push(seed::g![legend_parts]);
 
     for day in (page.first_day.day0())..(page.last_day.day()) {
         let num_issues = issues.get(&day).map(|v| v.len()).unwrap_or_default() as u32;
-        if num_issues == 0 {
-            continue;
-        }
         let x = (piece_width * day as f64)
             + (SVG_BAR_MARGIN * day) as f64
             + (legend_margin_width + SVG_MARGIN_X as f64);
@@ -96,25 +101,27 @@ fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -
             )))
         });
 
-        columns.push(seed::rect![
-            on_hover,
-            on_blur,
-            attrs![
-                At::X => x,
-                At::Y => SVG_DRAWABLE_HEIGHT as f64 - height, // reverse draw origin
-                At::Width => piece_width,
-                At::Height => height,
-                At::Style => "fill: rgb(255, 0, 0);",
-                At::Title => format!("Number of issues: {}", num_issues),
-            ]
-        ]);
-        columns.push(seed::text![
-            attrs![
-                At::X => x,
-                At::Y => SVG_HEIGHT,
-                At::Style => "fill: var(--textLight); font-family: var(--font-regular); font-size: 10px;",
+        svg_parts.push(seed::g![
+            seed::rect![
+                on_hover,
+                on_blur,
+                attrs![
+                    At::X => x,
+                    At::Y => SVG_DRAWABLE_HEIGHT as f64 - height, // reverse draw origin
+                    At::Width => piece_width,
+                    At::Height => height,
+                    At::Style => "fill: rgb(255, 0, 0);",
+                    At::Title => format!("Number of issues: {}", num_issues),
+                ]
             ],
-            day.format("%d/%m").to_string(),
+            seed::text![
+                attrs![
+                    At::X => x,
+                    At::Y => SVG_HEIGHT,
+                    At::Style => "fill: var(--textLight); font-family: var(--font-regular); font-size: 10px;",
+                ],
+                day.format("%d/%m").to_string(),
+            ]
         ]);
     }
 
@@ -123,7 +130,7 @@ fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -
         h5![class!["graphHeader"], "Last updated"],
         svg![
             attrs![At::Height => SVG_HEIGHT, At::Width => SVG_WIDTH],
-            columns,
+            svg_parts,
         ],
     ]
 }
