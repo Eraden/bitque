@@ -1,0 +1,34 @@
+#reports {
+}
+
+#reports > .top > .graph {
+    margin-top: 15px;
+}
+
+#reports > .top > .graph > .graphHeader {
+    margin-bottom: 15px;
+}
+
+#reports > .top > .issueList {
+    display: block;
+}
+
+#reports > .top > .issueList > .issue {
+    display: flex;
+    justify-content: space-between;
+    justify-items: flex-start;
+}
+
+#reports > .top > .issueList > .issue > * {
+    width: 25%;
+}
+
+#reports > .top > .issueList > .issue.selected {
+    color: var(--primary);
+    font-family: var(--font-bold);
+}
+
+#reports > .top > .issueList > .issue.nonSelected {
+    color: var(--textLight);
+    font-family: var(--font-regular);
+}

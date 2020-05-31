@@ -2,6 +2,7 @@ use seed::prelude::*;
 
 use jirs_data::WsMsg;
 
+use crate::changes::{PageChanged, ReportsPageChange};
 use crate::model::{Model, Page, PageContent, ReportsPage};
 use crate::ws::enqueue_ws_msg;
 use crate::{Msg, WebSocketChanged};
@@ -14,7 +15,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         _ => (),
     }
 
-    let _page = match &mut model.page_content {
+    let page = match &mut model.page_content {
         PageContent::Reports(page) => page,
         _ => return,
     };
@@ -28,12 +29,18 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         | Msg::ChangePage(Page::Reports) => {
             init_load(model, orders);
         }
+        Msg::PageChanged(PageChanged::Reports(ReportsPageChange::DayHovered(v))) => {
+            page.hovered_day = v;
+        }
+        Msg::PageChanged(PageChanged::Reports(ReportsPageChange::DaySelected(v))) => {
+            page.selected_day = v;
+        }
         _ => {}
     }
 }
 
 fn build_page_content(model: &mut Model) {
-    model.page_content = PageContent::Reports(Box::new(ReportsPage {}))
+    model.page_content = PageContent::Reports(Box::new(ReportsPage::new()))
 }
 
 fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {

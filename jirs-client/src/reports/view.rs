@@ -5,91 +5,166 @@ use seed::{prelude::*, *};
 
 use jirs_data::Issue;
 
-use crate::model::Model;
+use crate::model::{Model, PageContent, ReportsPage};
 use crate::shared::inner_layout;
-use crate::Msg;
+use crate::{Msg, PageChanged, ReportsPageChange};
 
-const SVG_MARGIN_X: u32 = 5;
+const SVG_MARGIN_X: u32 = 10;
 const SVG_DRAWABLE_HEIGHT: u32 = 300;
 const SVG_HEIGHT: u32 = SVG_DRAWABLE_HEIGHT + 30;
 const SVG_WIDTH: u32 = 1060;
-const SVG_BAR_WIDTH: u32 = 25;
 const SVG_BAR_MARGIN: u32 = 10;
 
 pub fn view(model: &Model) -> Node<Msg> {
-    let body = section![
-        h1![class!["header"], "Reports"],
-        div![this_month_graph(model)],
-    ];
+    let page = match &model.page_content {
+        PageContent::Reports(page) => page,
+        _ => return empty![],
+    };
+
+    let this_month_updated = this_month_updated(model, page);
+    let graph = this_month_graph(page, &this_month_updated);
+    let list = issue_list(page, &this_month_updated);
+
+    let body = section![class!["top"], h1![class!["header"], "Reports"], graph, list];
 
     inner_layout(model, "reports", vec![body])
 }
 
-fn this_month_graph(model: &Model) -> Node<Msg> {
-    let first_day = chrono::Utc::today().with_day(1).unwrap().naive_local();
-    let last_day = (first_day + chrono::Duration::days(32))
-        .with_day(1)
-        .unwrap()
-        - chrono::Duration::days(1);
-
-    let this_month_updated: Vec<&Issue> = model
-        .issues
-        .iter()
-        .filter(|issue| issue.updated_at.date() >= first_day)
-        .collect();
-
+fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -> Node<Msg> {
+    let mut dominant = 0;
     let mut issues: HashMap<u32, Vec<&Issue>> = HashMap::new();
 
-    let list: Vec<Node<Msg>> = this_month_updated
-        .into_iter()
-        .map(|issue| {
-            let date = issue.updated_at.date();
-            issues.entry(date.day0()).or_default().push(issue);
-            let day = issue.updated_at.date().format("%Y-%m-%d").to_string();
-            li![span![issue.title.as_str()], span![day.as_str()]]
-        })
-        .collect();
+    for issue in this_month_updated {
+        let date = issue.updated_at.date();
+        let v = issues.entry(date.day0()).or_default();
+        v.push(issue);
+        if dominant < v.len() {
+            dominant = v.len();
+        }
+    }
 
+    let legend_margin_width = (dominant as f64).log10() * SVG_MARGIN_X as f64;
     let mut columns: Vec<Node<Msg>> = vec![];
-    let x_origin: Node<Msg> = seed::rect![attrs![
-        At::X => SVG_MARGIN_X,
-        At::Y => SVG_HEIGHT - SVG_MARGIN_X - 20,
-        At::Width => SVG_WIDTH - (SVG_MARGIN_X * 2),
-        At::Height => 2,
-        At::Style => "fill: var(--textDark);"
-    ]];
 
-    for day in (first_day.day0())..(last_day.day0()) {
-        let x = (SVG_BAR_WIDTH * day) + (SVG_BAR_MARGIN * day) + (SVG_MARGIN_X * 2);
+    let piece_height = SVG_DRAWABLE_HEIGHT as f64 / dominant as f64;
+    let piece_width = (SVG_WIDTH as f64 - (legend_margin_width + SVG_MARGIN_X as f64))
+        / page.last_day.day() as f64;
+
+    let resolution = 10;
+    let mut legend_parts: Vec<Node<Msg>> = vec![];
+    for y in 0..(resolution + 1) {
+        let current = dominant as f64 * (y as f64 / resolution as f64);
+
+        legend_parts.push(seed::text![
+            attrs![
+                At::X => 0,
+                At::Y => SVG_DRAWABLE_HEIGHT as f64 - (current as f64 * piece_height)  + 12f64,
+                At::Style => "fill: var(--textLight); font-family: var(--font-regular); font-size: 10px;",
+            ],
+            format!("{:.1}", current),
+        ]);
+        legend_parts.push(seed::rect![attrs![
+            At::X =>  legend_margin_width + SVG_MARGIN_X as f64,
+            At::Y => SVG_DRAWABLE_HEIGHT as f64 - (current as f64 * piece_height),
+            At::Width => SVG_WIDTH as f64 - (legend_margin_width + SVG_MARGIN_X as f64),
+            At::Height => 1,
+            At::Style => "fill: var(--textLight);",
+        ],]);
+    }
+    columns.push(seed::g![legend_parts]);
+
+    for day in (page.first_day.day0())..(page.last_day.day()) {
         let num_issues = issues.get(&day).map(|v| v.len()).unwrap_or_default() as u32;
-        let height = num_issues * SVG_BAR_WIDTH;
+        if num_issues == 0 {
+            continue;
+        }
+        let x = (piece_width * day as f64)
+            + (SVG_BAR_MARGIN * day) as f64
+            + (legend_margin_width + SVG_MARGIN_X as f64);
+        let height = num_issues as f64 * piece_height;
 
-        let day = first_day.with_day0(day).unwrap();
+        let day = page.first_day.with_day0(day).unwrap();
 
-        columns.push(seed::rect![attrs![
-            At::X => x,
-            At::Y => SVG_DRAWABLE_HEIGHT - height, // reverse draw origin
-            At::Width => SVG_BAR_WIDTH,
-            At::Height => height,
-            At::Style => "fill: rgb(255,0,0);",
-            At::Title => format!("Number of issues: {}", num_issues),
-        ]]);
+        let on_hover: EventHandler<Msg> = mouse_ev(Ev::MouseEnter, move |_| {
+            Some(Msg::PageChanged(PageChanged::Reports(
+                ReportsPageChange::DayHovered(Some(day.clone())),
+            )))
+        });
+        let on_blur: EventHandler<Msg> = mouse_ev(Ev::MouseLeave, move |_| {
+            Some(Msg::PageChanged(PageChanged::Reports(
+                ReportsPageChange::DayHovered(None),
+            )))
+        });
+
+        columns.push(seed::rect![
+            on_hover,
+            on_blur,
+            attrs![
+                At::X => x,
+                At::Y => SVG_DRAWABLE_HEIGHT as f64 - height, // reverse draw origin
+                At::Width => piece_width,
+                At::Height => height,
+                At::Style => "fill: rgb(255, 0, 0);",
+                At::Title => format!("Number of issues: {}", num_issues),
+            ]
+        ]);
         columns.push(seed::text![
             attrs![
                 At::X => x,
                 At::Y => SVG_HEIGHT,
-                At::Style => "fill: var(--textDark); font-family: var(--font-regular); font-size: 10px;",
+                At::Style => "fill: var(--textLight); font-family: var(--font-regular); font-size: 10px;",
             ],
             day.format("%d/%m").to_string(),
         ]);
     }
 
     div![
+        class!["graph"],
+        h5![class!["graphHeader"], "Last updated"],
         svg![
             attrs![At::Height => SVG_HEIGHT, At::Width => SVG_WIDTH],
-            x_origin,
             columns,
         ],
-        ul![list],
     ]
+}
+
+fn issue_list(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -> Node<Msg> {
+    let mut children: Vec<Node<Msg>> = vec![];
+    for issue in this_month_updated.into_iter() {
+        let date = issue.updated_at.date();
+        let day = date.format("%Y-%m-%d").to_string();
+        let active_class = match (page.hovered_day.as_ref(), page.selected_day.as_ref()) {
+            (Some(d), _) if *d == date => "selected",
+            (_, Some(d)) if *d == date => "selected",
+            (Some(_), _) | (_, Some(_)) => "nonSelected",
+            _ => "",
+        };
+        let Issue {
+            title,
+            issue_type,
+            priority,
+            description: _,
+            issue_status_id: _,
+            ..
+        } = issue;
+        children.push(li![
+            class!["issue"],
+            class![active_class],
+            span![title.as_str()],
+            span![format!("{}", issue_type)],
+            span![format!("{}", priority)],
+            span![day.as_str()]
+        ]);
+    }
+    div![class!["issueList"], children]
+}
+
+fn this_month_updated<'a>(model: &'a Model, page: &Box<ReportsPage>) -> Vec<&'a Issue> {
+    model
+        .issues
+        .iter()
+        .filter(|issue| {
+            issue.updated_at.date() >= page.first_day && issue.updated_at.date() <= page.last_day
+        })
+        .collect()
 }

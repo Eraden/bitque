@@ -56,12 +56,19 @@ pub enum InvitationPageChange {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum ReportsPageChange {
+    DayHovered(Option<chrono::NaiveDate>),
+    DaySelected(Option<chrono::NaiveDate>),
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum PageChanged {
     Users(UsersPageChange),
     ProjectSettings(ProjectPageChange),
     Profile(ProfilePageChange),
     Board(BoardPageChange),
     Invitation(InvitationPageChange),
+    Reports(ReportsPageChange),
 }
 
 #[derive(Debug)]
