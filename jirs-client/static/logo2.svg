@@ -1,19 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg
         xmlns:xlink="http://www.w3.org/1999/xlink"
-        version="1.1"
         xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="xMidYMid meet"
         viewBox="0 0 640 640"
         width="28"
         height="28"
+        version="1.1"
 >
     <defs>
         <filter
                 id="shadow16022051"
-                filterUnits="userSpaceOnUse"
-                primitiveUnits="userSpaceOnUse"
         >
             <feFlood>
             </feFlood>
@@ -40,8 +35,8 @@
         <mask
                 id="maskb3oIvRAxi1"
                 x="78" y="78"
-                width="444"
-                height="444"
+                width="600"
+                height="600"
                 maskUnits="userSpaceOnUse"
         >
             <rect x="78" y="78" width="444" height="444" fill="white">
@@ -87,7 +82,7 @@
                 opacity="0.46"
                 fill-opacity="0"
                 stroke="#06697d"
-                stroke-width="22"
+                stroke-width="44"
                 stroke-opacity="1"
         >
         </use>
@@ -107,7 +102,7 @@
                 opacity="0.46"
                 fill-opacity="0"
                 stroke="#06697d"
-                stroke-width="22"
+                stroke-width="44"
                 stroke-opacity="1"
         >
         </use>
@@ -127,7 +122,7 @@
                 opacity="0.46"
                 fill-opacity="0"
                 stroke="#06697d"
-                stroke-width="22"
+                stroke-width="44"
                 stroke-opacity="1"
         >
         </use>

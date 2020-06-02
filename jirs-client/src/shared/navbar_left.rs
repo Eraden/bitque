@@ -50,7 +50,10 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 }
 
 pub fn render(model: &Model) -> Vec<Node<Msg>> {
-    let logo_svg = Node::from_html(include_str!("../../static/logo.svg"));
+    let logo_svg = img![
+        attrs![At::Src => "/logo2.svg"; At::Style => "background: rgba(244,244,244,.8); border-radius: 24px;"]
+    ];
+    // let logo_svg = Node::from_html(include_str!("../../static/logo.svg"));
 
     let user_icon = match model.user.as_ref() {
         Some(user) => i![

@@ -26,10 +26,23 @@ aside#navbar-left > .logoLink {
 
 aside#navbar-left > .logoLink > .styledLogo {
     display: inline-block;
-    margin-left: 8px;
-    padding: 10px;
+    margin-left: 0;
+    padding: 11px;
     cursor: pointer;
     user-select: none;
+    background: rgb(246, 246, 246);
+}
+
+aside#navbar-left > .logoLink > .styledLogo > img {
+    width: 42px;
+}
+
+aside#navbar-left:hover > .logoLink {
+    margin: 20px calc((200px - 64px) / 2) 10px;
+}
+
+aside#navbar-left:hover > .logoLink > .styledLogo {
+    border-radius: 34px;
 }
 
 aside#navbar-left .item {

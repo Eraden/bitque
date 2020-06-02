@@ -1,3 +1,7 @@
+BEGIN;
+
+SAVEPOINT seed;
+
 insert into projects (name) values ('initial'), ('second'), ('third');
 
 insert into issue_statuses (name, project_id, position)
@@ -15,6 +19,14 @@ insert into users (email, name, avatar_url) values (
     'mike@example.com',
     'Mike Keningham',
     'https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman1-512.png'
+), (
+    'foo2+accepted@example.com',
+    'Foo2 Accepted',
+    NULL
+), (
+    'foo1+accepted@example.com',
+    'Foo1 Accepted',
+    NULL
 );
 insert into user_projects (user_id, project_id, role, is_current, is_default) values (
     1, 1, 'owner', true, true
@@ -22,6 +34,10 @@ insert into user_projects (user_id, project_id, role, is_current, is_default) va
     2, 1, 'owner', true, true
 ), (
     3, 1, 'owner', true, true
+), (
+    4, 1, 'user', true, true
+), (
+    5, 1, 'user', true, true
 );
 insert into invitations (email, name, state, project_id, invited_by_id) values (
     'foo1@example.com',
@@ -60,15 +76,6 @@ insert into invitations (email, name, state, project_id, invited_by_id) values (
     2,
     2
 );
-insert into users (project_id, email, name) values (
-    2,
-    'foo2+accepted@example.com',
-    'Foo2 Accepted'
-), (
-    1,
-    'foo1+accepted@example.com',
-    'Foo1 Accepted'
-);
 insert into tokens (user_id, access_token, refresh_token) values (1, uuid_generate_v4(), uuid_generate_v4() );
 insert into issues(
     title,
@@ -82,7 +89,7 @@ insert into issues(
     issue_status_id
 ) values (
     'Foo',
-    'backlog',
+    'task',
     'low',
     1,
     'hello world',
@@ -92,7 +99,7 @@ insert into issues(
     1
 ), (
     'Foo2',
-    'selected',
+    'bug',
     'low',
     2,
     'hello world 2',
@@ -102,7 +109,7 @@ insert into issues(
     2
 ), (
     'Foo3',
-    'in_progress',
+    'story',
     'low',
     3,
     'hello world 3',
@@ -197,3 +204,5 @@ VALUES (
 );
 
 select * from tokens;
+
+commit;
