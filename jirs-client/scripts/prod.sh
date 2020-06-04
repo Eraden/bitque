@@ -6,7 +6,7 @@ rm -Rf build
 mkdir build
 
 wasm-pack build --mode normal --release --out-name jirs --out-dir ./build --target web
-../target/debug/jirs-css -i ./js/styles.css -O ./tmp/styles.css
+../target/debug/jirs-css -i ./js/styles.css -O ./build/styles.css
 
 cp -r ./static/* ./build
 cat ./static/index.js \

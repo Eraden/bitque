@@ -63,11 +63,11 @@ pub struct Configuration {
 impl Default for Configuration {
     fn default() -> Self {
         let database_url = if cfg!(test) {
-            "postgres://postgres@localhost:5432/jirs_test"
+            "postgres://postgres@localhost:5432/jirs_test".to_string()
         } else {
-            "postgres://postgres@localhost:5432/jirs"
-        }
-        .to_string();
+            std::env::var("DATABASE_URL")
+                .unwrap_or_else(|_| "postgres://postgres@localhost:5432/jirs".to_string())
+        };
         Self {
             concurrency: 2,
             database_url,
