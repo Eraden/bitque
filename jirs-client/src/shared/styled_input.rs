@@ -242,8 +242,13 @@ pub fn render(values: StyledInput) -> Node<Msg> {
                 At::Class => input_class_list.join(" "),
                 At::Value => value.unwrap_or_default(),
                 At::Type => input_type.unwrap_or_else(|| "text".to_string()),
-                At::AutoFocus => auto_focus,
+
             ],
+            if auto_focus {
+                vec![attrs![At::AutoFocus => true]]
+            } else {
+                vec![]
+            },
             input_handlers,
         ],
     ]

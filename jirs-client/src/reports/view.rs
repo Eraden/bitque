@@ -6,7 +6,8 @@ use seed::{prelude::*, *};
 use jirs_data::Issue;
 
 use crate::model::{Model, PageContent, ReportsPage};
-use crate::shared::inner_layout;
+use crate::shared::styled_icon::StyledIcon;
+use crate::shared::{inner_layout, ToNode};
 use crate::{Msg, PageChanged, ReportsPageChange};
 
 const SVG_MARGIN_X: u32 = 10;
@@ -100,11 +101,22 @@ fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -
                 ReportsPageChange::DayHovered(None),
             )))
         });
+        let selected = page.selected_day.clone();
+        let current_date = day.clone();
+        let on_click: EventHandler<Msg> = mouse_ev(Ev::MouseLeave, move |_| {
+            Some(Msg::PageChanged(PageChanged::Reports(
+                ReportsPageChange::DaySelected(match selected {
+                    Some(_) => None,
+                    None => Some(current_date),
+                }),
+            )))
+        });
 
         svg_parts.push(seed::g![
             seed::rect![
                 on_hover,
                 on_blur,
+                on_click,
                 attrs![
                     At::X => x,
                     At::Y => SVG_DRAWABLE_HEIGHT as f64 - height, // reverse draw origin
@@ -150,20 +162,34 @@ fn issue_list(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -> Node
             title,
             issue_type,
             priority,
-            description: _,
+            description,
             issue_status_id: _,
             ..
         } = issue;
+        let type_icon = StyledIcon::build(issue_type.clone().into())
+            .build()
+            .into_node();
+        let priority_icon = StyledIcon::build(priority.clone().into())
+            .build()
+            .into_node();
         children.push(li![
             class!["issue"],
             class![active_class],
-            span![title.as_str()],
-            span![format!("{}", issue_type)],
-            span![format!("{}", priority)],
-            span![day.as_str()]
+            span![class!["priority"], priority_icon],
+            span![class!["type"], type_icon],
+            span![class!["name"], title.as_str()],
+            span![
+                class!["desc"],
+                description.as_ref().cloned().unwrap_or_default()
+            ],
+            span![class!["updatedAt"], day.as_str()],
         ]);
     }
-    div![class!["issueList"], children]
+    div![
+        class!["issueList"],
+        h5![class!["issueListHeader"], "Issues this month"],
+        children
+    ]
 }
 
 fn this_month_updated<'a>(model: &'a Model, page: &Box<ReportsPage>) -> Vec<&'a Issue> {

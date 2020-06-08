@@ -19,6 +19,29 @@ https://git.sr.ht/~tsumanu/jirs
 * Comment issue
 * Add people to project
 
+## Known bugs
+
+* Bad sorting when dragging up and down
+
+## Roadmap
+
+##### Version 1.0
+
+* Basic issue management
+* Basic columns management
+* Basic user management
+
+##### Version 1.1
+
+* Add Epic
+* Add grouping by Epic
+* Add backend maximal per seconds request or die
+* Add fibonacci tracked issue reports
+* Add hourly tracked issue reports
+* Add Rich Text Editor
+* Add personal settings to choose MDE (Markdown Editor) or RTE
+* Add issues and filters
+
 ## How to run it
 
 ### Config files

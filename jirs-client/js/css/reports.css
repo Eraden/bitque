@@ -11,16 +11,16 @@
 
 #reports > .top > .issueList {
     display: block;
+    margin-top: 15px;
+}
+
+#reports > .top > .issueList > .issueListHeader {
+    margin-bottom: 15px;
 }
 
 #reports > .top > .issueList > .issue {
-    display: flex;
-    justify-content: space-between;
-    justify-items: flex-start;
-}
-
-#reports > .top > .issueList > .issue > * {
-    width: 25%;
+    display: grid;
+    grid-template-columns: 32px 32px 240px auto 120px;
 }
 
 #reports > .top > .issueList > .issue.selected {
