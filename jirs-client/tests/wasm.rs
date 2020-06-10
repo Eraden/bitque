@@ -1,4 +1,5 @@
 extern crate wasm_bindgen_test;
+
 use wasm_bindgen_test::*;
 
 use jirs_client::validations::*;

@@ -1,4 +1,5 @@
 use actix::{Handler, Message};
+use diesel::connection::TransactionManager;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 
@@ -6,7 +7,6 @@ use jirs_data::{ProjectId, UserId, UserProject, UserProjectId, UserRole};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
-use diesel::connection::TransactionManager;
 
 pub struct CurrentUserProject {
     pub user_id: UserId,

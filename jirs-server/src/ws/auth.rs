@@ -73,7 +73,7 @@ impl WsHandler<CheckAuthToken> for WebSocketActor {
             Ok(Err(_)) => {
                 return Ok(Some(WsMsg::AuthorizeLoaded(Err(
                     "Invalid auth token".to_string()
-                ))))
+                ))));
             }
             _ => return Ok(Some(WsMsg::AuthorizeExpired)),
         };

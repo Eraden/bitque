@@ -1,9 +1,10 @@
+use seed::{prelude::*, *};
+
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_tooltip::StyledTooltip;
 use crate::shared::ToNode;
 use crate::{FieldId, Msg};
-use seed::{prelude::*, *};
 
 #[derive(Debug, Clone, Copy)]
 pub enum HeadingSize {

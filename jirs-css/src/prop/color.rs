@@ -139,7 +139,7 @@ impl ParseToken<ColorProperty> for CssParser {
                 let a = self.parse_token()?;
                 match a {
                     PropertyValue::Other(f) if -0.001f64 > f || f > 1.001f64 => {
-                        return Err(format!("out of range hsl alpha value {:?}", a))
+                        return Err(format!("out of range hsl alpha value {:?}", a));
                     }
                     _ => (),
                 };

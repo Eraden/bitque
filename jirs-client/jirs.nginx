@@ -9,9 +9,9 @@ server {
     ssl_certificate /home/eraden/code/eraden/jirs/jirs-client/js/nginx-selfsigned.crt;
     ssl_certificate_key /home/eraden/code/eraden/jirs/jirs-client/js/nginx-selfsigned.key;
 
-#    if ($scheme != "https") {
-#        return 301 https://$host$request_uri;
-#    }
+    #    if ($scheme != "https") {
+    #        return 301 https://$host$request_uri;
+    #    }
 
     location ~ .wasm {
         default_type application/wasm;

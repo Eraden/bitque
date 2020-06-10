@@ -123,7 +123,7 @@ impl Handler<CreateMessage> for DbExecutor {
             _ => {
                 return Err(ServiceErrors::RecordNotFound(
                     "No matching user found".to_string(),
-                ))
+                ));
             }
         };
 

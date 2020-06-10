@@ -1,12 +1,15 @@
+use std::collections::HashSet;
+
+use seed::error;
+use seed::prelude::Orders;
+
+use jirs_data::{IssueStatus, IssueStatusId, ProjectFieldId, UpdateProjectPayload, WsMsg};
+
 use crate::model::{Model, Page, PageContent, ProjectSettingsPage};
 use crate::shared::styled_select::StyledSelectChange;
 use crate::ws::{enqueue_ws_msg, send_ws_msg};
 use crate::FieldChange::TabChanged;
 use crate::{FieldId, Msg, PageChanged, ProjectPageChange, WebSocketChanged};
-use jirs_data::{IssueStatus, IssueStatusId, ProjectFieldId, UpdateProjectPayload, WsMsg};
-use seed::error;
-use seed::prelude::Orders;
-use std::collections::HashSet;
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::ProjectSettings {
