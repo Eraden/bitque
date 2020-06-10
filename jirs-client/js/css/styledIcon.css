@@ -180,3 +180,195 @@ i.styledIcon.message:before {
 i.styledIcon.check:before {
     content: "\ec4b";
 }
+
+/********/
+/* RTE */
+/********/
+
+i.styledIcon.align-center:before {
+    content: "\eddf";
+}
+
+i.styledIcon.align-left:before {
+    content: "\ede0";
+}
+
+i.styledIcon.align-right:before {
+    content: "\ede1";
+}
+
+i.styledIcon.all-caps:before {
+    content: "\ede2";
+}
+
+i.styledIcon.bold:before {
+    content: "\ede3";
+}
+
+i.styledIcon.brush:before {
+    content: "\ede4";
+}
+
+i.styledIcon.clip-board:before {
+    content: "\ede5";
+}
+
+i.styledIcon.code-alt:before {
+    content: "\ede6";
+}
+
+i.styledIcon.color-bucket:before {
+    content: "\ede7";
+}
+
+i.styledIcon.color-picker:before {
+    content: "\ede8";
+}
+
+i.styledIcon.copy-invert:before {
+    content: "\ede9";
+}
+
+i.styledIcon.copy:before {
+    content: "\edea";
+}
+
+i.styledIcon.cut:before {
+    content: "\edeb";
+}
+
+i.styledIcon.delete-alt:before {
+    content: "\edec";
+}
+
+i.styledIcon.edit-alt:before {
+    content: "\eded";
+}
+
+i.styledIcon.eraser-alt:before {
+    content: "\edee";
+}
+
+i.styledIcon.font:before {
+    content: "\edef";
+}
+
+i.styledIcon.heading:before {
+    content: "\edf0";
+}
+
+i.styledIcon.indent:before {
+    content: "\edf1";
+}
+
+i.styledIcon.italic-alt:before {
+    content: "\edf2";
+}
+
+i.styledIcon.italic:before {
+    content: "\edf3";
+}
+
+i.styledIcon.justify-all:before {
+    content: "\edf4";
+}
+
+i.styledIcon.justify-center:before {
+    content: "\edf5";
+}
+
+i.styledIcon.justify-left:before {
+    content: "\edf6";
+}
+
+i.styledIcon.justify-right:before {
+    content: "\edf7";
+}
+
+i.styledIcon.link-broken:before {
+    content: "\edf8";
+}
+
+i.styledIcon.outdent:before {
+    content: "\edf9";
+}
+
+i.styledIcon.paper-clip:before {
+    content: "\edfa";
+}
+
+i.styledIcon.paragraph:before {
+    content: "\edfb";
+}
+
+i.styledIcon.pin:before {
+    content: "\edfc";
+}
+
+i.styledIcon.printer:before {
+    content: "\edfd";
+}
+
+i.styledIcon.redo:before {
+    content: "\edfe";
+}
+
+i.styledIcon.rotation:before {
+    content: "\edff";
+}
+
+i.styledIcon.save:before {
+    content: "\ee00";
+}
+
+i.styledIcon.small-cap:before {
+    content: "\ee01";
+}
+
+i.styledIcon.strike-through:before {
+    content: "\ee02";
+}
+
+i.styledIcon.sub-listing:before {
+    content: "\ee03";
+}
+
+i.styledIcon.subscript:before {
+    content: "\ee04";
+}
+
+i.styledIcon.superscript:before {
+    content: "\ee05";
+}
+
+i.styledIcon.table:before {
+    content: "\ee06";
+}
+
+i.styledIcon.text-height:before {
+    content: "\ee07";
+}
+
+i.styledIcon.text-width:before {
+    content: "\ee08";
+}
+
+i.styledIcon.trash:before {
+    content: "\ee09";
+}
+
+i.styledIcon.underline:before {
+    content: "\ee0a";
+}
+
+i.styledIcon.undo:before {
+    content: "\ee0b";
+}
+
+i.styledIcon.listing-dots:before {
+    content: "\ef74";
+}
+
+i.styledIcon.listing-number:before {
+    content: "\ef76";
+}

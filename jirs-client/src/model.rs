@@ -13,6 +13,7 @@ use crate::shared::styled_checkbox::StyledCheckboxState;
 use crate::shared::styled_editor::Mode;
 use crate::shared::styled_image_input::StyledImageInputState;
 use crate::shared::styled_input::StyledInputState;
+use crate::shared::styled_rte::StyledRteState;
 use crate::shared::styled_select::StyledSelectState;
 use crate::{EditIssueModalSection, FieldId, ProjectFieldId /*HOST_URL*/};
 
@@ -278,6 +279,7 @@ pub struct ProjectSettingsPage {
     pub edit_column_id: Option<IssueStatusId>,
     pub creating_issue_status: bool,
     pub name: StyledInputState,
+    pub description_rte: StyledRteState,
 }
 
 impl ProjectSettingsPage {
@@ -317,6 +319,9 @@ impl ProjectSettingsPage {
                 FieldId::ProjectSettings(ProjectFieldId::IssueStatusName),
                 "",
             ),
+            description_rte: StyledRteState::new(FieldId::ProjectSettings(
+                ProjectFieldId::Description,
+            )),
         }
     }
 

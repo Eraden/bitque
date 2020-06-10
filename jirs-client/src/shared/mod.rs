@@ -23,6 +23,7 @@ pub mod styled_image_input;
 pub mod styled_input;
 pub mod styled_link;
 pub mod styled_modal;
+pub mod styled_rte;
 pub mod styled_select;
 pub mod styled_select_child;
 pub mod styled_textarea;

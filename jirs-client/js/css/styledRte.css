@@ -1,0 +1,103 @@
+.styledRte {
+    display: block;
+}
+
+.styledRte > .bar {
+    display: block;
+    border-radius: 3px;
+    border: 1px solid var(--borderLightest);
+    background: var(--backgroundLightest);
+    font-family: var(--font-regular);
+}
+
+.styledRte > .bar > .row {
+    padding: 5px 0;
+    display: flex;
+}
+
+.styledRte > .bar > .row > .group {
+    padding: 0 5px 0 0;
+}
+
+.styledRte > .bar > .row > .group:first-child {
+    padding-left: 0;
+}
+
+.styledRte > .bar > .row > .group:last-child {
+    padding-right: 0;
+}
+
+.styledRte > .bar > .row > .group > .styledRteButton > .styledButton,
+.styledRte > .bar > .row > .group > .styledButton,
+.styledRte > .bar > .row > .group > span.headingList {
+    margin: 0 5px;
+}
+
+.styledRte > .bar > .row > .group > .headingList {
+    height: 32px;
+    min-width: 40px;
+    overflow-y: visible;
+    overflow-x: hidden;
+}
+
+.styledRte > .editorWrapper {
+    display: block;
+    width: 100%;
+    border-radius: 3px;
+    border: 1px solid var(--borderLightest);
+    background: var(--backgroundLightest);
+    font-family: var(--font-regular);
+    color: var(--textDarkest);
+    font-weight: normal;
+    font-size: 15px;
+    resize: vertical;
+}
+
+.styledRte > .editorWrapper > .editor {
+    display: block;
+    margin: 8px 12px 9px;
+    min-height: 60px;
+}
+
+.styledRte > .editorWrapper > .editor ul,
+.styledRte > .editorWrapper > .editor ol {
+    margin-left: 25px;
+}
+
+/**********************************************************/
+/* Table tooltip                                          */
+/**********************************************************/
+
+.tableTooltip {
+    min-width: 120px;
+    padding: 15px;
+    position: absolute;
+}
+
+.tableTooltip > h2 {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.tableTooltip > table {
+    table-layout: fixed;
+    border-spacing: 0;
+    text-align: center;
+}
+
+.tableTooltip > table > tbody > tr > td {
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    padding: 5px;
+    border-bottom: 1px solid var(--borderLight);
+    border-right: 1px solid var(--borderLight);
+    border-left: 1px solid var(--borderLight);
+    border-top: 1px solid var(--borderLight);
+}
+
+.tableTooltip > .inputs {
+    display: flex;
+    justify-content: space-between;
+}

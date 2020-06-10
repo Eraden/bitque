@@ -6,8 +6,9 @@ pub use fields::*;
 use jirs_data::*;
 
 use crate::model::{ModalType, Model, Page};
+use crate::shared::styled_rte::RteMsg;
 use crate::shared::styled_select::StyledSelectChange;
-use crate::shared::styled_tooltip::Variant as StyledTooltip;
+use crate::shared::styled_tooltip::{Variant as StyledTooltip, Variant};
 use crate::shared::{go_to_board, go_to_login, styled_tooltip};
 use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
 
@@ -72,6 +73,7 @@ pub enum Msg {
     StrInputChanged(FieldId, String),
     U32InputChanged(FieldId, u32),
     FileInputChanged(FieldId, Vec<File>),
+    Rte(RteMsg, FieldId),
 
     // issues
     AddIssue,
@@ -180,6 +182,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
             styled_tooltip::Variant::Messages => {
                 model.messages_tooltip_visible = !model.messages_tooltip_visible;
             }
+            Variant::TableBuilder => {}
         },
         _ => (),
     }

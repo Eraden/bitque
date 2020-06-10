@@ -12,6 +12,7 @@ use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
+use crate::shared::styled_rte::StyledRte;
 use crate::shared::styled_select::StyledSelect;
 use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::{inner_layout, ToChild, ToNode};
@@ -30,6 +31,11 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     let url_field = url_field(page);
 
     let description_field = description_field(page);
+
+    let desc_rte = StyledRte::build(FieldId::ProjectSettings(ProjectFieldId::Description))
+        .state(&page.description_rte)
+        .build()
+        .into_node();
 
     let category_field = category_field(page);
 
@@ -79,6 +85,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         }))
         .add_field(name_field)
         .add_field(url_field)
+        .add_field(desc_rte)
         .add_field(description_field)
         .add_field(category_field)
         .add_field(time_tracking_field)

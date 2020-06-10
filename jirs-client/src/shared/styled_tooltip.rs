@@ -7,6 +7,7 @@ use crate::Msg;
 pub enum Variant {
     About,
     Messages,
+    TableBuilder,
 }
 
 impl Default for Variant {
@@ -20,6 +21,7 @@ impl std::fmt::Display for Variant {
         match self {
             Variant::About => f.write_str("about"),
             Variant::Messages => f.write_str("messages"),
+            Variant::TableBuilder => f.write_str("tableTooltip"),
         }
     }
 }
@@ -77,6 +79,11 @@ impl StyledTooltipBuilder {
 
     pub fn messages_tooltip(mut self) -> Self {
         self.variant = Variant::Messages;
+        self
+    }
+
+    pub fn table_tooltip(mut self) -> Self {
+        self.variant = Variant::TableBuilder;
         self
     }
 

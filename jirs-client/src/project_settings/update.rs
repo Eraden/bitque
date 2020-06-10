@@ -51,6 +51,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     page.project_category_state.update(&msg, orders);
     page.time_tracking.update(&msg);
     page.name.update(&msg);
+    page.description_rte.update(&msg);
 
     match msg {
         Msg::StrInputChanged(FieldId::ProjectSettings(ProjectFieldId::Name), text) => {
