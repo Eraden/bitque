@@ -38,5 +38,8 @@ tasks:
   - build: |
       cd jirs
       cargo build --all --release
+      strip -s ./target/release/jirs_server
   - deploy: |
-      cd jirs
+      cp ~/jirs/target/release/jirs_server ~/
+artifacts:
+  - jirs_server
