@@ -88,7 +88,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     name: page.payload.name.clone(),
                     url: page.payload.url.clone(),
                     description: page.payload.description.clone(),
-                    category: page.payload.category.clone(),
+                    category: page.payload.category,
                     time_tracking: Some(page.time_tracking.value.into()),
                 }),
                 model.ws.as_ref(),
@@ -129,7 +129,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     .map(|is| (is.id, is.position))
                 {
                     send_ws_msg(
-                        WsMsg::IssueStatusUpdate(id, name.to_string(), pos),
+                        WsMsg::IssueStatusUpdate(id, name, pos),
                         model.ws.as_ref(),
                         orders,
                     );

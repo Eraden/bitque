@@ -358,7 +358,10 @@ impl Handler<InnerMsg> for WsServer {
         debug!("receive {:?}", msg);
         match msg {
             InnerMsg::Join(project_id, user_id, recipient) => {
-                let v = self.sessions.entry(user_id).or_insert(vec![]);
+                let v = self
+                    .sessions
+                    .entry(user_id)
+                    .or_insert_with(Default::default);
                 v.push(recipient);
                 self.ensure_room(project_id);
 
@@ -378,7 +381,7 @@ impl Handler<InnerMsg> for WsServer {
                     room.remove(&user_id);
                     self.sessions.remove(&user_id);
                 } else {
-                    let v = self.sessions.entry(user_id).or_insert(vec![]);
+                    let v = self.sessions.entry(user_id).or_insert_with(Vec::new);
                     v.remove_item(&recipient);
                 }
             }
@@ -414,7 +417,7 @@ impl WsServer {
         self.rooms.entry(room).or_insert_with(HashMap::new);
     }
 
-    fn send_to_recipients(&self, recipients: &Vec<Recipient<InnerMsg>>, msg: &WsMsg) {
+    fn send_to_recipients(&self, recipients: &[Recipient<InnerMsg>], msg: &WsMsg) {
         for recipient in recipients.iter() {
             match recipient.do_send(InnerMsg::Transfer(msg.clone())) {
                 Ok(_) => debug!("msg sent"),

@@ -24,14 +24,14 @@ pub fn view(model: &Model) -> Node<Msg> {
 
     let this_month_updated = this_month_updated(model, page);
     let graph = this_month_graph(page, &this_month_updated);
-    let list = issue_list(page, &this_month_updated);
+    let list = issue_list(page, this_month_updated.as_slice());
 
     let body = section![class!["top"], h1![class!["header"], "Reports"], graph, list];
 
     inner_layout(model, "reports", vec![body])
 }
 
-fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -> Node<Msg> {
+fn this_month_graph(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<Msg> {
     let mut dominant = 0;
     let mut issues: HashMap<u32, Vec<&Issue>> = HashMap::new();
 
@@ -93,7 +93,7 @@ fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -
 
         let on_hover: EventHandler<Msg> = mouse_ev(Ev::MouseEnter, move |_| {
             Some(Msg::PageChanged(PageChanged::Reports(
-                ReportsPageChange::DayHovered(Some(day.clone())),
+                ReportsPageChange::DayHovered(Some(day)),
             )))
         });
         let on_blur: EventHandler<Msg> = mouse_ev(Ev::MouseLeave, move |_| {
@@ -101,8 +101,8 @@ fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -
                 ReportsPageChange::DayHovered(None),
             )))
         });
-        let selected = page.selected_day.clone();
-        let current_date = day.clone();
+        let selected = page.selected_day;
+        let current_date = day;
         let on_click: EventHandler<Msg> = mouse_ev(Ev::MouseLeave, move |_| {
             Some(Msg::PageChanged(PageChanged::Reports(
                 ReportsPageChange::DaySelected(match selected {
@@ -147,9 +147,9 @@ fn this_month_graph(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -
     ]
 }
 
-fn issue_list(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -> Node<Msg> {
+fn issue_list(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<Msg> {
     let mut children: Vec<Node<Msg>> = vec![];
-    for issue in this_month_updated.into_iter() {
+    for issue in this_month_updated {
         let date = issue.updated_at.date();
         let day = date.format("%Y-%m-%d").to_string();
         let active_class = match (page.hovered_day.as_ref(), page.selected_day.as_ref()) {
@@ -192,7 +192,7 @@ fn issue_list(page: &Box<ReportsPage>, this_month_updated: &Vec<&Issue>) -> Node
     ]
 }
 
-fn this_month_updated<'a>(model: &'a Model, page: &Box<ReportsPage>) -> Vec<&'a Issue> {
+fn this_month_updated<'a>(model: &'a Model, page: &ReportsPage) -> Vec<&'a Issue> {
     model
         .issues
         .iter()

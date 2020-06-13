@@ -102,7 +102,7 @@ impl ToNode for ChildBuilder {
         } = self;
 
         let id = field_id.as_ref().map(|f| f.to_string()).unwrap_or_default();
-        let field_id_clone = field_id.clone();
+        let field_id_clone = field_id.as_ref().cloned();
         let handler: EventHandler<Msg> = mouse_ev(Ev::Click, move |_| {
             field_id_clone.map(|field_id| Msg::U32InputChanged(field_id, value))
         });

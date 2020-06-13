@@ -214,7 +214,7 @@ fn project_issue_list(model: &Model, status: &jirs_data::IssueStatus) -> Node<Ms
 }
 
 #[inline]
-fn issue_filter_with_avatars(issue: &Issue, user_ids: &Vec<UserId>) -> bool {
+fn issue_filter_with_avatars(issue: &Issue, user_ids: &[UserId]) -> bool {
     if user_ids.is_empty() {
         return true;
     }

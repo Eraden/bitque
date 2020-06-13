@@ -129,7 +129,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                     ws::update(ws_msg, model, orders);
                 }
                 WebSocketChanged::WebSocketMessageLoaded(v) => {
-                    if let Ok(m) = bincode::deserialize(v.clone().as_slice()) {
+                    if let Ok(m) = bincode::deserialize(v.as_slice()) {
                         match m {
                             WsMsg::Ping | WsMsg::Pong => {
                                 orders.perform_cmd(cmds::timeout(1000, || {
@@ -285,7 +285,7 @@ fn window_events(_model: &Model) -> Vec<EventHandler<Msg>> {
         move |event: web_sys::KeyboardEvent| {
             let tag_name: String = seed::document()
                 .active_element()
-                .map(|el| el.tag_name().to_string())
+                .map(|el| el.tag_name())
                 .unwrap_or_default();
             let key = match tag_name.to_lowercase().as_str() {
                 "input" | "textarea" => "".to_string(),

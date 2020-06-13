@@ -1,9 +1,9 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc};
 use std::time::Duration;
-use std::{error::Error, io, thread};
+use std::{error::Error, io /*, thread*/};
 
-use termion::input::TermRead;
+// use termion::input::TermRead;
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
@@ -37,48 +37,50 @@ pub enum Event<I> {
 /// type is handled in its own thread and returned to a common `Receiver`
 pub struct Events {
     rx: mpsc::Receiver<Event<Key>>,
-    input_handle: thread::JoinHandle<()>,
+    // input_handle: thread::JoinHandle<()>,
     ignore_exit_key: Arc<AtomicBool>,
-    tick_handle: thread::JoinHandle<()>,
+    // tick_handle: thread::JoinHandle<()>,
+}
+
+impl Default for Events {
+    fn default() -> Events {
+        Events::with_config(Config::default())
+    }
 }
 
 impl Events {
-    pub fn new() -> Events {
-        Events::with_config(Config::default())
-    }
-
-    pub fn with_config(config: Config) -> Events {
-        let (tx, rx) = mpsc::channel();
+    pub fn with_config(_config: Config) -> Events {
+        let (_tx, rx) = mpsc::channel();
         let ignore_exit_key = Arc::new(AtomicBool::new(false));
-        let input_handle = {
-            let tx = tx.clone();
-            let ignore_exit_key = ignore_exit_key.clone();
-            thread::spawn(move || {
-                let stdin = io::stdin();
-                for evt in stdin.keys() {
-                    if let Ok(key) = evt {
-                        if let Err(err) = tx.send(Event::Input(key)) {
-                            eprintln!("{}", err);
-                            return;
-                        }
-                        if !ignore_exit_key.load(Ordering::Relaxed) && key == config.exit_key {
-                            return;
-                        }
-                    }
-                }
-            })
-        };
-        let tick_handle = {
-            thread::spawn(move || loop {
-                tx.send(Event::Tick).unwrap();
-                thread::sleep(config.tick_rate);
-            })
-        };
+        // let input_handle = {
+        //     let tx = tx.clone();
+        //     let ignore_exit_key = ignore_exit_key.clone();
+        //     thread::spawn(move || {
+        //         let stdin = io::stdin();
+        //         for evt in stdin.keys() {
+        //             if let Ok(key) = evt {
+        //                 if let Err(err) = tx.send(Event::Input(key)) {
+        //                     eprintln!("{}", err);
+        //                     return;
+        //                 }
+        //                 if !ignore_exit_key.load(Ordering::Relaxed) && key == config.exit_key {
+        //                     return;
+        //                 }
+        //             }
+        //         }
+        //     })
+        // };
+        // let tick_handle = {
+        //     thread::spawn(move || loop {
+        //         tx.send(Event::Tick).unwrap();
+        //         thread::sleep(config.tick_rate);
+        //     })
+        // };
         Events {
             rx,
             ignore_exit_key,
-            input_handle,
-            tick_handle,
+            // input_handle,
+            // tick_handle,
         }
     }
 
@@ -130,7 +132,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
 
-    let events = Events::new();
+    let events = Events::default();
 
     // App
     let mut app = App {

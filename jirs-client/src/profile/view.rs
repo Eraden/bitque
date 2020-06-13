@@ -79,7 +79,7 @@ pub fn view(model: &Model) -> Node<Msg> {
     inner_layout(model, "profile", vec![content])
 }
 
-fn build_current_project(model: &Model, page: &Box<ProfilePage>) -> Node<Msg> {
+fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
     let inner = if model.projects.len() <= 1 {
         let name = model
             .project

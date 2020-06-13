@@ -649,11 +649,9 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
             ]])
                 .add_child({
                     let body: Vec<Node<Msg>> = (0..rows)
-                        .into_iter()
                         .map(|_row| {
                             let tds: Vec<Node<Msg>> = (0..cols)
-                                .into_iter()
-                                .map(|_col| td![format!(" ")])
+                                .map(|_col| td![" "])
                                 .collect();
                             tr![tds]
                         })

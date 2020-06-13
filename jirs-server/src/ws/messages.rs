@@ -14,11 +14,11 @@ impl WsHandler<LoadMessages> for WebSocketActor {
             Ok(Ok(v)) => Ok(Some(WsMsg::MessagesResponse(v))),
             Ok(Err(e)) => {
                 error!("{:?}", e);
-                return Ok(None);
+                Ok(None)
             }
             Err(e) => {
                 error!("{}", e);
-                return Ok(None);
+                Ok(None)
             }
         }
     }
@@ -38,11 +38,11 @@ impl WsHandler<MarkMessageSeen> for WebSocketActor {
             Ok(Ok(id)) => Ok(Some(WsMsg::MessageMarkedSeen(id))),
             Ok(Err(e)) => {
                 error!("{:?}", e);
-                return Ok(None);
+                Ok(None)
             }
             Err(e) => {
                 error!("{}", e);
-                return Ok(None);
+                Ok(None)
             }
         }
     }

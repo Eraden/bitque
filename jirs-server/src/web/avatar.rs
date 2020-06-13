@@ -164,7 +164,7 @@ async fn handle_image(
             bind = web_config.bind,
             port = match web_config.port.as_str() {
                 "80" | "443" => "".to_string(),
-                p @ _ => format!(":{}", p),
+                p => format!(":{}", p),
             },
             client_path = filesystem.client_path,
             user_id = user_id,

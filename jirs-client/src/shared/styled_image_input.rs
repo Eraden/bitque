@@ -25,7 +25,7 @@ impl StyledImageInputState {
             Msg::FileInputChanged(field_id, files) if field_id == &self.field_id => {
                 self.file = files.get(0).cloned();
             }
-            _ => return,
+            _ => {}
         }
     }
 }

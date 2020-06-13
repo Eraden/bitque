@@ -45,16 +45,15 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             orders.perform_cmd(update_avatar(fd, model.host_url.clone()));
             orders.skip();
         }
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(ws_msg)) => match ws_msg {
-            WsMsg::AvatarUrlChanged(user_id, avatar_url) => {
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(ws_msg)) => {
+            if let WsMsg::AvatarUrlChanged(user_id, avatar_url) = ws_msg {
                 if let Some(me) = model.user.as_mut() {
                     if me.id == user_id {
-                        profile_page.avatar.url = Some(avatar_url.clone());
+                        profile_page.avatar.url = Some(avatar_url);
                     }
                 }
             }
-            _ => (),
-        },
+        }
         Msg::ProjectChanged(Some(project)) => {
             profile_page.current_project.values = vec![project.id as u32];
         }

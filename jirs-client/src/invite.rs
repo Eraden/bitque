@@ -63,9 +63,9 @@ fn build_page_content(model: &mut Model) {
     let s: String = seed::document().location().unwrap().to_string().into();
     let url = seed::Url::from_str(s.as_str()).unwrap();
     let search = url.search();
-    let values = search.get("token").map(|v| v.clone()).unwrap_or_default();
+    let values = search.get("token").cloned().unwrap_or_default();
     let mut content = InvitePage::default();
-    content.token = values.get(0).map(|s| s.clone()).unwrap_or_default();
+    content.token = values.get(0).cloned().unwrap_or_default();
     model.page_content = PageContent::Invite(Box::new(content));
 }
 
@@ -97,7 +97,7 @@ pub fn view(model: &Model) -> Node<Msg> {
     outer_layout(model, "invite", vec![form])
 }
 
-fn submit(_page: &Box<InvitePage>) -> Node<Msg> {
+fn submit(_page: &InvitePage) -> Node<Msg> {
     let submit = StyledButton::build()
         .text("Accept")
         .primary()
@@ -106,7 +106,7 @@ fn submit(_page: &Box<InvitePage>) -> Node<Msg> {
     StyledField::build().input(submit).build().into_node()
 }
 
-fn token_field(page: &Box<InvitePage>) -> Node<Msg> {
+fn token_field(page: &InvitePage) -> Node<Msg> {
     let token = StyledInput::build(FieldId::Invite(InviteFieldId::Token))
         .valid(!page.token_touched || is_token(page.token.as_str()) && page.error.is_none())
         .value(page.token.as_str())

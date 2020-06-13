@@ -8,11 +8,8 @@ use crate::ws::enqueue_ws_msg;
 use crate::{Msg, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
-    match msg {
-        Msg::ChangePage(Page::Reports) => {
-            build_page_content(model);
-        }
-        _ => (),
+    if let Msg::ChangePage(Page::Reports) = msg {
+        build_page_content(model);
     }
 
     let page = match &mut model.page_content {
@@ -40,7 +37,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
 }
 
 fn build_page_content(model: &mut Model) {
-    model.page_content = PageContent::Reports(Box::new(ReportsPage::new()))
+    model.page_content = PageContent::Reports(Box::new(ReportsPage::default()))
 }
 
 fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {

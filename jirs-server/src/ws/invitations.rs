@@ -80,7 +80,7 @@ impl WsHandler<CreateInvitation> for WebSocketActor {
         }
 
         // If user exists then send message to him
-        match block_on(self.db.send(crate::db::messages::CreateMessage {
+        if let Ok(Ok(message)) = block_on(self.db.send(crate::db::messages::CreateMessage {
             receiver: CreateMessageReceiver::Lookup { name, email },
             sender_id: user_id,
             summary: "You have been invited to project".to_string(),
@@ -88,13 +88,10 @@ impl WsHandler<CreateInvitation> for WebSocketActor {
             message_type: MessageType::ReceivedInvitation,
             hyper_link: format!("#{}", invitation.bind_token),
         })) {
-            Ok(Ok(message)) => {
-                self.addr.do_send(InnerMsg::SendToUser(
-                    message.receiver_id,
-                    WsMsg::Message(message),
-                ));
-            }
-            _ => {}
+            self.addr.do_send(InnerMsg::SendToUser(
+                message.receiver_id,
+                WsMsg::Message(message),
+            ));
         }
 
         Ok(Some(WsMsg::InvitationSendSuccess))
@@ -154,9 +151,10 @@ pub struct AcceptInvitation {
 impl WsHandler<AcceptInvitation> for WebSocketActor {
     fn handle_msg(&mut self, msg: AcceptInvitation, ctx: &mut Self::Context) -> WsResult {
         let AcceptInvitation { invitation_token } = msg;
-        let token = match block_on(self.db.send(invitations::AcceptInvitation {
-            invitation_token: invitation_token.clone(),
-        })) {
+        let token = match block_on(
+            self.db
+                .send(invitations::AcceptInvitation { invitation_token }),
+        ) {
             Ok(Ok(token)) => token,
             Ok(Err(e)) => {
                 error!("{:?}", e);
@@ -172,7 +170,7 @@ impl WsHandler<AcceptInvitation> for WebSocketActor {
             token: invitation_token,
             user_id: token.user_id,
         }))
-        .unwrap_or(Ok(vec![]))
+        .unwrap_or_else(|_| Ok(vec![]))
         .unwrap_or_default()
         {
             match block_on(self.db.send(crate::db::messages::MarkMessageSeen {

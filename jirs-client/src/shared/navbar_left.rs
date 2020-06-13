@@ -30,14 +30,14 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::MessageInvitationApproved(token) => {
             send_ws_msg(
-                WsMsg::InvitationAcceptRequest(token.clone()),
+                WsMsg::InvitationAcceptRequest(*token),
                 model.ws.as_ref(),
                 orders,
             );
         }
         Msg::MessageInvitationDismiss(token) => {
             send_ws_msg(
-                WsMsg::InvitationRejectRequest(token.clone()),
+                WsMsg::InvitationRejectRequest(*token),
                 model.ws.as_ref(),
                 orders,
             );
@@ -138,14 +138,11 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
     });
     let mut messages: Vec<Node<Msg>> = vec![];
     for (idx, message) in model.messages.iter().enumerate() {
-        match message_ui(model, message) {
-            Some(message_ui) => {
-                messages.push(message_ui);
-                if idx != model.messages.len() - 1 {
-                    messages.push(divider());
-                }
+        if let Some(message_ui) = message_ui(model, message) {
+            messages.push(message_ui);
+            if idx != model.messages.len() - 1 {
+                messages.push(divider());
             }
-            None => (),
         };
     }
     let body = div![on_click, class!["messagesList"], messages];
@@ -172,7 +169,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
     } = message;
     let message_id = *id;
 
-    let hyperlink = if hyper_link.is_empty() && !hyper_link.starts_with("#") {
+    let hyperlink = if hyper_link.is_empty() && !hyper_link.starts_with('#') {
         empty![]
     } else {
         let link_icon = StyledIcon::build(Icon::Link).build().into_node();
@@ -206,7 +203,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
 
     let node = match message_type {
         MessageType::ReceivedInvitation => {
-            let token: InvitationToken = match hyper_link.trim_start_matches("#").parse() {
+            let token: InvitationToken = match hyper_link.trim_start_matches('#').parse() {
                 Err(_) => return None,
                 Ok(n) => n,
             };
@@ -218,7 +215,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
                 .on_click(mouse_ev(Ev::Click, move |ev| {
                     ev.stop_propagation();
                     ev.prevent_default();
-                    Some(Msg::MessageInvitationApproved(token.clone()))
+                    Some(Msg::MessageInvitationApproved(token))
                 }))
                 .build()
                 .into_node();
@@ -349,7 +346,7 @@ fn parse_description(model: &Model, desc: &str) -> Node<Msg> {
 }
 
 fn parse_email(word: &str) -> Option<&str> {
-    if word.starts_with("@<") && word.ends_with(">") {
+    if word.starts_with("@<") && word.ends_with('>') {
         Some(&word[2..(word.len() - 1)])
     } else {
         None

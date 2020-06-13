@@ -126,11 +126,11 @@ impl WsHandler<RemoveInvitedUser> for WebSocketActor {
             Ok(Ok(_users)) => Ok(Some(WsMsg::InvitedUserRemoveSuccess(invited_id))),
             Ok(Err(e)) => {
                 error!("{:?}", e);
-                return Ok(None);
+                Ok(None)
             }
             Err(e) => {
                 error!("{}", e);
-                return Ok(None);
+                Ok(None)
             }
         }
     }

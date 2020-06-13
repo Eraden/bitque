@@ -18,8 +18,8 @@ use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::{model, FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange};
 
-static TIME_TRACKING_FIBONACCI: &'static str = "Tracking employees’ time carries the risk of having them feel like they are being spied on. This is one of the most common fears that employees have when a time tracking system is implemented. No one likes to feel like they’re always being watched.";
-static TIME_TRACKING_HOURLY: &'static str = "Employees may feel intimidated by demands to track their time. Or they could feel that they’re constantly being watched and evaluated. And for overly ambitious managers, employee time tracking may open the doors to excessive micromanaging.";
+static TIME_TRACKING_FIBONACCI: &str = "Tracking employees’ time carries the risk of having them feel like they are being spied on. This is one of the most common fears that employees have when a time tracking system is implemented. No one likes to feel like they’re always being watched.";
+static TIME_TRACKING_HOURLY: &str = "Employees may feel intimidated by demands to track their time. Or they could feel that they’re constantly being watched and evaluated. And for overly ambitious managers, employee time tracking may open the doors to excessive micromanaging.";
 
 pub fn view(model: &model::Model) -> Node<Msg> {
     let page = match &model.page_content {
@@ -100,7 +100,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 }
 
 /// Build project name input with styled field wrapper
-fn name_field(page: &Box<ProjectSettingsPage>) -> Node<Msg> {
+fn name_field(page: &ProjectSettingsPage) -> Node<Msg> {
     let name = StyledTextarea::build(FieldId::ProjectSettings(ProjectFieldId::Name))
         .value(page.payload.name.as_ref().cloned().unwrap_or_default())
         .height(39)
@@ -117,7 +117,7 @@ fn name_field(page: &Box<ProjectSettingsPage>) -> Node<Msg> {
 }
 
 /// Build project url input with styled field wrapper
-fn url_field(page: &Box<ProjectSettingsPage>) -> Node<Msg> {
+fn url_field(page: &ProjectSettingsPage) -> Node<Msg> {
     let url = StyledTextarea::build(FieldId::ProjectSettings(ProjectFieldId::Url))
         .height(39)
         .max_height(39)
@@ -134,7 +134,7 @@ fn url_field(page: &Box<ProjectSettingsPage>) -> Node<Msg> {
 }
 
 /// Build project description text area with styled field wrapper
-fn description_field(page: &Box<ProjectSettingsPage>) -> Node<Msg> {
+fn description_field(page: &ProjectSettingsPage) -> Node<Msg> {
     let description = StyledEditor::build(FieldId::ProjectSettings(ProjectFieldId::Description))
         .text(
             page.payload
@@ -156,7 +156,7 @@ fn description_field(page: &Box<ProjectSettingsPage>) -> Node<Msg> {
 }
 
 /// Build project category dropdown with styled field wrapper
-fn category_field(page: &Box<ProjectSettingsPage>) -> Node<Msg> {
+fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
     let category = StyledSelect::build(FieldId::ProjectSettings(ProjectFieldId::Category))
         .opened(page.project_category_state.opened)
         .text_filter(page.project_category_state.text_filter.as_str())
@@ -185,7 +185,7 @@ fn category_field(page: &Box<ProjectSettingsPage>) -> Node<Msg> {
 }
 
 /// Build draggable columns preview with option to remove and add new columns
-fn columns_section(model: &Model, page: &Box<ProjectSettingsPage>) -> Node<Msg> {
+fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
     let width = 100f64 / (model.issue_statuses.len() + 1) as f64;
     let column_style = format!("width: calc({width}% - 10px)", width = width);
     let mut per_column_issue_count = HashMap::new();

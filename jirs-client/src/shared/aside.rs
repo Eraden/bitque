@@ -9,20 +9,17 @@ use crate::ws::enqueue_ws_msg;
 use crate::{Msg, WebSocketChanged};
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
-    match msg {
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_)))) => {
-            enqueue_ws_msg(
-                vec![
-                    WsMsg::UserProjectsLoad,
-                    WsMsg::ProjectsLoad,
-                    WsMsg::MessagesRequest,
-                    WsMsg::ProjectUsersRequest,
-                ],
-                model.ws.as_ref(),
-                orders,
-            );
-        }
-        _ => (),
+    if let Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_)))) = msg {
+        enqueue_ws_msg(
+            vec![
+                WsMsg::UserProjectsLoad,
+                WsMsg::ProjectsLoad,
+                WsMsg::MessagesRequest,
+                WsMsg::ProjectUsersRequest,
+            ],
+            model.ws.as_ref(),
+            orders,
+        );
     }
 }
 

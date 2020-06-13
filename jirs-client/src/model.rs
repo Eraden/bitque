@@ -300,7 +300,7 @@ impl ProjectSettingsPage {
                 name: Some(name.clone()),
                 url: Some(url.clone()),
                 description: Some(description.clone()),
-                category: Some(category.clone()),
+                category: Some(*category),
                 time_tracking: Some(*time_tracking),
             },
             description_mode: EditorMode::View,
@@ -444,8 +444,8 @@ pub struct ReportsPage {
     pub last_day: NaiveDate,
 }
 
-impl ReportsPage {
-    pub fn new() -> Self {
+impl Default for ReportsPage {
+    fn default() -> Self {
         let first_day = chrono::Utc::today().with_day(1).unwrap().naive_local();
         let last_day = (first_day + chrono::Duration::days(32))
             .with_day(1)

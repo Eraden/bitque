@@ -54,7 +54,7 @@ impl Handler<Welcome> for MailExecutor {
 
         transport
             .send(email.into())
-            .and_then(|_| Ok(()))
+            .map(|_| ())
             .map_err(|e| format!("Mailer: {}", e))
     }
 }

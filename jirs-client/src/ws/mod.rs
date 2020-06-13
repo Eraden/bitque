@@ -24,7 +24,7 @@ pub fn flush_queue(model: &mut Model, orders: &mut impl Orders<Msg>) {
 
 pub fn enqueue_ws_msg(v: Vec<WsMsg>, ws: Option<&WebSocket>, orders: &mut impl Orders<Msg>) {
     for msg in v {
-        send_ws_msg(msg, ws.clone(), orders);
+        send_ws_msg(msg, ws, orders);
     }
 }
 

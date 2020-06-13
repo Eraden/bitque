@@ -17,11 +17,11 @@ impl WsHandler<LoadUserProjects> for WebSocketActor {
             Ok(Ok(v)) => Ok(Some(WsMsg::UserProjectsLoaded(v))),
             Ok(Err(e)) => {
                 error!("{:?}", e);
-                return Ok(None);
+                Ok(None)
             }
             Err(e) => {
                 error!("{}", e);
-                return Ok(None);
+                Ok(None)
             }
         }
     }
@@ -44,11 +44,11 @@ impl WsHandler<SetCurrentUserProject> for WebSocketActor {
             }
             Ok(Err(e)) => {
                 error!("{:?}", e);
-                return Ok(None);
+                Ok(None)
             }
             Err(e) => {
                 error!("{}", e);
-                return Ok(None);
+                Ok(None)
             }
         }
     }

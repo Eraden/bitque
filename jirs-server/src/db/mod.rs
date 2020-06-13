@@ -42,7 +42,7 @@ pub fn build_pool() -> DbPool {
     dotenv::dotenv().ok();
     let config = Configuration::read();
 
-    let manager = ConnectionManager::<PgConnection>::new(config.database_url.clone());
+    let manager = ConnectionManager::<PgConnection>::new(config.database_url);
     r2d2::Pool::builder()
         .build(manager)
         .unwrap_or_else(|e| panic!("Failed to create pool. {}", e))
