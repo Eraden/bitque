@@ -32,8 +32,13 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let description_field = description_field(page);
 
-    let desc_rte = StyledRte::build(FieldId::ProjectSettings(ProjectFieldId::Description))
-        .state(&page.description_rte)
+    let desc_rte = StyledField::build()
+        .input(
+            StyledRte::build(FieldId::ProjectSettings(ProjectFieldId::Description))
+                .state(&page.description_rte)
+                .build()
+                .into_node(),
+        )
         .build()
         .into_node();
 

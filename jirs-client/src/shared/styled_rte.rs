@@ -55,6 +55,7 @@ pub enum RteMsg {
     TableSetRows(u16),
     TableSetColumns(u16),
     TableSetVisibility(bool),
+    InsertTable { rows: u16, cols: u16 },
 }
 
 #[derive(Debug)]
@@ -108,6 +109,7 @@ impl RteMsg {
             RteMsg::RemoveFormat => Some(ExecCommand::new("removeFormat")),
             RteMsg::Subscript => Some(ExecCommand::new("subscript")),
             RteMsg::Superscript => Some(ExecCommand::new("superscript")),
+            RteMsg::InsertTable { .. } => None,
             // outer
             RteMsg::TableSetColumns(..)
             | RteMsg::TableSetRows(..)
@@ -128,6 +130,7 @@ pub struct StyledRteState {
     pub value: String,
     pub field_id: FieldId,
     pub table_tooltip: StyledRteTableState,
+    range: Option<web_sys::Range>,
 }
 
 impl StyledRteState {
@@ -140,6 +143,7 @@ impl StyledRteState {
                 rows: 3,
                 cols: 3,
             },
+            range: None,
         }
     }
 
@@ -150,6 +154,7 @@ impl StyledRteState {
         };
         match m.to_command() {
             Some(ExecCommand { name, param }) => {
+                self.store_range();
                 match seed::html_document().exec_command_with_show_ui_and_value(
                     name.as_str(),
                     false,
@@ -157,6 +162,9 @@ impl StyledRteState {
                 ) {
                     Ok(_) => {}
                     Err(e) => log!(e),
+                }
+                if self.restore_range().is_err() {
+                    return;
                 }
             }
             _ => match m {
@@ -167,11 +175,69 @@ impl StyledRteState {
                     self.table_tooltip.cols = *n;
                 }
                 RteMsg::TableSetVisibility(b) => {
+                    if *b {
+                        self.store_range();
+                    }
                     self.table_tooltip.visible = *b;
+                }
+                RteMsg::InsertTable { rows, cols } => {
+                    self.table_tooltip.visible = false;
+                    self.table_tooltip.cols = 3;
+                    self.table_tooltip.rows = 3;
+                    if self.restore_range().is_err() {
+                        return;
+                    }
+                    let doc = seed::html_document();
+                    let r = match self.range.as_ref() {
+                        Some(r) => r,
+                        _ => return,
+                    };
+                    let table = match doc.create_element("table") {
+                        Ok(t) => t,
+                        _ => return,
+                    };
+                    let mut buff = "<tbody>".to_string();
+                    for _c in 0..(*cols) {
+                        buff.push_str("<tr>");
+                        for _r in 0..(*rows) {
+                            buff.push_str("<td>&nbsp;</td>")
+                        }
+                        buff.push_str("</tr>");
+                    }
+                    buff.push_str("</tbody>");
+                    table.set_inner_html(buff.as_str());
+                    r.insert_node(&table);
                 }
                 _ => log!(m),
             },
         };
+    }
+
+    fn store_range(&mut self) {
+        self.range = seed::html_document()
+            .get_selection()
+            .ok()
+            .unwrap_or_else(|| None)
+            .and_then(|s| s.get_range_at(0).ok());
+    }
+
+    fn restore_range(&mut self) -> Result<(), String> {
+        let doc = seed::html_document();
+        let sel = doc
+            .get_selection()
+            .ok()
+            .unwrap_or_else(|| None)
+            .ok_or_else(|| "Restoring selection failed. Unable to obtain select".to_string())?;
+        let r = self
+            .range
+            .as_ref()
+            .ok_or_else(|| "Restoring selection failed. No range was stored".to_string())?;
+        sel.remove_all_ranges()
+            .map_err(|_| "Restoring selection failed. Unable to remove ranges".to_string())?;
+        sel.add_range(r).map_err(|_| {
+            "Restoring selection failed. Unable to add current selection range".to_string()
+        })?;
+        Ok(())
     }
 }
 
@@ -301,8 +367,15 @@ pub fn render(values: StyledRte) -> Node<Msg> {
         );
     }
 
+    let capture_event = ev(Ev::KeyDown, |ev| {
+        ev.stop_propagation();
+        None as Option<Msg>
+    });
+    let id = values.field_id.to_string();
+
     div![
         class!["styledRte"],
+        attrs![At::Id => id],
         div![
             class!["bar"],
             first_row(&values),
@@ -318,7 +391,11 @@ pub fn render(values: StyledRte) -> Node<Msg> {
         ],
         div![
             class!["editorWrapper"],
-            div![class!["editor"], attrs![At::ContentEditable => true]],
+            div![
+                class!["editor"],
+                attrs![At::ContentEditable => true],
+                capture_event
+            ],
         ]
     ]
 }
@@ -579,7 +656,7 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
         .collect();
         let heading_button = span![class!["headingList"], options];
 
-        let _field_id = values.field_id.clone();
+        /*let _field_id = values.field_id.clone();
         let _small_cap_button = styled_rte_button(
             "Small Cap",
             Icon::SmallCap,
@@ -596,7 +673,7 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
                 ev.prevent_default();
                 None as Option<Msg>
             }),
-        );
+        );*/
         div![
             class!["group font"],
             // font_button,
@@ -607,60 +684,7 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
     };
 
     let insert_group = {
-        let table_tooltip = {
-            let StyledRteTableState {
-                visible,
-                rows,
-                cols,
-            } = values.table_tooltip;
-            let field_id = values.field_id.clone();
-            let on_rows_change = input_ev(Ev::Change, move |v| {
-                v.parse::<u16>()
-                    .ok()
-                    .map(|n| Msg::Rte(RteMsg::TableSetRows(n), field_id))
-            });
-            let field_id = values.field_id.clone();
-            let on_cols_change = input_ev(Ev::Change, move |v| {
-                v.parse::<u16>()
-                    .ok()
-                    .map(|n| Msg::Rte(RteMsg::TableSetColumns(n), field_id))
-            });
-            let field_id = values.field_id.clone();
-            let close_table_tooltip = StyledButton::build()
-                .empty()
-                .icon(Icon::Close)
-                .on_click(mouse_ev(Ev::Click, move |ev| {
-                    ev.prevent_default();
-                    Some(Msg::Rte(RteMsg::TableSetVisibility(false), field_id))
-                }))
-                .build()
-                .into_node();
-            StyledTooltip::build()
-                .table_tooltip()
-                .visible(visible)
-                .add_child(h2![span!["Add table"], close_table_tooltip])
-                .add_child(div![class!["inputs"], span!["Rows"], seed::input![
-                attrs![At::Type => "range"; At::Step => "1"; At::Min => "1"; At::Max => "10"; At::Value => rows],
-                on_rows_change
-            ]])
-                .add_child(div![class!["inputs"], span!["Columns"], seed::input![
-                attrs![At::Type => "range"; At::Step => "1"; At::Min => "1"; At::Max => "10"; At::Value => cols],
-                on_cols_change
-            ]])
-                .add_child({
-                    let body: Vec<Node<Msg>> = (0..rows)
-                        .map(|_row| {
-                            let tds: Vec<Node<Msg>> = (0..cols)
-                                .map(|_col| td![" "])
-                                .collect();
-                            tr![tds]
-                        })
-                        .collect();
-                    seed::table![tbody![body]]
-                })
-                .build()
-                .into_node()
-        };
+        let table_tooltip = table_tooltip(values);
 
         let field_id = values.field_id.clone();
         let listing_dots = styled_rte_button(
@@ -757,6 +781,74 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
         insert_group,
         indent_outdent
     ]
+}
+
+fn table_tooltip(values: &StyledRte) -> Node<Msg> {
+    let StyledRteTableState {
+        visible,
+        rows,
+        cols,
+    } = values.table_tooltip;
+    let field_id = values.field_id.clone();
+    let on_rows_change = input_ev(Ev::Change, move |v| {
+        v.parse::<u16>()
+            .ok()
+            .map(|n| Msg::Rte(RteMsg::TableSetRows(n), field_id))
+    });
+    let field_id = values.field_id.clone();
+    let on_cols_change = input_ev(Ev::Change, move |v| {
+        v.parse::<u16>()
+            .ok()
+            .map(|n| Msg::Rte(RteMsg::TableSetColumns(n), field_id))
+    });
+    let field_id = values.field_id.clone();
+    let close_table_tooltip = StyledButton::build()
+        .empty()
+        .icon(Icon::Close)
+        .on_click(mouse_ev(Ev::Click, move |ev| {
+            ev.prevent_default();
+            Some(Msg::Rte(RteMsg::TableSetVisibility(false), field_id))
+        }))
+        .build()
+        .into_node();
+    let field_id = values.field_id.clone();
+    let on_submit = mouse_ev(Ev::Click, move |ev| {
+        ev.prevent_default();
+        Some(Msg::Rte(RteMsg::InsertTable { rows, cols }, field_id))
+    });
+    StyledTooltip::build()
+        .table_tooltip()
+        .visible(visible)
+        .add_child(h2![span!["Add table"], close_table_tooltip])
+        .add_child(div![class!["inputs"], span!["Rows"], seed::input![
+                attrs![At::Type => "range"; At::Step => "1"; At::Min => "1"; At::Max => "10"; At::Value => rows],
+                on_rows_change
+            ]])
+        .add_child(div![
+            class!["inputs"],
+            span!["Columns"],
+            seed::input![
+                attrs![At::Type => "range"; At::Step => "1"; At::Min => "1"; At::Max => "10"; At::Value => cols],
+                on_cols_change
+            ]
+        ])
+        .add_child({
+            let body: Vec<Node<Msg>> = (0..rows)
+                .map(|_row| {
+                    let tds: Vec<Node<Msg>> = (0..cols)
+                        .map(|_col| td![" "])
+                        .collect();
+                    tr![tds]
+                })
+                .collect();
+            seed::div![
+                class!["tablePreview"],
+                seed::table![tbody![body]],
+                input![attrs![At::Type => "button"; At::Value => "Insert"], on_submit],
+            ]
+        })
+        .build()
+        .into_node()
 }
 
 fn styled_rte_button(title: &str, icon: Icon, handler: EventHandler<Msg>) -> Node<Msg> {

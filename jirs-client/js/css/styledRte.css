@@ -64,12 +64,29 @@
     margin-left: 25px;
 }
 
+.styledRte > .editorWrapper > .editor table {
+    table-layout: fixed;
+    border-spacing: 0;
+    text-align: center;
+}
+
+.styledRte > .editorWrapper > .editor table > tbody > tr > td {
+    min-width: 24px;
+    min-height: 24px;
+    text-align: center;
+    padding: 5px;
+    border-bottom: 1px solid var(--borderLight);
+    border-right: 1px solid var(--borderLight);
+    border-left: 1px solid var(--borderLight);
+    border-top: 1px solid var(--borderLight);
+}
+
 /**********************************************************/
 /* Table tooltip                                          */
 /**********************************************************/
 
 .tableTooltip {
-    min-width: 120px;
+    min-width: 136px;
     padding: 15px;
     position: absolute;
 }
@@ -80,13 +97,19 @@
     margin-bottom: 15px;
 }
 
-.tableTooltip > table {
+.tableTooltip > .tablePreview {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.tableTooltip > .tablePreview > table {
     table-layout: fixed;
     border-spacing: 0;
     text-align: center;
 }
 
-.tableTooltip > table > tbody > tr > td {
+.tableTooltip > .tablePreview > table > tbody > tr > td {
     width: 24px;
     height: 24px;
     text-align: center;
@@ -95,6 +118,12 @@
     border-right: 1px solid var(--borderLight);
     border-left: 1px solid var(--borderLight);
     border-top: 1px solid var(--borderLight);
+}
+
+.tableTooltip > .tablePreview > input {
+    height: 32px;
+    align-self: flex-end;
+    margin-left: 15px;
 }
 
 .tableTooltip > .inputs {

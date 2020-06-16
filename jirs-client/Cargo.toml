@@ -55,6 +55,7 @@ features = [
     "FormData",
     "FileReader",
     "FileReaderSync",
+    "Range",
     # events
     "EventTarget",
     "ErrorEvent",
