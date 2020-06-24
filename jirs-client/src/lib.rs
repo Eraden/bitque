@@ -28,7 +28,8 @@ mod users;
 pub mod validations;
 mod ws;
 
-pub type AppType = App<Msg, Model, Node<Msg>>;
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[derive(Debug)]
 pub enum Msg {

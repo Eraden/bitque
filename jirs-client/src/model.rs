@@ -545,11 +545,10 @@ impl Model {
             .map(|up| up.role)
             .unwrap_or_default()
     }
-
-    pub fn current_project_id(&self) -> ProjectId {
-        self.current_user_project
-            .as_ref()
-            .map(|up| up.project_id)
-            .unwrap_or_default()
-    }
+    // pub fn current_project_id(&self) -> ProjectId {
+    //     self.current_user_project
+    //         .as_ref()
+    //         .map(|up| up.project_id)
+    //         .unwrap_or_default()
+    // }
 }

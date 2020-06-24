@@ -206,7 +206,9 @@ impl StyledRteState {
                     }
                     buff.push_str("</tbody>");
                     table.set_inner_html(buff.as_str());
-                    r.insert_node(&table);
+                    if let Err(e) = r.insert_node(&table) {
+                        log!(e);
+                    }
                 }
                 _ => log!(m),
             },
