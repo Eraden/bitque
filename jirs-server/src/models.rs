@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use jirs_data::{
-    InvitationState, IssuePriority, IssueStatusId, IssueType, ProjectCategory, ProjectId,
+    EpicId, InvitationState, IssuePriority, IssueStatusId, IssueType, ProjectCategory, ProjectId,
     TimeTracking, UserId,
 };
 
@@ -34,6 +34,7 @@ pub struct Issue {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub issue_status_id: IssueStatusId,
+    pub epic_id: Option<EpicId>,
 }
 
 impl Into<jirs_data::Issue> for Issue {
@@ -54,6 +55,7 @@ impl Into<jirs_data::Issue> for Issue {
             created_at: self.created_at,
             updated_at: self.updated_at,
             issue_status_id: self.issue_status_id,
+            epic_id: self.epic_id,
 
             user_ids: vec![],
         }
@@ -75,6 +77,7 @@ pub struct CreateIssueForm {
     pub reporter_id: UserId,
     pub project_id: ProjectId,
     pub issue_status_id: IssueStatusId,
+    pub epic_id: Option<EpicId>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Insertable)]

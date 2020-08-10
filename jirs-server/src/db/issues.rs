@@ -214,9 +214,10 @@ pub struct CreateIssue {
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub project_id: i32,
-    pub reporter_id: i32,
-    pub user_ids: Vec<i32>,
+    pub project_id: jirs_data::ProjectId,
+    pub reporter_id: jirs_data::UserId,
+    pub user_ids: Vec<jirs_data::UserId>,
+    pub epic_id: Option<jirs_data::EpicId>,
 }
 
 impl Message for CreateIssue {
@@ -272,6 +273,7 @@ impl Handler<CreateIssue> for DbExecutor {
             time_remaining: msg.time_remaining,
             reporter_id: msg.reporter_id,
             project_id: msg.project_id,
+            epic_id: msg.epic_id,
         };
 
         let issue = diesel::insert_into(issues)

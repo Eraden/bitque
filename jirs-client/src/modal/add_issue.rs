@@ -50,6 +50,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
                 project_id: modal.project_id.unwrap_or(project_id),
                 user_ids: modal.user_ids.clone(),
                 reporter_id: modal.reporter_id.unwrap_or_else(|| user_id),
+                epic_id: modal.epic_id,
             };
             send_ws_msg(
                 jirs_data::WsMsg::IssueCreateRequest(payload),

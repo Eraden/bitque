@@ -106,6 +106,7 @@ impl WsHandler<CreateIssuePayload> for WebSocketActor {
             project_id: msg.project_id,
             reporter_id: msg.reporter_id,
             user_ids: msg.user_ids,
+            epic_id: msg.epic_id,
         };
         let m = match block_on(self.db.send(msg)) {
             Ok(Ok(issue)) => Some(WsMsg::IssueCreated(issue.into())),

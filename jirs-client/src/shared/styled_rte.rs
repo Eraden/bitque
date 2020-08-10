@@ -153,7 +153,9 @@ impl RteMsg {
                 let res = seed::document().query_selector(format!("#{}", identifier).as_str());
                 if let Ok(Some(el)) = res {
                     if let Ok(el) = el.dyn_into::<web_sys::HtmlElement>() {
-                        el.focus().is_ok();
+                        if let Err(e) = el.focus() {
+                            log!(e)
+                        }
                     }
                 }
                 None

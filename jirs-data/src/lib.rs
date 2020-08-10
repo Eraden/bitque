@@ -28,6 +28,7 @@ pub type IssueStatusId = i32;
 pub type InvitationId = i32;
 pub type Position = i32;
 pub type MessageId = i32;
+pub type EpicId = i32;
 pub type EmailString = String;
 pub type UsernameString = String;
 pub type TitleString = String;
@@ -41,19 +42,14 @@ pub enum IssueType {
     Task,
     Bug,
     Story,
-    Epic,
 }
 
 impl ToVec for IssueType {
     type Item = IssueType;
 
     fn ordered() -> Vec<Self> {
-        vec![
-            IssueType::Task,
-            IssueType::Bug,
-            IssueType::Story,
-            IssueType::Epic,
-        ]
+        use IssueType::*;
+        vec![Task, Bug, Story]
     }
 }
 
@@ -65,11 +61,11 @@ impl Default for IssueType {
 
 impl IssueType {
     pub fn to_label(&self) -> &str {
+        use IssueType::*;
         match self {
-            IssueType::Task => "Task",
-            IssueType::Bug => "Bug",
-            IssueType::Story => "Story",
-            IssueType::Epic => "Epic",
+            Task => "Task",
+            Bug => "Bug",
+            Story => "Story",
         }
     }
 }
@@ -80,7 +76,6 @@ impl Into<u32> for IssueType {
             IssueType::Task => 1,
             IssueType::Bug => 2,
             IssueType::Story => 3,
-            IssueType::Epic => 4,
         }
     }
 }
@@ -91,7 +86,6 @@ impl Into<IssueType> for u32 {
             1 => IssueType::Task,
             2 => IssueType::Bug,
             3 => IssueType::Story,
-            4 => IssueType::Epic,
             _ => IssueType::Task,
         }
     }
@@ -103,7 +97,6 @@ impl std::fmt::Display for IssueType {
             IssueType::Task => f.write_str("task"),
             IssueType::Bug => f.write_str("bug"),
             IssueType::Story => f.write_str("story"),
-            IssueType::Epic => f.write_str("epic"),
         }
     }
 }
@@ -434,6 +427,7 @@ pub struct Issue {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub issue_status_id: IssueStatusId,
+    pub epic_id: Option<EpicId>,
 
     pub user_ids: Vec<i32>,
 }
@@ -612,6 +606,17 @@ pub struct Message {
     pub updated_at: NaiveDateTime,
 }
 
+#[cfg_attr(feature = "backend", derive(Queryable))]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct Epic {
+    pub id: EpicId,
+    pub name: String,
+    pub user_id: UserId,
+    pub project_id: ProjectId,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct CreateCommentPayload {
     pub user_id: Option<UserId>,
@@ -639,6 +644,7 @@ pub struct CreateIssuePayload {
     pub user_ids: Vec<UserId>,
     pub reporter_id: UserId,
     pub issue_status_id: IssueStatusId,
+    pub epic_id: Option<EpicId>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

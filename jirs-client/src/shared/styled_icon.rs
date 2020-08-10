@@ -203,11 +203,11 @@ impl std::fmt::Display for Icon {
 
 impl From<IssueType> for Icon {
     fn from(t: IssueType) -> Self {
+        use IssueType::*;
         match t {
-            IssueType::Task => Icon::Task,
-            IssueType::Bug => Icon::Bug,
-            IssueType::Story => Icon::Story,
-            IssueType::Epic => Icon::Epic,
+            Task => Icon::Task,
+            Bug => Icon::Bug,
+            Story => Icon::Story,
         }
     }
 }

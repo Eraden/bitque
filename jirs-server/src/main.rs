@@ -1,5 +1,6 @@
 #![feature(async_closure)]
 #![feature(vec_remove_item)]
+#![recursion_limit = "256"]
 
 #[macro_use]
 extern crate diesel;

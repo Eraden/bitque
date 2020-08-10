@@ -161,10 +161,11 @@ pub struct AddIssueModal {
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub project_id: Option<i32>,
-    pub user_ids: Vec<i32>,
-    pub reporter_id: Option<i32>,
-    pub issue_status_id: i32,
+    pub project_id: Option<jirs_data::ProjectId>,
+    pub user_ids: Vec<jirs_data::UserId>,
+    pub reporter_id: Option<jirs_data::UserId>,
+    pub issue_status_id: jirs_data::IssueStatusId,
+    pub epic_id: Option<jirs_data::UserId>,
 
     // modal fields
     pub title_state: StyledInputState,
@@ -188,6 +189,7 @@ impl Default for AddIssueModal {
             user_ids: Default::default(),
             reporter_id: Default::default(),
             issue_status_id: Default::default(),
+            epic_id: Default::default(),
             title_state: StyledInputState::new(FieldId::AddIssueModal(IssueFieldId::Title), ""),
             type_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Type), vec![]),
             reporter_state: StyledSelectState::new(
