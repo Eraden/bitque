@@ -41,13 +41,19 @@ pub enum IssueType {
     Task,
     Bug,
     Story,
+    Epic,
 }
 
 impl ToVec for IssueType {
     type Item = IssueType;
 
     fn ordered() -> Vec<Self> {
-        vec![IssueType::Task, IssueType::Bug, IssueType::Story]
+        vec![
+            IssueType::Task,
+            IssueType::Bug,
+            IssueType::Story,
+            IssueType::Epic,
+        ]
     }
 }
 
@@ -63,6 +69,7 @@ impl IssueType {
             IssueType::Task => "Task",
             IssueType::Bug => "Bug",
             IssueType::Story => "Story",
+            IssueType::Epic => "Epic",
         }
     }
 }
@@ -73,6 +80,7 @@ impl Into<u32> for IssueType {
             IssueType::Task => 1,
             IssueType::Bug => 2,
             IssueType::Story => 3,
+            IssueType::Epic => 4,
         }
     }
 }
@@ -83,6 +91,7 @@ impl Into<IssueType> for u32 {
             1 => IssueType::Task,
             2 => IssueType::Bug,
             3 => IssueType::Story,
+            4 => IssueType::Epic,
             _ => IssueType::Task,
         }
     }
@@ -94,6 +103,7 @@ impl std::fmt::Display for IssueType {
             IssueType::Task => f.write_str("task"),
             IssueType::Bug => f.write_str("bug"),
             IssueType::Story => f.write_str("story"),
+            IssueType::Epic => f.write_str("epic"),
         }
     }
 }

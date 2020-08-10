@@ -55,6 +55,7 @@ fn issue_type_from_sql(bytes: Option<&[u8]>) -> deserialize::Result<IssueType> {
         b"task" => Ok(IssueType::Task),
         b"bug" => Ok(IssueType::Bug),
         b"story" => Ok(IssueType::Story),
+        b"epic" => Ok(IssueType::Epic),
         _ => Ok(IssueType::Task),
     }
 }
@@ -77,6 +78,7 @@ impl ToSql<IssueTypeType, Pg> for IssueType {
             IssueType::Task => out.write_all(b"task")?,
             IssueType::Story => out.write_all(b"story")?,
             IssueType::Bug => out.write_all(b"bug")?,
+            IssueType::Epic => out.write_all(b"epic")?,
         }
         Ok(IsNull::No)
     }

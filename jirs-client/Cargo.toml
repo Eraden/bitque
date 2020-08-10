@@ -13,6 +13,10 @@ crate-type = ["cdylib", "rlib"]
 name = "jirs_client"
 path = "./src/lib.rs"
 
+[profile.dev]
+opt-level = 0               # Use slightly better optimizations.
+overflow-checks = false     # Disable integer overflow checks.
+
 [profile.release]
 lto = true
 opt-level = 's'
@@ -21,20 +25,24 @@ opt-level = 's'
 jirs-data = { path = "../jirs-data" }
 seed = { version = "0.7.0" }
 serde = "*"
-serde_json = "*"
 bincode = "1.2.1"
-chrono = { version = "0.4", features = [ "serde", "wasmbind" ] }
-uuid = { version = "0.8.1", features = [ "serde" ] }
-wasm-bindgen = "0.2.60"
+chrono = { version = "0.4", features = ["serde", "wasmbind"] }
+uuid = { version = "0.8.1", features = ["serde"] }
 futures = "^0.1.26"
 comrak = "*"
 wee_alloc = "*"
 
+[dependencies.wasm-bindgen]
+version = "0.2.66"
+features = ["enable-interning"]
+
 [dependencies.js-sys]
 version = "*"
+default-features = false
 
 [dependencies.web-sys]
 version = "0.3.22"
+default-features = false
 features = [
     # elements
     "Window",

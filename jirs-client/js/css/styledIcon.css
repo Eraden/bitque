@@ -41,6 +41,10 @@ i.styledIcon.story:before {
     content: "\ef2d";
 }
 
+i.styledIcon.epic:before {
+    content: '\ef30';
+}
+
 i.styledIcon.arrowDown:before {
     content: "\ea92";
 }

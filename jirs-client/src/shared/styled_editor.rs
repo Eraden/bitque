@@ -108,26 +108,7 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
         .build()
         .into_node();
 
-    let parsed = comrak::markdown_to_html(
-        text.as_str(),
-        &comrak::ComrakOptions {
-            hardbreaks: false,
-            smart: true,
-            github_pre_lang: true,
-            width: 0,
-            default_info_string: None,
-            unsafe_: false,
-            ext_strikethrough: true,
-            ext_tagfilter: true,
-            ext_table: true,
-            ext_autolink: true,
-            ext_tasklist: true,
-            ext_superscript: true,
-            ext_header_ids: None,
-            ext_footnotes: true,
-            ext_description_lists: true,
-        },
-    );
+    let parsed = comrak::markdown_to_html(text.as_str(), &comrak::ComrakOptions::default());
     let parsed_node = Node::from_html(parsed.as_str());
 
     let (editor_radio_node, view_radio_node) = match mode {
@@ -169,9 +150,9 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
         ],
         label![
             if mode == Mode::Editor {
-                class!["navbar editorTab activeTab"]
+                C!["navbar editorTab activeTab"]
             } else {
-                class!["navbar editorTab"]
+                C!["navbar editorTab"]
             },
             attrs![At::For => editor_id.as_str()],
             "Editor",

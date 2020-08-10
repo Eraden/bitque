@@ -11,12 +11,17 @@
 }
 
 .styledRte > .bar > .row {
-    padding: 5px 0;
+    padding: 0 0 var(--rte-indent) 0;
     display: flex;
+    margin: 0 var(--rte-indent);
+}
+
+.styledRte > .bar > .row:first-child {
+    padding: var(--rte-indent) 0;
 }
 
 .styledRte > .bar > .row > .group {
-    padding: 0 5px 0 0;
+    padding: 0 var(--rte-indent) 0 0;
 }
 
 .styledRte > .bar > .row > .group:first-child {
@@ -30,7 +35,21 @@
 .styledRte > .bar > .row > .group > .styledRteButton > .styledButton,
 .styledRte > .bar > .row > .group > .styledButton,
 .styledRte > .bar > .row > .group > span.headingList {
-    margin: 0 5px;
+    margin-right: var(--rte-indent);
+    font-size: var(--small-font-size);
+}
+
+.styledRte > .bar > .row > .group.font > span.headingList > .headingOption {
+    margin-right: var(--rte-indent);
+}
+
+.styledRte > .bar > .row > .group > .styledRteButton > .styledButton,
+.styledRte > .bar > .row > .group > .styledRteButton > .styledButton > .styledIcon,
+.styledRte > .bar > .row > .group > span.headingList > .headingOption > .styledButton,
+.styledRte > .bar > .row > .group > span.headingList > .headingOption > .styledButton > span {
+    font-size: var(--small-font-size);
+    line-height: calc(2 * var(--small-font-size));
+    height: calc(2 * var(--small-font-size));
 }
 
 .styledRte > .bar > .row > .group > .headingList {
@@ -64,6 +83,14 @@
     margin-left: 25px;
 }
 
+.styledRte > .editorWrapper > .editor ul > li {
+    list-style: square;
+}
+
+.styledRte > .editorWrapper > .editor ol > li {
+    list-style: decimal;
+}
+
 .styledRte > .editorWrapper > .editor table {
     table-layout: fixed;
     border-spacing: 0;
@@ -74,11 +101,15 @@
     min-width: 24px;
     min-height: 24px;
     text-align: center;
-    padding: 5px;
+    padding: var(--rte-indent);
     border-bottom: 1px solid var(--borderLight);
     border-right: 1px solid var(--borderLight);
     border-left: 1px solid var(--borderLight);
     border-top: 1px solid var(--borderLight);
+}
+
+.styledRte > .editorWrapper > .editor *:focus {
+    background: var(--secondary);
 }
 
 /**********************************************************/
@@ -113,7 +144,7 @@
     width: 24px;
     height: 24px;
     text-align: center;
-    padding: 5px;
+    padding: var(--rte-indent);
     border-bottom: 1px solid var(--borderLight);
     border-right: 1px solid var(--borderLight);
     border-left: 1px solid var(--borderLight);

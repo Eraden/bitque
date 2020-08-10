@@ -6,7 +6,8 @@ rm -Rf tmp
 mkdir -p tmp
 mkdir -p target
 
-wasm-pack build --mode normal --dev --out-name jirs --out-dir ./tmp --target web -- --verbose
+wasm-pack build --mode force --dev --out-name jirs --out-dir ./tmp --target web -- --verbose
+
 ../target/debug/jirs-css -i ./js/styles.css -O ./tmp/styles.css
 
 cp -r ./static/* ./tmp

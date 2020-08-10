@@ -25,6 +25,7 @@
     --task: rgb(79, 173, 230); /* blue */
     --bug: rgb(228, 77, 66); /* red */
     --story: rgb(101, 186, 67); /* green */
+    --epic: rgb(186, 142, 67); /* gold */
 }
 
 :root {
@@ -66,6 +67,13 @@
     --font-medium: "CircularStdMedium";
     --font-bold: "CircularStdBold";
     --font-black: "CircularStdBlack";
+    --normal-font-size: 1rem;
+    --small-font-size: .8rem;
+}
+
+:root /* margin & padding */
+{
+    --rte-indent: 5px;
 }
 
 :root { /* user without avatar */

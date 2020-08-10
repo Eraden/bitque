@@ -154,7 +154,6 @@ impl EditIssueModal {
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct AddIssueModal {
-    pub title: String,
     pub issue_type: IssueType,
     pub priority: IssuePriority,
     pub description: Option<String>,
@@ -168,6 +167,7 @@ pub struct AddIssueModal {
     pub issue_status_id: i32,
 
     // modal fields
+    pub title_state: StyledInputState,
     pub type_state: StyledSelectState,
     pub reporter_state: StyledSelectState,
     pub assignees_state: StyledSelectState,
@@ -177,7 +177,6 @@ pub struct AddIssueModal {
 impl Default for AddIssueModal {
     fn default() -> Self {
         Self {
-            title: Default::default(),
             issue_type: Default::default(),
             priority: Default::default(),
             description: Default::default(),
@@ -189,6 +188,7 @@ impl Default for AddIssueModal {
             user_ids: Default::default(),
             reporter_id: Default::default(),
             issue_status_id: Default::default(),
+            title_state: StyledInputState::new(FieldId::AddIssueModal(IssueFieldId::Title), ""),
             type_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Type), vec![]),
             reporter_state: StyledSelectState::new(
                 FieldId::AddIssueModal(IssueFieldId::Reporter),

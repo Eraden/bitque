@@ -8,6 +8,7 @@ use crate::{FieldId, Msg};
 
 #[derive(Debug, Clone, Copy)]
 pub enum HeadingSize {
+    Normal,
     H1,
     H2,
     H3,
@@ -16,18 +17,35 @@ pub enum HeadingSize {
     H6,
 }
 
+impl HeadingSize {
+    fn all() -> Vec<Self> {
+        use HeadingSize::*;
+
+        vec![Normal, H1, H2, H3, H4, H5, H6]
+    }
+}
+
 impl ToString for HeadingSize {
     fn to_string(&self) -> String {
+        use HeadingSize::*;
+
         match self {
-            HeadingSize::H1 => "H1",
-            HeadingSize::H2 => "H2",
-            HeadingSize::H3 => "H3",
-            HeadingSize::H4 => "H4",
-            HeadingSize::H5 => "H5",
-            HeadingSize::H6 => "H6",
+            Normal => "Normal",
+            H1 => "H1",
+            H2 => "H2",
+            H3 => "H3",
+            H4 => "H4",
+            H5 => "H5",
+            H6 => "H6",
         }
         .to_string()
     }
+}
+
+#[derive(Debug)]
+pub enum RteIndentMsg {
+    Increase,
+    Decrease,
 }
 
 #[derive(Debug)]
@@ -56,6 +74,9 @@ pub enum RteMsg {
     TableSetColumns(u16),
     TableSetVisibility(bool),
     InsertTable { rows: u16, cols: u16 },
+    ChangeIndent(RteIndentMsg),
+
+    RequestFocus(uuid::Uuid),
 }
 
 #[derive(Debug)]
@@ -101,19 +122,42 @@ impl RteMsg {
             RteMsg::JustifyLeft => Some(ExecCommand::new("justifyLeft")),
             RteMsg::JustifyRight => Some(ExecCommand::new("justifyRight")),
             RteMsg::InsertParagraph => Some(ExecCommand::new("insertParagraph")),
-            RteMsg::InsertHeading(heading) => {
-                Some(ExecCommand::new_with_param("heading", heading.to_string()))
-            }
+            RteMsg::InsertHeading(heading) => match heading {
+                HeadingSize::H1
+                | HeadingSize::H2
+                | HeadingSize::H3
+                | HeadingSize::H4
+                | HeadingSize::H5
+                | HeadingSize::H6 => {
+                    Some(ExecCommand::new_with_param("heading", heading.to_string()))
+                }
+                HeadingSize::Normal => Some(ExecCommand::new_with_param("formatBlock", "div")),
+            },
             RteMsg::InsertUnorderedList => Some(ExecCommand::new("insertUnorderedList")),
             RteMsg::InsertOrderedList => Some(ExecCommand::new("insertOrderedList")),
             RteMsg::RemoveFormat => Some(ExecCommand::new("removeFormat")),
             RteMsg::Subscript => Some(ExecCommand::new("subscript")),
             RteMsg::Superscript => Some(ExecCommand::new("superscript")),
             RteMsg::InsertTable { .. } => None,
+
+            // indent
+            RteMsg::ChangeIndent(RteIndentMsg::Increase) => Some(ExecCommand::new("indent")),
+            RteMsg::ChangeIndent(RteIndentMsg::Decrease) => Some(ExecCommand::new("outdent")),
+
             // outer
             RteMsg::TableSetColumns(..)
             | RteMsg::TableSetRows(..)
             | RteMsg::TableSetVisibility(..) => None,
+
+            RteMsg::RequestFocus(identifier) => {
+                let res = seed::document().query_selector(format!("#{}", identifier).as_str());
+                if let Ok(Some(el)) = res {
+                    if let Ok(el) = el.dyn_into::<web_sys::HtmlElement>() {
+                        el.focus().is_ok();
+                    }
+                }
+                None
+            }
         }
     }
 }
@@ -131,6 +175,7 @@ pub struct StyledRteState {
     pub field_id: FieldId,
     pub table_tooltip: StyledRteTableState,
     range: Option<web_sys::Range>,
+    identifier: uuid::Uuid,
 }
 
 impl StyledRteState {
@@ -144,10 +189,11 @@ impl StyledRteState {
                 cols: 3,
             },
             range: None,
+            identifier: uuid::Uuid::new_v4(),
         }
     }
 
-    pub fn update(&mut self, msg: &Msg) {
+    pub fn update(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
         let m = match msg {
             Msg::Rte(m, field) if field == &self.field_id => m,
             _ => return,
@@ -166,6 +212,7 @@ impl StyledRteState {
                 if self.restore_range().is_err() {
                     return;
                 }
+                self.schedule_focus(orders);
             }
             _ => match m {
                 RteMsg::TableSetRows(n) => {
@@ -209,6 +256,7 @@ impl StyledRteState {
                     if let Err(e) = r.insert_node(&table) {
                         log!(e);
                     }
+                    self.schedule_focus(orders);
                 }
                 _ => log!(m),
             },
@@ -241,11 +289,20 @@ impl StyledRteState {
         })?;
         Ok(())
     }
+
+    fn schedule_focus(&self, orders: &mut impl Orders<Msg>) {
+        let field_id = self.field_id.clone();
+        let identifier = self.identifier.clone();
+        orders.perform_cmd(cmds::timeout(200, move || {
+            Msg::Rte(RteMsg::RequestFocus(identifier), field_id)
+        }));
+    }
 }
 
 pub struct StyledRte {
     field_id: FieldId,
     table_tooltip: StyledRteTableState,
+    identifier: Option<uuid::Uuid>,
     // value: String,
 }
 
@@ -259,6 +316,7 @@ impl StyledRte {
                 rows: 0,
                 cols: 0,
             },
+            identifier: None,
         }
     }
 }
@@ -273,12 +331,14 @@ pub struct StyledRteBuilder {
     field_id: FieldId,
     value: String,
     table_tooltip: StyledRteTableState,
+    identifier: Option<uuid::Uuid>,
 }
 
 impl StyledRteBuilder {
     pub fn state(mut self, state: &StyledRteState) -> Self {
         self.value = state.value.clone();
         self.table_tooltip = state.table_tooltip.clone();
+        self.identifier = Some(state.identifier.clone());
         self
     }
 
@@ -287,6 +347,7 @@ impl StyledRteBuilder {
             field_id: self.field_id,
             // value: self.value,
             table_tooltip: self.table_tooltip,
+            identifier: self.identifier,
         }
     }
 }
@@ -373,13 +434,14 @@ pub fn render(values: StyledRte) -> Node<Msg> {
         ev.stop_propagation();
         None as Option<Msg>
     });
-    let id = values.field_id.to_string();
+
+    let id = values.identifier.unwrap_or_default().to_string();
 
     div![
-        class!["styledRte"],
+        C!["styledRte"],
         attrs![At::Id => id],
         div![
-            class!["bar"],
+            C!["bar"],
             first_row(&values),
             second_row(&values),
             // brush_button,
@@ -392,9 +454,9 @@ pub fn render(values: StyledRte) -> Node<Msg> {
             // text_width_button,
         ],
         div![
-            class!["editorWrapper"],
+            C!["editorWrapper"],
             div![
-                class!["editor"],
+                C!["editor"],
                 attrs![At::ContentEditable => true],
                 capture_event
             ],
@@ -633,29 +695,22 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
                 None as Option<Msg>
             }),
         );
-        let options: Vec<Node<Msg>> = vec![
-            HeadingSize::H1,
-            HeadingSize::H2,
-            HeadingSize::H3,
-            HeadingSize::H4,
-            HeadingSize::H5,
-            HeadingSize::H6,
-        ]
-        .into_iter()
-        .map(|h| {
-            let field_id = values.field_id.clone();
-            let button = StyledButton::build()
-                .text(h.to_string())
-                .on_click(mouse_ev(Ev::Click, move |ev| {
-                    ev.prevent_default();
-                    Some(Msg::Rte(RteMsg::InsertHeading(h), field_id))
-                }))
-                .empty()
-                .build()
-                .into_node();
-            span![class!["headingOption"], button]
-        })
-        .collect();
+        let options: Vec<Node<Msg>> = HeadingSize::all()
+            .into_iter()
+            .map(|h| {
+                let field_id = values.field_id.clone();
+                let button = StyledButton::build()
+                    .text(h.to_string())
+                    .on_click(mouse_ev(Ev::Click, move |ev| {
+                        ev.prevent_default();
+                        Some(Msg::Rte(RteMsg::InsertHeading(h), field_id))
+                    }))
+                    .empty()
+                    .build()
+                    .into_node();
+                span![class!["headingOption"], button]
+            })
+            .collect();
         let heading_button = span![class!["headingList"], options];
 
         /*let _field_id = values.field_id.clone();
@@ -757,20 +812,28 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
     };
 
     let indent_outdent = {
+        let field_id = values.field_id.clone();
         let indent_button = styled_rte_button(
             "Indent",
             Icon::Indent,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                None as Option<Msg>
+                Some(Msg::Rte(
+                    RteMsg::ChangeIndent(RteIndentMsg::Increase),
+                    field_id,
+                ))
             }),
         );
+        let field_id = values.field_id.clone();
         let outdent_button = styled_rte_button(
             "Outdent",
             Icon::Outdent,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                None as Option<Msg>
+                Some(Msg::Rte(
+                    RteMsg::ChangeIndent(RteIndentMsg::Decrease),
+                    field_id,
+                ))
             }),
         );
         div![class!["group indentOutdent"], indent_button, outdent_button]

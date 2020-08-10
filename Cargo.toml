@@ -8,6 +8,15 @@
 #license = "MPL-2.0"
 #license-file = "./LICENSE"
 
+[profile.dev]
+opt-level = 0               # Use slightly better optimizations.
+overflow-checks = false     # Disable integer overflow checks.
+debug = 2
+
+[profile.release]
+lto = true
+opt-level = 's'
+
 [workspace]
 members = [
     "./jirs-cli",

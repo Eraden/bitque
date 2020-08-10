@@ -8,10 +8,13 @@ use crate::Msg;
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
 pub enum Icon {
-    Bug,
     Stopwatch,
+
+    Bug,
     Task,
     Story,
+    Epic,
+
     ArrowDown,
     ArrowLeftCircle,
     ArrowUp,
@@ -96,7 +99,7 @@ pub enum Icon {
 impl Icon {
     pub fn to_color(self) -> Option<String> {
         match self {
-            Icon::Bug | Icon::Task | Icon::Story => Some(format!("var(--{})", self)),
+            Icon::Bug | Icon::Task | Icon::Story | Icon::Epic => Some(format!("var(--{})", self)),
             _ => None,
         }
     }
@@ -192,6 +195,7 @@ impl std::fmt::Display for Icon {
             Icon::Undo => "undo",
             Icon::ListingDots => "listing-dots",
             Icon::ListingNumber => "listing-number",
+            Icon::Epic => "epic",
         };
         f.write_str(code)
     }
@@ -203,6 +207,7 @@ impl From<IssueType> for Icon {
             IssueType::Task => Icon::Task,
             IssueType::Bug => Icon::Bug,
             IssueType::Story => Icon::Story,
+            IssueType::Epic => Icon::Epic,
         }
     }
 }

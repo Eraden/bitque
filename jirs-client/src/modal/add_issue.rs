@@ -26,6 +26,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         _ => return,
     };
 
+    modal.title_state.update(msg);
     modal.assignees_state.update(msg, orders);
     modal.reporter_state.update(msg, orders);
     modal.type_state.update(msg, orders);
@@ -37,7 +38,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             let project_id = model.project.as_ref().map(|p| p.id).unwrap_or_default();
 
             let payload = jirs_data::CreateIssuePayload {
-                title: modal.title.clone(),
+                title: modal.title_state.value.clone(),
                 issue_type: modal.issue_type,
                 issue_status_id: modal.issue_status_id,
                 priority: modal.priority,
@@ -63,9 +64,6 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
         Msg::StrInputChanged(FieldId::AddIssueModal(IssueFieldId::Description), value) => {
             modal.description = Some(value.clone());
-        }
-        Msg::StrInputChanged(FieldId::AddIssueModal(IssueFieldId::Title), value) => {
-            modal.title = value.clone();
         }
 
         // IssueTypeAddIssueModal
@@ -144,7 +142,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .into_node();
 
     let short_summary = StyledInput::build(FieldId::AddIssueModal(IssueFieldId::Title))
-        .valid(true)
+        .state(&modal.title_state)
         .build()
         .into_node();
     let short_summary_field = StyledField::build()
@@ -269,7 +267,8 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .add_class("ActionButton")
         .on_click(mouse_ev(Ev::Click, |ev| {
             ev.stop_propagation();
-            Msg::AddIssue
+            ev.prevent_default();
+            Some(Msg::AddIssue)
         }))
         .build()
         .into_node();
@@ -281,7 +280,8 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .text("Cancel")
         .on_click(mouse_ev(Ev::Click, |ev| {
             ev.stop_propagation();
-            Msg::ModalDropped
+            ev.prevent_default();
+            Some(Msg::ModalDropped)
         }))
         .build()
         .into_node();

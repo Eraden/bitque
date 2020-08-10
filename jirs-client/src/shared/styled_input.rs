@@ -196,17 +196,15 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         mut wrapper_class_list,
         variant,
         auto_focus,
-        mut input_handlers,
+        input_handlers,
     } = values;
 
-    wrapper_class_list.push("styledInput".to_string());
     wrapper_class_list.push(variant.to_string());
     wrapper_class_list.push(format!("{}", id));
     if !valid {
         wrapper_class_list.push("invalid".to_string());
     }
 
-    input_class_list.push("inputElement".to_string());
     input_class_list.push(variant.to_string());
     if icon.is_some() {
         input_class_list.push("withIcon".to_string());
@@ -216,27 +214,37 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         Some(icon) => StyledIcon::build(icon).build().into_node(),
         _ => empty![],
     };
-    let field_id = id.clone();
-    input_handlers.push(ev(Ev::Input, move |event| {
-        event.stop_propagation();
-        let target = event.target().unwrap();
-        let input = seed::to_input(&target);
-        let value = input.value();
-        Msg::StrInputChanged(field_id, value)
-    }));
-    input_handlers.push(ev(Ev::KeyUp, move |event| {
-        event.stop_propagation();
-        None as Option<Msg>
-    }));
-    input_handlers.push(ev(Ev::Click, move |event| {
-        event.stop_propagation();
-        None as Option<Msg>
-    }));
+    let on_input = {
+        let field_id = id.clone();
+        ev(Ev::Input, move |event| {
+            event.stop_propagation();
+            let target = event.target().unwrap();
+            let input = seed::to_input(&target);
+            let value = input.value();
+            Msg::StrInputChanged(field_id, value)
+        })
+    };
+    let on_keyup = {
+        ev(Ev::KeyUp, move |event| {
+            event.stop_propagation();
+            None as Option<Msg>
+        })
+    };
+    let on_click = {
+        ev(Ev::Click, move |event| {
+            event.stop_propagation();
+            None as Option<Msg>
+        })
+    };
 
     div![
+        C!["styledInput"],
         attrs!(At::Class => wrapper_class_list.join(" ")),
         icon,
+        on_click,
+        on_keyup,
         seed::input![
+            C!["inputElement"],
             attrs![
                 At::Id => format!("{}", id),
                 At::Class => input_class_list.join(" "),
@@ -249,6 +257,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
             } else {
                 vec![]
             },
+            on_input,
             input_handlers,
         ],
     ]

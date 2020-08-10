@@ -288,17 +288,18 @@ fn window_events(_model: &Model) -> Vec<EventHandler<Msg>> {
                 .active_element()
                 .map(|el| el.tag_name())
                 .unwrap_or_default();
+
             let key = match tag_name.to_lowercase().as_str() {
-                "input" | "textarea" => "".to_string(),
+                "" | "input" | "textarea" => return None,
                 _ => event.key(),
             };
 
-            Msg::GlobalKeyDown {
+            Some(Msg::GlobalKeyDown {
                 key,
                 shift: event.shift_key(),
                 ctrl: event.ctrl_key(),
                 alt: event.alt_key(),
-            }
+            })
         },
     )]
 }

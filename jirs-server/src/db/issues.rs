@@ -226,7 +226,7 @@ impl Message for CreateIssue {
 impl Handler<CreateIssue> for DbExecutor {
     type Result = Result<Issue, ServiceErrors>;
 
-    fn handle(&mut self, msg: CreateIssue, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: CreateIssue, ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issue_assignees::dsl;
         use crate::schema::issues::dsl::issues;
 
@@ -241,10 +241,28 @@ impl Handler<CreateIssue> for DbExecutor {
             .get_result::<i32>(conn)
             .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
 
+        info!("{:?}", msg.issue_type);
+        info!("msg.issue_status_id {:?}", msg.issue_status_id);
+
+        let issue_status_id = if msg.issue_status_id == 0 {
+            self.handle(
+                crate::db::issue_statuses::LoadIssueStatuses {
+                    project_id: msg.project_id,
+                },
+                ctx,
+            )
+            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?
+            .get(0)
+            .ok_or_else(|| ServiceErrors::DatabaseConnectionLost)?
+            .id
+        } else {
+            msg.issue_status_id
+        };
+
         let form = crate::models::CreateIssueForm {
             title: msg.title,
             issue_type: msg.issue_type,
-            issue_status_id: msg.issue_status_id,
+            issue_status_id,
             priority: msg.priority,
             list_position,
             description: msg.description,
