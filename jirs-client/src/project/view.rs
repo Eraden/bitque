@@ -140,15 +140,32 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
 }
 
 fn project_board_lists(model: &Model) -> Node<Msg> {
-    let columns: Vec<Node<Msg>> = model
-        .issue_statuses
-        .iter()
-        .map(|is| project_issue_list(model, is))
+    let mut rows: Vec<Option<&Epic>> = vec![None];
+    for epic in model.epics.iter() {
+        rows.push(Some(epic));
+    }
+    let rows: Vec<Node<Msg>> = rows
+        .into_iter()
+        .map(|epic| {
+            let title = epic
+                .map(|epic| div![C!["rowName"], epic.name.as_str()])
+                .unwrap_or_else(|| empty![]);
+            let columns: Vec<Node<Msg>> = model
+                .issue_statuses
+                .iter()
+                .map(|issue_status| project_issue_list(model, issue_status, epic))
+                .collect();
+            div![C!["row"], title, div![C!["projectBoardLists"], columns]]
+        })
         .collect();
-    div![id!["projectBoardLists"], columns]
+    div![C!["rows"], rows]
 }
 
-fn project_issue_list(model: &Model, status: &jirs_data::IssueStatus) -> Node<Msg> {
+fn project_issue_list(
+    model: &Model,
+    status: &jirs_data::IssueStatus,
+    epic: Option<&jirs_data::Epic>,
+) -> Node<Msg> {
     let project_page = match &model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return empty![],
@@ -171,7 +188,8 @@ fn project_issue_list(model: &Model, status: &jirs_data::IssueStatus) -> Node<Ms
         .issues
         .iter()
         .filter(|issue| {
-            issue_filter_status(issue, status)
+            issue.epic_id == epic.map(|epic| epic.id)
+                && issue_filter_status(issue, status)
                 && issue_filter_with_avatars(issue, &project_page.active_avatar_filters)
                 && issue_filter_with_text(issue, project_page.text_filter.as_str())
                 && issue_filter_with_only_my(issue, project_page.only_my_filter, &model.user)

@@ -83,13 +83,20 @@
     color: var(--textMedium);
 }
 
-#projectPage > #projectBoardLists {
+#projectPage > .rows > .row > .projectBoardLists {
     display: flex;
     margin: 26px -5px 0;
     position: relative;
 }
 
-#projectPage > #projectBoardLists > .list {
+#projectPage > .rows > .row > .rowName {
+    position: relative;
+    color: var(--textDark);
+    font-family: var(--font-regular);
+    margin: 26px -5px 0;
+}
+
+#projectPage > .rows > .row > .projectBoardLists > .list {
     display: flex;
     flex-direction: column;
     margin: 0 5px;
@@ -99,7 +106,7 @@
     background: var(--backgroundLightest);
 }
 
-#projectPage > #projectBoardLists > .list > .title {
+#projectPage > .rows > .row > .projectBoardLists > .list > .title {
     padding: 13px 10px 17px;
     text-transform: uppercase;
     color: var(--textMedium);
@@ -109,22 +116,22 @@
     text-overflow: ellipsis;
 }
 
-#projectPage > #projectBoardLists > .list > .title > .issuesCount {
+#projectPage > .rows > .row > .projectBoardLists > .list > .title > .issuesCount {
     text-transform: lowercase;
     font-size: 13px;
 }
 
-#projectPage > #projectBoardLists > .list > .issues {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues {
     height: 100%;
     padding: 0 5px;
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink {
     display: block;
     margin-bottom: 5px;
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue {
     padding: 10px;
     border-radius: 3px;
     background: #fff;
@@ -134,11 +141,11 @@
     user-select: none;
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue.hidden {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue.hidden {
     display: none;
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue.isBeingDragged {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue.isBeingDragged {
     transform: rotate(3deg);
     /*box-shadow: 5px 10px 30px 0 rgba(9, 30, 66, 0.15);*/
     position: absolute;
@@ -148,48 +155,48 @@
     width: 90px;
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue:hover {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue:hover {
     background: var(--backgroundLight);
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .title {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .title {
     padding-bottom: 11px;
     font-size: 15px;
 }
 
 @media (max-width: 1100px) {
-    #projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue {
+    #projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue {
         padding: 10px 8px;
     }
 
-    #projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .title {
+    #projectPage > .projectBoardLists > .list > .issues > .issueLink > .issue > .title {
         font-size: 14.5px
     }
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .bottom {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > div {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > div {
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > div > .issueTypeIcon {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > div > .issueTypeIcon {
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > div > .issuePriorityIcon {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > div > .issuePriorityIcon {
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > .assignees {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > .assignees {
     display: flex;
     flex-direction: row-reverse;
     margin-left: 2px;
 }
 
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > .assignees > .assigneeAvatar,
-#projectPage > #projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > .assignees > .styledAvatar {
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > .assignees > .assigneeAvatar,
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .bottom > .assignees > .styledAvatar {
     margin-left: -2px;
     box-shadow: 0 0 0 2px #fff;
 }

@@ -163,8 +163,13 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
                 }
             };
         }
+
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueCreated(issue))) => {
             model.issues.push(issue.clone());
+            orders.skip().send_msg(Msg::ModalDropped);
+        }
+
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::EpicCreated(_))) => {
             orders.skip().send_msg(Msg::ModalDropped);
         }
 
