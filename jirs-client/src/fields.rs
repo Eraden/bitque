@@ -68,6 +68,7 @@ impl std::fmt::Display for FieldId {
                 EditIssueModalSection::Issue(IssueFieldId::ListPosition) => {
                     f.write_str("editIssue-listPosition")
                 }
+                EditIssueModalSection::Issue(IssueFieldId::Epic) => f.write_str("editIssue-epic"),
             },
             FieldId::AddIssueModal(sub) => match sub {
                 IssueFieldId::Type => f.write_str("issueTypeAddIssueModal"),
@@ -81,6 +82,7 @@ impl std::fmt::Display for FieldId {
                 IssueFieldId::TimeSpent => f.write_str("addIssueModal-timeSpend"),
                 IssueFieldId::TimeRemaining => f.write_str("addIssueModal-timeRemaining"),
                 IssueFieldId::ListPosition => f.write_str("addIssueModal-listPosition"),
+                IssueFieldId::Epic => f.write_str("addIssueModal-epic"),
             },
             FieldId::TextFilterBoard => f.write_str("textFilterBoard"),
             FieldId::CopyButtonLabel => f.write_str("copyButtonLabel"),

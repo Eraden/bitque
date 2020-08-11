@@ -93,7 +93,7 @@ pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
 
         send_ws_msg(
-            WsMsg::IssueUpdateRequest(
+            WsMsg::IssueUpdate(
                 issue.id,
                 IssueFieldId::IssueStatusId,
                 PayloadVariant::I32(issue.issue_status_id),
@@ -102,7 +102,7 @@ pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
             orders,
         );
         send_ws_msg(
-            WsMsg::IssueUpdateRequest(
+            WsMsg::IssueUpdate(
                 issue.id,
                 IssueFieldId::ListPosition,
                 PayloadVariant::I32(issue.list_position),

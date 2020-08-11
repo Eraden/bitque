@@ -4,7 +4,7 @@ use jirs_data::{Issue, IssueFieldId, WsMsg};
 
 use crate::model::{ModalType, Model, Page, PageContent, ProjectPage};
 use crate::shared::styled_select::StyledSelectChange;
-use crate::ws::{enqueue_ws_msg, send_ws_msg};
+use crate::ws::{board_load, send_ws_msg};
 use crate::{BoardPageChange, EditIssueModalSection, FieldId, Msg, PageChanged, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
@@ -32,7 +32,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         | Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)
         | Msg::ChangePage(Page::EditIssue(..)) => {
-            init_load(model, orders);
+            board_load(model, orders);
         }
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueUpdated(issue))) => {
             let mut old: Vec<Issue> = vec![];
@@ -116,21 +116,13 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::DeleteIssue(issue_id) => {
             send_ws_msg(
-                jirs_data::WsMsg::IssueDeleteRequest(issue_id),
+                jirs_data::WsMsg::IssueDelete(issue_id),
                 model.ws.as_ref(),
                 orders,
             );
         }
         _ => (),
     }
-}
-
-fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {
-    enqueue_ws_msg(
-        vec![WsMsg::ProjectIssuesRequest, WsMsg::IssueStatusesRequest],
-        model.ws.as_ref(),
-        orders,
-    );
 }
 
 fn build_page_content(model: &mut Model) {

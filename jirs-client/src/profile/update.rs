@@ -5,14 +5,14 @@ use jirs_data::{UsersFieldId, WsMsg};
 
 use crate::model::{Model, Page, PageContent, ProfilePage};
 use crate::shared::styled_select::StyledSelectChange;
-use crate::ws::{enqueue_ws_msg, send_ws_msg};
+use crate::ws::{board_load, send_ws_msg};
 use crate::{FieldId, Msg, PageChanged, ProfilePageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)))
         | Msg::ChangePage(Page::Profile) => {
-            init_load(model, orders);
+            board_load(model, orders);
             build_page_content(model);
         }
         _ => (),
@@ -85,13 +85,6 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         _ => (),
     }
-}
-
-fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {
-    if model.user.is_none() {
-        return;
-    }
-    enqueue_ws_msg(vec![WsMsg::ProjectIssuesRequest], model.ws.as_ref(), orders);
 }
 
 fn build_page_content(model: &mut Model) {

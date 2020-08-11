@@ -154,7 +154,6 @@ impl EditIssueModal {
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct AddIssueModal {
-    pub issue_type: IssueType,
     pub priority: IssuePriority,
     pub description: Option<String>,
     pub description_text: Option<String>,
@@ -173,12 +172,12 @@ pub struct AddIssueModal {
     pub reporter_state: StyledSelectState,
     pub assignees_state: StyledSelectState,
     pub priority_state: StyledSelectState,
+    pub epic_state: StyledSelectState,
 }
 
 impl Default for AddIssueModal {
     fn default() -> Self {
         Self {
-            issue_type: Default::default(),
             priority: Default::default(),
             description: Default::default(),
             description_text: Default::default(),
@@ -204,6 +203,7 @@ impl Default for AddIssueModal {
                 FieldId::AddIssueModal(IssueFieldId::Priority),
                 vec![],
             ),
+            epic_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Epic), vec![]),
         }
     }
 }
@@ -509,6 +509,7 @@ pub struct Model {
     pub messages: Vec<Message>,
     pub user_projects: Vec<UserProject>,
     pub projects: Vec<Project>,
+    pub epics: Vec<Epic>,
 }
 
 impl Model {
@@ -538,6 +539,7 @@ impl Model {
             messages: vec![],
             user_projects: vec![],
             projects: vec![],
+            epics: vec![],
         }
     }
 

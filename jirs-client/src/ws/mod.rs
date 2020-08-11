@@ -1,10 +1,13 @@
 use seed::prelude::*;
 
+pub use init_load_sets::*;
 use jirs_data::WsMsg;
 
 use crate::model::*;
 use crate::shared::{go_to_board, write_auth_token};
 use crate::{Msg, WebSocketChanged};
+
+mod init_load_sets;
 
 pub mod issue;
 
@@ -123,7 +126,7 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             model.issues = v;
         }
         // issue statuses
-        WsMsg::IssueStatusesResponse(v) => {
+        WsMsg::IssueStatusesLoaded(v) => {
             model.issue_statuses = v.clone();
             model
                 .issue_statuses
@@ -191,6 +194,17 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             v.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
             model.comments = v;
         }
+        WsMsg::CommentUpdated(comment) => {
+            let mut old = vec![];
+            std::mem::swap(&mut model.comments, &mut old);
+            for current in old.into_iter() {
+                if current.id != comment.id {
+                    model.comments.push(current);
+                } else {
+                    model.comments.push(comment.clone());
+                }
+            }
+        }
         WsMsg::CommentDeleted(comment_id) => {
             let mut old = vec![];
             std::mem::swap(&mut model.comments, &mut old);
@@ -225,7 +239,7 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             }
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
         }
-        WsMsg::MessagesResponse(v) => {
+        WsMsg::MessagesLoaded(v) => {
             model.messages = v.clone();
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
         }
@@ -238,6 +252,37 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
+        }
+
+        // epics
+        WsMsg::EpicsLoaded(epics) => {
+            model.epics = epics.clone();
+        }
+        WsMsg::EpicCreated(epic) => {
+            model.epics.push(epic.clone());
+            model.epics.sort_by(|a, b| a.id.cmp(&b.id));
+        }
+        WsMsg::EpicUpdated(epic) => {
+            let mut old = vec![];
+            std::mem::swap(&mut old, &mut model.epics);
+            for current in old {
+                if current.id != epic.id {
+                    model.epics.push(current);
+                } else {
+                    model.epics.push(epic.clone());
+                }
+            }
+            model.epics.sort_by(|a, b| a.id.cmp(&b.id));
+        }
+        WsMsg::EpicDeleted(id) => {
+            let mut old = vec![];
+            std::mem::swap(&mut old, &mut model.epics);
+            for current in old {
+                if current.id != *id {
+                    model.epics.push(current);
+                }
+            }
+            model.epics.sort_by(|a, b| a.id.cmp(&b.id));
         }
         _ => (),
     };

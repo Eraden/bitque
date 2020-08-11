@@ -15,7 +15,7 @@ impl WsHandler<LoadIssueStatuses> for WebSocketActor {
             self.db
                 .send(issue_statuses::LoadIssueStatuses { project_id }),
         ) {
-            Ok(Ok(v)) => Some(WsMsg::IssueStatusesResponse(v)),
+            Ok(Ok(v)) => Some(WsMsg::IssueStatusesLoaded(v)),
             Ok(Err(e)) => {
                 error!("{:?}", e);
                 return Ok(None);

@@ -23,6 +23,7 @@ impl ToString for Variant {
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct StyledInputState {
     id: FieldId,
+    touched: bool,
     pub value: String,
 }
 
@@ -33,6 +34,7 @@ impl StyledInputState {
     {
         Self {
             id,
+            touched: false,
             value: value.into(),
         }
     }
@@ -53,6 +55,7 @@ impl StyledInputState {
         match msg {
             Msg::StrInputChanged(field_id, s) if field_id == &self.id => {
                 self.value = s.clone();
+                self.touched = true;
             }
             _ => (),
         }
@@ -129,7 +132,7 @@ impl StyledInputBuilder {
 
     pub fn state(self, state: &StyledInputState) -> Self {
         self.value(state.value.as_str())
-            .valid(!state.value.is_empty())
+            .valid(!state.touched || !state.value.is_empty())
     }
 
     pub fn add_input_class<S>(mut self, name: S) -> Self

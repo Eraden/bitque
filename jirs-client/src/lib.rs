@@ -1,3 +1,5 @@
+#![feature(or_patterns)]
+
 use seed::{prelude::*, *};
 use web_sys::File;
 
@@ -80,6 +82,11 @@ pub enum Msg {
     AddIssue,
     DeleteIssue(IssueId),
 
+    // epics
+    AddEpic,
+    DeleteEpic,
+    UpdateEpic,
+
     // issue statuses
     DeleteIssueStatus(IssueStatusId),
 
@@ -130,19 +137,18 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                     ws::update(ws_msg, model, orders);
                 }
                 WebSocketChanged::WebSocketMessageLoaded(v) => {
-                    if let Ok(m) = bincode::deserialize(v.as_slice()) {
-                        match m {
-                            WsMsg::Ping | WsMsg::Pong => {
-                                orders.perform_cmd(cmds::timeout(1000, || {
-                                    Msg::WebSocketChange(WebSocketChanged::SendPing)
-                                }));
-                            }
-                            _ => {
-                                orders
-                                    .skip()
-                                    .send_msg(Msg::WebSocketChange(WebSocketChanged::WsMsg(m)));
-                            }
+                    match bincode::deserialize(v.as_slice()) {
+                        Ok(WsMsg::Ping | WsMsg::Pong) => {
+                            orders.perform_cmd(cmds::timeout(1000, || {
+                                Msg::WebSocketChange(WebSocketChanged::SendPing)
+                            }));
                         }
+                        Ok(m) => {
+                            orders
+                                .skip()
+                                .send_msg(Msg::WebSocketChange(WebSocketChanged::WsMsg(m)));
+                        }
+                        _ => (),
                     };
                     return;
                 }
@@ -309,7 +315,7 @@ fn authorize_or_redirect(model: &mut Model, orders: &mut impl Orders<Msg>) {
     let pathname = seed::document().location().unwrap().pathname().unwrap();
     match crate::shared::read_auth_token() {
         Ok(token) => {
-            send_ws_msg(WsMsg::AuthorizeRequest(token), model.ws.as_ref(), orders);
+            send_ws_msg(WsMsg::AuthorizeLoad(token), model.ws.as_ref(), orders);
         }
         Err(..) => {
             match pathname.as_str() {

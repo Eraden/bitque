@@ -35,6 +35,13 @@ impl StyledFormBuilder {
         self
     }
 
+    pub fn try_field(mut self, node: Option<Node<Msg>>) -> Self {
+        if let Some(n) = node {
+            self.fields.push(n);
+        }
+        self
+    }
+
     pub fn heading<S>(mut self, heading: S) -> Self
     where
         S: Into<String>,

@@ -3,29 +3,49 @@ use std::collections::HashMap;
 use actix::{
     Actor, ActorContext, Addr, AsyncContext, Context, Handler, Message, Recipient, StreamHandler,
 };
-use actix_web::web::Data;
-use actix_web::{get, web, Error, HttpRequest, HttpResponse};
+use actix_web::{
+    get,
+    web::{self, Data},
+    Error, HttpRequest, HttpResponse,
+};
 use actix_web_actors::ws;
 use futures::executor::block_on;
 
 use jirs_data::{Project, ProjectId, User, UserId, UserProject, WsMsg};
 
-use crate::db::projects::LoadCurrentProject;
-use crate::db::user_projects::CurrentUserProject;
-use crate::db::DbExecutor;
+use crate::db::{projects::LoadCurrentProject, user_projects::CurrentUserProject, DbExecutor};
 use crate::mail::MailExecutor;
-use crate::ws::auth::*;
-use crate::ws::comments::*;
-use crate::ws::invitations::*;
-use crate::ws::issue_statuses::*;
-use crate::ws::issues::*;
-use crate::ws::messages::*;
-use crate::ws::projects::*;
-use crate::ws::user_projects::{LoadUserProjects, SetCurrentUserProject};
-use crate::ws::users::*;
+use crate::ws::{
+    auth::*,
+    comments::*,
+    invitations::*,
+    issue_statuses::*,
+    issues::*,
+    messages::*,
+    projects::*,
+    user_projects::{LoadUserProjects, SetCurrentUserProject},
+    users::*,
+};
+
+macro_rules! query_db_or_print {
+    ($s:expr,$msg:expr) => {
+        match block_on($s.db.send($msg)) {
+            Ok(Ok(r)) => r,
+            Ok(Err(e)) => {
+                error!("{:?}", e);
+                return Ok(None);
+            }
+            Err(e) => {
+                error!("{}", e);
+                return Ok(None);
+            }
+        }
+    };
+}
 
 pub mod auth;
 pub mod comments;
+pub mod epics;
 pub mod invitations;
 pub mod issue_statuses;
 pub mod issues;
@@ -93,7 +113,7 @@ impl WebSocketActor {
             WsMsg::Pong => Some(WsMsg::Ping),
 
             // issues
-            WsMsg::IssueUpdateRequest(id, field_id, payload) => self.handle_msg(
+            WsMsg::IssueUpdate(id, field_id, payload) => self.handle_msg(
                 UpdateIssueHandler {
                     id,
                     field_id,
@@ -101,12 +121,12 @@ impl WebSocketActor {
                 },
                 ctx,
             )?,
-            WsMsg::IssueCreateRequest(payload) => self.handle_msg(payload, ctx)?,
-            WsMsg::IssueDeleteRequest(id) => self.handle_msg(DeleteIssue { id }, ctx)?,
-            WsMsg::ProjectIssuesRequest => self.handle_msg(LoadIssues, ctx)?,
+            WsMsg::IssueCreate(payload) => self.handle_msg(payload, ctx)?,
+            WsMsg::IssueDelete(id) => self.handle_msg(DeleteIssue { id }, ctx)?,
+            WsMsg::ProjectIssuesLoad => self.handle_msg(LoadIssues, ctx)?,
 
             // issue statuses
-            WsMsg::IssueStatusesRequest => self.handle_msg(LoadIssueStatuses, ctx)?,
+            WsMsg::IssueStatusesLoad => self.handle_msg(LoadIssueStatuses, ctx)?,
             WsMsg::IssueStatusDelete(issue_status_id) => {
                 self.handle_msg(DeleteIssueStatus { issue_status_id }, ctx)?
             }
@@ -124,7 +144,7 @@ impl WebSocketActor {
 
             // projects
             WsMsg::ProjectsLoad => self.handle_msg(LoadProjects, ctx)?,
-            WsMsg::ProjectUpdateRequest(payload) => self.handle_msg(payload, ctx)?,
+            WsMsg::ProjectUpdateLoad(payload) => self.handle_msg(payload, ctx)?,
 
             // user projects
             WsMsg::UserProjectsLoad => self.handle_msg(LoadUserProjects, ctx)?,
@@ -136,9 +156,7 @@ impl WebSocketActor {
             )?,
 
             // auth
-            WsMsg::AuthorizeRequest(uuid) => {
-                self.handle_msg(CheckAuthToken { token: uuid }, ctx)?
-            }
+            WsMsg::AuthorizeLoad(uuid) => self.handle_msg(CheckAuthToken { token: uuid }, ctx)?,
             WsMsg::BindTokenCheck(uuid) => {
                 self.handle_msg(CheckBindToken { bind_token: uuid }, ctx)?
             }
@@ -156,18 +174,18 @@ impl WebSocketActor {
             )?,
 
             // users
-            WsMsg::ProjectUsersRequest => self.handle_msg(LoadProjectUsers, ctx)?,
+            WsMsg::ProjectUsersLoad => self.handle_msg(LoadProjectUsers, ctx)?,
             WsMsg::InvitedUserRemoveRequest(user_id) => {
                 self.handle_msg(RemoveInvitedUser { user_id }, ctx)?
             }
 
             // comments
-            WsMsg::IssueCommentsRequest(issue_id) => {
+            WsMsg::IssueCommentsLoad(issue_id) => {
                 self.handle_msg(LoadIssueComments { issue_id }, ctx)?
             }
-            WsMsg::CreateComment(payload) => self.handle_msg(payload, ctx)?,
-            WsMsg::UpdateComment(payload) => self.handle_msg(payload, ctx)?,
-            WsMsg::CommentDeleteRequest(comment_id) => {
+            WsMsg::CommentCreate(payload) => self.handle_msg(payload, ctx)?,
+            WsMsg::CommentUpdate(payload) => self.handle_msg(payload, ctx)?,
+            WsMsg::CommentDelete(comment_id) => {
                 self.handle_msg(DeleteComment { comment_id }, ctx)?
             }
 
@@ -175,12 +193,12 @@ impl WebSocketActor {
             WsMsg::InvitationSendRequest { name, email, role } => {
                 self.handle_msg(CreateInvitation { name, email, role }, ctx)?
             }
-            WsMsg::InvitationListRequest => self.handle_msg(ListInvitation, ctx)?,
+            WsMsg::InvitationListLoad => self.handle_msg(ListInvitation, ctx)?,
             WsMsg::InvitationAcceptRequest(invitation_token) => {
                 self.handle_msg(AcceptInvitation { invitation_token }, ctx)?
             }
             WsMsg::InvitationRevokeRequest(id) => self.handle_msg(RevokeInvitation { id }, ctx)?,
-            WsMsg::InvitedUsersRequest => self.handle_msg(LoadInvitedUsers, ctx)?,
+            WsMsg::InvitedUsersLoad => self.handle_msg(LoadInvitedUsers, ctx)?,
 
             // users
             WsMsg::ProfileUpdate(email, name) => {
@@ -188,8 +206,16 @@ impl WebSocketActor {
             }
 
             // messages
-            WsMsg::MessagesRequest => self.handle_msg(LoadMessages, ctx)?,
+            WsMsg::MessagesLoad => self.handle_msg(LoadMessages, ctx)?,
             WsMsg::MessageMarkSeen(id) => self.handle_msg(MarkMessageSeen { id }, ctx)?,
+
+            // epics
+            WsMsg::EpicsLoad => self.handle_msg(epics::LoadEpics, ctx)?,
+            WsMsg::EpicCreate(name) => self.handle_msg(epics::CreateEpic { name }, ctx)?,
+            WsMsg::EpicUpdate(epic_id, name) => {
+                self.handle_msg(epics::UpdateEpic { epic_id, name }, ctx)?
+            }
+            WsMsg::EpicDelete(epic_id) => self.handle_msg(epics::DeleteEpic { epic_id }, ctx)?,
 
             // else fail
             _ => {

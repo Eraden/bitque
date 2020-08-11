@@ -14,8 +14,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             vec![
                 WsMsg::UserProjectsLoad,
                 WsMsg::ProjectsLoad,
-                WsMsg::MessagesRequest,
-                WsMsg::ProjectUsersRequest,
+                WsMsg::MessagesLoad,
+                WsMsg::ProjectUsersLoad,
             ],
             model.ws.as_ref(),
             orders,

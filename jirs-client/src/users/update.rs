@@ -4,7 +4,7 @@ use jirs_data::{InvitationState, UserRole, UsersFieldId, WsMsg};
 
 use crate::model::{InvitationFormState, Model, Page, PageContent, UsersPage};
 use crate::shared::styled_select::StyledSelectChange;
-use crate::ws::{enqueue_ws_msg, send_ws_msg};
+use crate::ws::{invitation_load, send_ws_msg};
 use crate::{FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
@@ -22,11 +22,11 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
     match msg {
         Msg::ChangePage(Page::Users) if model.user.is_some() => {
-            init_load(model, orders);
+            invitation_load(model, orders);
         }
         Msg::WebSocketChange(change) => match change {
             WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) if model.user.is_some() => {
-                init_load(model, orders);
+                invitation_load(model, orders);
             }
             WebSocketChanged::WsMsg(WsMsg::InvitedUsersLoaded(users)) => {
                 page.invited_users = users;
@@ -43,7 +43,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     }
                     page.invitations.push(invitation);
                 }
-                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref(), orders);
+                send_ws_msg(WsMsg::InvitationListLoad, model.ws.as_ref(), orders);
             }
             WebSocketChanged::WsMsg(WsMsg::InvitedUserRemoveSuccess(removed_id)) => {
                 let mut old = vec![];
@@ -55,7 +55,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
             WebSocketChanged::WsMsg(WsMsg::InvitationSendSuccess) => {
-                send_ws_msg(WsMsg::InvitationListRequest, model.ws.as_ref(), orders);
+                send_ws_msg(WsMsg::InvitationListLoad, model.ws.as_ref(), orders);
                 page.form_state = InvitationFormState::Succeed;
             }
             WebSocketChanged::WsMsg(WsMsg::InvitationSendFailure) => {
@@ -123,12 +123,4 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
 fn build_page_content(model: &mut Model) {
     model.page_content = PageContent::Users(Box::new(UsersPage::default()));
-}
-
-fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {
-    enqueue_ws_msg(
-        vec![WsMsg::InvitationListRequest, WsMsg::InvitedUsersRequest],
-        model.ws.as_ref(),
-        orders,
-    );
 }

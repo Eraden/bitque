@@ -59,10 +59,9 @@ impl WsHandler<CreateCommentPayload> for WebSocketActor {
 }
 
 impl WsHandler<UpdateCommentPayload> for WebSocketActor {
-    fn handle_msg(&mut self, msg: UpdateCommentPayload, ctx: &mut Self::Context) -> WsResult {
+    fn handle_msg(&mut self, msg: UpdateCommentPayload, _ctx: &mut Self::Context) -> WsResult {
         use crate::db::comments::UpdateComment;
 
-        info!("{:?}", msg);
         let user_id = self.require_user()?.id;
 
         let UpdateCommentPayload {
@@ -70,12 +69,12 @@ impl WsHandler<UpdateCommentPayload> for WebSocketActor {
             body,
         } = msg;
 
-        let issue_id = match block_on(self.db.send(UpdateComment {
+        let comment = match block_on(self.db.send(UpdateComment {
             comment_id,
             user_id,
             body,
         })) {
-            Ok(Ok(comment)) => comment.issue_id,
+            Ok(Ok(comment)) => comment,
             Ok(Err(e)) => {
                 error!("{:?}", e);
                 return Ok(None);
@@ -85,9 +84,7 @@ impl WsHandler<UpdateCommentPayload> for WebSocketActor {
                 return Ok(None);
             }
         };
-        if let Some(v) = self.handle_msg(LoadIssueComments { issue_id }, ctx)? {
-            self.broadcast(&v);
-        }
+        self.broadcast(&WsMsg::CommentUpdated(comment));
         Ok(None)
     }
 }

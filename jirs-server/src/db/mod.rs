@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod authorize_user;
 pub mod comments;
+pub mod epics;
 pub mod invitations;
 pub mod issue_assignees;
 pub mod issue_statuses;

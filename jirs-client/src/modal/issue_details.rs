@@ -44,7 +44,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.issue_type = (*value).into();
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::Type,
                     PayloadVariant::IssueType(modal.payload.issue_type),
@@ -59,7 +59,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.issue_status_id = *value as IssueStatusId;
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::IssueStatusId,
                     PayloadVariant::I32(modal.payload.issue_status_id),
@@ -74,7 +74,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.reporter_id = *value as i32;
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::Reporter,
                     PayloadVariant::I32(modal.payload.reporter_id),
@@ -89,7 +89,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.user_ids.push(*value as i32);
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::Assignees,
                     PayloadVariant::VecI32(modal.payload.user_ids.clone()),
@@ -111,7 +111,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::Assignees,
                     PayloadVariant::VecI32(modal.payload.user_ids.clone()),
@@ -126,7 +126,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.priority = (*value).into();
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::Priority,
                     PayloadVariant::IssuePriority(modal.payload.priority),
@@ -141,7 +141,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.title = value.clone();
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::Title,
                     PayloadVariant::String(modal.payload.title.clone()),
@@ -157,7 +157,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             modal.payload.description = Some(value.clone());
             modal.payload.description_text = Some(value.clone());
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::Description,
                     PayloadVariant::String(
@@ -180,7 +180,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.time_spent = modal.time_spent.represent_f64_as_i32();
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::TimeSpent,
                     PayloadVariant::OptionI32(modal.payload.time_spent),
@@ -195,7 +195,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.time_spent = modal.time_spent_select.values.get(0).map(|n| *n as i32);
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::TimeSpent,
                     PayloadVariant::OptionI32(modal.payload.time_spent),
@@ -211,7 +211,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.time_remaining = modal.time_remaining.represent_f64_as_i32();
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::TimeRemaining,
                     PayloadVariant::OptionI32(modal.payload.time_remaining),
@@ -227,7 +227,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             modal.payload.time_remaining =
                 modal.time_remaining_select.values.get(0).map(|n| *n as i32);
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::TimeRemaining,
                     PayloadVariant::OptionI32(modal.payload.time_remaining),
@@ -243,7 +243,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.estimate = modal.estimate.represent_f64_as_i32();
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::Estimate,
                     PayloadVariant::OptionI32(modal.payload.estimate),
@@ -258,7 +258,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             modal.payload.estimate = modal.estimate_select.values.get(0).map(|n| *n as i32);
             send_ws_msg(
-                WsMsg::IssueUpdateRequest(
+                WsMsg::IssueUpdate(
                     modal.id,
                     IssueFieldId::Estimate,
                     PayloadVariant::OptionI32(modal.payload.estimate),
@@ -294,11 +294,11 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::SaveComment => {
             let msg = match modal.comment_form.id {
-                Some(id) => WsMsg::UpdateComment(UpdateCommentPayload {
+                Some(id) => WsMsg::CommentUpdate(UpdateCommentPayload {
                     id,
                     body: modal.comment_form.body.clone(),
                 }),
-                _ => WsMsg::CreateComment(CreateCommentPayload {
+                _ => WsMsg::CommentCreate(CreateCommentPayload {
                     user_id: None,
                     body: modal.comment_form.body.clone(),
                     issue_id: modal.id,
@@ -328,11 +328,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             modal.comment_form.creating = true;
         }
         Msg::DeleteComment(comment_id) => {
-            send_ws_msg(
-                WsMsg::CommentDeleteRequest(*comment_id),
-                model.ws.as_ref(),
-                orders,
-            );
+            send_ws_msg(WsMsg::CommentDelete(*comment_id), model.ws.as_ref(), orders);
             orders.skip().send_msg(Msg::ModalDropped);
         }
 

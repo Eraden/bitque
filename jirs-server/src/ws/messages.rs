@@ -11,7 +11,7 @@ impl WsHandler<LoadMessages> for WebSocketActor {
     fn handle_msg(&mut self, _msg: LoadMessages, _ctx: &mut Self::Context) -> WsResult {
         let user_id = self.require_user()?.id;
         match block_on(self.db.send(messages::LoadMessages { user_id })) {
-            Ok(Ok(v)) => Ok(Some(WsMsg::MessagesResponse(v))),
+            Ok(Ok(v)) => Ok(Some(WsMsg::MessagesLoaded(v))),
             Ok(Err(e)) => {
                 error!("{:?}", e);
                 Ok(None)

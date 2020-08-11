@@ -7,8 +7,15 @@ use diesel::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub use fields::*;
+pub use msg::WsMsg;
+pub use payloads::*;
 #[cfg(feature = "backend")]
 pub use sql::*;
+
+mod fields;
+mod msg;
+mod payloads;
 
 #[cfg(feature = "backend")]
 pub mod sql;
@@ -29,9 +36,12 @@ pub type InvitationId = i32;
 pub type Position = i32;
 pub type MessageId = i32;
 pub type EpicId = i32;
+
 pub type EmailString = String;
 pub type UsernameString = String;
 pub type TitleString = String;
+pub type NameString = String;
+
 pub type BindToken = Uuid;
 pub type InvitationToken = Uuid;
 
@@ -505,23 +515,6 @@ pub struct Token {
     pub bind_token: Option<Uuid>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
-pub struct UpdateIssuePayload {
-    pub title: String,
-    pub issue_type: IssueType,
-    pub priority: IssuePriority,
-    pub list_position: i32,
-    pub description: Option<String>,
-    pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
-    pub project_id: ProjectId,
-    pub reporter_id: UserId,
-    pub issue_status_id: IssueStatusId,
-    pub user_ids: Vec<UserId>,
-}
-
 #[cfg_attr(feature = "backend", derive(Queryable))]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct IssueAssignee {
@@ -530,26 +523,6 @@ pub struct IssueAssignee {
     pub user_id: UserId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-}
-
-impl From<Issue> for UpdateIssuePayload {
-    fn from(issue: Issue) -> Self {
-        Self {
-            title: issue.title,
-            issue_type: issue.issue_type,
-            priority: issue.priority,
-            list_position: issue.list_position,
-            description: issue.description,
-            description_text: issue.description_text,
-            estimate: issue.estimate,
-            time_spent: issue.time_spent,
-            time_remaining: issue.time_remaining,
-            project_id: issue.project_id,
-            reporter_id: issue.reporter_id,
-            user_ids: issue.user_ids,
-            issue_status_id: issue.issue_status_id,
-        }
-    }
 }
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression))]
@@ -610,222 +583,9 @@ pub struct Message {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Epic {
     pub id: EpicId,
-    pub name: String,
+    pub name: NameString,
     pub user_id: UserId,
     pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct CreateCommentPayload {
-    pub user_id: Option<UserId>,
-    pub issue_id: IssueId,
-    pub body: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct UpdateCommentPayload {
-    pub id: CommentId,
-    pub body: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct CreateIssuePayload {
-    pub title: String,
-    pub issue_type: IssueType,
-    pub priority: IssuePriority,
-    pub description: Option<String>,
-    pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
-    pub project_id: ProjectId,
-    pub user_ids: Vec<UserId>,
-    pub reporter_id: UserId,
-    pub issue_status_id: IssueStatusId,
-    pub epic_id: Option<EpicId>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct UpdateProjectPayload {
-    pub id: ProjectId,
-    pub name: Option<String>,
-    pub url: Option<String>,
-    pub description: Option<String>,
-    pub category: Option<ProjectCategory>,
-    pub time_tracking: Option<TimeTracking>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub enum PayloadVariant {
-    OptionI32(Option<i32>),
-    VecI32(Vec<i32>),
-    I32(i32),
-    String(String),
-    IssueType(IssueType),
-    IssuePriority(IssuePriority),
-    ProjectCategory(ProjectCategory),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum ProjectFieldId {
-    Name,
-    Url,
-    Description,
-    Category,
-    TimeTracking,
-    IssueStatusName,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum SignInFieldId {
-    Username,
-    Email,
-    Token,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum SignUpFieldId {
-    Username,
-    Email,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum UsersFieldId {
-    Username,
-    Email,
-    UserRole,
-    Avatar,
-    CurrentProject,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum InviteFieldId {
-    Token,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum CommentFieldId {
-    Body,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
-pub enum IssueFieldId {
-    Type,
-    Title,
-    Description,
-    ListPosition,
-    Assignees,
-    Reporter,
-    Priority,
-    Estimate,
-    TimeSpent,
-    TimeRemaining,
-    IssueStatusId,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum WsMsg {
-    Ping,
-    Pong,
-    Die,
-
-    // auth
-    AuthorizeRequest(Uuid),
-    AuthorizeLoaded(Result<User, String>),
-    AuthorizeExpired,
-    AuthenticateRequest(EmailString, UsernameString),
-    AuthenticateSuccess,
-    BindTokenCheck(Uuid),
-    BindTokenBad,
-    BindTokenOk(Uuid),
-
-    // Sign up
-    SignUpRequest(EmailString, UsernameString),
-    SignUpSuccess,
-    SignUpPairTaken,
-
-    // invitations
-    InvitationListRequest,
-    InvitationListLoaded(Vec<Invitation>),
-    //
-    InvitedUsersRequest,
-    InvitedUsersLoaded(Vec<User>),
-    //
-    InvitationSendRequest {
-        name: UsernameString,
-        email: EmailString,
-        role: UserRole,
-    },
-    InvitationSendSuccess,
-    InvitationSendFailure,
-    //
-    InvitationRevokeRequest(InvitationId),
-    InvitationRevokeSuccess(InvitationId),
-    //
-    InvitationAcceptRequest(InvitationToken),
-    InvitationAcceptSuccess(BindToken),
-    InvitationAcceptFailure(InvitationToken),
-    //
-    InvitationRejectRequest(InvitationToken),
-    InvitationRejectSuccess,
-    InvitationRejectFailure(InvitationToken),
-    //
-    InvitedUserRemoveRequest(UserId),
-    InvitedUserRemoveSuccess(UserId),
-
-    // project page
-    ProjectsLoad,
-    ProjectsLoaded(Vec<Project>),
-
-    ProjectIssuesRequest,
-    ProjectIssuesLoaded(Vec<Issue>),
-    ProjectUsersRequest,
-    ProjectUsersLoaded(Vec<User>),
-    ProjectUpdateRequest(UpdateProjectPayload),
-
-    // issue
-    IssueUpdateRequest(IssueId, IssueFieldId, PayloadVariant),
-    IssueUpdated(Issue),
-    IssueDeleteRequest(IssueId),
-    IssueDeleted(IssueId),
-    IssueCreateRequest(CreateIssuePayload),
-    IssueCreated(Issue),
-
-    // issue status
-    IssueStatusesRequest,
-    IssueStatusesResponse(Vec<IssueStatus>),
-    IssueStatusUpdate(IssueStatusId, TitleString, Position),
-    IssueStatusUpdated(IssueStatus),
-    IssueStatusCreate(TitleString, Position),
-    IssueStatusCreated(IssueStatus),
-    IssueStatusDelete(IssueStatusId),
-    IssueStatusDeleted(IssueStatusId),
-
-    // comments
-    IssueCommentsRequest(IssueId),
-    IssueCommentsLoaded(Vec<Comment>),
-    CreateComment(CreateCommentPayload),
-    UpdateComment(UpdateCommentPayload),
-    CommentDeleteRequest(CommentId),
-    CommentDeleted(CommentId),
-
-    // users
-    AvatarUrlChanged(UserId, String),
-    ProfileUpdate(EmailString, UsernameString),
-    ProfileUpdated,
-
-    // user projects
-    UserProjectsLoad,
-    UserProjectsLoaded(Vec<UserProject>),
-    UserProjectSetCurrent(UserProjectId),
-    UserProjectCurrentChanged(UserProject),
-
-    // messages
-    Message(Message),
-    MessagesRequest,
-    MessagesResponse(Vec<Message>),
-    MessageMarkSeen(MessageId),
-    MessageMarkedSeen(MessageId),
 }

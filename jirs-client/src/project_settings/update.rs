@@ -7,7 +7,7 @@ use jirs_data::{IssueStatus, IssueStatusId, ProjectFieldId, UpdateProjectPayload
 
 use crate::model::{Model, Page, PageContent, ProjectSettingsPage};
 use crate::shared::styled_select::StyledSelectChange;
-use crate::ws::{enqueue_ws_msg, send_ws_msg};
+use crate::ws::{board_load, send_ws_msg};
 use crate::FieldChange::TabChanged;
 use crate::{FieldId, Msg, PageChanged, ProjectPageChange, WebSocketChanged};
 
@@ -22,7 +22,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::WebSocketChange(ref change) => match change {
             WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
-                init_load(model, orders);
+                board_load(model, orders);
             }
             WebSocketChanged::WsMsg(WsMsg::IssueStatusCreated(_)) => {
                 match &mut model.page_content {
@@ -37,7 +37,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::ChangePage(Page::ProjectSettings) => {
             build_page_content(model);
             if model.user.is_some() {
-                init_load(model, orders);
+                board_load(model, orders);
             }
         }
         _ => (),
@@ -83,7 +83,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ProjectPageChange::SubmitProjectSettingsForm,
         )) => {
             send_ws_msg(
-                WsMsg::ProjectUpdateRequest(UpdateProjectPayload {
+                WsMsg::ProjectUpdateLoad(UpdateProjectPayload {
                     id: page.payload.id,
                     name: page.payload.name.clone(),
                     url: page.payload.url.clone(),
@@ -158,14 +158,6 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         _ => (),
     }
-}
-
-fn init_load(model: &mut Model, orders: &mut impl Orders<Msg>) {
-    enqueue_ws_msg(
-        vec![WsMsg::IssueStatusesRequest, WsMsg::ProjectIssuesRequest],
-        model.ws.as_ref(),
-        orders,
-    );
 }
 
 fn exchange_position(bellow_id: IssueStatusId, model: &mut Model) {

@@ -279,6 +279,16 @@ impl ToChild for jirs_data::Project {
     }
 }
 
+impl ToChild for jirs_data::Epic {
+    type Builder = StyledSelectChildBuilder;
+
+    fn to_child(&self) -> Self::Builder {
+        StyledSelectChild::build()
+            .text(self.name.as_str())
+            .value(self.id as u32)
+    }
+}
+
 impl ToChild for u32 {
     type Builder = StyledSelectChildBuilder;
 

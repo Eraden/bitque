@@ -132,7 +132,7 @@ fn push_edit_modal(issue_id: i32, model: &mut Model, orders: &mut impl Orders<Ms
         )
     };
     send_ws_msg(
-        WsMsg::IssueCommentsRequest(issue_id),
+        WsMsg::IssueCommentsLoad(issue_id),
         model.ws.as_ref(),
         orders,
     );
