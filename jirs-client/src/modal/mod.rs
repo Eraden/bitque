@@ -2,19 +2,24 @@ use seed::{prelude::*, *};
 
 use jirs_data::{TimeTracking, WsMsg};
 
-use crate::model::{AddIssueModal, EditIssueModal, ModalType, Model, Page};
-use crate::shared::styled_confirm_modal::StyledConfirmModal;
-use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
-use crate::shared::{find_issue, go_to_board, ToNode};
-use crate::ws::send_ws_msg;
-use crate::{model, FieldChange, FieldId, Msg, WebSocketChanged};
+use crate::{
+    modal::issues::*,
+    model::{self, AddIssueModal, EditIssueModal, ModalType, Model, Page},
+    shared::{
+        find_issue, go_to_board,
+        styled_confirm_modal::StyledConfirmModal,
+        styled_modal::{StyledModal, Variant as ModalVariant},
+        ToNode,
+    },
+    ws::send_ws_msg,
+    FieldChange, FieldId, Msg, WebSocketChanged,
+};
 
-mod add_issue;
 mod confirm_delete_issue;
 #[cfg(debug_assertions)]
 mod debug_modal;
 mod delete_issue_status;
-mod issue_details;
+pub mod issues;
 pub mod time_tracking;
 
 pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {

@@ -1,6 +1,7 @@
 use std::collections::hash_map::HashMap;
 
 use chrono::{prelude::*, NaiveDate};
+use seed::app::Orders;
 use seed::browser::web_socket::WebSocket;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -15,7 +16,14 @@ use crate::shared::styled_image_input::StyledImageInputState;
 use crate::shared::styled_input::StyledInputState;
 use crate::shared::styled_rte::StyledRteState;
 use crate::shared::styled_select::StyledSelectState;
-use crate::{EditIssueModalSection, FieldId, ProjectFieldId /*HOST_URL*/};
+use crate::{EditIssueModalSection, FieldId, Msg, ProjectFieldId};
+
+pub trait IssueModal {
+    fn epic_id_value(&self) -> Option<u32>;
+    fn epic_state(&self) -> &StyledSelectState;
+
+    fn update_states(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>);
+}
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
@@ -61,6 +69,7 @@ pub struct EditIssueModal {
     pub reporter_state: StyledSelectState,
     pub assignees_state: StyledSelectState,
     pub priority_state: StyledSelectState,
+    pub epic_state: StyledSelectState,
 
     pub estimate: StyledInputState,
     pub estimate_select: StyledSelectState,
@@ -73,6 +82,31 @@ pub struct EditIssueModal {
 
     // comments
     pub comment_form: CommentForm,
+}
+
+impl IssueModal for EditIssueModal {
+    fn epic_id_value(&self) -> Option<u32> {
+        self.epic_state.values.get(0).cloned()
+    }
+
+    fn epic_state(&self) -> &StyledSelectState {
+        &self.epic_state
+    }
+
+    fn update_states(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
+        self.top_type_state.update(msg, orders);
+        self.status_state.update(msg, orders);
+        self.reporter_state.update(msg, orders);
+        self.assignees_state.update(msg, orders);
+        self.priority_state.update(msg, orders);
+        self.estimate.update(msg);
+        self.estimate_select.update(msg, orders);
+        self.time_spent.update(msg);
+        self.time_spent_select.update(msg, orders);
+        self.time_remaining.update(msg);
+        self.time_remaining_select.update(msg, orders);
+        self.epic_state.update(msg, orders);
+    }
 }
 
 impl EditIssueModal {
@@ -114,6 +148,14 @@ impl EditIssueModal {
             priority_state: StyledSelectState::new(
                 FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Priority)),
                 vec![issue.priority.into()],
+            ),
+            epic_state: StyledSelectState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Epic)),
+                issue
+                    .epic_id
+                    .as_ref()
+                    .map(|id| vec![*id as u32])
+                    .unwrap_or_default(),
             ),
             estimate: StyledInputState::new(
                 FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
@@ -173,6 +215,25 @@ pub struct AddIssueModal {
     pub assignees_state: StyledSelectState,
     pub priority_state: StyledSelectState,
     pub epic_state: StyledSelectState,
+}
+
+impl IssueModal for AddIssueModal {
+    fn epic_id_value(&self) -> Option<u32> {
+        self.epic_state.values.get(0).cloned()
+    }
+
+    fn epic_state(&self) -> &StyledSelectState {
+        &self.epic_state
+    }
+
+    fn update_states(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
+        self.title_state.update(msg);
+        self.assignees_state.update(msg, orders);
+        self.reporter_state.update(msg, orders);
+        self.type_state.update(msg, orders);
+        self.priority_state.update(msg, orders);
+        self.epic_state.update(msg, orders);
+    }
 }
 
 impl Default for AddIssueModal {

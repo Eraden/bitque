@@ -4,8 +4,7 @@ use diesel::prelude::*;
 
 use jirs_data::{IssueStatus, IssueStatusId, Position, ProjectId, TitleString};
 
-use crate::db::DbExecutor;
-use crate::errors::ServiceErrors;
+use crate::{db::DbExecutor, errors::ServiceErrors};
 
 pub struct LoadIssueStatuses {
     pub project_id: ProjectId,

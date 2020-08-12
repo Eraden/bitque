@@ -9,7 +9,7 @@ use crate::{FieldId, Msg};
 pub enum StyledSelectChange {
     Text(String),
     DropDownVisibility(bool),
-    Changed(u32),
+    Changed(Option<u32>),
     RemoveMulti(u32),
 }
 
@@ -75,10 +75,15 @@ impl StyledSelectState {
             {
                 self.text_filter = text.clone();
             }
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(v))
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(Some(v)))
                 if field_id == &self.field_id =>
             {
                 self.values = vec![*v];
+            }
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(None))
+                if field_id == &self.field_id =>
+            {
+                self.values.clear();
             }
             Msg::StyledSelectChanged(field_id, StyledSelectChange::RemoveMulti(v))
                 if field_id == &self.field_id =>
@@ -104,11 +109,11 @@ pub struct StyledSelect {
     name: Option<String>,
     valid: bool,
     is_multi: bool,
-    allow_clear: bool,
     options: Vec<StyledSelectChildBuilder>,
     selected: Vec<StyledSelectChildBuilder>,
     text_filter: String,
     opened: bool,
+    clearable: bool,
 }
 
 impl ToNode for StyledSelect {
@@ -126,11 +131,11 @@ impl StyledSelect {
             name: None,
             valid: None,
             is_multi: None,
-            allow_clear: None,
             options: None,
             selected: None,
             text_filter: None,
             opened: None,
+            clearable: false,
         }
     }
 }
@@ -143,11 +148,11 @@ pub struct StyledSelectBuilder {
     name: Option<String>,
     valid: Option<bool>,
     is_multi: Option<bool>,
-    allow_clear: Option<bool>,
     options: Option<Vec<StyledSelectChildBuilder>>,
     selected: Option<Vec<StyledSelectChildBuilder>>,
     text_filter: Option<String>,
     opened: Option<bool>,
+    clearable: bool,
 }
 
 impl StyledSelectBuilder {
@@ -159,11 +164,11 @@ impl StyledSelectBuilder {
             name: self.name,
             valid: self.valid.unwrap_or(true),
             is_multi: self.is_multi.unwrap_or_default(),
-            allow_clear: self.allow_clear.unwrap_or_default(),
             options: self.options.unwrap_or_default(),
             selected: self.selected.unwrap_or_default(),
             text_filter: self.text_filter.unwrap_or_default(),
             opened: self.opened.unwrap_or_default(),
+            clearable: self.clearable,
         }
     }
 
@@ -227,6 +232,11 @@ impl StyledSelectBuilder {
         self.is_multi = Some(true);
         self
     }
+
+    pub fn clearable(mut self) -> Self {
+        self.clearable = true;
+        self
+    }
 }
 
 pub fn render(values: StyledSelect) -> Node<Msg> {
@@ -237,22 +247,26 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
         name,
         valid,
         is_multi,
-        allow_clear,
         options,
         selected,
         text_filter,
         opened,
+        clearable,
     } = values;
 
-    let field_id = id.clone();
-    let on_text = input_ev(Ev::KeyUp, move |value| {
-        Msg::StyledSelectChanged(field_id, StyledSelectChange::Text(value))
-    });
+    let on_text = {
+        let field_id = id.clone();
+        input_ev(Ev::KeyUp, move |value| {
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::Text(value))
+        })
+    };
 
-    let field_id = id.clone();
-    let visibility_handler = mouse_ev(Ev::Click, move |_| {
-        Msg::StyledSelectChanged(field_id, StyledSelectChange::DropDownVisibility(!opened))
-    });
+    let on_handler = {
+        let field_id = id.clone();
+        mouse_ev(Ev::Click, move |_| {
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::DropDownVisibility(!opened))
+        })
+    };
 
     let dropdown_style = dropdown_width
         .map(|n| format!("width: {}px;", n))
@@ -263,7 +277,19 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
         select_class.push("invalid".to_string());
     }
 
-    let chevron_down = if (selected.is_empty() || !is_multi) && variant != Variant::Empty {
+    let action_icon = if clearable && !selected.is_empty() {
+        let field_id = id.clone();
+        let on_click = mouse_ev(Ev::Click, move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(None))
+        });
+        StyledIcon::build(Icon::Close)
+            .add_class("chevronIcon")
+            .on_click(on_click)
+            .build()
+            .into_node()
+    } else if (selected.is_empty() || !is_multi) && variant != Variant::Empty {
         StyledIcon::build(Icon::ChevronDown)
             .add_class("chevronIcon")
             .build()
@@ -281,12 +307,12 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
             let node = child.into_node();
             let field_id = id.clone();
             let on_change = mouse_ev(Ev::Click, move |_| {
-                Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(value))
+                Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(Some(value)))
             });
             div![
                 attrs![At::Class => "option"],
                 on_change,
-                visibility_handler.clone(),
+                on_handler.clone(),
                 node
             ]
         })
@@ -305,11 +331,6 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
         ]
     } else {
         empty![]
-    };
-
-    let clear_icon = match (opened, allow_clear) {
-        (true, true) => StyledIcon::build(Icon::Close).build().into_node(),
-        _ => empty![],
     };
 
     let option_list = match (opened, children.is_empty()) {
@@ -347,15 +368,14 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
         }),
         div![
             attrs![At::Class => format!("valueContainer {}", variant)],
-            visibility_handler,
+            on_handler,
             value,
-            chevron_down,
+            action_icon,
         ],
         div![
-            class!["dropDown"],
+            C!["dropDown"],
             attrs![At::Style => dropdown_style.as_str()],
             text_input,
-            clear_icon,
             option_list
         ]
     ]

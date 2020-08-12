@@ -3,9 +3,13 @@ use diesel::prelude::*;
 
 use jirs_data::{BindToken, Message, MessageId, MessageType, User, UserId};
 
-use crate::db::users::{FindUser, LookupUser};
-use crate::db::DbExecutor;
-use crate::errors::ServiceErrors;
+use crate::{
+    db::{
+        users::{FindUser, LookupUser},
+        DbExecutor,
+    },
+    errors::ServiceErrors,
+};
 
 #[derive(Debug)]
 pub struct LoadMessages {

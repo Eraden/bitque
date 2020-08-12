@@ -68,7 +68,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::ProjectSettings(ProjectFieldId::Category),
-            StyledSelectChange::Changed(value),
+            StyledSelectChange::Changed(Some(value)),
         ) => {
             let category = value.into();
             page.payload.category = Some(category);

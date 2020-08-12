@@ -5,8 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use jirs_data::Comment;
 
-use crate::db::DbExecutor;
-use crate::errors::ServiceErrors;
+use crate::{db::DbExecutor, errors::ServiceErrors};
 
 #[derive(Serialize, Deserialize)]
 pub struct LoadIssueComments {

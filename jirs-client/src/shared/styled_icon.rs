@@ -242,6 +242,7 @@ pub struct StyledIconBuilder {
     size: Option<i32>,
     class_list: Vec<String>,
     style_list: Vec<String>,
+    on_click: Option<EventHandler<Msg>>,
 }
 
 impl StyledIconBuilder {
@@ -266,12 +267,18 @@ impl StyledIconBuilder {
         self
     }
 
+    pub fn on_click(mut self, on_click: EventHandler<Msg>) -> Self {
+        self.on_click = Some(on_click);
+        self
+    }
+
     pub fn build(self) -> StyledIcon {
         StyledIcon {
             icon: self.icon,
             size: self.size,
             class_list: self.class_list,
             style_list: self.style_list,
+            on_click: self.on_click,
         }
     }
 }
@@ -281,6 +288,7 @@ pub struct StyledIcon {
     size: Option<i32>,
     class_list: Vec<String>,
     style_list: Vec<String>,
+    on_click: Option<EventHandler<Msg>>,
 }
 
 impl StyledIcon {
@@ -290,6 +298,7 @@ impl StyledIcon {
             size: None,
             class_list: vec![],
             style_list: vec![],
+            on_click: None,
         }
     }
 }
@@ -306,6 +315,7 @@ pub fn render(values: StyledIcon) -> Node<Msg> {
         size,
         mut class_list,
         mut style_list,
+        on_click,
     } = values;
 
     if let Some(s) = icon.to_color() {
@@ -320,6 +330,7 @@ pub fn render(values: StyledIcon) -> Node<Msg> {
 
     i![
         attrs![At::Class => class_list.join(" "), At::Style => style_list.join(";")],
+        on_click,
         ""
     ]
 }

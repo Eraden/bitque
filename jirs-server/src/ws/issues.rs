@@ -60,6 +60,9 @@ impl WsHandler<UpdateIssueHandler> for WebSocketActor {
             (IssueFieldId::TimeRemaining, PayloadVariant::OptionI32(o)) => {
                 msg.time_remaining = o;
             }
+            (IssueFieldId::Epic, PayloadVariant::OptionI32(o)) => {
+                msg.epic_id = Some(o);
+            }
             _ => (),
         };
 

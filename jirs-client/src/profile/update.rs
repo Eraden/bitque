@@ -1,7 +1,7 @@
 use seed::prelude::{Method, Orders, Request};
 use web_sys::FormData;
 
-use jirs_data::{UsersFieldId, WsMsg};
+use jirs_data::{ProjectId, UsersFieldId, WsMsg};
 
 use crate::model::{Model, Page, PageContent, ProfilePage};
 use crate::shared::styled_select::StyledSelectChange;
@@ -69,12 +69,12 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::StyledSelectChanged(
             FieldId::Profile(UsersFieldId::CurrentProject),
-            StyledSelectChange::Changed(id),
+            StyledSelectChange::Changed(Some(id)),
         ) => {
             if let Some(up) = model
                 .user_projects
                 .iter()
-                .find(|up| up.project_id == id as i32)
+                .find(|up| up.project_id == id as ProjectId)
             {
                 send_ws_msg(
                     WsMsg::UserProjectSetCurrent(up.id),

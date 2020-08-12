@@ -42,6 +42,19 @@ https://git.sr.ht/~tsumanu/jirs
 * Add personal settings to choose MDE (Markdown Editor) or RTE
 * Add issues and filters
 
+##### Work Progress
+
+* [X] Add Epic
+* [ ] Edit Epic
+* [ ] Delete Epic
+* [ ] Epic `starts` and `ends` date
+* [X] Grouping by Epic
+* [X] Basic Rich Text Editor
+* [ ] Insert Code in Rich Text Editor
+* [ ] Personal settings to choose MDE (Markdown Editor) or RTE
+* [ ] Issues and filters view
+* [ ] Issues and filters working filters
+
 ## How to run it
 
 ### Config files

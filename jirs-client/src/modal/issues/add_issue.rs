@@ -1,21 +1,25 @@
 use seed::{prelude::*, *};
 
-use jirs_data::{EpicId, IssueFieldId, WsMsg};
-use jirs_data::{IssuePriority, ToVec};
+use jirs_data::{IssueFieldId, IssuePriority, ToVec, UserId, WsMsg};
 
-use crate::model::{AddIssueModal, ModalType, Model};
-use crate::shared::styled_button::StyledButton;
-use crate::shared::styled_field::StyledField;
-use crate::shared::styled_form::StyledForm;
-use crate::shared::styled_input::StyledInput;
-use crate::shared::styled_modal::{StyledModal, Variant as ModalVariant};
-use crate::shared::styled_select::StyledSelect;
-use crate::shared::styled_select::StyledSelectChange;
-use crate::shared::styled_select_child::{StyledSelectChild, StyledSelectChildBuilder};
-use crate::shared::styled_textarea::StyledTextarea;
-use crate::shared::{ToChild, ToNode};
-use crate::ws::send_ws_msg;
-use crate::{FieldId, Msg, WebSocketChanged};
+use crate::{
+    modal::issues::epic_field,
+    model::{AddIssueModal, IssueModal, ModalType, Model},
+    shared::{
+        styled_button::StyledButton,
+        styled_field::StyledField,
+        styled_form::StyledForm,
+        styled_input::StyledInput,
+        styled_modal::{StyledModal, Variant as ModalVariant},
+        styled_select::StyledSelect,
+        styled_select::StyledSelectChange,
+        styled_select_child::{StyledSelectChild, StyledSelectChildBuilder},
+        styled_textarea::StyledTextarea,
+        ToChild, ToNode,
+    },
+    ws::send_ws_msg,
+    FieldId, Msg, WebSocketChanged,
+};
 
 #[derive(Copy, Clone)]
 enum Type {
@@ -114,12 +118,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         _ => return,
     };
 
-    modal.title_state.update(msg);
-    modal.assignees_state.update(msg, orders);
-    modal.reporter_state.update(msg, orders);
-    modal.type_state.update(msg, orders);
-    modal.priority_state.update(msg, orders);
-    modal.epic_state.update(msg, orders);
+    modal.update_states(msg, orders);
 
     match msg {
         Msg::AddEpic => {
@@ -182,15 +181,15 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             FieldId::AddIssueModal(IssueFieldId::Reporter),
             StyledSelectChange::Changed(id),
         ) => {
-            modal.reporter_id = Some(*id as i32);
+            modal.reporter_id = id.map(|n| n as UserId);
         }
 
         // AssigneesAddIssueModal
         Msg::StyledSelectChanged(
             FieldId::AddIssueModal(IssueFieldId::Assignees),
-            StyledSelectChange::Changed(id),
+            StyledSelectChange::Changed(Some(id)),
         ) => {
-            let id = *id as i32;
+            let id = *id as UserId;
             if !modal.user_ids.contains(&id) {
                 modal.user_ids.push(id);
             }
@@ -212,7 +211,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         // IssuePriorityAddIssueModal
         Msg::StyledSelectChanged(
             FieldId::AddIssueModal(IssueFieldId::Priority),
-            StyledSelectChange::Changed(id),
+            StyledSelectChange::Changed(Some(id)),
         ) => {
             modal.priority = (*id).into();
         }
@@ -247,7 +246,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
             let reporter_field = reporter_field(model, modal);
             let assignees_field = assignees_field(model, modal);
             let issue_priority_field = issue_priority_field(modal);
-            let epic_field = epic_field(model, modal);
+            let epic_field = epic_field(model, modal, FieldId::AddIssueModal(IssueFieldId::Epic));
 
             form.add_field(short_summary_field)
                 .add_field(description_field)
@@ -454,38 +453,6 @@ fn issue_priority_field(modal: &AddIssueModal) -> Node<Msg> {
         .input(select_priority)
         .build()
         .into_node()
-}
-
-fn epic_field(model: &Model, modal: &AddIssueModal) -> Option<Node<Msg>> {
-    if model.epics.is_empty() {
-        None
-    } else {
-        let selected = modal
-            .epic_state
-            .values
-            .get(0)
-            .and_then(|id| model.epics.iter().find(|epic| epic.id == *id as EpicId))
-            .map(|epic| vec![epic.to_child()])
-            .unwrap_or_default();
-        let input = StyledSelect::build(FieldId::AddIssueModal(IssueFieldId::Epic))
-            .name("epic")
-            .selected(selected)
-            .options(model.epics.iter().map(|epic| epic.to_child()).collect())
-            .normal()
-            .text_filter(modal.epic_state.text_filter.as_str())
-            .opened(modal.epic_state.opened)
-            .valid(true)
-            .build()
-            .into_node();
-        Some(
-            StyledField::build()
-                .label("Epic")
-                .tip("Feature group")
-                .input(input)
-                .build()
-                .into_node(),
-        )
-    }
 }
 
 fn name_field(modal: &AddIssueModal) -> Node<Msg> {

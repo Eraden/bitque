@@ -74,7 +74,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::Users(UsersFieldId::UserRole),
-            StyledSelectChange::Changed(role),
+            StyledSelectChange::Changed(Some(role)),
         ) => {
             page.user_role = role.into();
         }

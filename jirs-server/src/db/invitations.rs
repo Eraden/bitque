@@ -8,10 +8,14 @@ use jirs_data::{
     User, UserId, UserRole, UsernameString,
 };
 
-use crate::db::tokens::CreateBindToken;
-use crate::db::users::{LookupUser, Register};
-use crate::db::DbExecutor;
-use crate::errors::ServiceErrors;
+use crate::{
+    db::{
+        tokens::CreateBindToken,
+        users::{LookupUser, Register},
+        DbExecutor,
+    },
+    errors::ServiceErrors,
+};
 
 pub struct ListInvitation {
     pub user_id: UserId,

@@ -5,8 +5,10 @@ use serde::{Deserialize, Serialize};
 
 use jirs_data::{Token, User};
 
-use crate::db::{DbExecutor, DbPool, SyncQuery};
-use crate::errors::ServiceErrors;
+use crate::{
+    db::{DbExecutor, DbPool, SyncQuery},
+    errors::ServiceErrors,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AuthorizeUser {

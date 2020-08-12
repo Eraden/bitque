@@ -2,37 +2,31 @@ use seed::{prelude::*, *};
 
 use jirs_data::*;
 
-use crate::modal::time_tracking::time_tracking_field;
-use crate::model::{CommentForm, EditIssueModal, ModalType, Model};
-use crate::shared::styled_avatar::StyledAvatar;
-use crate::shared::styled_button::StyledButton;
-use crate::shared::styled_editor::StyledEditor;
-use crate::shared::styled_field::StyledField;
-use crate::shared::styled_icon::Icon;
-use crate::shared::styled_input::StyledInput;
-use crate::shared::styled_select::{StyledSelect, StyledSelectChange};
-use crate::shared::styled_textarea::StyledTextarea;
-use crate::shared::tracking_widget::tracking_link;
-use crate::shared::{ToChild, ToNode};
-use crate::ws::send_ws_msg;
-use crate::{EditIssueModalSection, FieldChange, FieldId, Msg, WebSocketChanged};
+use crate::{
+    modal::{issues::epic_field, time_tracking::time_tracking_field},
+    model::{CommentForm, EditIssueModal, IssueModal, ModalType, Model},
+    shared::{
+        styled_avatar::StyledAvatar,
+        styled_button::StyledButton,
+        styled_editor::StyledEditor,
+        styled_field::StyledField,
+        styled_icon::Icon,
+        styled_input::StyledInput,
+        styled_select::{StyledSelect, StyledSelectChange},
+        styled_textarea::StyledTextarea,
+        tracking_widget::tracking_link,
+        ToChild, ToNode,
+    },
+    ws::send_ws_msg,
+    EditIssueModalSection, FieldChange, FieldId, Msg, WebSocketChanged,
+};
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     let modal: &mut EditIssueModal = match model.modals.get_mut(0) {
         Some(ModalType::EditIssue(_issue_id, modal)) => modal,
         _ => return,
     };
-    modal.top_type_state.update(msg, orders);
-    modal.status_state.update(msg, orders);
-    modal.reporter_state.update(msg, orders);
-    modal.assignees_state.update(msg, orders);
-    modal.priority_state.update(msg, orders);
-    modal.estimate.update(msg);
-    modal.estimate_select.update(msg, orders);
-    modal.time_spent.update(msg);
-    modal.time_spent_select.update(msg, orders);
-    modal.time_remaining.update(msg);
-    modal.time_remaining_select.update(msg, orders);
+    modal.update_states(msg, orders);
 
     match msg {
         Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueUpdated(issue))) => {
@@ -40,7 +34,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
-            StyledSelectChange::Changed(value),
+            StyledSelectChange::Changed(Some(value)),
         ) => {
             modal.payload.issue_type = (*value).into();
             send_ws_msg(
@@ -55,7 +49,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::IssueStatusId)),
-            StyledSelectChange::Changed(value),
+            StyledSelectChange::Changed(Some(value)),
         ) => {
             modal.payload.issue_status_id = *value as IssueStatusId;
             send_ws_msg(
@@ -70,7 +64,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Reporter)),
-            StyledSelectChange::Changed(value),
+            StyledSelectChange::Changed(Some(value)),
         ) => {
             modal.payload.reporter_id = *value as i32;
             send_ws_msg(
@@ -85,7 +79,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
-            StyledSelectChange::Changed(value),
+            StyledSelectChange::Changed(Some(value)),
         ) => {
             modal.payload.user_ids.push(*value as i32);
             send_ws_msg(
@@ -122,7 +116,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Priority)),
-            StyledSelectChange::Changed(value),
+            StyledSelectChange::Changed(Some(value)),
         ) => {
             modal.payload.priority = (*value).into();
             send_ws_msg(
@@ -262,6 +256,20 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     modal.id,
                     IssueFieldId::Estimate,
                     PayloadVariant::OptionI32(modal.payload.estimate),
+                ),
+                model.ws.as_ref(),
+                orders,
+            );
+        }
+        Msg::StyledSelectChanged(
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Epic)),
+            StyledSelectChange::Changed(v),
+        ) => {
+            send_ws_msg(
+                WsMsg::IssueUpdate(
+                    modal.id,
+                    IssueFieldId::Epic,
+                    PayloadVariant::OptionI32(v.map(|n| n as EpicId).clone()),
                 ),
                 model.ws.as_ref(),
                 orders,
@@ -792,6 +800,13 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         (empty![], empty![])
     };
 
+    let epic_field = epic_field(
+        model,
+        modal,
+        FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Epic)),
+    )
+    .unwrap_or_else(|| empty![]);
+
     div![
         attrs![At::Class => "right"],
         status_field,
@@ -800,5 +815,6 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         priority_field,
         estimate_field,
         tracking_field,
+        epic_field,
     ]
 }

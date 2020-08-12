@@ -3,7 +3,7 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use jirs_data::{Project, ProjectCategory, TimeTracking, UserId};
+use jirs_data::{NameString, Project, ProjectCategory, ProjectId, TimeTracking, UserId};
 
 use crate::db::DbExecutor;
 use crate::errors::ServiceErrors;
@@ -11,7 +11,7 @@ use crate::schema::projects::all_columns;
 
 #[derive(Serialize, Deserialize)]
 pub struct LoadCurrentProject {
-    pub project_id: i32,
+    pub project_id: ProjectId,
 }
 
 impl Message for LoadCurrentProject {
@@ -43,7 +43,7 @@ impl Handler<LoadCurrentProject> for DbExecutor {
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateProject {
-    pub name: String,
+    pub name: NameString,
     pub url: Option<String>,
     pub description: Option<String>,
     pub category: Option<ProjectCategory>,
@@ -82,8 +82,8 @@ impl Handler<CreateProject> for DbExecutor {
 
 #[derive(Serialize, Deserialize)]
 pub struct UpdateProject {
-    pub project_id: i32,
-    pub name: Option<String>,
+    pub project_id: ProjectId,
+    pub name: Option<NameString>,
     pub url: Option<String>,
     pub description: Option<String>,
     pub category: Option<ProjectCategory>,

@@ -6,9 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use jirs_data::{IssuePriority, IssueStatusId, IssueType};
 
-use crate::db::DbExecutor;
-use crate::errors::ServiceErrors;
-use crate::models::Issue;
+use crate::{db::DbExecutor, errors::ServiceErrors, models::Issue};
 
 const FAILED_CONNECT_USER_AND_ISSUE: &str = "Failed to create connection between user and issue";
 
@@ -88,6 +86,7 @@ pub struct UpdateIssue {
     pub user_ids: Option<Vec<i32>>,
     pub reporter_id: Option<i32>,
     pub issue_status_id: Option<i32>,
+    pub epic_id: Option<Option<i32>>,
 }
 
 impl Message for UpdateIssue {
@@ -127,6 +126,7 @@ impl Handler<UpdateIssue> for DbExecutor {
                 .map(|project_id| dsl::project_id.eq(project_id)),
             msg.reporter_id
                 .map(|reporter_id| dsl::reporter_id.eq(reporter_id)),
+            msg.epic_id.map(|epic_id| dsl::epic_id.eq(epic_id)),
             dsl::updated_at.eq(chrono::Utc::now().naive_utc()),
         ));
         debug!(
