@@ -70,11 +70,16 @@ pub enum RteMsg {
     RemoveFormat,
     Subscript,
     Superscript,
+
+    // table
+    TableSetVisibility(bool),
     TableSetRows(u16),
     TableSetColumns(u16),
-    TableSetVisibility(bool),
     InsertTable { rows: u16, cols: u16 },
     ChangeIndent(RteIndentMsg),
+
+    // code
+    InsertCode(bool),
 
     RequestFocus(uuid::Uuid),
 }
@@ -139,6 +144,8 @@ impl RteMsg {
             RteMsg::Subscript => Some(ExecCommand::new("subscript")),
             RteMsg::Superscript => Some(ExecCommand::new("superscript")),
             RteMsg::InsertTable { .. } => None,
+            // code
+            RteMsg::InsertCode(_) => None,
 
             // indent
             RteMsg::ChangeIndent(RteIndentMsg::Increase) => Some(ExecCommand::new("indent")),
@@ -171,11 +178,18 @@ pub struct StyledRteTableState {
     pub cols: u16,
 }
 
+#[derive(Debug, Clone)]
+pub struct StyledRteCodeState {
+    pub visible: bool,
+    pub lang: String,
+}
+
 #[derive(Debug)]
 pub struct StyledRteState {
     pub value: String,
     pub field_id: FieldId,
     pub table_tooltip: StyledRteTableState,
+    pub code_tooltip: StyledRteCodeState,
     range: Option<web_sys::Range>,
     identifier: uuid::Uuid,
 }
@@ -189,6 +203,10 @@ impl StyledRteState {
                 visible: false,
                 rows: 3,
                 cols: 3,
+            },
+            code_tooltip: StyledRteCodeState {
+                visible: false,
+                lang: "".to_string(),
             },
             range: None,
             identifier: uuid::Uuid::new_v4(),
@@ -217,6 +235,12 @@ impl StyledRteState {
                 self.schedule_focus(orders);
             }
             _ => match m {
+                RteMsg::InsertCode(b) => {
+                    if *b {
+                        self.store_range();
+                    }
+                    self.code_tooltip.visible = *b;
+                }
                 RteMsg::TableSetRows(n) => {
                     self.table_tooltip.rows = *n;
                 }
@@ -772,41 +796,48 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
                 None as Option<Msg>
             }),
         );*/
-        let field_id = values.field_id.clone();
-        let mut table_button = styled_rte_button(
-            "Table",
-            Icon::Table,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(RteMsg::TableSetVisibility(true), field_id))
-            }),
-        );
+
+        let mut table_button = {
+            let field_id = values.field_id.clone();
+            styled_rte_button(
+                "Table",
+                Icon::Table,
+                mouse_ev(Ev::Click, move |ev| {
+                    ev.prevent_default();
+                    Some(Msg::Rte(RteMsg::TableSetVisibility(true), field_id))
+                }),
+            )
+        };
         table_button.add_child(table_tooltip);
 
-        let field_id = values.field_id.clone();
-        let paragraph_button = styled_rte_button(
-            "Paragraph",
-            Icon::Paragraph,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(RteMsg::InsertParagraph, field_id))
-            }),
-        );
-        // let field_id = values.field_id.clone();
-        // let code_alt_button = styled_rte_button(
-        //     "Insert code",
-        //     Icon::CodeAlt,
-        //     mouse_ev(Ev::Click, move |ev| {
-        //         ev.prevent_default();
-        //         None as Option<Msg>
-        //     }),
-        // );
+        let paragraph_button = {
+            let field_id = values.field_id.clone();
+            styled_rte_button(
+                "Paragraph",
+                Icon::Paragraph,
+                mouse_ev(Ev::Click, move |ev| {
+                    ev.prevent_default();
+                    Some(Msg::Rte(RteMsg::InsertParagraph, field_id))
+                }),
+            )
+        };
+        let code_alt_button = {
+            let field_id = values.field_id.clone();
+            styled_rte_button(
+                "Insert code",
+                Icon::CodeAlt,
+                mouse_ev(Ev::Click, move |ev| {
+                    ev.prevent_default();
+                    Some(Msg::Rte(RteMsg::InsertCode(true), field_id))
+                }),
+            )
+        };
 
         div![
             class!["group insert"],
             paragraph_button,
             table_button,
-            // code_alt_button,
+            code_alt_button,
             listing_dots,
             listing_number,
             // sub_listing_button,
@@ -930,4 +961,23 @@ fn styled_rte_button(title: &str, icon: Icon, handler: EventHandler<Msg>) -> Nod
         attrs![At::Title => title],
         button
     ]
+}
+
+fn insert_code() -> Node<Msg> {
+    let mut languages: Vec<&str> = crate::hi::SYNTAX_SET
+        .syntaxes()
+        .iter()
+        .map(|s| s.name.as_str())
+        .collect();
+    languages.sort();
+    let options: Vec<Node<Msg>> = languages
+        .into_iter()
+        .map(|name| option![attrs![At::Value => name], name])
+        .collect();
+
+    seed::select![options]
+}
+
+pub fn code_to_tag(code: &str) -> Node<Msg> {
+    custom!["jirs-code-view", code]
 }

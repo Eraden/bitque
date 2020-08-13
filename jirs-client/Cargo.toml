@@ -11,7 +11,7 @@ license = "MPL-2.0"
 [lib]
 crate-type = ["cdylib", "rlib"]
 name = "jirs_client"
-path = "./src/lib.rs"
+path = "src/lib.rs"
 
 [profile.dev]
 opt-level = 0               # Use slightly better optimizations.
@@ -31,6 +31,9 @@ uuid = { version = "0.8.1", features = ["serde"] }
 futures = "^0.1.26"
 comrak = "*"
 wee_alloc = "*"
+
+lazy_static = "*"
+syntect = { version = "*", default-features = false, features = ["default-fancy"] }
 
 [dependencies.wasm-bindgen]
 version = "0.2.66"

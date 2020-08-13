@@ -15,7 +15,9 @@ use crate::shared::{go_to_board, go_to_login, styled_tooltip};
 use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
 
 mod changes;
+pub mod elements;
 mod fields;
+pub mod hi;
 mod invite;
 mod modal;
 mod model;
@@ -261,6 +263,7 @@ pub static mut WS_URL: String = String::new();
 
 #[wasm_bindgen]
 pub fn render(host_url: String, ws_url: String) {
+    elements::define();
     unsafe {
         HOST_URL = host_url;
         WS_URL = ws_url;
