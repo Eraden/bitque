@@ -26,11 +26,11 @@ pub fn view(model: &Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let username = StyledInput::build(FieldId::Profile(UsersFieldId::Username))
+    let username = StyledInput::build()
         .state(&page.name)
         .valid(true)
         .primary()
-        .build()
+        .build(FieldId::Profile(UsersFieldId::Username))
         .into_node();
     let username_field = StyledField::build()
         .label("Username")
@@ -38,11 +38,11 @@ pub fn view(model: &Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let email = StyledInput::build(FieldId::Profile(UsersFieldId::Username))
+    let email = StyledInput::build()
         .state(&page.email)
         .valid(true)
         .primary()
-        .build()
+        .build(FieldId::Profile(UsersFieldId::Username))
         .into_node();
     let email_field = StyledField::build()
         .label("E-Mail")
@@ -97,7 +97,7 @@ fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
             joined_projects.insert(p.project_id, p);
         }
 
-        StyledSelect::build(FieldId::Profile(UsersFieldId::CurrentProject))
+        StyledSelect::build()
             .name("current_project")
             .normal()
             .options(
@@ -117,7 +117,7 @@ fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
                     .collect(),
             )
             .state(&page.current_project)
-            .build()
+            .build(FieldId::Profile(UsersFieldId::CurrentProject))
             .into_node()
     };
     StyledField::build()

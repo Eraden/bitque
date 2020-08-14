@@ -92,10 +92,10 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         _ => return empty![],
     };
 
-    let username = StyledInput::build(FieldId::SignIn(SignInFieldId::Username))
+    let username = StyledInput::build()
         .value(page.username.as_str())
         .valid(!page.username_touched || page.username.len() > 1)
-        .build()
+        .build(FieldId::SignIn(SignInFieldId::Username))
         .into_node();
     let username_field = StyledField::build()
         .label("Username")
@@ -103,10 +103,10 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let email = StyledInput::build(FieldId::SignIn(SignInFieldId::Email))
+    let email = StyledInput::build()
         .value(page.email.as_str())
         .valid(!page.email_touched || is_email(page.email.as_str()))
-        .build()
+        .build(FieldId::SignIn(SignInFieldId::Email))
         .into_node();
     let email_field = StyledField::build()
         .label("E-Mail")
@@ -164,10 +164,10 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let token = StyledInput::build(FieldId::SignIn(SignInFieldId::Token))
+    let token = StyledInput::build()
         .value(page.token.as_str())
         .valid(!page.token_touched || is_token(page.token.as_str()))
-        .build()
+        .build(FieldId::SignIn(SignInFieldId::Token))
         .into_node();
     let token_field = StyledField::build()
         .label("Single use token")

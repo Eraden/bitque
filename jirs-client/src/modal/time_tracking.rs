@@ -91,7 +91,7 @@ pub fn time_tracking_field(
 ) -> Node<Msg> {
     let input = match time_tracking_type {
         TimeTracking::Untracked => empty![],
-        TimeTracking::Fibonacci => StyledSelect::build(field_id)
+        TimeTracking::Fibonacci => StyledSelect::build()
             .selected(
                 select_state
                     .values
@@ -106,12 +106,12 @@ pub fn time_tracking_field(
                     .map(|v| v.to_child())
                     .collect(),
             )
-            .build()
+            .build(field_id)
             .into_node(),
-        TimeTracking::Hourly => StyledInput::build(field_id)
+        TimeTracking::Hourly => StyledInput::build()
             .state(input_state)
             .valid(true)
-            .build()
+            .build(field_id)
             .into_node(),
     };
     StyledField::build()

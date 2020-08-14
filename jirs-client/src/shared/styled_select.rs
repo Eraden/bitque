@@ -61,9 +61,10 @@ impl StyledSelectState {
     }
 
     pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
+        let ref id = self.field_id;
         match msg {
             Msg::StyledSelectChanged(field_id, StyledSelectChange::DropDownVisibility(b))
-                if *field_id == self.field_id =>
+                if field_id == id =>
             {
                 self.opened = *b;
                 if !self.opened {
@@ -71,22 +72,22 @@ impl StyledSelectState {
                 }
             }
             Msg::StyledSelectChanged(field_id, StyledSelectChange::Text(text))
-                if *field_id == self.field_id =>
+                if field_id == id =>
             {
                 self.text_filter = text.clone();
             }
             Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(Some(v)))
-                if field_id == &self.field_id =>
+                if field_id == id =>
             {
                 self.values = vec![*v];
             }
             Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(None))
-                if field_id == &self.field_id =>
+                if field_id == id =>
             {
                 self.values.clear();
             }
             Msg::StyledSelectChanged(field_id, StyledSelectChange::RemoveMulti(v))
-                if field_id == &self.field_id =>
+                if field_id == id =>
             {
                 let mut old = vec![];
                 std::mem::swap(&mut old, &mut self.values);
@@ -123,9 +124,8 @@ impl ToNode for StyledSelect {
 }
 
 impl StyledSelect {
-    pub fn build(id: FieldId) -> StyledSelectBuilder {
+    pub fn build() -> StyledSelectBuilder {
         StyledSelectBuilder {
-            id,
             variant: None,
             dropdown_width: None,
             name: None,
@@ -142,7 +142,6 @@ impl StyledSelect {
 
 #[derive(Debug)]
 pub struct StyledSelectBuilder {
-    id: FieldId,
     variant: Option<Variant>,
     dropdown_width: Option<usize>,
     name: Option<String>,
@@ -156,9 +155,9 @@ pub struct StyledSelectBuilder {
 }
 
 impl StyledSelectBuilder {
-    pub fn build(self) -> StyledSelect {
+    pub fn build(self, id: FieldId) -> StyledSelect {
         StyledSelect {
-            id: self.id,
+            id,
             variant: self.variant.unwrap_or_default(),
             dropdown_width: self.dropdown_width,
             name: self.name,
@@ -278,12 +277,14 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
     }
 
     let action_icon = if clearable && !selected.is_empty() {
-        let field_id = id.clone();
-        let on_click = mouse_ev(Ev::Click, move |ev| {
-            ev.stop_propagation();
-            ev.prevent_default();
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(None))
-        });
+        let on_click = {
+            let field_id = id.clone();
+            mouse_ev(Ev::Click, move |ev| {
+                ev.stop_propagation();
+                ev.prevent_default();
+                Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(None))
+            })
+        };
         StyledIcon::build(Icon::Close)
             .add_class("chevronIcon")
             .on_click(on_click)
@@ -305,10 +306,13 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
             let child = child.build(DisplayType::SelectOption);
             let value = child.value();
             let node = child.into_node();
-            let field_id = id.clone();
-            let on_change = mouse_ev(Ev::Click, move |_| {
-                Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(Some(value)))
-            });
+
+            let on_change = {
+                let field_id = id.clone();
+                mouse_ev(Ev::Click, move |_| {
+                    Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(Some(value)))
+                })
+            };
             div![
                 attrs![At::Class => "option"],
                 on_change,
@@ -386,7 +390,7 @@ fn render_value(mut content: Node<Msg>) -> Node<Msg> {
     content
 }
 
-fn into_multi_value(opt: StyledSelectChildBuilder, field_id: FieldId) -> Node<Msg> {
+fn into_multi_value(opt: StyledSelectChildBuilder, id: FieldId) -> Node<Msg> {
     let close_icon = StyledIcon::build(Icon::Close).size(14).build().into_node();
     let child = opt.build(DisplayType::SelectValue);
     let value = child.value();
@@ -395,10 +399,13 @@ fn into_multi_value(opt: StyledSelectChildBuilder, field_id: FieldId) -> Node<Ms
     opt.add_class("value");
     opt.add_child(close_icon);
 
-    let handler = mouse_ev(Ev::Click, move |ev| {
-        ev.stop_propagation();
-        Msg::StyledSelectChanged(field_id, StyledSelectChange::RemoveMulti(value))
-    });
+    let handler = {
+        let field_id = id.clone();
+        mouse_ev(Ev::Click, move |ev| {
+            ev.stop_propagation();
+            Msg::StyledSelectChanged(field_id, StyledSelectChange::RemoveMulti(value))
+        })
+    };
 
     div![attrs![At::Class => "valueMultiItem"], opt, handler]
 }

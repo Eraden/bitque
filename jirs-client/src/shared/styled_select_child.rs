@@ -301,3 +301,16 @@ impl ToChild for u32 {
             .value(*self)
     }
 }
+
+pub type Label = String;
+pub type Value = u32;
+
+impl ToChild for (Label, Value) {
+    type Builder = StyledSelectChildBuilder;
+
+    fn to_child(&self) -> Self::Builder {
+        StyledSelectChild::build()
+            .text(self.0.as_str())
+            .value(self.1)
+    }
+}

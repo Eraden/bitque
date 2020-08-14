@@ -12,6 +12,11 @@ pub enum EditIssueModalSection {
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum RteField {
+    CodeLang(Box<FieldId>),
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum FieldId {
     SignIn(SignInFieldId),
     SignUp(SignUpFieldId),
@@ -26,6 +31,7 @@ pub enum FieldId {
     CopyButtonLabel,
 
     ProjectSettings(ProjectFieldId),
+    Rte(RteField),
 }
 
 impl std::fmt::Display for FieldId {
@@ -120,6 +126,7 @@ impl std::fmt::Display for FieldId {
                 UsersFieldId::Avatar => f.write_str("profile-avatar"),
                 UsersFieldId::CurrentProject => f.write_str("profile-currentProject"),
             },
+            FieldId::Rte(..) => f.write_str("rte"),
         }
     }
 }

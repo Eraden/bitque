@@ -140,9 +140,8 @@ impl ToNode for StyledCheckbox {
 }
 
 impl StyledCheckbox {
-    pub fn build(field_id: FieldId) -> StyledCheckboxBuilder {
+    pub fn build() -> StyledCheckboxBuilder {
         StyledCheckboxBuilder {
-            id: field_id,
             options: vec![],
             selected: 0,
             class_list: vec![],
@@ -151,7 +150,6 @@ impl StyledCheckbox {
 }
 
 pub struct StyledCheckboxBuilder {
-    id: FieldId,
     options: Vec<ChildBuilder>,
     selected: u32,
     class_list: Vec<String>,
@@ -176,9 +174,9 @@ impl StyledCheckboxBuilder {
         self
     }
 
-    pub fn build(self) -> StyledCheckbox {
+    pub fn build(self, field_id: FieldId) -> StyledCheckbox {
         StyledCheckbox {
-            id: self.id,
+            id: field_id,
             options: self.options,
             selected: self.selected,
             class_list: self.class_list,

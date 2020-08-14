@@ -8,6 +8,7 @@ pub enum Variant {
     About,
     Messages,
     TableBuilder,
+    CodeBuilder,
 }
 
 impl Default for Variant {
@@ -22,6 +23,7 @@ impl std::fmt::Display for Variant {
             Variant::About => f.write_str("about"),
             Variant::Messages => f.write_str("messages"),
             Variant::TableBuilder => f.write_str("tableTooltip"),
+            Variant::CodeBuilder => f.write_str("codeTooltip"),
         }
     }
 }
@@ -84,6 +86,11 @@ impl StyledTooltipBuilder {
 
     pub fn table_tooltip(mut self) -> Self {
         self.variant = Variant::TableBuilder;
+        self
+    }
+
+    pub fn code_tooltip(mut self) -> Self {
+        self.variant = Variant::CodeBuilder;
         self
     }
 

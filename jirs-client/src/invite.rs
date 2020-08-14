@@ -107,10 +107,10 @@ fn submit(_page: &InvitePage) -> Node<Msg> {
 }
 
 fn token_field(page: &InvitePage) -> Node<Msg> {
-    let token = StyledInput::build(FieldId::Invite(InviteFieldId::Token))
+    let token = StyledInput::build()
         .valid(!page.token_touched || is_token(page.token.as_str()) && page.error.is_none())
         .value(page.token.as_str())
-        .build()
+        .build(FieldId::Invite(InviteFieldId::Token))
         .into_node();
 
     StyledField::build()

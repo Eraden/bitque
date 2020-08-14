@@ -68,10 +68,10 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         _ => return empty![],
     };
 
-    let username = StyledInput::build(FieldId::SignUp(SignUpFieldId::Username))
+    let username = StyledInput::build()
         .value(page.username.as_str())
         .valid(!page.username_touched || page.username.len() > 1)
-        .build()
+        .build(FieldId::SignUp(SignUpFieldId::Username))
         .into_node();
     let username_field = StyledField::build()
         .label("Username")
@@ -79,10 +79,10 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let email = StyledInput::build(FieldId::SignUp(SignUpFieldId::Email))
+    let email = StyledInput::build()
         .value(page.email.as_str())
         .valid(!page.email_touched || is_email(page.email.as_str()))
-        .build()
+        .build(FieldId::SignUp(SignUpFieldId::Email))
         .into_node();
     let email_field = StyledField::build()
         .label("E-Mail")

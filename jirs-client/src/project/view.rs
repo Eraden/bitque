@@ -61,11 +61,11 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         _ => return empty![],
     };
 
-    let search_input = StyledInput::build(FieldId::TextFilterBoard)
+    let search_input = StyledInput::build()
         .icon(Icon::Search)
         .valid(true)
         .value(project_page.text_filter.as_str())
-        .build()
+        .build(FieldId::TextFilterBoard)
         .into_node();
 
     let only_my = StyledButton::build()

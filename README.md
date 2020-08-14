@@ -51,6 +51,7 @@ https://git.sr.ht/~tsumanu/jirs
 * [X] Grouping by Epic
 * [X] Basic Rich Text Editor
 * [ ] Insert Code in Rich Text Editor
+* [X] Code syntax
 * [ ] Personal settings to choose MDE (Markdown Editor) or RTE
 * [ ] Issues and filters view
 * [ ] Issues and filters working filters
@@ -180,3 +181,159 @@ sudo nginx -s reload
 ## Issue trackers
 
 https://todo.sr.ht/~tsumanu/JIRS
+
+## Details
+
+### Display code syntax
+
+Custom element glued with WASM
+
+* `file-path` have connected on attr changed callback and will change displayed path
+* `lang` does not have callback and it's used only on `connectedCallback`
+
+```html
+<jirs-code-view lang="Rust" file-path="/some/path.rs">
+struct Foo {
+}
+</jirs-code-view>
+```
+
+### Supported languages
+
+* ASP
+* AWK
+* ActionScript
+* Advanced CSV
+* AppleScript
+* Assembly x86 (NASM)
+* Batch File
+* BibTeX
+* Bourne Again Shell (bash)
+* C
+* C#
+* C++
+* CMake
+* CMake C Header
+* CMake C++ Header
+* CMakeCache
+* CMakeCommands
+* CSS
+* Cargo Build Results
+* Clojure
+* Crystal
+* D
+* DMD Output
+* Dart
+* Diff
+* Dockerfile
+* Elixir
+* Elm
+* Elm Compile Messages
+* Elm Documentation
+* Erlang
+* F#
+* Fortran (Fixed Form)
+* Fortran (Modern)
+* Fortran Namelist
+* Friendly Interactive Shell (fish)
+* GFortran Build Results
+* Generic Config
+* Git Attributes
+* Git Commit
+* Git Common
+* Git Config
+* Git Ignore
+* Git Link
+* Git Log
+* Git Mailmap
+* Git Rebase Todo
+* Go
+* GraphQL
+* Graphviz (DOT)
+* Groovy
+* HTML
+* HTML (ASP)
+* HTML (EEx)
+* HTML (Erlang)
+* HTML (Jinja2)
+* HTML (Rails)
+* HTML (Tcl)
+* Handlebars
+* Haskell
+* JSON
+* Java
+* Java Properties
+* Java Server Page (JSP)
+* JavaScript
+* JavaScript (Rails)
+* Javadoc
+* Jinja2
+* Julia
+* Kotlin
+* LaTeX
+* LaTeX Log
+* Less
+* Linker Script
+* Lisp
+* Literate Haskell
+* Lua
+* MATLAB
+* Make Output
+* Makefile
+* Markdown
+* MiniZinc (MZN)
+* MultiMarkdown
+* NAnt Build File
+* Nim
+* Nix
+* OCaml
+* OCamllex
+* OCamlyacc
+* Objective-C
+* Objective-C++
+* OpenMP (Fortran)
+* PHP
+* PHP Source
+* Pascal
+* Perl
+* Plain Text
+* PowerShell
+* PureScript
+* Python
+* R
+* R Console
+* Racket
+* Rd (R Documentation)
+* Reason
+* Regular Expression
+* Regular Expressions (Elixir)
+* Regular Expressions (Javascript)
+* Regular Expressions (PHP)
+* Regular Expressions (Python)
+* Ruby
+* Ruby Haml
+* Ruby on Rails
+* Rust
+* SCSS
+* SQL
+* SQL (Rails)
+* SWI-Prolog
+* Sass
+* Scala
+* Shell-Unix-Generic
+* Stylus
+* Swift
+* TOML
+* Tcl
+* TeX
+* Textile
+* TypeScript
+* TypeScriptReact
+* VimL
+* XML
+* YAML
+* camlp4
+* commands-builtin-shell-bash
+* lrc
+* reStructuredText
+* srt

@@ -191,6 +191,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
             styled_tooltip::Variant::Messages => {
                 model.messages_tooltip_visible = !model.messages_tooltip_visible;
             }
+            styled_tooltip::Variant::CodeBuilder => {}
             Variant::TableBuilder => {}
         },
         _ => (),

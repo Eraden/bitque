@@ -33,7 +33,7 @@ comrak = "*"
 wee_alloc = "*"
 
 lazy_static = "*"
-syntect = { version = "*", default-features = false, features = ["default-fancy"] }
+syntect = { version = "*", default-features = false, features = ["html", "regex-fancy", "dump-load-rs"] }
 
 [dependencies.wasm-bindgen]
 version = "0.2.66"

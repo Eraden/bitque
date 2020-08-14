@@ -161,3 +161,54 @@
     display: flex;
     justify-content: space-between;
 }
+
+/**********************************************************/
+/* Code tooltip                                          */
+/**********************************************************/
+
+.codeTooltip {
+    min-width: 336px;
+    padding: 15px;
+    position: absolute;
+}
+
+@media (min-width: 800px) {
+    .codeTooltip {
+        min-width: 636px;
+        left: calc(100% / 2 - 318px);
+    }
+}
+
+@media (min-width: 1024px) {
+    .codeTooltip {
+        min-width: 836px;
+        left: calc(100% / 2 - 418px);
+    }
+}
+
+.codeTooltip > h2 {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.codeTooltip > select {
+    width: 100%;
+    border: 1px solid var(--borderLightest);
+    margin: var(--rte-indent) 0;
+    min-height: 1rem;
+    background: var(--backgroundLightest);
+}
+
+.codeTooltip > select > option {
+}
+
+.codeTooltip > textarea {
+    border: 1px solid var(--borderLightest);
+    width: 100%;
+    min-height: 200px;
+}
+
+.codeTooltip > textarea:focus {
+    border: 1px solid var(--borderInputFocus);
+}

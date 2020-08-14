@@ -22,10 +22,10 @@ pub fn view(model: &Model) -> Node<Msg> {
         _ => return empty![],
     };
 
-    let name = StyledInput::build(FieldId::Users(UsersFieldId::Username))
+    let name = StyledInput::build()
         .valid(!page.name_touched || page.name.len() >= 3)
         .value(page.name.as_str())
-        .build()
+        .build(FieldId::Users(UsersFieldId::Username))
         .into_node();
     let name_field = StyledField::build()
         .input(name)
@@ -33,10 +33,10 @@ pub fn view(model: &Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let email = StyledInput::build(FieldId::Users(UsersFieldId::Email))
+    let email = StyledInput::build()
         .valid(!page.email_touched || is_email(page.email.as_str()))
         .value(page.email.as_str())
-        .build()
+        .build(FieldId::Users(UsersFieldId::Email))
         .into_node();
     let email_field = StyledField::build()
         .input(email)
@@ -44,7 +44,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let user_role = StyledSelect::build(FieldId::Users(UsersFieldId::UserRole))
+    let user_role = StyledSelect::build()
         .name("user_role")
         .valid(true)
         .normal()
@@ -56,7 +56,7 @@ pub fn view(model: &Model) -> Node<Msg> {
                 .map(|role| role.to_child())
                 .collect(),
         )
-        .build()
+        .build(FieldId::Users(UsersFieldId::UserRole))
         .into_node();
     let user_role_field = StyledField::build()
         .input(user_role)

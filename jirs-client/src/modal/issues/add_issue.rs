@@ -300,7 +300,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
 }
 
 fn issue_type_field(modal: &AddIssueModal) -> Node<Msg> {
-    let select_type = StyledSelect::build(FieldId::AddIssueModal(IssueFieldId::Type))
+    let select_type = StyledSelect::build()
         .name("type")
         .normal()
         .text_filter(modal.type_state.text_filter.as_str())
@@ -317,7 +317,7 @@ fn issue_type_field(modal: &AddIssueModal) -> Node<Msg> {
         )
         .to_child()
         .name("type")])
-        .build()
+        .build(FieldId::AddIssueModal(IssueFieldId::Type))
         .into_node();
     StyledField::build()
         .label("Issue Type")
@@ -328,9 +328,9 @@ fn issue_type_field(modal: &AddIssueModal) -> Node<Msg> {
 }
 
 fn short_summary_field(modal: &AddIssueModal) -> Node<Msg> {
-    let short_summary = StyledInput::build(FieldId::AddIssueModal(IssueFieldId::Title))
+    let short_summary = StyledInput::build()
         .state(&modal.title_state)
-        .build()
+        .build(FieldId::AddIssueModal(IssueFieldId::Title))
         .into_node();
     StyledField::build()
         .label("Short Summary")
@@ -359,7 +359,7 @@ fn reporter_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .reporter_id
         .or_else(|| model.user.as_ref().map(|u| u.id))
         .unwrap_or_default();
-    let reporter = StyledSelect::build(FieldId::AddIssueModal(IssueFieldId::Reporter))
+    let reporter = StyledSelect::build()
         .normal()
         .text_filter(modal.reporter_state.text_filter.as_str())
         .opened(modal.reporter_state.opened)
@@ -384,7 +384,7 @@ fn reporter_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
                 .collect(),
         )
         .valid(true)
-        .build()
+        .build(FieldId::AddIssueModal(IssueFieldId::Reporter))
         .into_node();
     StyledField::build()
         .input(reporter)
@@ -395,7 +395,7 @@ fn reporter_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
 }
 
 fn assignees_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
-    let assignees = StyledSelect::build(FieldId::AddIssueModal(IssueFieldId::Assignees))
+    let assignees = StyledSelect::build()
         .normal()
         .multi()
         .text_filter(modal.assignees_state.text_filter.as_str())
@@ -421,7 +421,7 @@ fn assignees_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
                 .collect(),
         )
         .valid(true)
-        .build()
+        .build(FieldId::AddIssueModal(IssueFieldId::Assignees))
         .into_node();
     StyledField::build()
         .input(assignees)
@@ -432,7 +432,7 @@ fn assignees_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
 }
 
 fn issue_priority_field(modal: &AddIssueModal) -> Node<Msg> {
-    let select_priority = StyledSelect::build(FieldId::AddIssueModal(IssueFieldId::Priority))
+    let select_priority = StyledSelect::build()
         .name("priority")
         .normal()
         .text_filter(modal.priority_state.text_filter.as_str())
@@ -445,7 +445,7 @@ fn issue_priority_field(modal: &AddIssueModal) -> Node<Msg> {
                 .collect(),
         )
         .selected(vec![modal.priority.to_child().name("priority")])
-        .build()
+        .build(FieldId::AddIssueModal(IssueFieldId::Priority))
         .into_node();
     StyledField::build()
         .label("Issue Type")
@@ -456,9 +456,9 @@ fn issue_priority_field(modal: &AddIssueModal) -> Node<Msg> {
 }
 
 fn name_field(modal: &AddIssueModal) -> Node<Msg> {
-    let name = StyledInput::build(FieldId::AddIssueModal(IssueFieldId::Title))
+    let name = StyledInput::build()
         .state(&modal.title_state)
-        .build()
+        .build(FieldId::AddIssueModal(IssueFieldId::Title))
         .into_node();
     StyledField::build()
         .label("Epic name")

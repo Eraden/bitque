@@ -44,17 +44,16 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let category_field = category_field(page);
 
-    let time_tracking =
-        StyledCheckbox::build(FieldId::ProjectSettings(ProjectFieldId::TimeTracking))
-            .options(vec![
-                TimeTracking::Untracked.to_child(),
-                TimeTracking::Fibonacci.to_child(),
-                TimeTracking::Hourly.to_child(),
-            ])
-            .state(&page.time_tracking)
-            .add_class("timeTracking")
-            .build()
-            .into_node();
+    let time_tracking = StyledCheckbox::build()
+        .options(vec![
+            TimeTracking::Untracked.to_child(),
+            TimeTracking::Fibonacci.to_child(),
+            TimeTracking::Hourly.to_child(),
+        ])
+        .state(&page.time_tracking)
+        .add_class("timeTracking")
+        .build(FieldId::ProjectSettings(ProjectFieldId::TimeTracking))
+        .into_node();
     let time_tracking_type: TimeTracking = page.time_tracking.value.into();
     let time_tracking_field = StyledField::build()
         .input(time_tracking)
@@ -162,7 +161,7 @@ fn description_field(page: &ProjectSettingsPage) -> Node<Msg> {
 
 /// Build project category dropdown with styled field wrapper
 fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
-    let category = StyledSelect::build(FieldId::ProjectSettings(ProjectFieldId::Category))
+    let category = StyledSelect::build()
         .opened(page.project_category_state.opened)
         .text_filter(page.project_category_state.text_filter.as_str())
         .valid(true)
@@ -180,7 +179,7 @@ fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
             .cloned()
             .unwrap_or_default()
             .to_child()])
-        .build()
+        .build(FieldId::ProjectSettings(ProjectFieldId::Category))
         .into_node();
     StyledField::build()
         .label("Project Category")
@@ -242,12 +241,12 @@ fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
             )))
         });
 
-        let input = StyledInput::build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
+        let input = StyledInput::build()
             .state(&page.name)
             .primary()
             .auto_focus()
             .on_input_ev(blur)
-            .build()
+            .build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
             .into_node();
 
         div![
@@ -277,12 +276,12 @@ fn column_preview(
                 ProjectPageChange::EditIssueStatusName(None),
             ))
         });
-        let input = StyledInput::build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
+        let input = StyledInput::build()
             .state(&page.name)
             .primary()
             .auto_focus()
             .on_input_ev(blur)
-            .build()
+            .build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
             .into_node();
 
         div![class!["columnPreview"], div![class!["columnName"], input]]

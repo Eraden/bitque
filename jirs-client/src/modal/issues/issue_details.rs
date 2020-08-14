@@ -426,30 +426,30 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let issue_type_select = StyledSelect::build(FieldId::EditIssueModal(
-        EditIssueModalSection::Issue(IssueFieldId::Type),
-    ))
-    .dropdown_width(150)
-    .name("type")
-    .text_filter(top_type_state.text_filter.as_str())
-    .opened(top_type_state.opened)
-    .valid(true)
-    .options(
-        IssueType::ordered()
-            .into_iter()
-            .map(|t| t.to_child().name("type"))
-            .collect(),
-    )
-    .selected(vec![{
-        let id = modal.id;
-        let issue_type = &payload.issue_type;
-        issue_type
-            .to_child()
-            .name("type")
-            .text(format!("{} - {}", issue_type, id))
-    }])
-    .build()
-    .into_node();
+    let issue_type_select = StyledSelect::build()
+        .dropdown_width(150)
+        .name("type")
+        .text_filter(top_type_state.text_filter.as_str())
+        .opened(top_type_state.opened)
+        .valid(true)
+        .options(
+            IssueType::ordered()
+                .into_iter()
+                .map(|t| t.to_child().name("type"))
+                .collect(),
+        )
+        .selected(vec![{
+            let id = modal.id;
+            let issue_type = &payload.issue_type;
+            issue_type
+                .to_child()
+                .name("type")
+                .text(format!("{} - {}", issue_type, id))
+        }])
+        .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+            IssueFieldId::Type,
+        )))
+        .into_node();
 
     div![
         attrs![At::Class => "topActions"],
@@ -471,16 +471,16 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         ..
     } = modal;
 
-    let title = StyledInput::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-        IssueFieldId::Title,
-    )))
-    .add_input_class("issueSummary")
-    .add_wrapper_class("issueSummary")
-    .add_wrapper_class("textarea")
-    .value(payload.title.as_str())
-    .valid(payload.title.len() >= 3)
-    .build()
-    .into_node();
+    let title = StyledInput::build()
+        .add_input_class("issueSummary")
+        .add_wrapper_class("issueSummary")
+        .add_wrapper_class("textarea")
+        .value(payload.title.as_str())
+        .valid(payload.title.len() >= 3)
+        .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+            IssueFieldId::Title,
+        )))
+        .into_node();
 
     let description_text = payload.description.as_ref().cloned().unwrap_or_default();
     let description = StyledEditor::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
@@ -659,114 +659,114 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         ..
     } = modal;
 
-    let status = StyledSelect::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-        IssueFieldId::IssueStatusId,
-    )))
-    .name("status")
-    .opened(status_state.opened)
-    .normal()
-    .text_filter(status_state.text_filter.as_str())
-    .options(
-        model
-            .issue_statuses
-            .iter()
-            .map(|opt| opt.to_child().name("status"))
-            .collect(),
-    )
-    .selected(
-        model
-            .issue_statuses
-            .iter()
-            .filter(|is| is.id == payload.issue_status_id)
-            .map(|is| is.to_child().name("status"))
-            .collect(),
-    )
-    .valid(true)
-    .build()
-    .into_node();
+    let status = StyledSelect::build()
+        .name("status")
+        .opened(status_state.opened)
+        .normal()
+        .text_filter(status_state.text_filter.as_str())
+        .options(
+            model
+                .issue_statuses
+                .iter()
+                .map(|opt| opt.to_child().name("status"))
+                .collect(),
+        )
+        .selected(
+            model
+                .issue_statuses
+                .iter()
+                .filter(|is| is.id == payload.issue_status_id)
+                .map(|is| is.to_child().name("status"))
+                .collect(),
+        )
+        .valid(true)
+        .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+            IssueFieldId::IssueStatusId,
+        )))
+        .into_node();
     let status_field = StyledField::build()
         .input(status)
         .label("Status")
         .build()
         .into_node();
 
-    let assignees = StyledSelect::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-        IssueFieldId::Assignees,
-    )))
-    .name("assignees")
-    .opened(assignees_state.opened)
-    .empty()
-    .multi()
-    .text_filter(assignees_state.text_filter.as_str())
-    .options(
-        model
-            .users
-            .iter()
-            .map(|user| user.to_child().name("assignees"))
-            .collect(),
-    )
-    .selected(
-        model
-            .users
-            .iter()
-            .filter(|user| payload.user_ids.contains(&user.id))
-            .map(|user| user.to_child().name("assignees"))
-            .collect(),
-    )
-    .build()
-    .into_node();
+    let assignees = StyledSelect::build()
+        .name("assignees")
+        .opened(assignees_state.opened)
+        .empty()
+        .multi()
+        .text_filter(assignees_state.text_filter.as_str())
+        .options(
+            model
+                .users
+                .iter()
+                .map(|user| user.to_child().name("assignees"))
+                .collect(),
+        )
+        .selected(
+            model
+                .users
+                .iter()
+                .filter(|user| payload.user_ids.contains(&user.id))
+                .map(|user| user.to_child().name("assignees"))
+                .collect(),
+        )
+        .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+            IssueFieldId::Assignees,
+        )))
+        .into_node();
     let assignees_field = StyledField::build()
         .input(assignees)
         .label("Assignees")
         .build()
         .into_node();
 
-    let reporter = StyledSelect::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-        IssueFieldId::Reporter,
-    )))
-    .name("reporter")
-    .opened(reporter_state.opened)
-    .empty()
-    .text_filter(reporter_state.text_filter.as_str())
-    .options(
-        model
-            .users
-            .iter()
-            .map(|user| user.to_child().name("reporter"))
-            .collect(),
-    )
-    .selected(
-        model
-            .users
-            .iter()
-            .filter(|user| payload.reporter_id == user.id)
-            .map(|user| user.to_child().name("reporter"))
-            .collect(),
-    )
-    .build()
-    .into_node();
+    let reporter = StyledSelect::build()
+        .name("reporter")
+        .opened(reporter_state.opened)
+        .empty()
+        .text_filter(reporter_state.text_filter.as_str())
+        .options(
+            model
+                .users
+                .iter()
+                .map(|user| user.to_child().name("reporter"))
+                .collect(),
+        )
+        .selected(
+            model
+                .users
+                .iter()
+                .filter(|user| payload.reporter_id == user.id)
+                .map(|user| user.to_child().name("reporter"))
+                .collect(),
+        )
+        .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+            IssueFieldId::Reporter,
+        )))
+        .into_node();
     let reporter_field = StyledField::build()
         .input(reporter)
         .label("Reporter")
         .build()
         .into_node();
 
-    let priority = StyledSelect::build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-        IssueFieldId::Priority,
-    )))
-    .name("priority")
-    .opened(priority_state.opened)
-    .empty()
-    .text_filter(priority_state.text_filter.as_str())
-    .options(
-        IssuePriority::ordered()
-            .into_iter()
-            .map(|p| p.to_child().name("priority"))
-            .collect(),
-    )
-    .selected(vec![payload.priority.to_child().name("priority")])
-    .build()
-    .into_node();
+    let priority = StyledSelect::build()
+        .name("priority")
+        .opened(priority_state.opened)
+        .empty()
+        .text_filter(priority_state.text_filter.as_str())
+        .options(
+            IssuePriority::ordered()
+                .into_iter()
+                .map(|p| p.to_child().name("priority"))
+                .collect(),
+        )
+        .selected(vec![payload.priority.to_child().name("priority")])
+        .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
+            IssueFieldId::Priority,
+        )))
+        .into_node();
     let priority_field = StyledField::build()
         .input(priority)
         .label("Priority")

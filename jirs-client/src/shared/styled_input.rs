@@ -81,9 +81,8 @@ pub struct StyledInput {
 }
 
 impl StyledInput {
-    pub fn build(id: FieldId) -> StyledInputBuilder {
+    pub fn build() -> StyledInputBuilder {
         StyledInputBuilder {
-            id,
             icon: None,
             valid: None,
             value: None,
@@ -99,7 +98,6 @@ impl StyledInput {
 
 #[derive(Debug)]
 pub struct StyledInputBuilder {
-    id: FieldId,
     icon: Option<Icon>,
     valid: Option<bool>,
     value: Option<String>,
@@ -166,9 +164,9 @@ impl StyledInputBuilder {
         self
     }
 
-    pub fn build(self) -> StyledInput {
+    pub fn build(self, id: FieldId) -> StyledInput {
         StyledInput {
-            id: self.id,
+            id,
             icon: self.icon,
             valid: self.valid.unwrap_or_default(),
             value: self.value,
