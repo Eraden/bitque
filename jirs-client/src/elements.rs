@@ -78,7 +78,6 @@ pub fn define() {
                 r#"
             <style>
             :host { display: block; border: 1px solid black; }
-            :host { margin-left: 400px; }
             #view { background: rgba(43, 48, 59, 255); padding: 1rem; }
             #view span { white-space: pre; font-family: 'Source Code Pro', monospace; }
         </style>

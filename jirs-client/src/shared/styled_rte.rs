@@ -81,7 +81,8 @@ pub enum RteMsg {
 
     // code
     InsertCode(bool),
-    CodeSetLang(String),
+    CodeChanged(String),
+    InjectCode,
 
     RequestFocus(uuid::Uuid),
 }
@@ -148,7 +149,8 @@ impl RteMsg {
             RteMsg::InsertTable { .. } => None,
             // code
             RteMsg::InsertCode(_) => None,
-            RteMsg::CodeSetLang(_) => None,
+            RteMsg::CodeChanged(_) => None,
+            RteMsg::InjectCode => None,
 
             // indent
             RteMsg::ChangeIndent(RteIndentMsg::Increase) => Some(ExecCommand::new("indent")),
@@ -185,6 +187,38 @@ pub struct StyledRteTableState {
 pub struct StyledRteCodeState {
     pub visible: bool,
     pub lang: StyledSelectState,
+    pub code: String,
+    languages: Vec<String>,
+}
+
+impl StyledRteCodeState {
+    pub fn new(field_id: FieldId) -> Self {
+        let mut languages: Vec<String> = crate::hi::SYNTAX_SET
+            .syntaxes()
+            .iter()
+            .map(|s| s.name.clone())
+            .collect();
+        languages.sort();
+        Self {
+            visible: false,
+            lang: StyledSelectState::new(
+                FieldId::Rte(RteField::CodeLang(Box::new(field_id.clone()))),
+                vec![],
+            ),
+            code: "".to_string(),
+            languages,
+        }
+    }
+
+    pub fn languages(&self) -> &Vec<String> {
+        &self.languages
+    }
+
+    pub fn reset(&mut self) {
+        self.code.clear();
+        self.lang.reset();
+        self.visible = false;
+    }
 }
 
 #[derive(Debug)]
@@ -207,13 +241,7 @@ impl StyledRteState {
                 rows: 3,
                 cols: 3,
             },
-            code_tooltip: StyledRteCodeState {
-                visible: false,
-                lang: StyledSelectState::new(
-                    FieldId::Rte(RteField::CodeLang(Box::new(field_id.clone()))),
-                    vec![],
-                ),
-            },
+            code_tooltip: StyledRteCodeState::new(field_id),
             range: None,
             identifier: uuid::Uuid::new_v4(),
         }
@@ -246,8 +274,47 @@ impl StyledRteState {
                 RteMsg::InsertCode(b) => {
                     if *b {
                         self.store_range();
+                    } else {
+                        self.code_tooltip.reset();
                     }
                     self.code_tooltip.visible = *b;
+                }
+                RteMsg::CodeChanged(s) => {
+                    self.code_tooltip.code = s.to_string();
+                }
+                RteMsg::InjectCode => {
+                    let lang = match self
+                        .code_tooltip
+                        .lang
+                        .values
+                        .get(0)
+                        .cloned()
+                        .and_then(|idx| self.code_tooltip.languages.get(idx as usize))
+                    {
+                        Some(v) => v.to_string(),
+                        _ => return,
+                    };
+                    let doc = seed::html_document();
+                    let r = match self.range.as_ref() {
+                        Some(r) => r,
+                        _ => return,
+                    };
+                    let code = self.code_tooltip.code.to_string();
+                    let view = match doc.create_element("jirs-code-view") {
+                        Ok(t) => t,
+                        _ => return,
+                    };
+                    if let Err(err) = view.set_attribute("lang", lang.as_str()) {
+                        error!(err);
+                    }
+                    view.set_inner_html(code.as_str());
+                    if let Err(e) = r.insert_node(&view) {
+                        log!(e);
+                    }
+
+                    self.code_tooltip.reset();
+
+                    self.schedule_focus(orders);
                 }
                 // table
                 RteMsg::TableSetRows(n) => {
@@ -327,7 +394,7 @@ impl StyledRteState {
 
     fn schedule_focus(&self, orders: &mut impl Orders<Msg>) {
         let field_id = self.field_id.clone();
-        let identifier = self.identifier.clone();
+        let identifier = self.identifier;
         orders.perform_cmd(cmds::timeout(200, move || {
             Msg::Rte(RteMsg::RequestFocus(identifier), field_id)
         }));
@@ -339,7 +406,6 @@ pub struct StyledRte {
     table_tooltip: StyledRteTableState,
     identifier: Option<uuid::Uuid>,
     code_tooltip: StyledRteCodeState,
-    // value: String,
 }
 
 impl StyledRte {
@@ -352,10 +418,7 @@ impl StyledRte {
                 rows: 0,
                 cols: 0,
             },
-            code_tooltip: StyledRteCodeState {
-                visible: false,
-                lang: StyledSelectState::new(field_id.clone(), vec![]),
-            },
+            code_tooltip: StyledRteCodeState::new(field_id),
             identifier: None,
         }
     }
@@ -387,7 +450,6 @@ impl StyledRteBuilder {
     pub fn build(self) -> StyledRte {
         StyledRte {
             field_id: self.field_id,
-            // value: self.value,
             table_tooltip: self.table_tooltip,
             identifier: self.identifier,
             code_tooltip: self.code_tooltip,
@@ -1008,14 +1070,9 @@ fn styled_rte_button(title: &str, icon: Icon, handler: EventHandler<Msg>) -> Nod
 }
 
 fn code_tooltip(values: &StyledRte) -> Node<Msg> {
-    let StyledRteCodeState { visible, lang } = &values.code_tooltip;
+    let StyledRteCodeState { visible, lang, .. } = &values.code_tooltip;
 
-    let mut languages: Vec<&str> = crate::hi::SYNTAX_SET
-        .syntaxes()
-        .iter()
-        .map(|s| s.name.as_str())
-        .collect();
-    languages.sort();
+    let languages = values.code_tooltip.languages();
 
     let options: Vec<(String, u32)> = languages
         .into_iter()
@@ -1052,16 +1109,44 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
             .into_node()
     };
 
+    let input = {
+        let field_id = values.field_id.clone();
+        let on_change = ev(Ev::Change, move |ev| {
+            ev.stop_propagation();
+            let target = ev.target().unwrap();
+            let textarea = seed::to_textarea(&target);
+            let code = textarea.value();
+            Msg::Rte(RteMsg::CodeChanged(code), field_id)
+        });
+        seed::textarea![on_change]
+    };
+
+    let actions = {
+        let field_id = values.field_id.clone();
+        let on_insert = ev(Ev::Click, move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::Rte(RteMsg::InjectCode, field_id)
+        });
+        let insert = StyledButton::build()
+            .on_click(on_insert)
+            .text("Insert")
+            .build()
+            .into_node();
+        div![insert]
+    };
+
     StyledTooltip::build()
         .code_tooltip()
         .visible(*visible)
         .add_child(h2!["Insert Code", close_tooltip])
         .add_child(select_lang_node)
-        .add_child(seed::textarea![])
+        .add_child(input)
+        .add_child(actions)
         .build()
         .into_node()
 }
 
-pub fn code_to_tag(code: &str) -> Node<Msg> {
-    custom!["jirs-code-view", code]
-}
+// pub fn code_to_tag(code: &str) -> Node<Msg> {
+//     custom!["jirs-code-view", code]
+// }

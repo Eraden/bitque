@@ -89,7 +89,7 @@ impl StyledSelectChildBuilder {
     pub fn match_text(&self, text: &str) -> bool {
         self.text
             .as_ref()
-            .map(|t| t.contains(text.to_lowercase().as_str()))
+            .map(|t| t.to_lowercase().contains(text.to_lowercase().as_str()))
             .unwrap_or(true)
     }
 
