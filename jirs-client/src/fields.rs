@@ -74,7 +74,15 @@ impl std::fmt::Display for FieldId {
                 EditIssueModalSection::Issue(IssueFieldId::ListPosition) => {
                     f.write_str("editIssue-listPosition")
                 }
-                EditIssueModalSection::Issue(IssueFieldId::Epic) => f.write_str("editIssue-epic"),
+                EditIssueModalSection::Issue(IssueFieldId::EpicName) => {
+                    f.write_str("editIssue-epicName")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::EpicStartsAt) => {
+                    f.write_str("editIssue-epicStartsAt")
+                }
+                EditIssueModalSection::Issue(IssueFieldId::EpicEndsAt) => {
+                    f.write_str("editIssue-epicEndsAt")
+                }
             },
             FieldId::AddIssueModal(sub) => match sub {
                 IssueFieldId::Type => f.write_str("issueTypeAddIssueModal"),
@@ -88,7 +96,9 @@ impl std::fmt::Display for FieldId {
                 IssueFieldId::TimeSpent => f.write_str("addIssueModal-timeSpend"),
                 IssueFieldId::TimeRemaining => f.write_str("addIssueModal-timeRemaining"),
                 IssueFieldId::ListPosition => f.write_str("addIssueModal-listPosition"),
-                IssueFieldId::Epic => f.write_str("addIssueModal-epic"),
+                IssueFieldId::EpicName => f.write_str("addIssueModal-epicName"),
+                IssueFieldId::EpicStartsAt => f.write_str("addIssueModal-epicStartsAt"),
+                IssueFieldId::EpicEndsAt => f.write_str("addIssueModal-epicEndsAt"),
             },
             FieldId::TextFilterBoard => f.write_str("textFilterBoard"),
             FieldId::CopyButtonLabel => f.write_str("copyButtonLabel"),

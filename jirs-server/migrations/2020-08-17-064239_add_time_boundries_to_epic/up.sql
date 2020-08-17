@@ -1,0 +1,4 @@
+ALTER TABLE epics
+    ADD COLUMN starts_at TIMESTAMP;
+ALTER TABLE epics
+    ADD COLUMN ends_at TIMESTAMP;

@@ -2,6 +2,7 @@ use seed::{prelude::*, *};
 
 use jirs_data::{IssueFieldId, IssuePriority, ToVec, UserId, WsMsg};
 
+use crate::shared::styled_date_time_input::StyledDateTimeInput;
 use crate::{
     modal::issues::epic_field,
     model::{AddIssueModal, IssueModal, ModalType, Model},
@@ -226,7 +227,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .values
         .get(0)
         .cloned()
-        .map(|n| Type::from(n))
+        .map(Type::from)
         .unwrap_or_else(|| Type::Task);
 
     let issue_type_field = issue_type_field(modal);
@@ -238,7 +239,18 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let form = match issue_type {
         Type::Epic => {
             let name_field = name_field(modal);
-            form.add_field(name_field)
+
+            let starts = StyledDateTimeInput::build()
+                .state(&modal.epic_starts_at_state)
+                .build(FieldId::AddIssueModal(IssueFieldId::EpicStartsAt))
+                .into_node();
+
+            let end = StyledDateTimeInput::build()
+                .state(&modal.epic_ends_at_state)
+                .build(FieldId::AddIssueModal(IssueFieldId::EpicEndsAt))
+                .into_node();
+
+            form.add_field(name_field).add_field(starts).add_field(end)
         }
         Type::Task | Type::Story | Type::Bug => {
             let short_summary_field = short_summary_field(modal);
@@ -246,7 +258,8 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
             let reporter_field = reporter_field(model, modal);
             let assignees_field = assignees_field(model, modal);
             let issue_priority_field = issue_priority_field(modal);
-            let epic_field = epic_field(model, modal, FieldId::AddIssueModal(IssueFieldId::Epic));
+            let epic_field =
+                epic_field(model, modal, FieldId::AddIssueModal(IssueFieldId::EpicName));
 
             form.add_field(short_summary_field)
                 .add_field(description_field)
@@ -258,7 +271,6 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     };
 
     let submit = {
-        let issue_type = issue_type.clone();
         StyledButton::build()
             .primary()
             .text(issue_type.submit_label())

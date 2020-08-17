@@ -50,7 +50,7 @@ https://git.sr.ht/~tsumanu/jirs
 * [ ] Epic `starts` and `ends` date
 * [X] Grouping by Epic
 * [X] Basic Rich Text Editor
-* [ ] Insert Code in Rich Text Editor
+* [X] Insert Code in Rich Text Editor
 * [X] Code syntax
 * [ ] Personal settings to choose MDE (Markdown Editor) or RTE
 * [ ] Issues and filters view

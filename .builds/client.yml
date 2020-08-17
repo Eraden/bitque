@@ -29,7 +29,7 @@ tasks:
       export NODE_ENV=production
       ./scripts/prod.sh
       export TAR_NAME=$(date -u +"%Y%m%d%H%M%s")
-      tar -czvf ~/${TAR_NAME}.tar.gz ./build
-      cp ~/${TAR_NAME}.tar.gz ~/latest.tar.gz
+      tar -cJvf ~/${TAR_NAME}.tar.xz ./build
+      cp ~/${TAR_NAME}.tar.xz ~/latest.tar.xz
 artifacts:
   - latest.tar.gz

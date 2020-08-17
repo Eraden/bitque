@@ -262,13 +262,13 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             );
         }
         Msg::StyledSelectChanged(
-            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Epic)),
+            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::EpicName)),
             StyledSelectChange::Changed(v),
         ) => {
             send_ws_msg(
                 WsMsg::IssueUpdate(
                     modal.id,
-                    IssueFieldId::Epic,
+                    IssueFieldId::EpicName,
                     PayloadVariant::OptionI32(v.map(|n| n as EpicId).clone()),
                 ),
                 model.ws.as_ref(),
@@ -803,7 +803,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let epic_field = epic_field(
         model,
         modal,
-        FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Epic)),
+        FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::EpicName)),
     )
     .unwrap_or_else(|| empty![]);
 

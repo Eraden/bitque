@@ -55,5 +55,14 @@ pub enum IssueFieldId {
     TimeSpent,
     TimeRemaining,
     IssueStatusId,
-    Epic,
+    EpicName,
+    EpicStartsAt,
+    EpicEndsAt,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum EpicFieldId {
+    Name,
+    StartsAt,
+    EndsAt,
 }

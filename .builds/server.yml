@@ -39,7 +39,8 @@ tasks:
       cd jirs
       cargo build --all --release
       strip -s ./target/release/jirs_server
+      tar -cJvf ~/server.tar.xz ./target/release/jirs_server
   - deploy: |
-      cp ~/jirs/target/release/jirs_server ~/
+      cp ~/server.tar.xz ~/latest.tar.xz
 artifacts:
   - jirs_server

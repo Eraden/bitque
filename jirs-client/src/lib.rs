@@ -8,6 +8,7 @@ pub use fields::*;
 use jirs_data::*;
 
 use crate::model::{ModalType, Model, Page};
+use crate::shared::styled_date_time_input::DateTimeMsg;
 use crate::shared::styled_rte::RteMsg;
 use crate::shared::styled_select::StyledSelectChange;
 use crate::shared::styled_tooltip::{Variant as StyledTooltip, Variant};
@@ -50,6 +51,7 @@ pub enum Msg {
     ProjectChanged(Option<Project>),
 
     StyledSelectChanged(FieldId, StyledSelectChange),
+    StyledDateTimeInputChanged(FieldId, DateTimeMsg),
     InternalFailure(String),
     ToggleTooltip(StyledTooltip),
 

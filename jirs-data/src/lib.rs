@@ -588,4 +588,6 @@ pub struct Epic {
     pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub starts_at: Option<NaiveDateTime>,
+    pub ends_at: Option<NaiveDateTime>,
 }

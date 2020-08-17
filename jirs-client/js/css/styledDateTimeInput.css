@@ -1,0 +1,64 @@
+.styledDateTimeInput {
+    position: relative;
+}
+
+/*         TOOLTIP           */
+
+.dateTimeTooltip > .actions {
+}
+
+.dateTimeTooltip > .calendar {
+}
+
+.dateTimeTooltip > .calendar > .week {
+    display: flex;
+    border-left: 1px solid var(--textDarkest);
+    border-right: 1px solid var(--textDarkest);
+}
+
+.dateTimeTooltip > .calendar > .week:first-child {
+    border-top: 1px solid var(--textDarkest);
+}
+
+.dateTimeTooltip > .calendar > .week:last-child {
+    border-bottom: 1px solid var(--textDarkest);
+}
+
+.dateTimeTooltip > .calendar > .week.weekHeader {
+    border-bottom: 1px solid var(--textDarkest);
+}
+
+.dateTimeTooltip > .calendar > .week > .day {
+    width: calc(100% / 7);
+    text-align: center;
+    height: 3rem;
+    line-height: 3rem;
+    cursor: pointer;
+}
+
+.dateTimeTooltip > .calendar > .week > .day.inCurrentMonth:hover,
+.dateTimeTooltip > .calendar > .week > .day.outCurrentMonth:hover {
+    background: var(--primary);
+    color: var(--asideIcon);
+}
+
+.dateTimeTooltip > .calendar > .week > .day.inCurrentMonth {
+    color: var(--textDarkest);
+}
+
+.dateTimeTooltip > .calendar > .week > .day.outCurrentMonth {
+    color: var(--textLight);
+}
+
+/*.styledDateTimeInput > .calendar > .week > .day > .weekday {*/
+/*    font-family: var(--font-bold);*/
+/*    line-height: 1.5rem;*/
+/*    font-size: 1rem;*/
+/*    cursor: pointer;*/
+/*}*/
+
+.dateTimeTooltip > .calendar > .week > .day {
+    font-family: var(--font-medium);
+    font-size: 1rem;
+    cursor: pointer;
+}
