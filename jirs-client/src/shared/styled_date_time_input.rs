@@ -13,7 +13,7 @@ use crate::shared::styled_tooltip::StyledTooltip;
 use crate::{shared::ToNode, FieldId, Msg};
 
 #[derive(Debug)]
-pub enum DateTimeMsg {
+pub enum StyledDateTimeChanged {
     MonthChanged(Option<NaiveDateTime>),
     DayChanged(Option<NaiveDateTime>),
     PopupVisibilityChanged(bool),
@@ -35,22 +35,35 @@ impl StyledDateTimeInputState {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.timestamp = None;
+        self.popup_visible = false;
+    }
+
     pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
         match msg {
-            Msg::StyledDateTimeInputChanged(field_id, DateTimeMsg::MonthChanged(new_date))
-                if field_id == &self.field_id =>
-            {
+            Msg::StyledDateTimeInputChanged(
+                field_id,
+                StyledDateTimeChanged::MonthChanged(new_date),
+            ) if field_id == &self.field_id => {
                 self.timestamp = *new_date;
             }
-            Msg::StyledDateTimeInputChanged(field_id, DateTimeMsg::DayChanged(new_date))
-                if field_id == &self.field_id =>
-            {
+            Msg::StyledDateTimeInputChanged(
+                field_id,
+                StyledDateTimeChanged::DayChanged(new_date),
+            ) if field_id == &self.field_id => {
                 self.timestamp = *new_date;
+                self.popup_visible = false;
             }
-            Msg::StyledDateTimeInputChanged(field_id, DateTimeMsg::PopupVisibilityChanged(b))
-                if field_id == &self.field_id =>
-            {
-                self.popup_visible = *b;
+            Msg::StyledDateTimeInputChanged(
+                field_id,
+                StyledDateTimeChanged::PopupVisibilityChanged(b),
+            ) if field_id == &self.field_id => {
+                if *b {
+                    self.popup_visible = true;
+                } else {
+                    self.reset();
+                }
             }
             _ => {}
         }
@@ -100,10 +113,10 @@ impl StyledDateTimeInputBuilder {
 }
 
 fn render(values: StyledDateTimeInput) -> Node<Msg> {
-    let current = values
+    let timestamp = values
         .timestamp
         .unwrap_or_else(|| chrono::Utc::now().naive_utc());
-    let start = current.with_day0(0).unwrap().date();
+    let start = timestamp.with_day0(0).unwrap();
     let end = (start + Duration::days(32)).with_day0(0).unwrap();
 
     let calendar_start = match start.weekday() {
@@ -139,7 +152,12 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
             current_week = vec![];
         }
 
-        current_week.push(day_cell(&current, &current_month_range));
+        current_week.push(day_cell(
+            &values.field_id,
+            &timestamp,
+            &current,
+            &current_month_range,
+        ));
 
         current += Duration::days(1);
     }
@@ -156,22 +174,77 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
                 ev.prevent_default();
                 Some(Msg::StyledDateTimeInputChanged(
                     field_id,
-                    DateTimeMsg::PopupVisibilityChanged(false),
+                    StyledDateTimeChanged::PopupVisibilityChanged(false),
                 ))
             }))
             .build()
             .into_node()
     };
 
+    let actions = {
+        let left_action = {
+            let field_id = values.field_id.clone();
+            let current = timestamp;
+            let on_click_left = mouse_ev(Ev::Click, move |ev| {
+                ev.stop_propagation();
+                ev.prevent_default();
+                let last_day_of_prev_month = current.with_day0(0).unwrap() - Duration::days(1);
+
+                let date = last_day_of_prev_month
+                    .with_day0(timestamp.day0())
+                    .unwrap_or_else(|| last_day_of_prev_month);
+                Msg::StyledDateTimeInputChanged(
+                    field_id,
+                    StyledDateTimeChanged::MonthChanged(Some(date)),
+                )
+            });
+            StyledButton::build()
+                .on_click(on_click_left)
+                .icon(Icon::DoubleLeft)
+                .empty()
+                .build()
+                .into_node()
+        };
+        let right_action = {
+            let field_id = values.field_id.clone();
+            let current = timestamp;
+            let on_click_right = mouse_ev(Ev::Click, move |ev| {
+                ev.stop_propagation();
+                ev.prevent_default();
+                let first_day_of_next_month = (current + Duration::days(32)).with_day0(0).unwrap();
+                let last_day_of_next_month = (first_day_of_next_month + Duration::days(32))
+                    .with_day0(0)
+                    .unwrap()
+                    - Duration::days(1);
+                let date = first_day_of_next_month
+                    .with_day0(timestamp.day0())
+                    .unwrap_or_else(|| last_day_of_next_month);
+                Msg::StyledDateTimeInputChanged(
+                    field_id,
+                    StyledDateTimeChanged::MonthChanged(Some(date)),
+                )
+            });
+            StyledButton::build()
+                .on_click(on_click_right)
+                .icon(Icon::DoubleRight)
+                .empty()
+                .build()
+                .into_node()
+        };
+        div![
+            C!["actions"],
+            button![C!["prev"], left_action],
+            button![C!["next"], right_action],
+        ]
+    };
+
+    let header_text = current.format("%B %Y").to_string();
+
     let tooltip = StyledTooltip::build()
         .visible(values.popup_visible)
-        .add_class("dateTimeTooltip")
-        .add_child(h2![span!["Add table"], close_tooltip])
-        .add_child(div![
-            C!["actions"],
-            button![C!["prev"], "Prev"],
-            button![C!["next"], "Next"],
-        ])
+        .date_time_picker()
+        .add_child(h2![span![" "], span![header_text], close_tooltip])
+        .add_child(actions)
         .add_child(div![
             C!["calendar"],
             div![
@@ -194,17 +267,20 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
         let on_focus = ev(Ev::Click, move |ev| {
             ev.prevent_default();
             ev.stop_propagation();
-            Msg::StyledDateTimeInputChanged(field_id, DateTimeMsg::PopupVisibilityChanged(true))
+            Msg::StyledDateTimeInputChanged(
+                field_id,
+                StyledDateTimeChanged::PopupVisibilityChanged(true),
+            )
         });
         let text = values
             .timestamp
-            .map(|d| format!("{}", d))
-            .unwrap_or_default();
+            .unwrap_or_else(|| Utc::now().naive_utc())
+            .date()
+            .format("%d/%m/%Y")
+            .to_string();
         StyledButton::build()
-            .add_class("")
             .on_click(on_focus)
             .text(text)
-            .active(true)
             .empty()
             .build()
             .into_node()
@@ -218,7 +294,27 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
     ]
 }
 
-fn day_cell(current: &NaiveDate, current_month_range: &RangeInclusive<NaiveDate>) -> Node<Msg> {
+fn day_cell(
+    field_id: &FieldId,
+    timestamp: &NaiveDateTime,
+    current: &NaiveDateTime,
+    current_month_range: &RangeInclusive<NaiveDateTime>,
+) -> Node<Msg> {
+    let selected_day_class = if *timestamp == *current {
+        "selected"
+    } else {
+        ""
+    };
+
+    let on_click = {
+        let field_id = field_id.clone();
+        let date = *current;
+        ev(Ev::Click, move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::StyledDateTimeInputChanged(field_id, StyledDateTimeChanged::DayChanged(Some(date)))
+        })
+    };
     div![
         C!["day"],
         attrs![At::Class => format!("{}", current.weekday())],
@@ -227,6 +323,8 @@ fn day_cell(current: &NaiveDate, current_month_range: &RangeInclusive<NaiveDate>
         } else {
             C!["outCurrentMonth"]
         },
+        C![selected_day_class],
         format!("{}", current.day()).as_str(),
+        on_click,
     ]
 }

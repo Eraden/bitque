@@ -3,7 +3,7 @@ use seed::prelude::Orders;
 use jirs_data::{Issue, IssueFieldId, WsMsg};
 
 use crate::model::{ModalType, Model, Page, PageContent, ProjectPage};
-use crate::shared::styled_select::StyledSelectChange;
+use crate::shared::styled_select::StyledSelectChanged;
 use crate::ws::{board_load, send_ws_msg};
 use crate::{BoardPageChange, EditIssueModalSection, FieldId, Msg, PageChanged, WebSocketChanged};
 
@@ -57,7 +57,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
-            StyledSelectChange::Text(text),
+            StyledSelectChanged::Text(text),
         ) => {
             let modal = model
                 .modals

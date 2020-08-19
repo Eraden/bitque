@@ -1075,7 +1075,7 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
     let languages = values.code_tooltip.languages();
 
     let options: Vec<(String, u32)> = languages
-        .into_iter()
+        .iter()
         .enumerate()
         .map(|(idx, label)| (label.to_string(), idx as u32))
         .collect();
@@ -1146,7 +1146,3 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
         .build()
         .into_node()
 }
-
-// pub fn code_to_tag(code: &str) -> Node<Msg> {
-//     custom!["jirs-code-view", code]
-// }

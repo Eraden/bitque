@@ -6,7 +6,7 @@ use seed::prelude::Orders;
 use jirs_data::{IssueStatus, IssueStatusId, ProjectFieldId, UpdateProjectPayload, WsMsg};
 
 use crate::model::{Model, Page, PageContent, ProjectSettingsPage};
-use crate::shared::styled_select::StyledSelectChange;
+use crate::shared::styled_select::StyledSelectChanged;
 use crate::ws::{board_load, send_ws_msg};
 use crate::FieldChange::TabChanged;
 use crate::{FieldId, Msg, PageChanged, ProjectPageChange, WebSocketChanged};
@@ -68,7 +68,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::ProjectSettings(ProjectFieldId::Category),
-            StyledSelectChange::Changed(Some(value)),
+            StyledSelectChanged::Changed(Some(value)),
         ) => {
             let category = value.into();
             page.payload.category = Some(category);

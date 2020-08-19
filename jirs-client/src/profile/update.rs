@@ -4,7 +4,7 @@ use web_sys::FormData;
 use jirs_data::{ProjectId, UsersFieldId, WsMsg};
 
 use crate::model::{Model, Page, PageContent, ProfilePage};
-use crate::shared::styled_select::StyledSelectChange;
+use crate::shared::styled_select::StyledSelectChanged;
 use crate::ws::{board_load, send_ws_msg};
 use crate::{FieldId, Msg, PageChanged, ProfilePageChange, WebSocketChanged};
 
@@ -69,7 +69,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::StyledSelectChanged(
             FieldId::Profile(UsersFieldId::CurrentProject),
-            StyledSelectChange::Changed(Some(id)),
+            StyledSelectChanged::Changed(Some(id)),
         ) => {
             if let Some(up) = model
                 .user_projects

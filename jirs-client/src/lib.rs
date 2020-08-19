@@ -8,9 +8,9 @@ pub use fields::*;
 use jirs_data::*;
 
 use crate::model::{ModalType, Model, Page};
-use crate::shared::styled_date_time_input::DateTimeMsg;
+use crate::shared::styled_date_time_input::StyledDateTimeChanged;
 use crate::shared::styled_rte::RteMsg;
-use crate::shared::styled_select::StyledSelectChange;
+use crate::shared::styled_select::StyledSelectChanged;
 use crate::shared::styled_tooltip::{Variant as StyledTooltip, Variant};
 use crate::shared::{go_to_board, go_to_login, styled_tooltip};
 use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
@@ -50,8 +50,8 @@ pub enum Msg {
     UserChanged(Option<User>),
     ProjectChanged(Option<Project>),
 
-    StyledSelectChanged(FieldId, StyledSelectChange),
-    StyledDateTimeInputChanged(FieldId, DateTimeMsg),
+    StyledSelectChanged(FieldId, StyledSelectChanged),
+    StyledDateTimeInputChanged(FieldId, StyledDateTimeChanged),
     InternalFailure(String),
     ToggleTooltip(StyledTooltip),
 
@@ -195,6 +195,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
             }
             styled_tooltip::Variant::CodeBuilder => {}
             Variant::TableBuilder => {}
+            Variant::DateTimeBuilder => {}
         },
         _ => (),
     }

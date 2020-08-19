@@ -15,6 +15,9 @@ pub enum Icon {
     Story,
     Epic,
 
+    DoubleLeft,
+    DoubleRight,
+
     ArrowDown,
     ArrowLeftCircle,
     ArrowUp,
@@ -196,6 +199,9 @@ impl std::fmt::Display for Icon {
             Icon::ListingDots => "listing-dots",
             Icon::ListingNumber => "listing-number",
             Icon::Epic => "epic",
+
+            Icon::DoubleLeft => "double-left",
+            Icon::DoubleRight => "double-right",
         };
         f.write_str(code)
     }

@@ -376,3 +376,11 @@ i.styledIcon.listing-dots:before {
 i.styledIcon.listing-number:before {
     content: "\ef76";
 }
+
+i.styledIcon.double-left:before {
+    content: "\ea7b";
+}
+
+i.styledIcon.double-right:before {
+    content: "\ea7c";
+}

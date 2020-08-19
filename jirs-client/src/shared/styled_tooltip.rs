@@ -9,6 +9,7 @@ pub enum Variant {
     Messages,
     TableBuilder,
     CodeBuilder,
+    DateTimeBuilder,
 }
 
 impl Default for Variant {
@@ -24,6 +25,7 @@ impl std::fmt::Display for Variant {
             Variant::Messages => f.write_str("messages"),
             Variant::TableBuilder => f.write_str("tableTooltip"),
             Variant::CodeBuilder => f.write_str("codeTooltip"),
+            Variant::DateTimeBuilder => f.write_str("dateTimeTooltip"),
         }
     }
 }
@@ -91,6 +93,11 @@ impl StyledTooltipBuilder {
 
     pub fn code_tooltip(mut self) -> Self {
         self.variant = Variant::CodeBuilder;
+        self
+    }
+
+    pub fn date_time_picker(mut self) -> Self {
+        self.variant = Variant::DateTimeBuilder;
         self
     }
 

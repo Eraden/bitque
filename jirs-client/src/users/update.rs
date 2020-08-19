@@ -3,7 +3,7 @@ use seed::prelude::Orders;
 use jirs_data::{InvitationState, UserRole, UsersFieldId, WsMsg};
 
 use crate::model::{InvitationFormState, Model, Page, PageContent, UsersPage};
-use crate::shared::styled_select::StyledSelectChange;
+use crate::shared::styled_select::StyledSelectChanged;
 use crate::ws::{invitation_load, send_ws_msg};
 use crate::{FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged};
 
@@ -74,7 +74,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::Users(UsersFieldId::UserRole),
-            StyledSelectChange::Changed(Some(role)),
+            StyledSelectChanged::Changed(Some(role)),
         ) => {
             page.user_role = role.into();
         }

@@ -13,7 +13,7 @@ use crate::{
         styled_input::StyledInput,
         styled_modal::{StyledModal, Variant as ModalVariant},
         styled_select::StyledSelect,
-        styled_select::StyledSelectChange,
+        styled_select::StyledSelectChanged,
         styled_select_child::{StyledSelectChild, StyledSelectChildBuilder},
         styled_textarea::StyledTextarea,
         ToChild, ToNode,
@@ -180,7 +180,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         // ReporterAddIssueModal
         Msg::StyledSelectChanged(
             FieldId::AddIssueModal(IssueFieldId::Reporter),
-            StyledSelectChange::Changed(id),
+            StyledSelectChanged::Changed(id),
         ) => {
             modal.reporter_id = id.map(|n| n as UserId);
         }
@@ -188,7 +188,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         // AssigneesAddIssueModal
         Msg::StyledSelectChanged(
             FieldId::AddIssueModal(IssueFieldId::Assignees),
-            StyledSelectChange::Changed(Some(id)),
+            StyledSelectChanged::Changed(Some(id)),
         ) => {
             let id = *id as UserId;
             if !modal.user_ids.contains(&id) {
@@ -197,7 +197,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         }
         Msg::StyledSelectChanged(
             FieldId::AddIssueModal(IssueFieldId::Assignees),
-            StyledSelectChange::RemoveMulti(id),
+            StyledSelectChanged::RemoveMulti(id),
         ) => {
             let id = *id as i32;
             let mut old: Vec<i32> = vec![];
@@ -212,7 +212,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         // IssuePriorityAddIssueModal
         Msg::StyledSelectChanged(
             FieldId::AddIssueModal(IssueFieldId::Priority),
-            StyledSelectChange::Changed(Some(id)),
+            StyledSelectChanged::Changed(Some(id)),
         ) => {
             modal.priority = (*id).into();
         }
@@ -240,14 +240,26 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         Type::Epic => {
             let name_field = name_field(modal);
 
-            let starts = StyledDateTimeInput::build()
-                .state(&modal.epic_starts_at_state)
-                .build(FieldId::AddIssueModal(IssueFieldId::EpicStartsAt))
+            let starts = StyledField::build()
+                .input(
+                    StyledDateTimeInput::build()
+                        .state(&modal.epic_starts_at_state)
+                        .build(FieldId::AddIssueModal(IssueFieldId::EpicStartsAt))
+                        .into_node(),
+                )
+                .label("Starts at")
+                .build()
                 .into_node();
 
-            let end = StyledDateTimeInput::build()
-                .state(&modal.epic_ends_at_state)
-                .build(FieldId::AddIssueModal(IssueFieldId::EpicEndsAt))
+            let end = StyledField::build()
+                .input(
+                    StyledDateTimeInput::build()
+                        .state(&modal.epic_ends_at_state)
+                        .build(FieldId::AddIssueModal(IssueFieldId::EpicEndsAt))
+                        .into_node(),
+                )
+                .label("Ends at")
+                .build()
                 .into_node();
 
             form.add_field(name_field).add_field(starts).add_field(end)

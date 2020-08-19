@@ -12,7 +12,7 @@ use crate::{
         styled_field::StyledField,
         styled_icon::Icon,
         styled_input::StyledInput,
-        styled_select::{StyledSelect, StyledSelectChange},
+        styled_select::{StyledSelect, StyledSelectChanged},
         styled_textarea::StyledTextarea,
         tracking_widget::tracking_link,
         ToChild, ToNode,
@@ -34,7 +34,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
-            StyledSelectChange::Changed(Some(value)),
+            StyledSelectChanged::Changed(Some(value)),
         ) => {
             modal.payload.issue_type = (*value).into();
             send_ws_msg(
@@ -49,7 +49,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::IssueStatusId)),
-            StyledSelectChange::Changed(Some(value)),
+            StyledSelectChanged::Changed(Some(value)),
         ) => {
             modal.payload.issue_status_id = *value as IssueStatusId;
             send_ws_msg(
@@ -64,7 +64,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Reporter)),
-            StyledSelectChange::Changed(Some(value)),
+            StyledSelectChanged::Changed(Some(value)),
         ) => {
             modal.payload.reporter_id = *value as i32;
             send_ws_msg(
@@ -79,7 +79,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
-            StyledSelectChange::Changed(Some(value)),
+            StyledSelectChanged::Changed(Some(value)),
         ) => {
             modal.payload.user_ids.push(*value as i32);
             send_ws_msg(
@@ -94,7 +94,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
-            StyledSelectChange::RemoveMulti(value),
+            StyledSelectChanged::RemoveMulti(value),
         ) => {
             let mut old = vec![];
             std::mem::swap(&mut old, &mut modal.payload.user_ids);
@@ -116,7 +116,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Priority)),
-            StyledSelectChange::Changed(Some(value)),
+            StyledSelectChanged::Changed(Some(value)),
         ) => {
             modal.payload.priority = (*value).into();
             send_ws_msg(
@@ -185,7 +185,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
-            StyledSelectChange::Changed(..),
+            StyledSelectChanged::Changed(..),
         ) => {
             modal.payload.time_spent = modal.time_spent_select.values.get(0).map(|n| *n as i32);
             send_ws_msg(
@@ -216,7 +216,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
-            StyledSelectChange::Changed(..),
+            StyledSelectChanged::Changed(..),
         ) => {
             modal.payload.time_remaining =
                 modal.time_remaining_select.values.get(0).map(|n| *n as i32);
@@ -248,7 +248,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
-            StyledSelectChange::Changed(..),
+            StyledSelectChanged::Changed(..),
         ) => {
             modal.payload.estimate = modal.estimate_select.values.get(0).map(|n| *n as i32);
             send_ws_msg(
@@ -263,7 +263,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::EpicName)),
-            StyledSelectChange::Changed(v),
+            StyledSelectChanged::Changed(v),
         ) => {
             send_ws_msg(
                 WsMsg::IssueUpdate(

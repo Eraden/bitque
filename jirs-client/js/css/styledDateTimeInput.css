@@ -4,7 +4,27 @@
 
 /*         TOOLTIP           */
 
+.dateTimeTooltip {
+    padding: 15px;
+    position: absolute;
+    top: 0;
+    width: 720px;
+    min-width: 720px;
+    max-width: 720px;
+}
+
+.dateTimeTooltip > h2 {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
 .dateTimeTooltip > .actions {
+    display: flex;
+    justify-content: space-between;
+    height: 2rem;
+    line-height: 2rem;
 }
 
 .dateTimeTooltip > .calendar {
@@ -31,8 +51,8 @@
 .dateTimeTooltip > .calendar > .week > .day {
     width: calc(100% / 7);
     text-align: center;
-    height: 3rem;
-    line-height: 3rem;
+    height: 2rem;
+    line-height: 2rem;
     cursor: pointer;
 }
 
@@ -50,12 +70,11 @@
     color: var(--textLight);
 }
 
-/*.styledDateTimeInput > .calendar > .week > .day > .weekday {*/
-/*    font-family: var(--font-bold);*/
-/*    line-height: 1.5rem;*/
-/*    font-size: 1rem;*/
-/*    cursor: pointer;*/
-/*}*/
+.dateTimeTooltip > .calendar > .week > .day.inCurrentMonth.selected,
+.dateTimeTooltip > .calendar > .week > .day.outCurrentMonth.selected {
+    color: var(--primary);
+    background: var(--asideIcon);
+}
 
 .dateTimeTooltip > .calendar > .week > .day {
     font-family: var(--font-medium);

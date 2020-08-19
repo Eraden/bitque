@@ -6,7 +6,7 @@ use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum StyledSelectChange {
+pub enum StyledSelectChanged {
     Text(String),
     DropDownVisibility(bool),
     Changed(Option<u32>),
@@ -63,7 +63,7 @@ impl StyledSelectState {
     pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
         let ref id = self.field_id;
         match msg {
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::DropDownVisibility(b))
+            Msg::StyledSelectChanged(field_id, StyledSelectChanged::DropDownVisibility(b))
                 if field_id == id =>
             {
                 self.opened = *b;
@@ -71,22 +71,22 @@ impl StyledSelectState {
                     self.text_filter.clear();
                 }
             }
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::Text(text))
+            Msg::StyledSelectChanged(field_id, StyledSelectChanged::Text(text))
                 if field_id == id =>
             {
                 self.text_filter = text.clone();
             }
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(Some(v)))
+            Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(Some(v)))
                 if field_id == id =>
             {
                 self.values = vec![*v];
             }
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(None))
+            Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(None))
                 if field_id == id =>
             {
                 self.values.clear();
             }
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::RemoveMulti(v))
+            Msg::StyledSelectChanged(field_id, StyledSelectChanged::RemoveMulti(v))
                 if field_id == id =>
             {
                 let mut old = vec![];
@@ -256,14 +256,14 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
     let on_text = {
         let field_id = id.clone();
         input_ev(Ev::KeyUp, move |value| {
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::Text(value))
+            Msg::StyledSelectChanged(field_id, StyledSelectChanged::Text(value))
         })
     };
 
     let on_handler = {
         let field_id = id.clone();
         mouse_ev(Ev::Click, move |_| {
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::DropDownVisibility(!opened))
+            Msg::StyledSelectChanged(field_id, StyledSelectChanged::DropDownVisibility(!opened))
         })
     };
 
@@ -282,7 +282,7 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
             mouse_ev(Ev::Click, move |ev| {
                 ev.stop_propagation();
                 ev.prevent_default();
-                Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(None))
+                Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(None))
             })
         };
         StyledIcon::build(Icon::Close)
@@ -310,7 +310,7 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
             let on_change = {
                 let field_id = id.clone();
                 mouse_ev(Ev::Click, move |_| {
-                    Msg::StyledSelectChanged(field_id, StyledSelectChange::Changed(Some(value)))
+                    Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(Some(value)))
                 })
             };
             div![
@@ -403,7 +403,7 @@ fn into_multi_value(opt: StyledSelectChildBuilder, id: FieldId) -> Node<Msg> {
         let field_id = id.clone();
         mouse_ev(Ev::Click, move |ev| {
             ev.stop_propagation();
-            Msg::StyledSelectChanged(field_id, StyledSelectChange::RemoveMulti(value))
+            Msg::StyledSelectChanged(field_id, StyledSelectChanged::RemoveMulti(value))
         })
     };
 
