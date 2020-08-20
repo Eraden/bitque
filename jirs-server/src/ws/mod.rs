@@ -408,7 +408,9 @@ impl Handler<InnerMsg> for WsServer {
                     self.sessions.remove(&user_id);
                 } else {
                     let v = self.sessions.entry(user_id).or_insert_with(Vec::new);
-                    v.remove_item(&recipient);
+                    if let Err(e) = v.remove_item(&recipient) {
+                        error2!(e);
+                    }
                 }
             }
             InnerMsg::SendToUser(user_id, msg) => {

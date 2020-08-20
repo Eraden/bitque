@@ -264,12 +264,13 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
 
     let input = {
         let field_id = values.field_id.clone();
+        let visible = values.popup_visible;
         let on_focus = ev(Ev::Click, move |ev| {
             ev.prevent_default();
             ev.stop_propagation();
             Msg::StyledDateTimeInputChanged(
                 field_id,
-                StyledDateTimeChanged::PopupVisibilityChanged(true),
+                StyledDateTimeChanged::PopupVisibilityChanged(!visible),
             )
         });
         let text = values

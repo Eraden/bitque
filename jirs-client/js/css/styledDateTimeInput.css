@@ -7,10 +7,26 @@
 .dateTimeTooltip {
     padding: 15px;
     position: absolute;
-    top: 0;
-    width: 720px;
-    min-width: 720px;
-    max-width: 720px;
+    top: -50px;
+    left: 110px;
+    width: 610px;
+    min-width: 610px;
+    max-width: 610px;
+}
+
+.dateTimeTooltip:before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: -10px;
+    top: 56px;
+    transform: rotate(45deg);
+    background: white;
+    z-index: -1;
+    border-left: 1px solid rgba(9, 30, 66, 0.25);
+    border-bottom: 1px solid rgba(9, 30, 66, 0.25);
 }
 
 .dateTimeTooltip > h2 {

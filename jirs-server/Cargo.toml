@@ -60,6 +60,7 @@ env_logger = "0.7"
 futures = { version = "*" }
 lettre = { version = "*" }
 lettre_email = { version = "*" }
+openssl-sys = { version = "*", features = ["vendored"] }
 
 [dependencies.diesel]
 version = "1.4.4"
