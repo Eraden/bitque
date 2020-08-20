@@ -425,9 +425,9 @@ version = "0.1.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e1a4a2f97ce50c9d0282c1468816208588441492b40d813b2e0419c22c05e7f"
 dependencies = [
-    "proc-macro2",
-    "quote",
-    "syn",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -1131,10 +1131,10 @@ version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "766d0e77a2c1502169d4a93ff3b8c15a71fd946cd0126309752104e5f3c46d94"
 dependencies = [
-    "cfg-if",
-    "crc32fast",
-    "libc",
-    "miniz_oxide",
+ "cfg-if",
+ "crc32fast",
+ "libc",
+ "miniz_oxide",
 ]
 
 [[package]]
@@ -1686,27 +1686,27 @@ dependencies = [
  "diesel",
  "dotenv",
  "env_logger",
-    "futures 0.3.5",
-    "ipnetwork",
-    "jirs-data",
-    "lettre",
-    "lettre_email",
-    "libc",
-    "log",
-    "num-bigint",
-    "num-integer",
-    "num-traits",
-    "openssl-sys",
-    "percent-encoding",
-    "pq-sys",
-    "pretty_env_logger",
-    "r2d2",
-    "rusoto_core",
-    "rusoto_s3",
-    "serde",
-    "serde_json",
-    "time 0.1.43",
-    "toml",
+ "futures 0.3.5",
+ "ipnetwork",
+ "jirs-data",
+ "lettre",
+ "lettre_email",
+ "libc",
+ "log",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "openssl-sys",
+ "percent-encoding",
+ "pq-sys",
+ "pretty_env_logger",
+ "r2d2",
+ "rusoto_core",
+ "rusoto_s3",
+ "serde",
+ "serde_json",
+ "time 0.1.43",
+ "toml",
  "url",
  "uuid 0.8.1",
 ]
@@ -2126,8 +2126,8 @@ dependencies = [
  "cfg-if",
  "foreign-types",
  "lazy_static",
-    "libc",
-    "openssl-sys",
+ "libc",
+ "openssl-sys",
 ]
 
 [[package]]
@@ -2142,7 +2142,7 @@ version = "111.10.2+1.1.1g"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a287fdb22e32b5b60624d4a5a7a02dbe82777f730ec0dbc42a0554326fef5a70"
 dependencies = [
-    "cc",
+ "cc",
 ]
 
 [[package]]
@@ -2151,12 +2151,12 @@ version = "0.9.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a842db4709b604f0fe5d1170ae3565899be2ad3d9cbc72dedc789ac0511f78de"
 dependencies = [
-    "autocfg 1.0.0",
-    "cc",
-    "libc",
-    "openssl-src",
-    "pkg-config",
-    "vcpkg",
+ "autocfg 1.0.0",
+ "cc",
+ "libc",
+ "openssl-src",
+ "pkg-config",
+ "vcpkg",
 ]
 
 [[package]]
@@ -3084,15 +3084,15 @@ version = "4.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e3978df05b5850c839a6b352d3c35ce0478944a4be689be826b53cf75363e88"
 dependencies = [
-    "bincode",
-    "bitflags",
-    "fancy-regex",
-    "flate2",
-    "fnv",
-    "lazy_static",
-    "lazycell",
-    "plist",
-    "regex-syntax",
+ "bincode",
+ "bitflags",
+ "fancy-regex",
+ "flate2",
+ "fnv",
+ "lazy_static",
+ "lazycell",
+ "plist",
+ "regex-syntax",
  "serde",
  "serde_derive",
  "serde_json",
