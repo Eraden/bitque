@@ -31,6 +31,7 @@ uuid = { version = "0.8.1", features = ["serde"] }
 futures = "^0.1.26"
 comrak = "*"
 wee_alloc = "*"
+num-traits = { version = "*" }
 
 lazy_static = "*"
 syntect = { version = "*", default-features = false, features = ["html", "regex-fancy", "dump-load-rs"] }

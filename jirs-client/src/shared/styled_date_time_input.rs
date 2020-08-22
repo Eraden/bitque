@@ -9,7 +9,9 @@ use {
 
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::Icon;
+use crate::shared::styled_select::StyledSelect;
 use crate::shared::styled_tooltip::StyledTooltip;
+use crate::shared::ToChild;
 use crate::{shared::ToNode, FieldId, Msg};
 
 #[derive(Debug)]
@@ -165,86 +167,113 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
         weeks.push(div![C!["week"], current_week]);
     }
 
-    let close_tooltip = {
+    let left_action = {
         let field_id = values.field_id.clone();
+        let current = timestamp;
+        let on_click_left = mouse_ev(Ev::Click, move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            let last_day_of_prev_month = current.with_day0(0).unwrap() - Duration::days(1);
+
+            let date = last_day_of_prev_month
+                .with_day0(timestamp.day0())
+                .unwrap_or_else(|| last_day_of_prev_month);
+            Msg::StyledDateTimeInputChanged(
+                field_id,
+                StyledDateTimeChanged::MonthChanged(Some(date)),
+            )
+        });
         StyledButton::build()
+            .on_click(on_click_left)
+            .icon(Icon::DoubleLeft)
             .empty()
-            .icon(Icon::Close)
-            .on_click(mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::StyledDateTimeInputChanged(
-                    field_id,
-                    StyledDateTimeChanged::PopupVisibilityChanged(false),
-                ))
-            }))
+            .build()
+            .into_node()
+    };
+    let right_action = {
+        let field_id = values.field_id.clone();
+        let current = timestamp;
+        let on_click_right = mouse_ev(Ev::Click, move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            let first_day_of_next_month = (current + Duration::days(32)).with_day0(0).unwrap();
+            let last_day_of_next_month = (first_day_of_next_month + Duration::days(32))
+                .with_day0(0)
+                .unwrap()
+                - Duration::days(1);
+            let date = first_day_of_next_month
+                .with_day0(timestamp.day0())
+                .unwrap_or_else(|| last_day_of_next_month);
+            Msg::StyledDateTimeInputChanged(
+                field_id,
+                StyledDateTimeChanged::MonthChanged(Some(date)),
+            )
+        });
+        StyledButton::build()
+            .on_click(on_click_right)
+            .icon(Icon::DoubleRight)
+            .empty()
             .build()
             .into_node()
     };
 
-    let actions = {
-        let left_action = {
-            let field_id = values.field_id.clone();
-            let current = timestamp;
-            let on_click_left = mouse_ev(Ev::Click, move |ev| {
-                ev.stop_propagation();
-                ev.prevent_default();
-                let last_day_of_prev_month = current.with_day0(0).unwrap() - Duration::days(1);
+    let month_select = {
+        use num_traits::FromPrimitive;
+        let field_id = values.field_id.clone();
+        let selected_month = Month::from_u32(current.month()).unwrap_or_else(|| Month::January);
 
-                let date = last_day_of_prev_month
-                    .with_day0(timestamp.day0())
-                    .unwrap_or_else(|| last_day_of_prev_month);
-                Msg::StyledDateTimeInputChanged(
-                    field_id,
-                    StyledDateTimeChanged::MonthChanged(Some(date)),
-                )
-            });
-            StyledButton::build()
-                .on_click(on_click_left)
-                .icon(Icon::DoubleLeft)
-                .empty()
-                .build()
-                .into_node()
-        };
-        let right_action = {
-            let field_id = values.field_id.clone();
-            let current = timestamp;
-            let on_click_right = mouse_ev(Ev::Click, move |ev| {
-                ev.stop_propagation();
-                ev.prevent_default();
-                let first_day_of_next_month = (current + Duration::days(32)).with_day0(0).unwrap();
-                let last_day_of_next_month = (first_day_of_next_month + Duration::days(32))
-                    .with_day0(0)
-                    .unwrap()
-                    - Duration::days(1);
-                let date = first_day_of_next_month
-                    .with_day0(timestamp.day0())
-                    .unwrap_or_else(|| last_day_of_next_month);
-                Msg::StyledDateTimeInputChanged(
-                    field_id,
-                    StyledDateTimeChanged::MonthChanged(Some(date)),
-                )
-            });
-            StyledButton::build()
-                .on_click(on_click_right)
-                .icon(Icon::DoubleRight)
-                .empty()
-                .build()
-                .into_node()
-        };
-        div![
-            C!["actions"],
-            button![C!["prev"], left_action],
-            button![C!["next"], right_action],
-        ]
+        StyledSelect::build()
+            .options(
+                vec![
+                    Month::January,
+                    Month::February,
+                    Month::March,
+                    Month::April,
+                    Month::May,
+                    Month::June,
+                    Month::July,
+                    Month::August,
+                    Month::September,
+                    Month::October,
+                    Month::November,
+                    Month::December,
+                ]
+                .into_iter()
+                .map(|month| (month.name().to_string(), month.number_from_month()).to_child())
+                .collect(),
+            )
+            .selected(vec![(
+                selected_month.name().to_string(),
+                selected_month.number_from_month(),
+            )
+                .to_child()])
+            .build(field_id)
+            .into_node()
     };
 
-    let header_text = current.format("%B %Y").to_string();
+    let year_select = {
+        let field_id = values.field_id.clone();
+        let selected_year = current.year();
+        StyledSelect::build()
+            .options(
+                (1980..=Utc::today().year())
+                    .into_iter()
+                    .map(|i| (i as u32).to_child())
+                    .collect(),
+            )
+            .selected(vec![(selected_year as u32).to_child()])
+            .build(field_id)
+            .into_node()
+    };
 
     let tooltip = StyledTooltip::build()
         .visible(values.popup_visible)
         .date_time_picker()
-        .add_child(h2![span![" "], span![header_text], close_tooltip])
-        .add_child(actions)
+        .add_child(h2![
+            left_action,
+            span![C!["headerText"], month_select, year_select],
+            right_action
+        ])
         .add_child(div![
             C!["calendar"],
             div![

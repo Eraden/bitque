@@ -10,6 +10,11 @@
     -webkit-overflow-scrolling: touch;
 }
 
+.modal > .clickableOverlay {
+    min-height: 100%;
+    background: rgba(9, 30, 66, 0.54);
+}
+
 .modal > .clickableOverlay.center {
     display: flex;
     justify-content: center;

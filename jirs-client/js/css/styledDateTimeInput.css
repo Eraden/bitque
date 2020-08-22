@@ -7,19 +7,11 @@
 .dateTimeTooltip {
     padding: 15px;
     position: absolute;
-    top: 0;
-    width: 100%;
-}
-
-@media (max-width: 1100px) {
-    .dateTimeTooltip {
-        padding: 15px;
-        position: absolute;
-        top: -50px;
+    top: -50px;
     left: 110px;
-        width: 610px;
-        min-width: 610px;
-        max-width: 610px;
+    width: 610px;
+    min-width: 610px;
+    max-width: 610px;
 }
 
 .dateTimeTooltip:before {
@@ -35,6 +27,19 @@
     z-index: -1;
     border-left: 1px solid rgba(9, 30, 66, 0.25);
     border-bottom: 1px solid rgba(9, 30, 66, 0.25);
+}
+
+@media (max-width: 1100px) {
+    .dateTimeTooltip {
+        padding: 15px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+
+    .dateTimeTooltip:before {
+        display: none;
     }
 }
 
@@ -45,11 +50,8 @@
     font-size: 1.1rem;
 }
 
-.dateTimeTooltip > .actions {
-    display: flex;
-    justify-content: space-between;
-    height: 2rem;
-    line-height: 2rem;
+.dateTimeTooltip > h2 > .headerText {
+    line-height: 34px;
 }
 
 .dateTimeTooltip > .calendar {
@@ -57,16 +59,6 @@
 
 .dateTimeTooltip > .calendar > .week {
     display: flex;
-    border-left: 1px solid var(--textDarkest);
-    border-right: 1px solid var(--textDarkest);
-}
-
-.dateTimeTooltip > .calendar > .week:first-child {
-    border-top: 1px solid var(--textDarkest);
-}
-
-.dateTimeTooltip > .calendar > .week:last-child {
-    border-bottom: 1px solid var(--textDarkest);
 }
 
 .dateTimeTooltip > .calendar > .week.weekHeader {
