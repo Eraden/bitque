@@ -30,7 +30,7 @@ impl Variant {
 #[derive(Debug)]
 pub struct StyledModal {
     variant: Variant,
-    width: usize,
+    width: Option<usize>,
     with_icon: bool,
     children: Vec<Node<Msg>>,
     class_list: Vec<String>,
@@ -93,7 +93,7 @@ impl StyledModalBuilder {
     pub fn build(self) -> StyledModal {
         StyledModal {
             variant: self.variant.unwrap_or_else(|| Variant::Center),
-            width: self.width.unwrap_or_else(|| 130),
+            width: self.width,
             with_icon: self.with_icon.unwrap_or_default(),
             children: self.children.unwrap_or_default(),
             class_list: self.class_list,
@@ -112,7 +112,7 @@ pub fn render(values: StyledModal) -> Node<Msg> {
 
     let icon = if with_icon {
         StyledIcon::build(Icon::Close)
-            .add_class(variant.to_icon_class_name().to_string())
+            .add_class(variant.to_icon_class_name())
             .build()
             .into_node()
     } else {
@@ -127,9 +127,13 @@ pub fn render(values: StyledModal) -> Node<Msg> {
 
     let clickable_class = format!("clickableOverlay {}", variant.to_class_name());
     class_list.push(format!("styledModal {}", variant.to_class_name()));
-    let styled_modal_style = format!("max-width: {width}px", width = width);
+    let styled_modal_style = match width {
+        Some(0) => "".to_string(),
+        Some(n) => format!("max-width: {width}px", width = n),
+        _ => format!("max-width: {width}px", width = 130),
+    };
     div![
-        attrs![At::Class => "modal"],
+        C!["modal"],
         div![
             attrs![At::Class => clickable_class],
             close_handler,

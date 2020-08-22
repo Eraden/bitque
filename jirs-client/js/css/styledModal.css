@@ -10,16 +10,40 @@
     -webkit-overflow-scrolling: touch;
 }
 
-.modal > .clickableOverlay {
-    min-height: 100%;
-    background: rgba(9, 30, 66, 0.54);
-}
-
 .modal > .clickableOverlay.center {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 50px;
+}
+
+@media (max-width: 1100px) {
+    .modal {
+        z-index: var(--modal);
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modal > .clickableOverlay {
+        min-height: 100%;
+        background: rgba(9, 30, 66, 0.54);
+    }
+
+    .modal > .clickableOverlay.center {
+        display: block;
+        padding: 0;
+    }
+}
+
+.modal > .clickableOverlay {
+    min-height: 100%;
+    background: rgba(9, 30, 66, 0.54);
 }
 
 .modal > .clickableOverlay > .styledModal {
@@ -75,6 +99,17 @@
 
 .modal > .clickableOverlay > .styledModal.aside > .styledIcon.modalVariantAside:hover {
     color: var(--primary);
+}
+
+.modal > .clickableOverlay > .styledModal.addIssue {
+    max-width: 800px;
+}
+
+@media (max-width: 1100px) {
+    .modal > .clickableOverlay > .styledModal.addIssue {
+        max-width: none;
+        width: auto;
+    }
 }
 
 .modal > .clickableOverlay > .styledModal.confirmModal {

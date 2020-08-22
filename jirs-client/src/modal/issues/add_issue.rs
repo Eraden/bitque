@@ -315,8 +315,8 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let form = form.add_field(actions).build().into_node();
 
     StyledModal::build()
-        .width(800)
-        .add_class("add-issue")
+        .add_class("addIssue")
+        .width(0)
         .variant(ModalVariant::Center)
         .children(vec![form])
         .build()
