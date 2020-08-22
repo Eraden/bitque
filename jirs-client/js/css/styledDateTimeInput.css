@@ -29,20 +29,6 @@
     border-bottom: 1px solid rgba(9, 30, 66, 0.25);
 }
 
-@media (max-width: 1100px) {
-    .dateTimeTooltip {
-        padding: 15px;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-    }
-
-    .dateTimeTooltip:before {
-        display: none;
-    }
-}
-
 .dateTimeTooltip > h2 {
     display: flex;
     justify-content: space-between;
@@ -50,8 +36,11 @@
     font-size: 1.1rem;
 }
 
-.dateTimeTooltip > h2 > .headerText {
-    line-height: 34px;
+.dateTimeTooltip > .actions {
+    display: flex;
+    justify-content: space-between;
+    height: 2rem;
+    line-height: 2rem;
 }
 
 .dateTimeTooltip > .calendar {
@@ -63,6 +52,11 @@
 
 .dateTimeTooltip > .calendar > .week.weekHeader {
     border-bottom: 1px solid var(--textDarkest);
+    cursor: auto;
+}
+
+.dateTimeTooltip > .calendar > .week.weekHeader > .day {
+    cursor: auto;
 }
 
 .dateTimeTooltip > .calendar > .week > .day {

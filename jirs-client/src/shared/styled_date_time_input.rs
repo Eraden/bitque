@@ -9,9 +9,7 @@ use {
 
 use crate::shared::styled_button::StyledButton;
 use crate::shared::styled_icon::Icon;
-use crate::shared::styled_select::StyledSelect;
 use crate::shared::styled_tooltip::StyledTooltip;
-use crate::shared::ToChild;
 use crate::{shared::ToNode, FieldId, Msg};
 
 #[derive(Debug)]
@@ -217,63 +215,12 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
             .into_node()
     };
 
-    let month_select = {
-        use num_traits::FromPrimitive;
-        let field_id = values.field_id.clone();
-        let selected_month = Month::from_u32(current.month()).unwrap_or_else(|| Month::January);
-
-        StyledSelect::build()
-            .options(
-                vec![
-                    Month::January,
-                    Month::February,
-                    Month::March,
-                    Month::April,
-                    Month::May,
-                    Month::June,
-                    Month::July,
-                    Month::August,
-                    Month::September,
-                    Month::October,
-                    Month::November,
-                    Month::December,
-                ]
-                .into_iter()
-                .map(|month| (month.name().to_string(), month.number_from_month()).to_child())
-                .collect(),
-            )
-            .selected(vec![(
-                selected_month.name().to_string(),
-                selected_month.number_from_month(),
-            )
-                .to_child()])
-            .build(field_id)
-            .into_node()
-    };
-
-    let year_select = {
-        let field_id = values.field_id.clone();
-        let selected_year = current.year();
-        StyledSelect::build()
-            .options(
-                (1980..=Utc::today().year())
-                    .into_iter()
-                    .map(|i| (i as u32).to_child())
-                    .collect(),
-            )
-            .selected(vec![(selected_year as u32).to_child()])
-            .build(field_id)
-            .into_node()
-    };
+    let header_text = current.format("%B %Y").to_string();
 
     let tooltip = StyledTooltip::build()
         .visible(values.popup_visible)
         .date_time_picker()
-        .add_child(h2![
-            left_action,
-            span![C!["headerText"], month_select, year_select],
-            right_action
-        ])
+        .add_child(h2![left_action, span![header_text], right_action])
         .add_child(div![
             C!["calendar"],
             div![
