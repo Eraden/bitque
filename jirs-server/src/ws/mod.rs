@@ -408,8 +408,8 @@ impl Handler<InnerMsg> for WsServer {
                     self.sessions.remove(&user_id);
                 } else {
                     let v = self.sessions.entry(user_id).or_insert_with(Vec::new);
-                    if let Err(e) = v.remove_item(&recipient) {
-                        error2!(e);
+                    if v.remove_item(&recipient).is_none() {
+                        debug!("Can't remove recipient");
                     }
                 }
             }
