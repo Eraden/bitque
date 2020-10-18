@@ -41,7 +41,7 @@ fn breadcrumbs(model: &Model) -> Node<Msg> {
 fn header() -> Node<Msg> {
     let button = StyledButton::build()
         .secondary()
-        .text("Github Repo".to_string())
+        .text("Github Repo")
         .icon(Icon::Github)
         .build()
         .into_node();
@@ -124,7 +124,7 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
                 class_list.push("isActive");
             }
             let styled_avatar = StyledAvatar::build()
-                .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
+                .avatar_url(user.avatar_url.as_deref().unwrap_or_default())
                 .on_click(mouse_ev(Ev::Click, move |_| {
                     Msg::ProjectAvatarFilterChanged(user_id, active)
                 }))
@@ -270,7 +270,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
             StyledAvatar::build()
                 .size(24)
                 .name(user.name.as_str())
-                .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
+                .avatar_url(user.avatar_url.as_deref().unwrap_or_default())
                 .user_index(idx)
                 .build()
                 .into_node()
@@ -279,10 +279,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
 
     let issue_type_icon = {
         StyledIcon::build(issue.issue_type.clone().into())
-            .add_style(format!(
-                "color: var(--{issue_type})",
-                issue_type = issue.issue_type.to_string()
-            ))
+            .with_color(issue.issue_type.to_str())
             .build()
             .into_node()
     };
@@ -292,7 +289,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
             _ => Icon::ArrowUp,
         };
         StyledIcon::build(icon)
-            .add_style(format!("color: var(--{})", issue.priority))
+            .with_color(issue.priority.to_str())
             .build()
             .into_node()
     };

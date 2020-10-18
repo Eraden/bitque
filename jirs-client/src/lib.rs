@@ -1,4 +1,4 @@
-#![feature(or_patterns)]
+#![feature(or_patterns, type_ascription)]
 
 use seed::{prelude::*, *};
 use web_sys::File;
@@ -32,6 +32,11 @@ mod sign_up;
 mod users;
 pub mod validations;
 mod ws;
+
+#[link(wasm_import_module = "__wbindgen_thread_xform__")]
+extern "C" {
+    fn __wbindgen_thread_id() -> u32;
+}
 
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
@@ -80,7 +85,7 @@ pub enum Msg {
     StrInputChanged(FieldId, String),
     U32InputChanged(FieldId, u32),
     FileInputChanged(FieldId, Vec<File>),
-    Rte(RteMsg, FieldId),
+    Rte(FieldId, RteMsg),
 
     // issues
     AddIssue,
@@ -143,7 +148,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                 WebSocketChanged::WebSocketMessageLoaded(v) => {
                     match bincode::deserialize(v.as_slice()) {
                         Ok(WsMsg::Ping | WsMsg::Pong) => {
-                            orders.perform_cmd(cmds::timeout(1000, || {
+                            orders.perform_cmd(cmds::timeout(300, || {
                                 Msg::WebSocketChange(WebSocketChanged::SendPing)
                             }));
                         }
@@ -267,11 +272,14 @@ pub static mut WS_URL: String = String::new();
 
 #[wasm_bindgen]
 pub fn render(host_url: String, ws_url: String) {
-    elements::define();
     unsafe {
         HOST_URL = host_url;
         WS_URL = ws_url;
     }
+    {
+        // crate::hi::syntax_set::load();
+    }
+    elements::define();
 
     let _app = seed::App::builder(update, view)
         .routes(routes)

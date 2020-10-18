@@ -28,36 +28,36 @@ impl Variant {
 }
 
 #[derive(Debug)]
-pub struct StyledModal {
+pub struct StyledModal<'l> {
     variant: Variant,
     width: Option<usize>,
     with_icon: bool,
     children: Vec<Node<Msg>>,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
 }
 
-impl ToNode for StyledModal {
+impl<'l> ToNode for StyledModal<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-impl StyledModal {
-    pub fn build() -> StyledModalBuilder {
+impl<'l> StyledModal<'l> {
+    pub fn build() -> StyledModalBuilder<'l> {
         Default::default()
     }
 }
 
 #[derive(Default)]
-pub struct StyledModalBuilder {
+pub struct StyledModalBuilder<'l> {
     variant: Option<Variant>,
     width: Option<usize>,
     with_icon: Option<bool>,
     children: Option<Vec<Node<Msg>>>,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
 }
 
-impl StyledModalBuilder {
+impl<'l> StyledModalBuilder<'l> {
     pub fn variant(mut self, variant: Variant) -> Self {
         self.variant = Some(variant);
         self
@@ -82,15 +82,12 @@ impl StyledModalBuilder {
         self
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn add_class(mut self, name: &'l str) -> Self {
+        self.class_list.push(name);
         self
     }
 
-    pub fn build(self) -> StyledModal {
+    pub fn build(self) -> StyledModal<'l> {
         StyledModal {
             variant: self.variant.unwrap_or_else(|| Variant::Center),
             width: self.width,
@@ -126,7 +123,8 @@ pub fn render(values: StyledModal) -> Node<Msg> {
     });
 
     let clickable_class = format!("clickableOverlay {}", variant.to_class_name());
-    class_list.push(format!("styledModal {}", variant.to_class_name()));
+    class_list.push("styledModal");
+    class_list.push(variant.to_class_name());
     let styled_modal_style = match width {
         Some(0) => "".to_string(),
         Some(n) => format!("max-width: {width}px", width = n),

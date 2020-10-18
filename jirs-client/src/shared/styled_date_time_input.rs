@@ -257,7 +257,7 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
             .to_string();
         StyledButton::build()
             .on_click(on_focus)
-            .text(text)
+            .text(text.as_str())
             .empty()
             .build()
             .into_node()

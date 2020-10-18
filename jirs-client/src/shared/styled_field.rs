@@ -4,47 +4,41 @@ use crate::shared::ToNode;
 use crate::Msg;
 
 #[derive(Debug)]
-pub struct StyledField {
-    label: String,
-    tip: Option<String>,
+pub struct StyledField<'l> {
+    label: &'l str,
+    tip: Option<&'l str>,
     input: Node<Msg>,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
 }
 
-impl StyledField {
-    pub fn build() -> StyledFieldBuilder {
+impl<'l> StyledField<'l> {
+    pub fn build() -> StyledFieldBuilder<'l> {
         StyledFieldBuilder::default()
     }
 }
 
-impl ToNode for StyledField {
+impl<'l> ToNode for StyledField<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
 #[derive(Default, Debug)]
-pub struct StyledFieldBuilder {
-    label: Option<String>,
-    tip: Option<String>,
+pub struct StyledFieldBuilder<'l> {
+    label: Option<&'l str>,
+    tip: Option<&'l str>,
     input: Option<Node<Msg>>,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
 }
 
-impl StyledFieldBuilder {
-    pub fn label<S>(mut self, label: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.label = Some(label.into());
+impl<'l> StyledFieldBuilder<'l> {
+    pub fn label(mut self, label: &'l str) -> Self {
+        self.label = Some(label);
         self
     }
 
-    pub fn tip<S>(mut self, tip: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.tip = Some(tip.into());
+    pub fn tip(mut self, tip: &'l str) -> Self {
+        self.tip = Some(tip);
         self
     }
 
@@ -53,15 +47,12 @@ impl StyledFieldBuilder {
         self
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn add_class(mut self, name: &'l str) -> Self {
+        self.class_list.push(name);
         self
     }
 
-    pub fn build(self) -> StyledField {
+    pub fn build(self) -> StyledField<'l> {
         StyledField {
             label: self.label.unwrap_or_default(),
             tip: self.tip,
@@ -76,16 +67,15 @@ pub fn render(values: StyledField) -> Node<Msg> {
         label,
         tip,
         input,
-        mut class_list,
+        class_list,
     } = values;
     let tip_node = match tip {
         Some(s) => div![attrs![At::Class => "styledTip"], s],
         _ => empty![],
     };
-    class_list.push("styledField".to_string());
 
     div![
-        attrs![At::Class => class_list.join(" ")],
+        attrs![At::Class => class_list.join(" "), At::Class => "styledField"],
         seed::label![attrs![At::Class => "styledLabel"], label],
         input,
         tip_node,

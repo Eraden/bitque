@@ -8,6 +8,13 @@ repository = "https://gitlab.com/adrian.wozniak/jirs"
 license = "MPL-2.0"
 #license-file = "../LICENSE"
 
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[[bin]]
+name = "print"
+path = "./src/print.rs"
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 name = "jirs_client"
@@ -23,21 +30,29 @@ opt-level = 's'
 
 [dependencies]
 jirs-data = { path = "../jirs-data" }
+
+wee_alloc = "*"
+
 seed = { version = "0.7.0" }
-serde = "*"
-bincode = "1.2.1"
-chrono = { version = "0.4", features = ["serde", "wasmbind"] }
+
+serde = { version = "*" }
+serde_json = { version = "*" }
+bincode = { version = "*" }
+ron = { version = "*" }
+bson = "1.1.0"
+serde_cbor = "0.11.1"
+
+chrono = { version = "0.4", default-features = false, features = ["serde", "wasmbind"] }
 uuid = { version = "0.8.1", features = ["serde"] }
 futures = "^0.1.26"
 comrak = "*"
-wee_alloc = "*"
 num-traits = { version = "*" }
 
 lazy_static = "*"
 syntect = { version = "*", default-features = false, features = ["html", "regex-fancy", "dump-load-rs"] }
 
 [dependencies.wasm-bindgen]
-version = "0.2.66"
+version = "*"
 features = ["enable-interning"]
 
 [dependencies.js-sys]
@@ -45,7 +60,7 @@ version = "*"
 default-features = false
 
 [dependencies.web-sys]
-version = "0.3.22"
+version = "*"
 default-features = false
 features = [
     # elements

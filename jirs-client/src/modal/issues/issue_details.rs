@@ -426,6 +426,7 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
+    let issue_types = IssueType::ordered();
     let issue_type_select = StyledSelect::build()
         .dropdown_width(150)
         .name("type")
@@ -433,8 +434,8 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .opened(top_type_state.opened)
         .valid(true)
         .options(
-            IssueType::ordered()
-                .into_iter()
+            issue_types
+                .iter()
                 .map(|t| t.to_child().name("type"))
                 .collect(),
         )
@@ -444,7 +445,7 @@ fn top_modal_row(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             issue_type
                 .to_child()
                 .name("type")
-                .text(format!("{} - {}", issue_type, id))
+                .text_owned(format!("{} - {}", issue_type, id))
         }])
         .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
             IssueFieldId::Type,
@@ -500,7 +501,7 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             model
                 .user
                 .as_ref()
-                .and_then(|u| u.avatar_url.clone())
+                .and_then(|u| u.avatar_url.as_deref())
                 .unwrap_or_default(),
         )
         .build()
@@ -597,7 +598,7 @@ fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Option<N
 
     let avatar = StyledAvatar::build()
         .size(32)
-        .avatar_url(user.avatar_url.as_ref().cloned()?)
+        .avatar_url(user.avatar_url.as_deref()?)
         .add_class("userAvatar")
         .build()
         .into_node();
@@ -751,14 +752,15 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
+    let issue_priorities = IssuePriority::ordered();
     let priority = StyledSelect::build()
         .name("priority")
         .opened(priority_state.opened)
         .empty()
         .text_filter(priority_state.text_filter.as_str())
         .options(
-            IssuePriority::ordered()
-                .into_iter()
+            issue_priorities
+                .iter()
                 .map(|p| p.to_child().name("priority"))
                 .collect(),
         )

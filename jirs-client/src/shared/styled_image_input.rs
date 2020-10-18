@@ -30,14 +30,14 @@ impl StyledImageInputState {
     }
 }
 
-pub struct StyledImageInput {
+pub struct StyledImageInput<'l> {
     id: FieldId,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
     url: Option<String>,
 }
 
-impl StyledImageInput {
-    pub fn build(field_id: FieldId) -> StyledInputInputBuilder {
+impl<'l> StyledImageInput<'l> {
+    pub fn build(field_id: FieldId) -> StyledInputInputBuilder<'l> {
         StyledInputInputBuilder {
             id: field_id,
             class_list: vec![],
@@ -46,24 +46,21 @@ impl StyledImageInput {
     }
 }
 
-impl ToNode for StyledImageInput {
+impl<'l> ToNode for StyledImageInput<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-pub struct StyledInputInputBuilder {
+pub struct StyledInputInputBuilder<'l> {
     id: FieldId,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
     url: Option<String>,
 }
 
-impl StyledInputInputBuilder {
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+impl<'l> StyledInputInputBuilder<'l> {
+    pub fn add_class(mut self, name: &'l str) -> Self {
+        self.class_list.push(name);
         self
     }
 
@@ -72,7 +69,7 @@ impl StyledInputInputBuilder {
         self
     }
 
-    pub fn build(self) -> StyledImageInput {
+    pub fn build(self) -> StyledImageInput<'l> {
         StyledImageInput {
             id: self.id,
             class_list: self.class_list,

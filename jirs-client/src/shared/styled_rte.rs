@@ -26,8 +26,8 @@ impl HeadingSize {
     }
 }
 
-impl ToString for HeadingSize {
-    fn to_string(&self) -> String {
+impl HeadingSize {
+    fn as_str<'l>(&self) -> &'l str {
         use HeadingSize::*;
 
         match self {
@@ -39,7 +39,6 @@ impl ToString for HeadingSize {
             H5 => "H5",
             H6 => "H6",
         }
-        .to_string()
     }
 }
 
@@ -88,28 +87,18 @@ pub enum RteMsg {
 }
 
 #[derive(Debug)]
-pub struct ExecCommand {
-    pub(crate) name: String,
-    pub(crate) param: String,
+pub struct ExecCommand<'l> {
+    pub(crate) name: &'l str,
+    pub(crate) param: &'l str,
 }
 
-impl ExecCommand {
-    pub fn new<S>(name: S) -> Self
-    where
-        S: Into<String>,
-    {
+impl<'l> ExecCommand<'l> {
+    pub fn new(name: &'l str) -> Self {
         Self::new_with_param(name, "")
     }
 
-    pub fn new_with_param<S1, S2>(name: S1, param: S2) -> Self
-    where
-        S1: Into<String>,
-        S2: Into<String>,
-    {
-        Self {
-            name: name.into(),
-            param: param.into(),
-        }
+    pub fn new_with_param(name: &'l str, param: &'l str) -> Self {
+        Self { name, param }
     }
 }
 
@@ -136,9 +125,7 @@ impl RteMsg {
                 | HeadingSize::H3
                 | HeadingSize::H4
                 | HeadingSize::H5
-                | HeadingSize::H6 => {
-                    Some(ExecCommand::new_with_param("heading", heading.to_string()))
-                }
+                | HeadingSize::H6 => Some(ExecCommand::new_with_param("heading", heading.as_str())),
                 HeadingSize::Normal => Some(ExecCommand::new_with_param("formatBlock", "div")),
             },
             RteMsg::InsertUnorderedList => Some(ExecCommand::new("insertUnorderedList")),
@@ -193,7 +180,7 @@ pub struct StyledRteCodeState {
 
 impl StyledRteCodeState {
     pub fn new(field_id: FieldId) -> Self {
-        let mut languages: Vec<String> = crate::hi::SYNTAX_SET
+        let mut languages: Vec<String> = crate::hi::syntax_set::load()
             .syntaxes()
             .iter()
             .map(|s| s.name.clone())
@@ -202,7 +189,7 @@ impl StyledRteCodeState {
         Self {
             visible: false,
             lang: StyledSelectState::new(
-                FieldId::Rte(RteField::CodeLang(Box::new(field_id.clone()))),
+                FieldId::Rte(RteField::CodeLang(Box::new(field_id))),
                 vec![],
             ),
             code: "".to_string(),
@@ -218,6 +205,33 @@ impl StyledRteCodeState {
         self.code.clear();
         self.lang.reset();
         self.visible = false;
+    }
+}
+
+struct RteTableBodyBuilder {
+    cols: u16,
+    rows: u16,
+}
+
+impl RteTableBodyBuilder {
+    pub fn new(cols: u16, rows: u16) -> Self {
+        Self { cols, rows }
+    }
+}
+
+impl ToString for RteTableBodyBuilder {
+    fn to_string(&self) -> String {
+        let RteTableBodyBuilder { cols, rows } = self;
+        let mut buff = "<tbody>".to_string();
+        for _c in 0..(*cols) {
+            buff.push_str("<tr>");
+            for _r in 0..(*rows) {
+                buff.push_str("<td>&nbsp;</td>")
+            }
+            buff.push_str("</tr>");
+        }
+        buff.push_str("</tbody>");
+        buff
     }
 }
 
@@ -250,17 +264,19 @@ impl StyledRteState {
     pub fn update(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
         self.code_tooltip.lang.update(msg, orders);
         let m = match msg {
-            Msg::Rte(m, field) if field == &self.field_id => m,
+            Msg::Rte(field, m) if field == &self.field_id => m,
             _ => return,
         };
         match m.to_command() {
             Some(ExecCommand { name, param }) => {
                 self.store_range();
-                match seed::html_document().exec_command_with_show_ui_and_value(
-                    name.as_str(),
-                    false,
-                    param.as_str(),
-                ) {
+                let doc = match web_sys::window().and_then(|w| w.document()).map(|d| {
+                    wasm_bindgen::JsValue::from(d).unchecked_into::<web_sys::HtmlDocument>()
+                }) {
+                    Some(doc) => doc,
+                    _ => return,
+                };
+                match doc.exec_command_with_show_ui_and_value(name, false, param) {
                     Ok(_) => {}
                     Err(e) => log!(e),
                 }
@@ -345,16 +361,9 @@ impl StyledRteState {
                         Ok(t) => t,
                         _ => return,
                     };
-                    let mut buff = "<tbody>".to_string();
-                    for _c in 0..(*cols) {
-                        buff.push_str("<tr>");
-                        for _r in 0..(*rows) {
-                            buff.push_str("<td>&nbsp;</td>")
-                        }
-                        buff.push_str("</tr>");
-                    }
-                    buff.push_str("</tbody>");
-                    table.set_inner_html(buff.as_str());
+                    table.set_inner_html(
+                        RteTableBodyBuilder::new(*cols, *rows).to_string().as_str(),
+                    );
                     if let Err(e) = r.insert_node(&table) {
                         log!(e);
                     }
@@ -363,6 +372,10 @@ impl StyledRteState {
                 _ => log!(m),
             },
         };
+        // orders.skip().send_msg(Msg::StrInputChanged(
+        //     self.field_id.clone(),
+        //     self.value.clone(),
+        // ));
     }
 
     fn store_range(&mut self) {
@@ -396,58 +409,54 @@ impl StyledRteState {
         let field_id = self.field_id.clone();
         let identifier = self.identifier;
         orders.perform_cmd(cmds::timeout(200, move || {
-            Msg::Rte(RteMsg::RequestFocus(identifier), field_id)
+            Msg::Rte(field_id, RteMsg::RequestFocus(identifier))
         }));
     }
 }
 
-pub struct StyledRte {
+pub struct StyledRte<'component> {
     field_id: FieldId,
-    table_tooltip: StyledRteTableState,
+    table_tooltip: Option<&'component StyledRteTableState>,
     identifier: Option<uuid::Uuid>,
-    code_tooltip: StyledRteCodeState,
+    code_tooltip: Option<&'component StyledRteCodeState>,
 }
 
-impl StyledRte {
-    pub fn build(field_id: FieldId) -> StyledRteBuilder {
+impl<'component> StyledRte<'component> {
+    pub fn build(field_id: FieldId) -> StyledRteBuilder<'component> {
         StyledRteBuilder {
             field_id: field_id.clone(),
             value: String::new(),
-            table_tooltip: StyledRteTableState {
-                visible: false,
-                rows: 0,
-                cols: 0,
-            },
-            code_tooltip: StyledRteCodeState::new(field_id),
+            table_tooltip: None,
+            code_tooltip: None,
             identifier: None,
         }
     }
 }
 
-impl ToNode for StyledRte {
+impl<'component> ToNode for StyledRte<'component> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-pub struct StyledRteBuilder {
+pub struct StyledRteBuilder<'outer> {
     field_id: FieldId,
     value: String,
-    table_tooltip: StyledRteTableState,
-    code_tooltip: StyledRteCodeState,
+    table_tooltip: Option<&'outer StyledRteTableState>,
+    code_tooltip: Option<&'outer StyledRteCodeState>,
     identifier: Option<uuid::Uuid>,
 }
 
-impl StyledRteBuilder {
-    pub fn state(mut self, state: &StyledRteState) -> Self {
+impl<'outer> StyledRteBuilder<'outer> {
+    pub fn state(mut self, state: &'outer StyledRteState) -> Self {
         self.value = state.value.clone();
-        self.table_tooltip = state.table_tooltip.clone();
-        self.code_tooltip = state.code_tooltip.clone();
+        self.table_tooltip = Some(&state.table_tooltip);
+        self.code_tooltip = Some(&state.code_tooltip);
         self.identifier = Some(state.identifier);
         self
     }
 
-    pub fn build(self) -> StyledRte {
+    pub fn build(self) -> StyledRte<'outer> {
         StyledRte {
             field_id: self.field_id,
             table_tooltip: self.table_tooltip,
@@ -458,7 +467,7 @@ impl StyledRteBuilder {
 }
 
 pub fn render(values: StyledRte) -> Node<Msg> {
-    {
+    /*{
         let _brush_button = styled_rte_button(
             "Brush",
             Icon::Brush,
@@ -533,12 +542,17 @@ pub fn render(values: StyledRte) -> Node<Msg> {
                 None as Option<Msg>
             }),
         );
-    }
+    }*/
 
+    // let field_id = values.field_id.clone();
     let capture_event = ev(Ev::KeyDown, |ev| {
         ev.stop_propagation();
         None as Option<Msg>
     });
+    // let capture_change = ev(Ev::Input, |ev| {
+    //     ev.stop_propagation();
+    //     Some(Msg::StrInputChanged(field_id, "".to_string()))
+    // });
 
     let id = values.identifier.unwrap_or_default().to_string();
 
@@ -563,7 +577,8 @@ pub fn render(values: StyledRte) -> Node<Msg> {
             div![
                 C!["editor"],
                 attrs![At::ContentEditable => true],
-                capture_event
+                capture_event,
+                // capture_change
             ],
         ]
     ]
@@ -578,7 +593,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
 
-                Some(Msg::Rte(RteMsg::JustifyFull, field_id))
+                Some(Msg::Rte(field_id, RteMsg::JustifyFull))
             }),
         );
         let field_id = values.field_id.clone();
@@ -587,7 +602,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
             Icon::JustifyCenter,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::JustifyCenter, field_id))
+                Some(Msg::Rte(field_id, RteMsg::JustifyCenter))
             }),
         );
         let field_id = values.field_id.clone();
@@ -596,7 +611,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
             Icon::JustifyLeft,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::JustifyLeft, field_id))
+                Some(Msg::Rte(field_id, RteMsg::JustifyLeft))
             }),
         );
         let field_id = values.field_id.clone();
@@ -606,7 +621,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
 
-                Some(Msg::Rte(RteMsg::JustifyRight, field_id))
+                Some(Msg::Rte(field_id, RteMsg::JustifyRight))
             }),
         );
         div![
@@ -625,7 +640,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
             Icon::Redo,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::Redo, field_id))
+                Some(Msg::Rte(field_id, RteMsg::Redo))
             }),
         );
         let field_id = values.field_id.clone();
@@ -634,7 +649,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
             Icon::Undo,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::Undo, field_id))
+                Some(Msg::Rte(field_id, RteMsg::Undo))
             }),
         );
         /*let field_id = values.field_id.clone();
@@ -681,7 +696,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
             Icon::EraserAlt,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::RemoveFormat, field_id))
+                Some(Msg::Rte(field_id, RteMsg::RemoveFormat))
             }),
         );
         let field_id = values.field_id.clone();
@@ -690,7 +705,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
             Icon::Bold,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::Bold, field_id))
+                Some(Msg::Rte(field_id, RteMsg::Bold))
             }),
         );
         let field_id = values.field_id.clone();
@@ -699,7 +714,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
             Icon::Italic,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::Italic, field_id))
+                Some(Msg::Rte(field_id, RteMsg::Italic))
             }),
         );
 
@@ -710,7 +725,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
                 Icon::Underline,
                 mouse_ev(Ev::Click, move |ev| {
                     ev.prevent_default();
-                    Some(Msg::Rte(RteMsg::Underscore, field_id))
+                    Some(Msg::Rte(field_id, RteMsg::Underscore))
                 }),
             )
         };
@@ -722,7 +737,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
                 Icon::StrikeThrough,
                 mouse_ev(Ev::Click, move |ev| {
                     ev.prevent_default();
-                    Some(Msg::Rte(RteMsg::Strikethrough, field_id))
+                    Some(Msg::Rte(field_id, RteMsg::Strikethrough))
                 }),
             )
         };
@@ -734,7 +749,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
                 Icon::Subscript,
                 mouse_ev(Ev::Click, move |ev| {
                     ev.prevent_default();
-                    Some(Msg::Rte(RteMsg::Subscript, field_id))
+                    Some(Msg::Rte(field_id, RteMsg::Subscript))
                 }),
             )
         };
@@ -746,7 +761,7 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
                 Icon::Superscript,
                 mouse_ev(Ev::Click, move |ev| {
                     ev.prevent_default();
-                    Some(Msg::Rte(RteMsg::Superscript, field_id))
+                    Some(Msg::Rte(field_id, RteMsg::Superscript))
                 }),
             )
         };
@@ -818,10 +833,10 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
             .map(|h| {
                 let field_id = values.field_id.clone();
                 let button = StyledButton::build()
-                    .text(h.to_string())
+                    .text(h.as_str())
                     .on_click(mouse_ev(Ev::Click, move |ev| {
                         ev.prevent_default();
-                        Some(Msg::Rte(RteMsg::InsertHeading(h), field_id))
+                        Some(Msg::Rte(field_id, RteMsg::InsertHeading(h)))
                     }))
                     .empty()
                     .build()
@@ -867,7 +882,7 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
             Icon::ListingDots,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::InsertUnorderedList, field_id))
+                Some(Msg::Rte(field_id, RteMsg::InsertUnorderedList))
             }),
         );
         let field_id = values.field_id.clone();
@@ -876,7 +891,7 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
             Icon::ListingNumber,
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::InsertOrderedList, field_id))
+                Some(Msg::Rte(field_id, RteMsg::InsertOrderedList))
             }),
         );
         /*let field_id = values.field_id.clone();
@@ -896,7 +911,7 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
                 Icon::Table,
                 mouse_ev(Ev::Click, move |ev| {
                     ev.prevent_default();
-                    Some(Msg::Rte(RteMsg::TableSetVisibility(true), field_id))
+                    Some(Msg::Rte(field_id, RteMsg::TableSetVisibility(true)))
                 }),
             )
         };
@@ -909,7 +924,7 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
                 Icon::Paragraph,
                 mouse_ev(Ev::Click, move |ev| {
                     ev.prevent_default();
-                    Some(Msg::Rte(RteMsg::InsertParagraph, field_id))
+                    Some(Msg::Rte(field_id, RteMsg::InsertParagraph))
                 }),
             )
         };
@@ -920,7 +935,7 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
                 Icon::CodeAlt,
                 mouse_ev(Ev::Click, move |ev| {
                     ev.prevent_default();
-                    Some(Msg::Rte(RteMsg::InsertCode(true), field_id))
+                    Some(Msg::Rte(field_id, RteMsg::InsertCode(true)))
                 }),
             )
         };
@@ -945,8 +960,8 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
                 Some(Msg::Rte(
-                    RteMsg::ChangeIndent(RteIndentMsg::Increase),
                     field_id,
+                    RteMsg::ChangeIndent(RteIndentMsg::Increase),
                 ))
             }),
         );
@@ -957,8 +972,8 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
             mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
                 Some(Msg::Rte(
-                    RteMsg::ChangeIndent(RteIndentMsg::Decrease),
                     field_id,
+                    RteMsg::ChangeIndent(RteIndentMsg::Decrease),
                 ))
             }),
         );
@@ -975,18 +990,23 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
 }
 
 fn table_tooltip(values: &StyledRte) -> Node<Msg> {
-    let StyledRteTableState {
-        visible,
-        rows,
-        cols,
-    } = values.table_tooltip;
+    let (visible, rows, cols) = values
+        .table_tooltip
+        .map(
+            |StyledRteTableState {
+                 visible,
+                 rows,
+                 cols,
+             }| (*visible, *rows, *cols),
+        )
+        .unwrap_or_default();
 
     let on_rows_change = {
         let field_id = values.field_id.clone();
         input_ev(Ev::Change, move |v| {
             v.parse::<u16>()
                 .ok()
-                .map(|n| Msg::Rte(RteMsg::TableSetRows(n), field_id))
+                .map(|n| Msg::Rte(field_id, RteMsg::TableSetRows(n)))
         })
     };
 
@@ -995,7 +1015,7 @@ fn table_tooltip(values: &StyledRte) -> Node<Msg> {
         input_ev(Ev::Change, move |v| {
             v.parse::<u16>()
                 .ok()
-                .map(|n| Msg::Rte(RteMsg::TableSetColumns(n), field_id))
+                .map(|n| Msg::Rte(field_id, RteMsg::TableSetColumns(n)))
         })
     };
 
@@ -1006,7 +1026,7 @@ fn table_tooltip(values: &StyledRte) -> Node<Msg> {
             .icon(Icon::Close)
             .on_click(mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::TableSetVisibility(false), field_id))
+                Some(Msg::Rte(field_id, RteMsg::TableSetVisibility(false)))
             }))
             .build()
             .into_node()
@@ -1016,7 +1036,7 @@ fn table_tooltip(values: &StyledRte) -> Node<Msg> {
         let field_id = values.field_id.clone();
         mouse_ev(Ev::Click, move |ev| {
             ev.prevent_default();
-            Some(Msg::Rte(RteMsg::InsertTable { rows, cols }, field_id))
+            Some(Msg::Rte(field_id, RteMsg::InsertTable { rows, cols }))
         })
     };
 
@@ -1070,9 +1090,16 @@ fn styled_rte_button(title: &str, icon: Icon, handler: EventHandler<Msg>) -> Nod
 }
 
 fn code_tooltip(values: &StyledRte) -> Node<Msg> {
-    let StyledRteCodeState { visible, lang, .. } = &values.code_tooltip;
+    let (visible, lang) = values
+        .code_tooltip
+        .as_ref()
+        .map(|StyledRteCodeState { visible, lang, .. }| (*visible, Some(lang)))
+        .unwrap_or_default();
 
-    let languages = values.code_tooltip.languages();
+    let languages = values
+        .code_tooltip
+        .map(|ct| ct.languages().as_slice())
+        .unwrap_or_default();
 
     let options: Vec<(String, u32)> = languages
         .iter()
@@ -1081,15 +1108,14 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
         .collect();
 
     let select_lang_node = StyledSelect::build()
-        .state(lang)
+        .try_state(lang)
         .selected(
-            lang.values
-                .get(0)
+            lang.and_then(|l| l.values.get(0))
                 .and_then(|n| options.get(*n as usize))
                 .map(|v| vec![v.to_child()])
                 .unwrap_or_default(),
         )
-        .options(options.into_iter().map(|opt| opt.to_child()).collect())
+        .options(options.iter().map(|opt| opt.to_child()).collect())
         .normal()
         .build(FieldId::Rte(RteField::CodeLang(Box::new(
             values.field_id.clone(),
@@ -1103,7 +1129,7 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
             .icon(Icon::Close)
             .on_click(mouse_ev(Ev::Click, move |ev| {
                 ev.prevent_default();
-                Some(Msg::Rte(RteMsg::InsertCode(false), field_id))
+                Some(Msg::Rte(field_id, RteMsg::InsertCode(false)))
             }))
             .build()
             .into_node()
@@ -1116,7 +1142,7 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
             let target = ev.target().unwrap();
             let textarea = seed::to_textarea(&target);
             let code = textarea.value();
-            Msg::Rte(RteMsg::CodeChanged(code), field_id)
+            Msg::Rte(field_id, RteMsg::CodeChanged(code))
         });
         seed::textarea![on_change]
     };
@@ -1126,7 +1152,8 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
         let on_insert = ev(Ev::Click, move |ev| {
             ev.stop_propagation();
             ev.prevent_default();
-            Msg::Rte(RteMsg::InjectCode, field_id)
+            ev.target().unwrap();
+            Msg::Rte(field_id, RteMsg::InjectCode)
         });
         let insert = StyledButton::build()
             .on_click(on_insert)
@@ -1138,7 +1165,7 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
 
     StyledTooltip::build()
         .code_tooltip()
-        .visible(*visible)
+        .visible(visible)
         .add_child(h2!["Insert Code", close_tooltip])
         .add_child(select_lang_node)
         .add_child(input)

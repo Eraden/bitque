@@ -44,18 +44,14 @@ pub fn view(model: &Model) -> Node<Msg> {
         .build()
         .into_node();
 
+    let roles = UserRole::ordered();
     let user_role = StyledSelect::build()
         .name("user_role")
         .valid(true)
         .normal()
         .state(&page.user_role_state)
         .selected(vec![page.user_role.to_child()])
-        .options(
-            UserRole::ordered()
-                .into_iter()
-                .map(|role| role.to_child())
-                .collect(),
-        )
+        .options(roles.iter().map(|role| role.to_child()).collect())
         .build(FieldId::Users(UsersFieldId::UserRole))
         .into_node();
     let user_role_field = StyledField::build()

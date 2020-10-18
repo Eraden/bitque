@@ -14,8 +14,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             vec![
                 WsMsg::UserProjectsLoad,
                 WsMsg::ProjectsLoad,
-                WsMsg::MessagesLoad,
                 WsMsg::ProjectUsersLoad,
+                WsMsg::MessagesLoad,
             ],
             model.ws.as_ref(),
             orders,
@@ -85,16 +85,17 @@ pub fn render(model: &Model) -> Node<Msg> {
 
 fn sidebar_link_item(model: &Model, name: &str, icon: Icon, page: Option<Page>) -> Node<Msg> {
     let path = page.map(|ref p| p.to_path()).unwrap_or_default();
-    let mut class_list = vec!["linkItem".to_string(), icon.to_string()];
+    let mut class_list = vec![];
     if page.is_none() {
-        class_list.push("notAllowed".to_string());
+        class_list.push("notAllowed");
     };
     if Some(model.page) == page {
-        class_list.push("active".to_string());
+        class_list.push("active");
     }
     let icon_node = StyledIcon::build(icon).build().into_node();
     li![
-        attrs![At::Class => class_list.join(" ")],
+        class!["linkItem"],
+        class![icon.to_str()],
         a![
             attrs![At::Href => path],
             icon_node,

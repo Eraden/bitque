@@ -12,65 +12,53 @@ const CONFIRM_TEXT: &str = "Confirm";
 const CANCEL_TEXT: &str = "Cancel";
 
 #[derive(Debug)]
-pub struct StyledConfirmModal {
-    title: String,
-    message: String,
-    confirm_text: String,
-    cancel_text: String,
+pub struct StyledConfirmModal<'l> {
+    title: &'l str,
+    message: &'l str,
+    confirm_text: &'l str,
+    cancel_text: &'l str,
     on_confirm: Option<EventHandler<Msg>>,
 }
 
-impl StyledConfirmModal {
-    pub fn build() -> StyledConfirmModalBuilder {
+impl<'l> StyledConfirmModal<'l> {
+    pub fn build() -> StyledConfirmModalBuilder<'l> {
         StyledConfirmModalBuilder::default()
     }
 }
 
-impl ToNode for StyledConfirmModal {
+impl<'l> ToNode for StyledConfirmModal<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
 #[derive(Default)]
-pub struct StyledConfirmModalBuilder {
-    title: Option<String>,
-    message: Option<String>,
-    confirm_text: Option<String>,
-    cancel_text: Option<String>,
+pub struct StyledConfirmModalBuilder<'l> {
+    title: Option<&'l str>,
+    message: Option<&'l str>,
+    confirm_text: Option<&'l str>,
+    cancel_text: Option<&'l str>,
     on_confirm: Option<EventHandler<Msg>>,
 }
 
-impl StyledConfirmModalBuilder {
-    pub fn title<S>(mut self, title: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.title = Some(title.into());
+impl<'l> StyledConfirmModalBuilder<'l> {
+    pub fn title(mut self, title: &'l str) -> Self {
+        self.title = Some(title);
         self
     }
 
-    pub fn message<S>(mut self, message: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.message = Some(message.into());
+    pub fn message(mut self, message: &'l str) -> Self {
+        self.message = Some(message);
         self
     }
 
-    pub fn confirm_text<S>(mut self, confirm_text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.confirm_text = Some(confirm_text.into());
+    pub fn confirm_text(mut self, confirm_text: &'l str) -> Self {
+        self.confirm_text = Some(confirm_text);
         self
     }
 
-    pub fn cancel_text<S>(mut self, cancel_text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.cancel_text = Some(cancel_text.into());
+    pub fn cancel_text(mut self, cancel_text: &'l str) -> Self {
+        self.cancel_text = Some(cancel_text);
         self
     }
 
@@ -79,14 +67,12 @@ impl StyledConfirmModalBuilder {
         self
     }
 
-    pub fn build(self) -> StyledConfirmModal {
+    pub fn build(self) -> StyledConfirmModal<'l> {
         StyledConfirmModal {
-            title: self.title.unwrap_or_else(|| TITLE.to_string()),
-            message: self.message.unwrap_or_else(|| MESSAGE.to_string()),
-            confirm_text: self
-                .confirm_text
-                .unwrap_or_else(|| CONFIRM_TEXT.to_string()),
-            cancel_text: self.cancel_text.unwrap_or_else(|| CANCEL_TEXT.to_string()),
+            title: self.title.unwrap_or_else(|| TITLE),
+            message: self.message.unwrap_or_else(|| MESSAGE),
+            confirm_text: self.confirm_text.unwrap_or_else(|| CONFIRM_TEXT),
+            cancel_text: self.cancel_text.unwrap_or_else(|| CANCEL_TEXT),
             on_confirm: self.on_confirm,
         }
     }
@@ -132,7 +118,7 @@ pub fn render(values: StyledConfirmModal) -> Node<Msg> {
                 cancel_button
             ],
         ])
-        .add_class("confirmModal".to_string())
+        .add_class("confirmModal")
         .build()
         .into_node()
 }

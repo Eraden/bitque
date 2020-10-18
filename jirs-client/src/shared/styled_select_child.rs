@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use seed::{prelude::*, *};
 
 use crate::shared::styled_select::Variant;
@@ -9,18 +11,18 @@ pub enum DisplayType {
     SelectValue,
 }
 
-pub struct StyledSelectChild {
-    name: Option<String>,
+pub struct StyledSelectChild<'l> {
+    name: Option<&'l str>,
     icon: Option<Node<Msg>>,
-    text: Option<String>,
+    text: Option<std::borrow::Cow<'l, str>>,
     display_type: DisplayType,
     value: u32,
-    class_list: Vec<String>,
+    class_list: Vec<std::borrow::Cow<'l, str>>,
     variant: Variant,
 }
 
-impl StyledSelectChild {
-    pub fn build() -> StyledSelectChildBuilder {
+impl<'l> StyledSelectChild<'l> {
+    pub fn build() -> StyledSelectChildBuilder<'l> {
         StyledSelectChildBuilder {
             icon: None,
             text: None,
@@ -37,47 +39,46 @@ impl StyledSelectChild {
     }
 }
 
-impl ToNode for StyledSelectChild {
+impl<'l> ToNode for StyledSelectChild<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
 #[derive(Debug)]
-pub struct StyledSelectChildBuilder {
+pub struct StyledSelectChildBuilder<'l> {
     icon: Option<Node<Msg>>,
-    text: Option<String>,
-    name: Option<String>,
+    text: Option<std::borrow::Cow<'l, str>>,
+    name: Option<&'l str>,
     value: u32,
-    class_list: Vec<String>,
+    class_list: Vec<std::borrow::Cow<'l, str>>,
     variant: Variant,
 }
 
-impl PartialEq for StyledSelectChildBuilder {
+impl<'l> PartialEq for StyledSelectChildBuilder<'l> {
     fn eq(&self, other: &Self) -> bool {
         self.value == other.value
     }
 }
 
-impl StyledSelectChildBuilder {
+impl<'l> StyledSelectChildBuilder<'l> {
     pub fn icon(mut self, icon: Node<Msg>) -> Self {
         self.icon = Some(icon);
         self
     }
 
-    pub fn text<S>(mut self, text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.text = Some(text.into());
+    pub fn text<'m: 'l>(mut self, text: &'m str) -> Self {
+        self.text = Some(std::borrow::Cow::Borrowed(text));
         self
     }
 
-    pub fn name<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.name = Some(name.into());
+    pub fn text_owned(mut self, text: String) -> Self {
+        self.text = Some(std::borrow::Cow::Owned(text));
+        self
+    }
+
+    pub fn name(mut self, name: &'l str) -> Self {
+        self.name = Some(name);
         self
     }
 
@@ -93,15 +94,12 @@ impl StyledSelectChildBuilder {
             .unwrap_or(true)
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn add_class<'m: 'l>(mut self, name: &'m str) -> Self {
+        self.class_list.push(Cow::Borrowed(name));
         self
     }
 
-    pub fn build(self, display_type: DisplayType) -> StyledSelectChild {
+    pub fn build(self, display_type: DisplayType) -> StyledSelectChild<'l> {
         StyledSelectChild {
             name: self.name,
             icon: self.icon,
@@ -121,45 +119,27 @@ pub fn render(values: StyledSelectChild) -> Node<Msg> {
         text,
         display_type,
         value: _,
-        mut class_list,
+        class_list,
         variant,
     } = values;
 
-    class_list.push(format!("{}", variant));
-
     let label_class = match display_type {
         DisplayType::SelectOption => vec![
-            "optionLabel".to_string(),
-            variant.to_string(),
-            name.as_ref().cloned().unwrap_or_default(),
-            name.as_ref()
-                .map(|s| format!("{}Label", s))
-                .unwrap_or_default(),
-            class_list.join(" "),
+            "optionLabel",
+            variant.to_str(),
+            name.as_deref().unwrap_or_default(),
         ],
         DisplayType::SelectValue => vec![
-            "selectItemLabel".to_string(),
-            variant.to_string(),
-            name.as_ref().cloned().unwrap_or_default(),
-            name.as_ref()
-                .map(|s| format!("{}Label", s))
-                .unwrap_or_default(),
-            class_list.join(" "),
+            "selectItemLabel",
+            variant.to_str(),
+            name.as_deref().unwrap_or_default(),
         ],
     }
     .join(" ");
 
     let wrapper_class = match display_type {
-        DisplayType::SelectOption => vec![
-            "optionItem".to_string(),
-            name.as_ref().cloned().unwrap_or_default(),
-            class_list.join(" "),
-        ],
-        DisplayType::SelectValue => vec![
-            "selectItem".to_string(),
-            name.as_ref().cloned().unwrap_or_default(),
-            class_list.join(" "),
-        ],
+        DisplayType::SelectOption => vec!["optionItem", name.as_deref().unwrap_or_default()],
+        DisplayType::SelectValue => vec!["selectItem", name.as_deref().unwrap_or_default()],
     }
     .join(" ");
 
@@ -169,19 +149,32 @@ pub fn render(values: StyledSelectChild) -> Node<Msg> {
     };
 
     let label_node = match text {
-        Some(text) => div![class![label_class.as_str()], text],
+        Some(text) => div![
+            attrs![
+                At::Class => name.as_deref().map(|s| format!("{}Label", s)).unwrap_or_default(),
+                At::Class => class_list.join(" "),
+            ],
+            class![label_class.as_str()],
+            text
+        ],
         _ => empty![],
     };
 
-    div![class![wrapper_class.as_str()], icon_node, label_node]
+    div![
+        class![variant.to_str()],
+        class![wrapper_class.as_str()],
+        attrs![At::Class => class_list.join(" ")],
+        icon_node,
+        label_node
+    ]
 }
 
-impl ToChild for jirs_data::User {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for jirs_data::User {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> Self::Builder {
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
         let avatar = crate::shared::styled_avatar::StyledAvatar::build()
-            .avatar_url(self.avatar_url.as_ref().cloned().unwrap_or_default())
+            .avatar_url(self.avatar_url.as_deref().unwrap_or_default())
             .size(20)
             .name(self.name.as_str())
             .build()
@@ -193,110 +186,106 @@ impl ToChild for jirs_data::User {
     }
 }
 
-impl ToChild for jirs_data::IssuePriority {
-    type Builder = StyledSelectChildBuilder;
-    fn to_child(&self) -> StyledSelectChildBuilder {
+impl<'l> ToChild<'l> for jirs_data::IssuePriority {
+    type Builder = StyledSelectChildBuilder<'l>;
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
         let icon = crate::shared::styled_icon::StyledIcon::build(self.clone().into())
-            .add_class(self.to_string())
+            .add_class(self.to_str())
             .build()
             .into_node();
-        let text = self.to_string();
+        let text = self.to_str();
 
         StyledSelectChild::build()
             .icon(icon)
             .value(self.clone().into())
             .text(text)
-            .add_class(format!("{}", self))
+            .add_class(self.to_str())
     }
 }
 
-impl ToChild for jirs_data::IssueStatus {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for jirs_data::IssueStatus {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> StyledSelectChildBuilder {
-        let text = &self.name;
-
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
         StyledSelectChild::build()
             .value(self.id as u32)
-            .add_class(text)
-            .text(text.as_str())
+            .add_class(self.name.as_str())
+            .text(self.name.as_str())
     }
 }
 
-impl ToChild for jirs_data::IssueType {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for jirs_data::IssueType {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> StyledSelectChildBuilder {
-        let name = self.to_label().to_owned();
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
+        let name = self.to_label();
 
         let type_icon = crate::shared::styled_icon::StyledIcon::build(self.clone().into())
-            .add_class(name.as_str())
+            .add_class(name)
             .build()
             .into_node();
 
         StyledSelectChild::build()
-            .add_class(name.as_str())
+            .add_class(name)
             .text(name)
             .icon(type_icon)
             .value(self.clone().into())
     }
 }
 
-impl ToChild for jirs_data::ProjectCategory {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for jirs_data::ProjectCategory {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> StyledSelectChildBuilder {
-        let name = self.to_string();
-
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
         StyledSelectChild::build()
-            .add_class(name.as_str())
-            .text(name)
+            .add_class(self.to_str())
+            .text(self.to_str())
             .value(self.clone().into())
     }
 }
 
-impl ToChild for jirs_data::UserRole {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for jirs_data::UserRole {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> StyledSelectChildBuilder {
-        let name = self.to_string();
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
+        let name = self.to_str();
 
         StyledSelectChild::build()
-            .add_class(name.as_str())
+            .add_class(name)
             .add_class("capitalize")
             .text(name)
             .value(self.clone().into())
     }
 }
 
-impl ToChild for jirs_data::Project {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for jirs_data::Project {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> Self::Builder {
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
         StyledSelectChild::build()
             .text(self.name.as_str())
             .value(self.id as u32)
     }
 }
 
-impl ToChild for jirs_data::Epic {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for jirs_data::Epic {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> Self::Builder {
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
         StyledSelectChild::build()
             .text(self.name.as_str())
             .value(self.id as u32)
     }
 }
 
-impl ToChild for u32 {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for u32 {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> Self::Builder {
-        let name = self.to_string();
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
+        let name = stringify!(self);
 
         StyledSelectChild::build()
-            .add_class(name.as_str())
+            .add_class(name)
             .text(name)
             .value(*self)
     }
@@ -305,10 +294,10 @@ impl ToChild for u32 {
 pub type Label = String;
 pub type Value = u32;
 
-impl ToChild for (Label, Value) {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for (Label, Value) {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> Self::Builder {
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
         StyledSelectChild::build()
             .text(self.0.as_str())
             .value(self.1)

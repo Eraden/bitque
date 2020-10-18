@@ -3,21 +3,21 @@ use seed::{prelude::*, *};
 use crate::shared::ToNode;
 use crate::Msg;
 
-pub struct StyledAvatar {
-    avatar_url: Option<String>,
+pub struct StyledAvatar<'l> {
+    avatar_url: Option<&'l str>,
     size: u32,
-    name: String,
+    name: &'l str,
     on_click: Option<EventHandler<Msg>>,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
     user_index: usize,
 }
 
-impl Default for StyledAvatar {
+impl<'l> Default for StyledAvatar<'l> {
     fn default() -> Self {
         Self {
             avatar_url: None,
             size: 32,
-            name: "".to_string(),
+            name: "",
             on_click: None,
             class_list: vec![],
             user_index: 0,
@@ -25,12 +25,12 @@ impl Default for StyledAvatar {
     }
 }
 
-impl StyledAvatar {
-    pub fn build() -> StyledAvatarBuilder {
+impl<'l> StyledAvatar<'l> {
+    pub fn build() -> StyledAvatarBuilder<'l> {
         StyledAvatarBuilder {
             avatar_url: None,
             size: None,
-            name: "".to_string(),
+            name: "",
             on_click: None,
             class_list: vec![],
             user_index: 0,
@@ -38,29 +38,25 @@ impl StyledAvatar {
     }
 }
 
-impl ToNode for StyledAvatar {
+impl<'l> ToNode for StyledAvatar<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-pub struct StyledAvatarBuilder {
-    avatar_url: Option<String>,
+pub struct StyledAvatarBuilder<'l> {
+    avatar_url: Option<&'l str>,
     size: Option<u32>,
-    name: String,
+    name: &'l str,
     on_click: Option<EventHandler<Msg>>,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
     user_index: usize,
 }
 
-impl StyledAvatarBuilder {
-    pub fn avatar_url<S>(mut self, avatar_url: S) -> Self
-    where
-        S: Into<String>,
-    {
-        let url = avatar_url.into();
-        if !url.is_empty() {
-            self.avatar_url = Some(url);
+impl<'l> StyledAvatarBuilder<'l> {
+    pub fn avatar_url<'m: 'l>(mut self, avatar_url: &'m str) -> Self {
+        if !avatar_url.is_empty() {
+            self.avatar_url = Some(avatar_url);
         }
         self
     }
@@ -70,11 +66,8 @@ impl StyledAvatarBuilder {
         self
     }
 
-    pub fn name<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.name = name.into();
+    pub fn name<'m: 'l>(mut self, name: &'m str) -> Self {
+        self.name = name;
         self
     }
 
@@ -83,11 +76,8 @@ impl StyledAvatarBuilder {
         self
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn add_class<'m: 'l>(mut self, name: &'m str) -> Self {
+        self.class_list.push(name);
         self
     }
 
@@ -96,7 +86,7 @@ impl StyledAvatarBuilder {
         self
     }
 
-    pub fn build(self) -> StyledAvatar {
+    pub fn build(self) -> StyledAvatar<'l> {
         StyledAvatar {
             avatar_url: self.avatar_url,
             size: self.size.unwrap_or(32),
@@ -120,10 +110,10 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
 
     let index = user_index % 8;
 
-    class_list.push("styledAvatar".to_string());
+    class_list.push("styledAvatar");
     match avatar_url {
-        Some(_) => class_list.push("image".to_string()),
-        _ => class_list.push("letter".to_string()),
+        Some(_) => class_list.push("image"),
+        _ => class_list.push("letter"),
     };
 
     let shared_style = format!("width: {size}px; height: {size}px", size = size);
@@ -155,10 +145,13 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
                 shared = shared_style,
                 size = size
             );
-            class_list.push("letter".to_string());
-            class_list.push(format!("avatarColor{}", index + 1));
             div![
-                attrs![At::Class => class_list.join(" "), At::Style => style],
+                class!["letter"],
+                attrs![
+                    At::Class => format!("avatarColor{}", index + 1),
+                    At::Class => class_list.join(" "),
+                    At::Style => style
+                ],
                 span![letter],
                 handler,
             ]

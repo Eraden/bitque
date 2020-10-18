@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use seed::{prelude::*, *};
 
 use jirs_data::{IssuePriority, IssueType};
@@ -100,21 +102,19 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub fn to_color(self) -> Option<String> {
+    pub fn to_color(&self) -> Option<String> {
         match self {
             Icon::Bug | Icon::Task | Icon::Story | Icon::Epic => Some(format!("var(--{})", self)),
             _ => None,
         }
     }
 
-    pub fn into_styled_builder(self) -> StyledIconBuilder {
+    pub fn into_styled_builder<'l>(self) -> StyledIconBuilder<'l> {
         StyledIcon::build(self)
     }
-}
 
-impl std::fmt::Display for Icon {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let code = match self {
+    pub fn to_str<'l>(&self) -> &'l str {
+        match self {
             Icon::Bug => "bug",
             Icon::Stopwatch => "stopwatch",
             Icon::Task => "task",
@@ -202,8 +202,13 @@ impl std::fmt::Display for Icon {
 
             Icon::DoubleLeft => "double-left",
             Icon::DoubleRight => "double-right",
-        };
-        f.write_str(code)
+        }
+    }
+}
+
+impl std::fmt::Display for Icon {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.to_str())
     }
 }
 
@@ -230,8 +235,8 @@ impl From<IssuePriority> for Icon {
     }
 }
 
-impl Into<StyledIcon> for Icon {
-    fn into(self) -> StyledIcon {
+impl<'l> Into<StyledIcon<'l>> for Icon {
+    fn into(self) -> StyledIcon<'l> {
         StyledIcon::build(self).build()
     }
 }
@@ -243,33 +248,28 @@ impl ToNode for Icon {
     }
 }
 
-pub struct StyledIconBuilder {
+pub struct StyledIconBuilder<'l> {
     icon: Icon,
     size: Option<i32>,
-    class_list: Vec<String>,
-    style_list: Vec<String>,
+    class_list: Vec<Cow<'l, str>>,
+    style_list: Vec<Cow<'l, str>>,
+    color: Option<Cow<'l, str>>,
     on_click: Option<EventHandler<Msg>>,
 }
 
-impl StyledIconBuilder {
+impl<'l> StyledIconBuilder<'l> {
     pub fn size(mut self, size: i32) -> Self {
         self.size = Some(size);
         self
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn add_class(mut self, name: &'l str) -> Self {
+        self.class_list.push(Cow::Borrowed(name));
         self
     }
 
-    pub fn add_style<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.style_list.push(name.into());
+    pub fn with_color(mut self, color: &'l str) -> Self {
+        self.color = Some(Cow::Borrowed(color));
         self
     }
 
@@ -278,10 +278,11 @@ impl StyledIconBuilder {
         self
     }
 
-    pub fn build(self) -> StyledIcon {
+    pub fn build(self) -> StyledIcon<'l> {
         StyledIcon {
             icon: self.icon,
             size: self.size,
+            color: self.color,
             class_list: self.class_list,
             style_list: self.style_list,
             on_click: self.on_click,
@@ -289,27 +290,29 @@ impl StyledIconBuilder {
     }
 }
 
-pub struct StyledIcon {
+pub struct StyledIcon<'l> {
     icon: Icon,
     size: Option<i32>,
-    class_list: Vec<String>,
-    style_list: Vec<String>,
+    class_list: Vec<Cow<'l, str>>,
+    style_list: Vec<Cow<'l, str>>,
+    color: Option<Cow<'l, str>>,
     on_click: Option<EventHandler<Msg>>,
 }
 
-impl StyledIcon {
-    pub fn build(icon: Icon) -> StyledIconBuilder {
+impl<'l> StyledIcon<'l> {
+    pub fn build(icon: Icon) -> StyledIconBuilder<'l> {
         StyledIconBuilder {
             icon,
             size: None,
             class_list: vec![],
             style_list: vec![],
+            color: None,
             on_click: None,
         }
     }
 }
 
-impl ToNode for StyledIcon {
+impl<'l> ToNode for StyledIcon<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
@@ -319,23 +322,56 @@ pub fn render(values: StyledIcon) -> Node<Msg> {
     let StyledIcon {
         icon,
         size,
-        mut class_list,
-        mut style_list,
+        color,
+        class_list,
+        style_list,
         on_click,
     } = values;
 
-    if let Some(s) = icon.to_color() {
-        style_list.push(format!("color: {}", s));
-    }
+    let styles: Vec<Attrs> = vec![
+        size.map(|s| {
+            let font_size = format!("font-size: {}", s);
+            attrs![At::Style => font_size]
+        }),
+        icon.to_color().map(|s| {
+            let color = format!("color: {}", s);
+            attrs![At::Style => color]
+        }),
+        color.map(|s| {
+            let s = match s {
+                Cow::Owned(s) => format!("color: var(--{})", s.as_str()),
+                Cow::Borrowed(s) => format!("color: var(--{})", s),
+            };
+            attrs![At::Style => s]
+        }),
+    ]
+    .into_iter()
+    .filter(Option::is_some)
+    .map(|o| o.unwrap())
+    .collect();
 
-    if let Some(size) = size {
-        style_list.push(format!("font-size: {s}px", s = size));
-    }
-
-    class_list.push(format!("styledIcon {}", icon));
+    let class_list: Vec<seed::Attrs> = class_list
+        .into_iter()
+        .map(|s| match s {
+            Cow::Borrowed(s) => class![s],
+            Cow::Owned(s) => class![s.as_str()],
+        })
+        .collect();
+    let style_list = style_list
+        .iter()
+        .map(|s| match s {
+            Cow::Borrowed(s) => s,
+            Cow::Owned(s) => s.as_str(),
+        })
+        .collect::<Vec<&str>>()
+        .join(";");
 
     i![
-        attrs![At::Class => class_list.join(" "), At::Style => style_list.join(";")],
+        class!["styledIcon"],
+        class_list,
+        class![icon.to_str()],
+        styles,
+        attrs![ At::Style => style_list ],
         on_click,
         ""
     ]

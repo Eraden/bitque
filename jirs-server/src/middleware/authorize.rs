@@ -53,7 +53,7 @@ where
     }
 
     fn call(&mut self, req: ServiceRequest) -> Self::Future {
-        let pool: Db = match req.app_data() {
+        let pool: &Db = match req.app_data::<Db>() {
             Some(d) => d,
             _ => {
                 return async move {
@@ -66,7 +66,7 @@ where
             }
         };
 
-        match check_token(req.headers(), pool) {
+        match check_token(req.headers(), pool.clone()) {
             std::result::Result::Err(e) => {
                 return async move {
                     let res = e.into_http_response().into_body();

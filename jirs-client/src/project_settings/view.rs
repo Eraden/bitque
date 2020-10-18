@@ -18,8 +18,8 @@ use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::{model, FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange};
 
-static TIME_TRACKING_FIBONACCI: &str = "Tracking employees’ time carries the risk of having them feel like they are being spied on. This is one of the most common fears that employees have when a time tracking system is implemented. No one likes to feel like they’re always being watched.";
-static TIME_TRACKING_HOURLY: &str = "Employees may feel intimidated by demands to track their time. Or they could feel that they’re constantly being watched and evaluated. And for overly ambitious managers, employee time tracking may open the doors to excessive micromanaging.";
+static TIME_TRACKING_FIBONACCI: &str = include_str!("./time_tracking_fibonacci.txt");
+static TIME_TRACKING_HOURLY: &str = include_str!("./time_tracking_hourly.txt");
 
 pub fn view(model: &model::Model) -> Node<Msg> {
     let page = match &model.page_content {
@@ -106,7 +106,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 /// Build project name input with styled field wrapper
 fn name_field(page: &ProjectSettingsPage) -> Node<Msg> {
     let name = StyledTextarea::build(FieldId::ProjectSettings(ProjectFieldId::Name))
-        .value(page.payload.name.as_ref().cloned().unwrap_or_default())
+        .value(page.payload.name.as_deref().unwrap_or_default())
         .height(39)
         .max_height(39)
         .disable_auto_resize()
@@ -126,7 +126,7 @@ fn url_field(page: &ProjectSettingsPage) -> Node<Msg> {
         .height(39)
         .max_height(39)
         .disable_auto_resize()
-        .value(page.payload.url.as_ref().cloned().unwrap_or_default())
+        .value(page.payload.url.as_deref().unwrap_or_default())
         .build()
         .into_node();
     StyledField::build()
@@ -161,17 +161,13 @@ fn description_field(page: &ProjectSettingsPage) -> Node<Msg> {
 
 /// Build project category dropdown with styled field wrapper
 fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
+    let project_categories = ProjectCategory::ordered();
     let category = StyledSelect::build()
         .opened(page.project_category_state.opened)
         .text_filter(page.project_category_state.text_filter.as_str())
         .valid(true)
         .normal()
-        .options(
-            ProjectCategory::ordered()
-                .into_iter()
-                .map(|c| c.to_child())
-                .collect(),
-        )
+        .options(project_categories.iter().map(|c| c.to_child()).collect())
         .selected(vec![page
             .payload
             .category

@@ -101,13 +101,19 @@ impl Into<IssueType> for u32 {
     }
 }
 
+impl IssueType {
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            IssueType::Task => "task",
+            IssueType::Bug => "bug",
+            IssueType::Story => "story",
+        }
+    }
+}
+
 impl std::fmt::Display for IssueType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            IssueType::Task => f.write_str("task"),
-            IssueType::Bug => f.write_str("bug"),
-            IssueType::Story => f.write_str("story"),
-        }
+        f.write_str(self.to_str())
     }
 }
 
@@ -157,15 +163,21 @@ impl Default for IssuePriority {
     }
 }
 
+impl IssuePriority {
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            IssuePriority::Highest => "highest",
+            IssuePriority::High => "high",
+            IssuePriority::Medium => "medium",
+            IssuePriority::Low => "low",
+            IssuePriority::Lowest => "lowest",
+        }
+    }
+}
+
 impl std::fmt::Display for IssuePriority {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            IssuePriority::Highest => f.write_str("highest"),
-            IssuePriority::High => f.write_str("high"),
-            IssuePriority::Medium => f.write_str("medium"),
-            IssuePriority::Low => f.write_str("low"),
-            IssuePriority::Lowest => f.write_str("lowest"),
-        }
+        f.write_str(self.to_str())
     }
 }
 
@@ -245,13 +257,19 @@ impl Default for UserRole {
     }
 }
 
+impl UserRole {
+    pub fn to_str<'l>(&self) -> &'l str {
+        match self {
+            UserRole::User => "user",
+            UserRole::Manager => "manager",
+            UserRole::Owner => "owner",
+        }
+    }
+}
+
 impl std::fmt::Display for UserRole {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            UserRole::User => f.write_str("user"),
-            UserRole::Manager => f.write_str("manager"),
-            UserRole::Owner => f.write_str("owner"),
-        }
+        f.write_str(self.to_str())
     }
 }
 
@@ -316,13 +334,19 @@ impl Default for ProjectCategory {
     }
 }
 
+impl ProjectCategory {
+    pub fn to_str<'l>(&self) -> &'l str {
+        match self {
+            ProjectCategory::Software => "software",
+            ProjectCategory::Marketing => "marketing",
+            ProjectCategory::Business => "business",
+        }
+    }
+}
+
 impl std::fmt::Display for ProjectCategory {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ProjectCategory::Software => f.write_str("software"),
-            ProjectCategory::Marketing => f.write_str("marketing"),
-            ProjectCategory::Business => f.write_str("business"),
-        }
+        f.write_str(self.to_str())
     }
 }
 

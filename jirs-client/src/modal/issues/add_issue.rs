@@ -73,10 +73,10 @@ impl Type {
     }
 }
 
-impl ToChild for Type {
-    type Builder = StyledSelectChildBuilder;
+impl<'l> ToChild<'l> for Type {
+    type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child(&self) -> Self::Builder {
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
         let name = match self {
             Type::Task => "Task",
             Type::Bug => "Bug",

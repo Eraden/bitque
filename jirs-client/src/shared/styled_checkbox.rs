@@ -27,21 +27,21 @@ impl StyledCheckboxState {
 }
 
 #[derive(Debug)]
-pub struct ChildBuilder {
+pub struct ChildBuilder<'l> {
     field_id: Option<FieldId>,
-    name: String,
-    label: String,
+    name: &'l str,
+    label: &'l str,
     value: u32,
     selected: bool,
     class_list: Vec<String>,
 }
 
-impl Default for ChildBuilder {
+impl<'l> Default for ChildBuilder<'l> {
     fn default() -> Self {
         Self {
             field_id: None,
-            name: "".to_string(),
-            label: "".to_string(),
+            name: "",
+            label: "",
             value: 0,
             selected: false,
             class_list: vec![],
@@ -49,25 +49,19 @@ impl Default for ChildBuilder {
     }
 }
 
-impl ChildBuilder {
+impl<'l> ChildBuilder<'l> {
     pub fn value(mut self, value: u32) -> Self {
         self.value = value;
         self
     }
 
-    pub fn name<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.name = name.into();
+    pub fn name(mut self, name: &'l str) -> Self {
+        self.name = name;
         self
     }
 
-    pub fn label<S>(mut self, label: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.label = label.into();
+    pub fn label(mut self, label: &'l str) -> Self {
+        self.label = label;
         self
     }
 
@@ -90,7 +84,7 @@ impl ChildBuilder {
     }
 }
 
-impl ToNode for ChildBuilder {
+impl<'l> ToNode for ChildBuilder<'l> {
     fn into_node(self) -> Node<Msg> {
         let ChildBuilder {
             field_id,
@@ -111,9 +105,9 @@ impl ToNode for ChildBuilder {
         class_list.push(if selected { "selected" } else { "" }.to_string());
 
         let input_attrs = if selected {
-            attrs![At::Type => "radio", At::Name => name.as_str(), At::Checked => selected, At::Id => format!("{}-{}", id, name)]
+            attrs![At::Type => "radio", At::Name => name, At::Checked => selected, At::Id => format!("{}-{}", id, name)]
         } else {
-            attrs![At::Type => "radio", At::Name => name.as_str(), At::Id => format!("{}-{}", id, name)]
+            attrs![At::Type => "radio", At::Name => name, At::Id => format!("{}-{}", id, name)]
         };
 
         div![
@@ -126,21 +120,21 @@ impl ToNode for ChildBuilder {
 }
 
 #[derive(Debug)]
-pub struct StyledCheckbox {
+pub struct StyledCheckbox<'l> {
     id: FieldId,
-    options: Vec<ChildBuilder>,
+    options: Vec<ChildBuilder<'l>>,
     selected: u32,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
 }
 
-impl ToNode for StyledCheckbox {
+impl<'l> ToNode for StyledCheckbox<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-impl StyledCheckbox {
-    pub fn build() -> StyledCheckboxBuilder {
+impl<'l> StyledCheckbox<'l> {
+    pub fn build() -> StyledCheckboxBuilder<'l> {
         StyledCheckboxBuilder {
             options: vec![],
             selected: 0,
@@ -149,32 +143,29 @@ impl StyledCheckbox {
     }
 }
 
-pub struct StyledCheckboxBuilder {
-    options: Vec<ChildBuilder>,
+pub struct StyledCheckboxBuilder<'l> {
+    options: Vec<ChildBuilder<'l>>,
     selected: u32,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
 }
 
-impl StyledCheckboxBuilder {
+impl<'l> StyledCheckboxBuilder<'l> {
     pub fn state(mut self, state: &StyledCheckboxState) -> Self {
         self.selected = state.value;
         self
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn add_class(mut self, name: &'l str) -> Self {
+        self.class_list.push(name);
         self
     }
 
-    pub fn options(mut self, options: Vec<ChildBuilder>) -> Self {
+    pub fn options(mut self, options: Vec<ChildBuilder<'l>>) -> Self {
         self.options = options;
         self
     }
 
-    pub fn build(self, field_id: FieldId) -> StyledCheckbox {
+    pub fn build(self, field_id: FieldId) -> StyledCheckbox<'l> {
         StyledCheckbox {
             id: field_id,
             options: self.options,
@@ -204,10 +195,10 @@ fn render(values: StyledCheckbox) -> Node<Msg> {
     ]
 }
 
-impl ToChild for TimeTracking {
-    type Builder = ChildBuilder;
+impl<'l> ToChild<'l> for TimeTracking {
+    type Builder = ChildBuilder<'l>;
 
-    fn to_child(&self) -> Self::Builder {
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
         Self::Builder::default()
             .label(match self {
                 TimeTracking::Untracked => "No tracking",

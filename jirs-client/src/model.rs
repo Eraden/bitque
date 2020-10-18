@@ -8,16 +8,16 @@ use uuid::Uuid;
 
 use jirs_data::*;
 
-use crate::modal::time_tracking::value_for_time_tracking;
-use crate::shared::drag::DragState;
-use crate::shared::styled_checkbox::StyledCheckboxState;
-use crate::shared::styled_date_time_input::StyledDateTimeInputState;
-use crate::shared::styled_editor::Mode;
-use crate::shared::styled_image_input::StyledImageInputState;
-use crate::shared::styled_input::StyledInputState;
-use crate::shared::styled_rte::StyledRteState;
-use crate::shared::styled_select::StyledSelectState;
-use crate::{EditIssueModalSection, FieldId, Msg, ProjectFieldId};
+use crate::{
+    modal::time_tracking::value_for_time_tracking,
+    shared::{
+        drag::DragState, styled_checkbox::StyledCheckboxState,
+        styled_date_time_input::StyledDateTimeInputState, styled_editor::Mode,
+        styled_image_input::StyledImageInputState, styled_input::StyledInputState,
+        styled_rte::StyledRteState, styled_select::StyledSelectState,
+    },
+    EditIssueModalSection, FieldId, Msg, ProjectFieldId,
+};
 
 pub trait IssueModal {
     fn epic_id_value(&self) -> Option<u32>;

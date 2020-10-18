@@ -31,10 +31,10 @@ pub mod styled_textarea;
 pub mod styled_tooltip;
 pub mod tracking_widget;
 
-pub trait ToChild {
-    type Builder;
+pub trait ToChild<'l> {
+    type Builder: 'l;
 
-    fn to_child(&self) -> Self::Builder;
+    fn to_child<'m: 'l>(&'m self) -> Self::Builder;
 }
 
 pub fn go_to_board(orders: &mut impl Orders<Msg>) {
@@ -51,7 +51,7 @@ pub fn go_to(url: &str) {
     seed::push_route(Url::from_str(url).unwrap());
 }
 
-pub fn find_issue(model: &Model, issue_id: IssueId) -> Option<&Issue> {
+pub fn find_issue<'l>(model: &'l Model, issue_id: IssueId) -> Option<&'l Issue> {
     model.issues.iter().find(|issue| issue.id == issue_id)
 }
 

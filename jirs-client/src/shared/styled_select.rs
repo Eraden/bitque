@@ -25,12 +25,18 @@ impl Default for Variant {
     }
 }
 
+impl Variant {
+    pub fn to_str<'l>(&self) -> &'l str {
+        match self {
+            Variant::Empty => "empty",
+            Variant::Normal => "normal",
+        }
+    }
+}
+
 impl std::fmt::Display for Variant {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Variant::Empty => f.write_str("empty"),
-            Variant::Normal => f.write_str("normal"),
-        }
+        f.write_str(self.to_str())
     }
 }
 
@@ -61,34 +67,30 @@ impl StyledSelectState {
     }
 
     pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
-        let ref id = self.field_id;
+        let field_id = match msg {
+            Msg::StyledSelectChanged(field_id, ..) => field_id,
+            _ => return,
+        };
+        if &self.field_id != field_id {
+            return;
+        }
         match msg {
-            Msg::StyledSelectChanged(field_id, StyledSelectChanged::DropDownVisibility(b))
-                if field_id == id =>
-            {
+            Msg::StyledSelectChanged(_, StyledSelectChanged::DropDownVisibility(b)) => {
                 self.opened = *b;
                 if !self.opened {
                     self.text_filter.clear();
                 }
             }
-            Msg::StyledSelectChanged(field_id, StyledSelectChanged::Text(text))
-                if field_id == id =>
-            {
+            Msg::StyledSelectChanged(_, StyledSelectChanged::Text(text)) => {
                 self.text_filter = text.clone();
             }
-            Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(Some(v)))
-                if field_id == id =>
-            {
+            Msg::StyledSelectChanged(_, StyledSelectChanged::Changed(Some(v))) => {
                 self.values = vec![*v];
             }
-            Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(None))
-                if field_id == id =>
-            {
+            Msg::StyledSelectChanged(_, StyledSelectChanged::Changed(None)) => {
                 self.values.clear();
             }
-            Msg::StyledSelectChanged(field_id, StyledSelectChanged::RemoveMulti(v))
-                if field_id == id =>
-            {
+            Msg::StyledSelectChanged(_, StyledSelectChanged::RemoveMulti(v)) => {
                 let mut old = vec![];
                 std::mem::swap(&mut old, &mut self.values);
 
@@ -103,28 +105,28 @@ impl StyledSelectState {
     }
 }
 
-pub struct StyledSelect {
+pub struct StyledSelect<'l> {
     id: FieldId,
     variant: Variant,
     dropdown_width: Option<usize>,
-    name: Option<String>,
+    name: Option<&'l str>,
     valid: bool,
     is_multi: bool,
-    options: Vec<StyledSelectChildBuilder>,
-    selected: Vec<StyledSelectChildBuilder>,
-    text_filter: String,
+    options: Vec<StyledSelectChildBuilder<'l>>,
+    selected: Vec<StyledSelectChildBuilder<'l>>,
+    text_filter: &'l str,
     opened: bool,
     clearable: bool,
 }
 
-impl ToNode for StyledSelect {
+impl<'l> ToNode for StyledSelect<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-impl StyledSelect {
-    pub fn build() -> StyledSelectBuilder {
+impl<'l> StyledSelect<'l> {
+    pub fn build() -> StyledSelectBuilder<'l> {
         StyledSelectBuilder {
             variant: None,
             dropdown_width: None,
@@ -141,21 +143,21 @@ impl StyledSelect {
 }
 
 #[derive(Debug)]
-pub struct StyledSelectBuilder {
+pub struct StyledSelectBuilder<'l> {
     variant: Option<Variant>,
     dropdown_width: Option<usize>,
-    name: Option<String>,
+    name: Option<&'l str>,
     valid: Option<bool>,
     is_multi: Option<bool>,
-    options: Option<Vec<StyledSelectChildBuilder>>,
-    selected: Option<Vec<StyledSelectChildBuilder>>,
-    text_filter: Option<String>,
+    options: Option<Vec<StyledSelectChildBuilder<'l>>>,
+    selected: Option<Vec<StyledSelectChildBuilder<'l>>>,
+    text_filter: Option<&'l str>,
     opened: Option<bool>,
     clearable: bool,
 }
 
-impl StyledSelectBuilder {
-    pub fn build(self, id: FieldId) -> StyledSelect {
+impl<'l> StyledSelectBuilder<'l> {
+    pub fn build(self, id: FieldId) -> StyledSelect<'l> {
         StyledSelect {
             id,
             variant: self.variant.unwrap_or_default(),
@@ -171,7 +173,15 @@ impl StyledSelectBuilder {
         }
     }
 
-    pub fn state(self, state: &StyledSelectState) -> Self {
+    pub fn try_state<'state: 'l>(self, state: Option<&'state StyledSelectState>) -> Self {
+        if let Some(s) = state {
+            self.state(s)
+        } else {
+            self
+        }
+    }
+
+    pub fn state<'state: 'l>(self, state: &'state StyledSelectState) -> Self {
         self.opened(state.opened)
             .text_filter(state.text_filter.as_str())
     }
@@ -181,19 +191,13 @@ impl StyledSelectBuilder {
         self
     }
 
-    pub fn name<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.name = Some(name.into());
+    pub fn name(mut self, name: &'l str) -> Self {
+        self.name = Some(name);
         self
     }
 
-    pub fn text_filter<S>(mut self, text_filter: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.text_filter = Some(text_filter.into());
+    pub fn text_filter(mut self, text_filter: &'l str) -> Self {
+        self.text_filter = Some(text_filter);
         self
     }
 
@@ -207,12 +211,12 @@ impl StyledSelectBuilder {
         self
     }
 
-    pub fn options(mut self, options: Vec<StyledSelectChildBuilder>) -> Self {
+    pub fn options(mut self, options: Vec<StyledSelectChildBuilder<'l>>) -> Self {
         self.options = Some(options);
         self
     }
 
-    pub fn selected(mut self, selected: Vec<StyledSelectChildBuilder>) -> Self {
+    pub fn selected(mut self, selected: Vec<StyledSelectChildBuilder<'l>>) -> Self {
         self.selected = Some(selected);
         self
     }
@@ -301,7 +305,7 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
 
     let children: Vec<Node<Msg>> = options
         .into_iter()
-        .filter(|o| !selected.contains(&o) && o.match_text(text_filter.as_str()))
+        .filter(|o| !selected.contains(&o) && o.match_text(text_filter))
         .map(|child| {
             let child = child.build(DisplayType::SelectOption);
             let value = child.value();

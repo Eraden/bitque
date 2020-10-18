@@ -18,56 +18,59 @@ impl Default for Variant {
     }
 }
 
-impl std::fmt::Display for Variant {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Variant {
+    pub fn to_str(&self) -> &'static str {
         match self {
-            Variant::About => f.write_str("about"),
-            Variant::Messages => f.write_str("messages"),
-            Variant::TableBuilder => f.write_str("tableTooltip"),
-            Variant::CodeBuilder => f.write_str("codeTooltip"),
-            Variant::DateTimeBuilder => f.write_str("dateTimeTooltip"),
+            Variant::About => "about",
+            Variant::Messages => "messages",
+            Variant::TableBuilder => "tableTooltip",
+            Variant::CodeBuilder => "codeTooltip",
+            Variant::DateTimeBuilder => "dateTimeTooltip",
         }
     }
 }
 
-pub struct StyledTooltip {
+impl std::fmt::Display for Variant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.to_str())
+    }
+}
+
+pub struct StyledTooltip<'l> {
     visible: bool,
-    class_name: String,
+    class_list: Vec<&'l str>,
     children: Vec<Node<Msg>>,
     variant: Variant,
 }
 
-impl ToNode for StyledTooltip {
+impl<'l> ToNode for StyledTooltip<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-impl StyledTooltip {
-    pub fn build() -> StyledTooltipBuilder {
+impl<'l> StyledTooltip<'l> {
+    pub fn build() -> StyledTooltipBuilder<'l> {
         StyledTooltipBuilder::default()
     }
 }
 
 #[derive(Default)]
-pub struct StyledTooltipBuilder {
+pub struct StyledTooltipBuilder<'l> {
     visible: bool,
-    class_list: Vec<String>,
+    class_list: Vec<&'l str>,
     children: Vec<Node<Msg>>,
     variant: Variant,
 }
 
-impl StyledTooltipBuilder {
+impl<'l> StyledTooltipBuilder<'l> {
     pub fn visible(mut self, b: bool) -> Self {
         self.visible = b;
         self
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn add_class(mut self, name: &'l str) -> Self {
+        self.class_list.push(name);
         self
     }
 
@@ -101,10 +104,10 @@ impl StyledTooltipBuilder {
         self
     }
 
-    pub fn build(self) -> StyledTooltip {
+    pub fn build(self) -> StyledTooltip<'l> {
         StyledTooltip {
             visible: self.visible,
-            class_name: self.class_list.join(" "),
+            class_list: self.class_list,
             children: self.children,
             variant: self.variant,
         }
@@ -114,13 +117,13 @@ impl StyledTooltipBuilder {
 pub fn render(values: StyledTooltip) -> Node<Msg> {
     let StyledTooltip {
         visible,
-        class_name,
+        class_list,
         children,
         variant,
     } = values;
     if visible {
         div![
-            attrs![At::Class => format!("styledTooltip {} {}", class_name, variant)],
+            attrs![At::Class => format!("styledTooltip {} {}", class_list.join(" "), variant)],
             children
         ]
     } else {

@@ -82,7 +82,7 @@ impl WsMessageSender for ws::WebsocketContext<WebSocketActor> {
 impl Handler<InnerMsg> for WebSocketActor {
     type Result = ();
 
-    fn handle(&mut self, msg: InnerMsg, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: InnerMsg, ctx: &mut <Self as Actor>::Context) -> Self::Result {
         if let InnerMsg::Transfer(msg) = msg {
             ctx.send_msg(&msg)
         };
@@ -252,10 +252,10 @@ impl WebSocketActor {
     }
 
     fn require_user(&self) -> Result<&User, WsMsg> {
-        self.current_user.as_ref().map(|u| u).ok_or_else(|| {
-            let _x = 1;
-            WsMsg::AuthorizeExpired
-        })
+        self.current_user
+            .as_ref()
+            .map(|u| u)
+            .ok_or_else(|| WsMsg::AuthorizeExpired)
     }
 
     fn require_user_project(&self) -> Result<&UserProject, WsMsg> {
@@ -300,7 +300,11 @@ impl WebSocketActor {
 }
 
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
-    fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
+    fn handle(
+        &mut self,
+        msg: Result<ws::Message, ws::ProtocolError>,
+        ctx: &mut <Self as Actor>::Context,
+    ) {
         match msg {
             Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
             Ok(ws::Message::Text(text)) => ctx.text(text),
@@ -322,7 +326,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
         }
     }
 
-    fn finished(&mut self, ctx: &mut Self::Context) {
+    fn finished(&mut self, ctx: &mut <Self as Actor>::Context) {
         info!("Disconnected");
         if let (Some(user), Some(up)) = (
             self.current_user.as_ref(),
@@ -380,7 +384,7 @@ impl Actor for WsServer {
 impl Handler<InnerMsg> for WsServer {
     type Result = ();
 
-    fn handle(&mut self, msg: InnerMsg, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: InnerMsg, _ctx: &mut <Self as Actor>::Context) -> Self::Result {
         debug!("receive {:?}", msg);
         match msg {
             InnerMsg::Join(project_id, user_id, recipient) => {
@@ -408,8 +412,12 @@ impl Handler<InnerMsg> for WsServer {
                     self.sessions.remove(&user_id);
                 } else {
                     let v = self.sessions.entry(user_id).or_insert_with(Vec::new);
-                    if v.remove_item(&recipient).is_none() {
-                        debug!("Can't remove recipient");
+                    let mut old = vec![];
+                    std::mem::swap(&mut old, v);
+                    for r in old {
+                        if r != recipient {
+                            v.push(r);
+                        }
                     }
                 }
             }

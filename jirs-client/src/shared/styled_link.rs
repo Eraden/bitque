@@ -3,56 +3,46 @@ use seed::{prelude::*, *};
 use crate::shared::ToNode;
 use crate::Msg;
 
-pub struct StyledLink {
+pub struct StyledLink<'l> {
     children: Vec<Node<Msg>>,
-    class_list: Vec<String>,
-    href: String,
+    class_list: Vec<&'l str>,
+    href: &'l str,
 }
 
-impl StyledLink {
-    pub fn build() -> StyledLinkBuilder {
+impl<'l> StyledLink<'l> {
+    pub fn build() -> StyledLinkBuilder<'l> {
         StyledLinkBuilder::default()
     }
 }
 
 #[derive(Default)]
-pub struct StyledLinkBuilder {
+pub struct StyledLinkBuilder<'l> {
     children: Vec<Node<Msg>>,
-    class_list: Vec<String>,
-    href: String,
+    class_list: Vec<&'l str>,
+    href: &'l str,
 }
 
-impl StyledLinkBuilder {
+impl<'l> StyledLinkBuilder<'l> {
     pub fn add_child(mut self, child: Node<Msg>) -> Self {
         self.children.push(child);
         self
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn add_class(mut self, name: &'l str) -> Self {
+        self.class_list.push(name);
         self
     }
 
-    pub fn href<S>(mut self, href: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.href = href.into();
+    pub fn href(mut self, href: &'l str) -> Self {
+        self.href = href;
         self
     }
 
-    pub fn text<S>(self, s: S) -> Self
-    where
-        S: Into<String>,
-    {
-        let text: String = s.into();
-        self.add_child(span![text])
+    pub fn text(self, s: &'l str) -> Self {
+        self.add_child(span![s])
     }
 
-    pub fn build(self) -> StyledLink {
+    pub fn build(self) -> StyledLink<'l> {
         StyledLink {
             children: self.children,
             class_list: self.class_list,
@@ -61,7 +51,7 @@ impl StyledLinkBuilder {
     }
 }
 
-impl ToNode for StyledLink {
+impl<'l> ToNode for StyledLink<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
@@ -70,12 +60,12 @@ impl ToNode for StyledLink {
 pub fn render(values: StyledLink) -> Node<Msg> {
     let StyledLink {
         children,
-        mut class_list,
+        class_list,
         href,
     } = values;
-    class_list.push("styledLink".to_string());
 
     a![
+        class!["styledLink"],
         attrs![
             At::Class => class_list.join(" "),
             At::Href => href,

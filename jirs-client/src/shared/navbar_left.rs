@@ -61,7 +61,7 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
             StyledAvatar::build()
                 .size(27)
                 .name(user.name.as_str())
-                .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
+                .avatar_url(user.avatar_url.as_deref().unwrap_or_default())
                 .build()
                 .into_node()
         ],
@@ -257,12 +257,12 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
 
 fn about_tooltip_popup(model: &Model) -> Node<Msg> {
     let visit_website = StyledButton::build()
-        .text("Visit Website".to_string())
+        .text("Visit Website")
         .primary()
         .build()
         .into_node();
     let github_repo = StyledButton::build()
-        .text("Github Repo".to_string())
+        .text("Github Repo")
         .secondary()
         .icon(Icon::Github)
         .build()
@@ -332,7 +332,7 @@ fn parse_description(model: &Model, desc: &str) -> Node<Msg> {
             })
             .map(|(index, user)| {
                 let avatar = StyledAvatar::build()
-                    .avatar_url(user.avatar_url.as_ref().cloned().unwrap_or_default())
+                    .avatar_url(user.avatar_url.as_deref().unwrap_or_default())
                     .user_index(index)
                     .size(16)
                     .build()

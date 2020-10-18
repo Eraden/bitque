@@ -10,13 +10,18 @@ pub enum Variant {
     Primary,
 }
 
-impl ToString for Variant {
-    fn to_string(&self) -> String {
+impl Variant {
+    pub fn to_str<'l>(&self) -> &'l str {
         match self {
             Variant::Normal => "normal",
             Variant::Primary => "primary",
         }
-        .to_string()
+    }
+}
+
+impl ToString for Variant {
+    fn to_string(&self) -> String {
+        self.to_str().to_string()
     }
 }
 
@@ -67,21 +72,21 @@ impl StyledInputState {
 }
 
 #[derive(Debug)]
-pub struct StyledInput {
+pub struct StyledInput<'l> {
     id: FieldId,
     icon: Option<Icon>,
     valid: bool,
     value: Option<String>,
-    input_type: Option<String>,
-    input_class_list: Vec<String>,
-    wrapper_class_list: Vec<String>,
+    input_type: Option<&'l str>,
+    input_class_list: Vec<&'l str>,
+    wrapper_class_list: Vec<&'l str>,
     variant: Variant,
     auto_focus: bool,
     input_handlers: Vec<EventHandler<Msg>>,
 }
 
-impl StyledInput {
-    pub fn build() -> StyledInputBuilder {
+impl<'l> StyledInput<'l> {
+    pub fn build() -> StyledInputBuilder<'l> {
         StyledInputBuilder {
             icon: None,
             valid: None,
@@ -97,19 +102,19 @@ impl StyledInput {
 }
 
 #[derive(Debug)]
-pub struct StyledInputBuilder {
+pub struct StyledInputBuilder<'l> {
     icon: Option<Icon>,
     valid: Option<bool>,
     value: Option<String>,
-    input_type: Option<String>,
-    input_class_list: Vec<String>,
-    wrapper_class_list: Vec<String>,
+    input_type: Option<&'l str>,
+    input_class_list: Vec<&'l str>,
+    wrapper_class_list: Vec<&'l str>,
     variant: Variant,
     auto_focus: bool,
     input_handlers: Vec<EventHandler<Msg>>,
 }
 
-impl StyledInputBuilder {
+impl<'l> StyledInputBuilder<'l> {
     pub fn icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
         self
@@ -133,19 +138,13 @@ impl StyledInputBuilder {
             .valid(!state.touched || !state.value.is_empty())
     }
 
-    pub fn add_input_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.input_class_list.push(name.into());
+    pub fn add_input_class(mut self, name: &'l str) -> Self {
+        self.input_class_list.push(name);
         self
     }
 
-    pub fn add_wrapper_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.wrapper_class_list.push(name.into());
+    pub fn add_wrapper_class(mut self, name: &'l str) -> Self {
+        self.wrapper_class_list.push(name);
         self
     }
 
@@ -164,7 +163,7 @@ impl StyledInputBuilder {
         self
     }
 
-    pub fn build(self, id: FieldId) -> StyledInput {
+    pub fn build(self, id: FieldId) -> StyledInput<'l> {
         StyledInput {
             id,
             icon: self.icon,
@@ -180,7 +179,7 @@ impl StyledInputBuilder {
     }
 }
 
-impl ToNode for StyledInput {
+impl<'l> ToNode for StyledInput<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
@@ -200,15 +199,14 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         input_handlers,
     } = values;
 
-    wrapper_class_list.push(variant.to_string());
-    wrapper_class_list.push(format!("{}", id));
+    wrapper_class_list.push(variant.to_str());
     if !valid {
-        wrapper_class_list.push("invalid".to_string());
+        wrapper_class_list.push("invalid");
     }
 
-    input_class_list.push(variant.to_string());
+    input_class_list.push(variant.to_str());
     if icon.is_some() {
-        input_class_list.push("withIcon".to_string());
+        input_class_list.push("withIcon");
     }
 
     let icon = match icon {
@@ -240,7 +238,10 @@ pub fn render(values: StyledInput) -> Node<Msg> {
 
     div![
         C!["styledInput"],
-        attrs!(At::Class => wrapper_class_list.join(" ")),
+        attrs!(
+            At::Class => wrapper_class_list.join(" "),
+            At::Class => format!("{}", id),
+        ),
         icon,
         on_click,
         on_keyup,
@@ -250,7 +251,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
                 At::Id => format!("{}", id),
                 At::Class => input_class_list.join(" "),
                 At::Value => value.unwrap_or_default(),
-                At::Type => input_type.unwrap_or_else(|| "text".to_string()),
+                At::Type => input_type.unwrap_or_else(|| "text"),
 
             ],
             if auto_focus {

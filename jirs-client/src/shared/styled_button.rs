@@ -12,8 +12,8 @@ enum Variant {
     Empty,
 }
 
-impl ToString for Variant {
-    fn to_string(&self) -> String {
+impl Variant {
+    fn to_str(&self) -> &'static str {
         match self {
             Variant::Primary => "primary",
             Variant::Success => "success",
@@ -21,24 +21,29 @@ impl ToString for Variant {
             Variant::Secondary => "secondary",
             Variant::Empty => "empty",
         }
-        .to_string()
+    }
+}
+
+impl ToString for Variant {
+    fn to_string(&self) -> String {
+        self.to_str().to_string()
     }
 }
 
 #[derive(Default)]
-pub struct StyledButtonBuilder {
+pub struct StyledButtonBuilder<'l> {
     variant: Option<Variant>,
     disabled: Option<bool>,
     active: Option<bool>,
-    text: Option<String>,
+    text: Option<&'l str>,
     icon: Option<Node<Msg>>,
     on_click: Option<EventHandler<Msg>>,
     children: Option<Vec<Node<Msg>>>,
-    class_list: Vec<String>,
-    button_type: Option<String>,
+    class_list: Vec<&'l str>,
+    button_type: Option<&'l str>,
 }
 
-impl StyledButtonBuilder {
+impl<'l> StyledButtonBuilder<'l> {
     fn variant(mut self, value: Variant) -> Self {
         self.variant = Some(value);
         self
@@ -74,11 +79,8 @@ impl StyledButtonBuilder {
         self
     }
 
-    pub fn text<S>(mut self, value: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.text = Some(value.into());
+    pub fn text(mut self, value: &'l str) -> Self {
+        self.text = Some(value);
         self
     }
 
@@ -100,20 +102,17 @@ impl StyledButtonBuilder {
         self
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn add_class(mut self, name: &'l str) -> Self {
+        self.class_list.push(name);
         self
     }
 
     pub fn set_type_reset(mut self) -> Self {
-        self.button_type = Some("reset".to_string());
+        self.button_type = Some("reset");
         self
     }
 
-    pub fn build(self) -> StyledButton {
+    pub fn build(self) -> StyledButton<'l> {
         StyledButton {
             variant: self.variant.unwrap_or_else(|| Variant::Primary),
             disabled: self.disabled.unwrap_or_else(|| false),
@@ -123,30 +122,30 @@ impl StyledButtonBuilder {
             on_click: self.on_click,
             children: self.children.unwrap_or_default(),
             class_list: self.class_list,
-            button_type: self.button_type.unwrap_or_else(|| "submit".to_string()),
+            button_type: self.button_type.unwrap_or_else(|| "submit"),
         }
     }
 }
 
-pub struct StyledButton {
+pub struct StyledButton<'l> {
     variant: Variant,
     disabled: bool,
     active: bool,
-    text: Option<String>,
+    text: Option<&'l str>,
     icon: Option<Node<Msg>>,
     on_click: Option<EventHandler<Msg>>,
     children: Vec<Node<Msg>>,
-    class_list: Vec<String>,
-    button_type: String,
+    class_list: Vec<&'l str>,
+    button_type: &'l str,
 }
 
-impl StyledButton {
-    pub fn build() -> StyledButtonBuilder {
+impl<'l> StyledButton<'l> {
+    pub fn build() -> StyledButtonBuilder<'l> {
         StyledButtonBuilder::default()
     }
 }
 
-impl ToNode for StyledButton {
+impl<'l> ToNode for StyledButton<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
@@ -164,16 +163,16 @@ pub fn render(values: StyledButton) -> Node<Msg> {
         mut class_list,
         button_type,
     } = values;
-    class_list.push("styledButton".to_string());
-    class_list.push(variant.to_string());
+    class_list.push("styledButton");
+    class_list.push(variant.to_str());
     if children.is_empty() && text.is_none() {
-        class_list.push("iconOnly".to_string());
+        class_list.push("iconOnly");
     }
     if active {
-        class_list.push("isActive".to_string());
+        class_list.push("isActive");
     }
     if icon.is_some() {
-        class_list.push("withIcon".to_string());
+        class_list.push("withIcon");
     }
     let handler = match on_click {
         Some(h) if !disabled => vec![h],

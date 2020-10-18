@@ -4,31 +4,31 @@ use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
 #[derive(Debug)]
-pub struct StyledTextarea {
+pub struct StyledTextarea<'l> {
     id: FieldId,
     height: usize,
     max_height: usize,
-    value: String,
-    class_list: Vec<String>,
+    value: &'l str,
+    class_list: Vec<&'l str>,
     update_event: Ev,
-    placeholder: Option<String>,
+    placeholder: Option<&'l str>,
     disable_auto_resize: bool,
 }
 
-impl ToNode for StyledTextarea {
+impl<'l> ToNode for StyledTextarea<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-impl StyledTextarea {
-    pub fn build(field_id: FieldId) -> StyledTextareaBuilder {
+impl<'l> StyledTextarea<'l> {
+    pub fn build(field_id: FieldId) -> StyledTextareaBuilder<'l> {
         StyledTextareaBuilder {
             id: field_id,
             height: None,
             max_height: None,
             on_change: None,
-            value: "".to_string(),
+            value: "",
             class_list: vec![],
             update_event: None,
             placeholder: None,
@@ -38,19 +38,19 @@ impl StyledTextarea {
 }
 
 #[derive(Debug)]
-pub struct StyledTextareaBuilder {
+pub struct StyledTextareaBuilder<'l> {
     id: FieldId,
     height: Option<usize>,
     max_height: Option<usize>,
     on_change: Option<EventHandler<Msg>>,
-    value: String,
-    class_list: Vec<String>,
+    value: &'l str,
+    class_list: Vec<&'l str>,
     update_event: Option<Ev>,
-    placeholder: Option<String>,
+    placeholder: Option<&'l str>,
     disable_auto_resize: bool,
 }
 
-impl StyledTextareaBuilder {
+impl<'l> StyledTextareaBuilder<'l> {
     #[inline]
     pub fn height(mut self, height: usize) -> Self {
         self.height = Some(height);
@@ -64,20 +64,14 @@ impl StyledTextareaBuilder {
     }
 
     #[inline]
-    pub fn value<S>(mut self, value: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.value = value.into();
+    pub fn value(mut self, value: &'l str) -> Self {
+        self.value = value;
         self
     }
 
     #[inline]
-    pub fn add_class<S>(mut self, value: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(value.into());
+    pub fn add_class(mut self, value: &'l str) -> Self {
+        self.class_list.push(value);
         self
     }
 
@@ -86,11 +80,8 @@ impl StyledTextareaBuilder {
         self
     }
 
-    pub fn placeholder<S>(mut self, placeholder: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.placeholder = Some(placeholder.into());
+    pub fn placeholder(mut self, placeholder: &'l str) -> Self {
+        self.placeholder = Some(placeholder);
         self
     }
 
@@ -100,7 +91,7 @@ impl StyledTextareaBuilder {
     }
 
     #[inline]
-    pub fn build(self) -> StyledTextarea {
+    pub fn build(self) -> StyledTextarea<'l> {
         StyledTextarea {
             id: self.id,
             value: self.value,
@@ -140,7 +131,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
     } = values;
     let mut style_list = vec![];
 
-    let min_height = get_min_height(value.as_str(), height as f64, disable_auto_resize);
+    let min_height = get_min_height(value, height as f64, disable_auto_resize);
     if min_height > 0f64 {
         style_list.push(format!("min-height: {}px", min_height));
     }
@@ -197,7 +188,7 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         )
     });
 
-    class_list.push("textAreaInput".to_string());
+    class_list.push("textAreaInput");
 
     div![
         attrs![At::Class => "styledTextArea"],

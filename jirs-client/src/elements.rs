@@ -16,53 +16,49 @@ impl JirsCodeBuilder {
 
     #[wasm_bindgen]
     pub fn hi_code(&mut self, lang: &str, code: &str) -> String {
-        let syntax = match crate::hi::SYNTAX_SET.find_syntax_by_name(lang) {
-            Some(s) => s,
-            _ => {
-                return code.to_string();
+        let syntax = {
+            match crate::hi::syntax_set::load().find_syntax_by_name(lang) {
+                Some(s) => s.clone(),
+                _ => {
+                    return code.to_string();
+                }
             }
         };
-        let mut buffer = String::new();
+        let mut buffer: Vec<String> = Vec::with_capacity(code.lines().count() * 2);
         for line in code.lines() {
-            buffer.push_str(self.hi(syntax, line).as_str());
-            buffer.push_str("<br />");
+            self.hi(&syntax, line, &mut buffer);
+            buffer.push("<br />".to_string());
         }
-        buffer
+        buffer.join("")
     }
 
-    fn hi(&mut self, syntax: &SyntaxReference, line: &str) -> String {
+    fn hi<'l>(&mut self, syntax: &SyntaxReference, line: &'l str, buffer: &mut Vec<String>) {
         let mut h = HighlightLines::new(syntax, &crate::hi::THEME_SET.themes["base16-ocean-dark"]); // inspired-github
-        let tokens = h.highlight(line, &crate::hi::SYNTAX_SET);
+        let tokens = { h.highlight(line, &crate::hi::syntax_set::load()) };
 
-        let parts: Vec<String> = tokens
-            .into_iter()
-            .map(|(style, token)| {
-                let Style {
-                    foreground: f,
-                    background: b,
-                    font_style,
-                } = style;
-                let fs = if font_style == FontStyle::BOLD {
-                    "font-weight: bold"
-                } else if font_style == FontStyle::ITALIC {
-                    "font-style: italic"
-                } else if font_style == FontStyle::UNDERLINE {
-                    "text-decoration: underline"
-                } else {
-                    ""
-                };
-                let f = format!("rgba({}, {}, {}, {})", f.r, f.g, f.b, f.a);
-                let b = format!("rgba({}, {}, {}, {})", b.r, b.g, b.b, b.a);
-                format!(
-                    r#"<span style="color: {f};background:{b}; {fs}">{t}</span>"#,
-                    t = if token.is_empty() { "&nbsp;" } else { token },
-                    f = f,
-                    b = b,
-                    fs = fs
-                )
-            })
-            .collect();
-        parts.join("")
+        for (style, token) in tokens.into_iter() {
+            let Style {
+                foreground: f,
+                background: b,
+                font_style,
+            } = style;
+            let fs = if font_style == FontStyle::BOLD {
+                "font-weight: bold"
+            } else if font_style == FontStyle::ITALIC {
+                "font-style: italic"
+            } else if font_style == FontStyle::UNDERLINE {
+                "text-decoration: underline"
+            } else {
+                ""
+            };
+
+            buffer.push(format!(
+                r#"<span style="color: rgba({f_r}, {f_g}, {f_b}, {f_a});background:rgba({b_r}, {b_g}, {b_b}, {b_a}); {fs}">{t}</span>"#,
+                t = if token.is_empty() { "&nbsp;" } else { token },
+                f_r = f.r, f_g = f.g, f_b = f.b, f_a = f.a, b_r = b.r, b_g = b.g, b_b = b.b, b_a = b.a,
+                fs = fs
+            ));
+        }
     }
 }
 
@@ -91,6 +87,7 @@ pub fn define() {
                 const lang = this.getAttribute('lang') || '';
                 setTimeout(() => {{
                     const code = (this.innerHTML || '').trim();
+                    console.log('connected');
                     shadow.querySelector('#view').innerHTML = runtime.hi_code(lang, code);
                 }}, 1);
             "#,

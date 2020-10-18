@@ -42,9 +42,12 @@ pub fn send_ws_msg(msg: WsMsg, ws: Option<&WebSocket>, orders: &mut impl Orders<
             return;
         }
     };
+    // orders.perform_cmd(seed::app::cmds::timeout(10, move || {
+    // let ws = ws.clone();
     let binary = bincode::serialize(&msg).unwrap();
     ws.send_bytes(binary.as_slice())
         .expect("Failed to send ws msg");
+    // }));
 }
 
 pub fn open_socket(model: &mut Model, orders: &mut impl Orders<Msg>) {
@@ -64,10 +67,21 @@ pub fn open_socket(model: &mut Model, orders: &mut impl Orders<Msg>) {
     let url = model.ws_url.as_str();
 
     model.ws = WebSocket::builder(url, orders)
-        .on_message(|msg| Msg::WebSocketChange(WebSocketChanged::WebSocketMessage(msg)))
-        .on_open(|| Msg::WebSocketChange(WebSocketChanged::WebSocketOpened))
-        .on_close(|_| Msg::WebSocketChange(WebSocketChanged::WebSocketClosed))
-        .on_error(|| {})
+        .on_message(|msg| {
+            Some(Msg::WebSocketChange(WebSocketChanged::WebSocketMessage(
+                msg,
+            )))
+        })
+        .on_open(|| {
+            log!("open_socket opened");
+            Some(Msg::WebSocketChange(WebSocketChanged::WebSocketOpened))
+        })
+        .on_close(|_| Some(Msg::WebSocketChange(WebSocketChanged::WebSocketClosed)))
+        .on_error(|| {
+            error!("Failed to open WebSocket");
+            None as Option<Msg>
+        })
+        .protocols(&["jirs"])
         .build_and_open()
         .ok();
 }
