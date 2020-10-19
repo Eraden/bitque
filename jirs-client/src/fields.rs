@@ -17,6 +17,72 @@ pub enum RteField {
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum ButtonId {
+    JustifyAll,
+    JustifyCenter,
+    JustifyLeft,
+    JustifyRight,
+    Undo,
+    Redo,
+    RemoveFormat,
+    Bold,
+    Italic,
+    Underscore,
+    Strikethrough,
+    Subscript,
+    Superscript,
+
+    Font,
+    ListingDots,
+    ListingNumber,
+    Table,
+    Paragraph,
+    CodeAlt,
+    Indent,
+    Outdent,
+
+    CloseRteTableTooltip,
+    RteInsertCode,
+    RteInjectCode,
+    RteInsertTable,
+}
+
+impl ButtonId {
+    pub fn to_str<'l>(&self) -> &'l str {
+        match self {
+            ButtonId::JustifyAll => "justifyAll",
+            ButtonId::JustifyCenter => "justifyCenter",
+            ButtonId::JustifyLeft => "justifyLeft",
+            ButtonId::JustifyRight => "justifyRight",
+            ButtonId::Undo => "undo",
+            ButtonId::Redo => "redo",
+
+            ButtonId::RemoveFormat => "removeFormat",
+            ButtonId::Bold => "bold",
+            ButtonId::Italic => "italic ",
+            ButtonId::Underscore => "underscore",
+            ButtonId::Strikethrough => "strikethrough",
+            ButtonId::Subscript => "subscript",
+            ButtonId::Superscript => "superscript",
+
+            ButtonId::Font => "font",
+            ButtonId::ListingDots => "listingDots",
+            ButtonId::ListingNumber => "listingNumber",
+            ButtonId::Table => "table",
+            ButtonId::Paragraph => "paragraph",
+            ButtonId::CodeAlt => "codeAlt",
+            ButtonId::Indent => "indent",
+            ButtonId::Outdent => "outdent",
+
+            ButtonId::CloseRteTableTooltip => "closeRteTableTooltip",
+            ButtonId::RteInsertCode => "rteInsertCode",
+            ButtonId::RteInjectCode => "rteInjectCode",
+            ButtonId::RteInsertTable => "rteInsertTable",
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum FieldId {
     SignIn(SignInFieldId),
     SignUp(SignUpFieldId),

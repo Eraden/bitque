@@ -1,7 +1,7 @@
 use seed::{prelude::*, *};
 
 use crate::shared::ToNode;
-use crate::Msg;
+use crate::{ButtonId, Msg};
 
 #[allow(dead_code)]
 enum Variant {
@@ -41,6 +41,7 @@ pub struct StyledButtonBuilder<'l> {
     children: Option<Vec<Node<Msg>>>,
     class_list: Vec<&'l str>,
     button_type: Option<&'l str>,
+    button_id: Option<ButtonId>,
 }
 
 impl<'l> StyledButtonBuilder<'l> {
@@ -67,6 +68,11 @@ impl<'l> StyledButtonBuilder<'l> {
 
     pub fn empty(self) -> Self {
         self.variant(Variant::Empty)
+    }
+
+    pub fn button_id(mut self, button_id: ButtonId) -> Self {
+        self.button_id = Some(button_id);
+        self
     }
 
     pub fn disabled(mut self, value: bool) -> Self {
@@ -123,6 +129,7 @@ impl<'l> StyledButtonBuilder<'l> {
             children: self.children.unwrap_or_default(),
             class_list: self.class_list,
             button_type: self.button_type.unwrap_or_else(|| "submit"),
+            button_id: self.button_id,
         }
     }
 }
@@ -137,6 +144,7 @@ pub struct StyledButton<'l> {
     children: Vec<Node<Msg>>,
     class_list: Vec<&'l str>,
     button_type: &'l str,
+    button_id: Option<ButtonId>,
 }
 
 impl<'l> StyledButton<'l> {
@@ -162,8 +170,8 @@ pub fn render(values: StyledButton) -> Node<Msg> {
         children,
         mut class_list,
         button_type,
+        button_id,
     } = values;
-    class_list.push("styledButton");
     class_list.push(variant.to_str());
     if children.is_empty() && text.is_none() {
         class_list.push("iconOnly");
@@ -183,16 +191,17 @@ pub fn render(values: StyledButton) -> Node<Msg> {
     let content = if children.is_empty() && text.is_none() {
         empty![]
     } else {
-        span![
-            attrs![At::Class => "text"],
-            text.unwrap_or_default(),
-            children
-        ]
+        span![class!["text"], text.unwrap_or_default(), children]
     };
 
+    let class_list: Vec<Attrs> = class_list.into_iter().map(|s| class![s]).collect();
+    let button_id = button_id.map(|id| id.to_str()).unwrap_or_default();
+
     seed::button![
+        class!["styledButton"],
+        class_list,
         attrs![
-            At::Class => class_list.join(" "),
+            At::Id => button_id,
             At::Type => button_type,
         ],
         handler,

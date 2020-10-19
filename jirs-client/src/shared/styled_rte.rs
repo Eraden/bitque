@@ -5,7 +5,7 @@ use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_select::{StyledSelect, StyledSelectState};
 use crate::shared::styled_tooltip::StyledTooltip;
 use crate::shared::{ToChild, ToNode};
-use crate::{FieldId, Msg, RteField};
+use crate::{ButtonId, FieldId, Msg, RteField};
 
 #[derive(Debug, Clone, Copy)]
 pub enum HeadingSize {
@@ -19,10 +19,10 @@ pub enum HeadingSize {
 }
 
 impl HeadingSize {
-    fn all() -> Vec<Self> {
+    fn all<'l>() -> &'l [Self; 7] {
         use HeadingSize::*;
 
-        vec![Normal, H1, H2, H3, H4, H5, H6]
+        &[Normal, H1, H2, H3, H4, H5, H6]
     }
 }
 
@@ -304,8 +304,7 @@ impl StyledRteState {
                         .lang
                         .values
                         .get(0)
-                        .cloned()
-                        .and_then(|idx| self.code_tooltip.languages.get(idx as usize))
+                        .and_then(|idx| self.code_tooltip.languages.get(*idx as usize))
                     {
                         Some(v) => v.to_string(),
                         _ => return,
@@ -424,7 +423,7 @@ pub struct StyledRte<'component> {
 impl<'component> StyledRte<'component> {
     pub fn build(field_id: FieldId) -> StyledRteBuilder<'component> {
         StyledRteBuilder {
-            field_id: field_id.clone(),
+            field_id,
             value: String::new(),
             table_tooltip: None,
             code_tooltip: None,
@@ -556,13 +555,85 @@ pub fn render(values: StyledRte) -> Node<Msg> {
 
     let id = values.identifier.unwrap_or_default().to_string();
 
+    let click_handler = {
+        let field_id = values.field_id.clone();
+        let (rows, cols) = values
+            .table_tooltip
+            .as_ref()
+            .map(|t| (t.rows, t.cols))
+            .unwrap_or_default();
+
+        mouse_ev(Ev::Click, move |ev| {
+            ev.prevent_default();
+            ev.stop_propagation();
+
+            let target = ev
+                .current_target()
+                .map(|el| seed::to_html_el(&el).id())
+                .unwrap_or_default();
+
+            let rte_msg = match target.as_str() {
+                "justifyAll" => RteMsg::JustifyFull,
+                "justifyCenter" => RteMsg::JustifyCenter,
+                "justifyLeft" => RteMsg::JustifyLeft,
+                "justifyRight" => RteMsg::JustifyRight,
+                "undo" => RteMsg::Undo,
+                "redo" => RteMsg::Redo,
+
+                "removeFormat" => RteMsg::RemoveFormat,
+                "bold" => RteMsg::Bold,
+                "italic " => RteMsg::Italic,
+                "underscore" => RteMsg::Underscore,
+                "strikethrough" => RteMsg::Strikethrough,
+                "subscript" => RteMsg::Subscript,
+                "superscript" => RteMsg::Superscript,
+
+                // "font" => RteMsg::, // Some(RteMsg::Font),
+                "listingDots" => RteMsg::InsertUnorderedList,
+                "listingNumber" => RteMsg::InsertOrderedList,
+                "table" => RteMsg::TableSetVisibility(true),
+                "paragraph" => RteMsg::InsertParagraph,
+                "codeAlt" => RteMsg::InsertCode(true),
+                "indent" => RteMsg::ChangeIndent(RteIndentMsg::Increase),
+                "outdent" => RteMsg::ChangeIndent(RteIndentMsg::Decrease),
+
+                "closeRteTableTooltip" => RteMsg::TableSetVisibility(false),
+                "rteInsertCode" => RteMsg::InsertCode(false),
+                "rteInjectCode" => RteMsg::InjectCode,
+                "rteInsertTable" => RteMsg::InsertTable { rows, cols },
+
+                _ => {
+                    let target = ev.target().unwrap();
+                    let h = seed::to_html_el(&target);
+                    log!(h);
+                    unreachable!();
+                }
+            };
+            Msg::Rte(field_id, rte_msg)
+        })
+    };
+
+    let change_handler = {
+        let field_id = values.field_id.clone();
+        ev(Ev::Change, move |event| {
+            event
+                .target()
+                .as_ref()
+                .ok_or("Can't get event target reference")
+                .and_then(util::get_value)
+                .ok()
+                .and_then(|s| s.parse::<u16>().ok())
+                .map(|n| Msg::Rte(field_id, RteMsg::TableSetRows(n)))
+        })
+    };
+
     div![
         C!["styledRte"],
         attrs![At::Id => id],
         div![
             C!["bar"],
-            first_row(&values),
-            second_row(&values),
+            first_row(click_handler.clone()),
+            second_row(&values, click_handler, change_handler),
             // brush_button,
             // color_bucket_button,
             // color_picker_button,
@@ -584,45 +655,31 @@ pub fn render(values: StyledRte) -> Node<Msg> {
     ]
 }
 
-fn first_row(values: &StyledRte) -> Node<Msg> {
+fn first_row(click_handler: EventHandler<Msg>) -> Node<Msg> {
     let justify = {
-        let field_id = values.field_id.clone();
         let justify_all_button = styled_rte_button(
             "Justify All",
+            ButtonId::JustifyAll,
             Icon::JustifyAll,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-
-                Some(Msg::Rte(field_id, RteMsg::JustifyFull))
-            }),
+            click_handler.clone(),
         );
-        let field_id = values.field_id.clone();
         let justify_center_button = styled_rte_button(
             "Justify Center",
+            ButtonId::JustifyCenter,
             Icon::JustifyCenter,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::JustifyCenter))
-            }),
+            click_handler.clone(),
         );
-        let field_id = values.field_id.clone();
         let justify_left_button = styled_rte_button(
             "Justify Left",
+            ButtonId::JustifyLeft,
             Icon::JustifyLeft,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::JustifyLeft))
-            }),
+            click_handler.clone(),
         );
-        let field_id = values.field_id.clone();
         let justify_right_button = styled_rte_button(
             "Justify Right",
+            ButtonId::JustifyRight,
             Icon::JustifyRight,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-
-                Some(Msg::Rte(field_id, RteMsg::JustifyRight))
-            }),
+            click_handler.clone(),
         );
         div![
             class!["group justify"],
@@ -634,24 +691,10 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
     };
 
     let system = {
-        let field_id = values.field_id.clone();
-        let redo_button = styled_rte_button(
-            "Redo",
-            Icon::Redo,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::Redo))
-            }),
-        );
-        let field_id = values.field_id.clone();
-        let undo_button = styled_rte_button(
-            "Undo",
-            Icon::Undo,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::Undo))
-            }),
-        );
+        let redo_button =
+            styled_rte_button("Redo", ButtonId::Redo, Icon::Redo, click_handler.clone());
+        let undo_button =
+            styled_rte_button("Undo", ButtonId::Undo, Icon::Undo, click_handler.clone());
         /*let field_id = values.field_id.clone();
         let clip_board_button = styled_rte_button(
             "Paste",
@@ -690,81 +733,48 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
     };
 
     let formatting = {
-        let field_id = values.field_id.clone();
         let remove_formatting = styled_rte_button(
             "Remove format",
+            ButtonId::RemoveFormat,
             Icon::EraserAlt,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::RemoveFormat))
-            }),
+            click_handler.clone(),
         );
-        let field_id = values.field_id.clone();
-        let bold_button = styled_rte_button(
-            "Bold",
-            Icon::Bold,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::Bold))
-            }),
-        );
-        let field_id = values.field_id.clone();
+        let bold_button =
+            styled_rte_button("Bold", ButtonId::Bold, Icon::Bold, click_handler.clone());
         let italic_button = styled_rte_button(
             "Italic",
+            ButtonId::Italic,
             Icon::Italic,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::Italic))
-            }),
+            click_handler.clone(),
         );
 
-        let underline_button = {
-            let field_id = values.field_id.clone();
-            styled_rte_button(
-                "Underline",
-                Icon::Underline,
-                mouse_ev(Ev::Click, move |ev| {
-                    ev.prevent_default();
-                    Some(Msg::Rte(field_id, RteMsg::Underscore))
-                }),
-            )
-        };
+        let underline_button = styled_rte_button(
+            "Underline",
+            ButtonId::Underscore,
+            Icon::Underline,
+            click_handler.clone(),
+        );
 
-        let strike_through_button = {
-            let field_id = values.field_id.clone();
-            styled_rte_button(
-                "StrikeThrough",
-                Icon::StrikeThrough,
-                mouse_ev(Ev::Click, move |ev| {
-                    ev.prevent_default();
-                    Some(Msg::Rte(field_id, RteMsg::Strikethrough))
-                }),
-            )
-        };
+        let strike_through_button = styled_rte_button(
+            "StrikeThrough",
+            ButtonId::Strikethrough,
+            Icon::StrikeThrough,
+            click_handler.clone(),
+        );
 
-        let subscript_button = {
-            let field_id = values.field_id.clone();
-            styled_rte_button(
-                "Subscript",
-                Icon::Subscript,
-                mouse_ev(Ev::Click, move |ev| {
-                    ev.prevent_default();
-                    Some(Msg::Rte(field_id, RteMsg::Subscript))
-                }),
-            )
-        };
+        let subscript_button = styled_rte_button(
+            "Subscript",
+            ButtonId::Subscript,
+            Icon::Subscript,
+            click_handler.clone(),
+        );
 
-        let superscript_button = {
-            let field_id = values.field_id.clone();
-            styled_rte_button(
-                "Superscript",
-                Icon::Superscript,
-                mouse_ev(Ev::Click, move |ev| {
-                    ev.prevent_default();
-                    Some(Msg::Rte(field_id, RteMsg::Superscript))
-                }),
-            )
-        };
+        let superscript_button = styled_rte_button(
+            "Superscript",
+            ButtonId::Superscript,
+            Icon::Superscript,
+            click_handler,
+        );
 
         div![
             class!["group formatting"],
@@ -778,10 +788,14 @@ fn first_row(values: &StyledRte) -> Node<Msg> {
         ]
     };
 
-    div![class!["row firstRow"], system, formatting, justify,]
+    div![class!["row firstRow"], system, formatting, justify]
 }
 
-fn second_row(values: &StyledRte) -> Node<Msg> {
+fn second_row(
+    values: &StyledRte,
+    click_handler: EventHandler<Msg>,
+    change_handler: EventHandler<Msg>,
+) -> Node<Msg> {
     /*let align_group = {
         let field_id = values.field_id.clone();
         let align_center_button = styled_rte_button(
@@ -819,15 +833,8 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
     };*/
 
     let font_group = {
-        let _field_id = values.field_id.clone();
-        let _font_button = styled_rte_button(
-            "Font",
-            Icon::Font,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                None as Option<Msg>
-            }),
-        );
+        let _font_button =
+            styled_rte_button("Font", ButtonId::Font, Icon::Font, click_handler.clone());
         let options: Vec<Node<Msg>> = HeadingSize::all()
             .into_iter()
             .map(|h| {
@@ -836,7 +843,7 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
                     .text(h.as_str())
                     .on_click(mouse_ev(Ev::Click, move |ev| {
                         ev.prevent_default();
-                        Some(Msg::Rte(field_id, RteMsg::InsertHeading(h)))
+                        Some(Msg::Rte(field_id, RteMsg::InsertHeading(*h)))
                     }))
                     .empty()
                     .build()
@@ -874,25 +881,19 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
     };
 
     let insert_group = {
-        let table_tooltip = table_tooltip(values);
+        let table_tooltip = table_tooltip(values, click_handler.clone(), change_handler);
 
-        let field_id = values.field_id.clone();
         let listing_dots = styled_rte_button(
             "Listing dots",
+            ButtonId::ListingDots,
             Icon::ListingDots,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::InsertUnorderedList))
-            }),
+            click_handler.clone(),
         );
-        let field_id = values.field_id.clone();
         let listing_number = styled_rte_button(
             "Listing number",
+            ButtonId::ListingNumber,
             Icon::ListingNumber,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::InsertOrderedList))
-            }),
+            click_handler.clone(),
         );
         /*let field_id = values.field_id.clone();
         let sub_listing_button = styled_rte_button(
@@ -904,42 +905,23 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
             }),
         );*/
 
-        let mut table_button = {
-            let field_id = values.field_id.clone();
-            styled_rte_button(
-                "Table",
-                Icon::Table,
-                mouse_ev(Ev::Click, move |ev| {
-                    ev.prevent_default();
-                    Some(Msg::Rte(field_id, RteMsg::TableSetVisibility(true)))
-                }),
-            )
-        };
+        let mut table_button =
+            styled_rte_button("Table", ButtonId::Table, Icon::Table, click_handler.clone());
         table_button.add_child(table_tooltip);
 
-        let paragraph_button = {
-            let field_id = values.field_id.clone();
-            styled_rte_button(
-                "Paragraph",
-                Icon::Paragraph,
-                mouse_ev(Ev::Click, move |ev| {
-                    ev.prevent_default();
-                    Some(Msg::Rte(field_id, RteMsg::InsertParagraph))
-                }),
-            )
-        };
-        let mut code_alt_button = {
-            let field_id = values.field_id.clone();
-            styled_rte_button(
-                "Insert code",
-                Icon::CodeAlt,
-                mouse_ev(Ev::Click, move |ev| {
-                    ev.prevent_default();
-                    Some(Msg::Rte(field_id, RteMsg::InsertCode(true)))
-                }),
-            )
-        };
-        code_alt_button.add_child(code_tooltip(values));
+        let paragraph_button = styled_rte_button(
+            "Paragraph",
+            ButtonId::Paragraph,
+            Icon::Paragraph,
+            click_handler.clone(),
+        );
+        let mut code_alt_button = styled_rte_button(
+            "Insert code",
+            ButtonId::CodeAlt,
+            Icon::CodeAlt,
+            click_handler.clone(),
+        );
+        code_alt_button.add_child(code_tooltip(values, click_handler.clone()));
 
         div![
             class!["group insert"],
@@ -953,30 +935,14 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
     };
 
     let indent_outdent = {
-        let field_id = values.field_id.clone();
         let indent_button = styled_rte_button(
             "Indent",
+            ButtonId::Indent,
             Icon::Indent,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(
-                    field_id,
-                    RteMsg::ChangeIndent(RteIndentMsg::Increase),
-                ))
-            }),
+            click_handler.clone(),
         );
-        let field_id = values.field_id.clone();
-        let outdent_button = styled_rte_button(
-            "Outdent",
-            Icon::Outdent,
-            mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(
-                    field_id,
-                    RteMsg::ChangeIndent(RteIndentMsg::Decrease),
-                ))
-            }),
-        );
+        let outdent_button =
+            styled_rte_button("Outdent", ButtonId::Outdent, Icon::Outdent, click_handler);
         div![class!["group indentOutdent"], indent_button, outdent_button]
     };
 
@@ -989,7 +955,11 @@ fn second_row(values: &StyledRte) -> Node<Msg> {
     ]
 }
 
-fn table_tooltip(values: &StyledRte) -> Node<Msg> {
+fn table_tooltip(
+    values: &StyledRte,
+    click_handler: EventHandler<Msg>,
+    change_handler: EventHandler<Msg>,
+) -> Node<Msg> {
     let (visible, rows, cols) = values
         .table_tooltip
         .map(
@@ -1019,36 +989,25 @@ fn table_tooltip(values: &StyledRte) -> Node<Msg> {
         })
     };
 
-    let close_table_tooltip = {
-        let field_id = values.field_id.clone();
-        StyledButton::build()
-            .empty()
-            .icon(Icon::Close)
-            .on_click(mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::TableSetVisibility(false)))
-            }))
-            .build()
-            .into_node()
-    };
+    let close_table_tooltip = StyledButton::build()
+        .button_id(ButtonId::CloseRteTableTooltip)
+        .empty()
+        .icon(Icon::Close)
+        .on_click(click_handler.clone())
+        .build()
+        .into_node();
 
-    let on_submit = {
-        let field_id = values.field_id.clone();
-        mouse_ev(Ev::Click, move |ev| {
-            ev.prevent_default();
-            Some(Msg::Rte(field_id, RteMsg::InsertTable { rows, cols }))
-        })
-    };
+    let on_submit = click_handler;
 
     StyledTooltip::build()
-        .table_tooltip()
-        .visible(visible)
-        .add_child(h2![span!["Add table"], close_table_tooltip])
-        .add_child(div![class!["inputs"], span!["Rows"], seed::input![
+    .table_tooltip()
+    .visible(visible)
+    .add_child(h2![span!["Add table"], close_table_tooltip])
+    .add_child(div![class!["inputs"], span!["Rows"], seed::input![
                 attrs![At::Type => "range"; At::Step => "1"; At::Min => "1"; At::Max => "10"; At::Value => rows],
                 on_rows_change
             ]])
-        .add_child(div![
+    .add_child(div![
             class!["inputs"],
             span!["Columns"],
             seed::input![
@@ -1056,40 +1015,26 @@ fn table_tooltip(values: &StyledRte) -> Node<Msg> {
                 on_cols_change
             ]
         ])
-        .add_child({
-            let body: Vec<Node<Msg>> = (0..rows)
-                .map(|_row| {
-                    let tds: Vec<Node<Msg>> = (0..cols)
-                        .map(|_col| td![" "])
-                        .collect();
-                    tr![tds]
-                })
-                .collect();
-            seed::div![
+    .add_child({
+      let body: Vec<Node<Msg>> = (0..rows)
+        .map(|_row| {
+          let tds: Vec<Node<Msg>> = (0..cols)
+            .map(|_col| td![" "])
+            .collect();
+          tr![tds]
+        })
+        .collect();
+      seed::div![
                 class!["tablePreview"],
                 seed::table![tbody![body]],
-                input![attrs![At::Type => "button"; At::Value => "Insert"], on_submit],
+                input![attrs![At::Type => "button"; At::Id => "rteInsertTable"; At::Value => "Insert"], on_submit],
             ]
-        })
-        .build()
-        .into_node()
+    })
+    .build()
+    .into_node()
 }
 
-fn styled_rte_button(title: &str, icon: Icon, handler: EventHandler<Msg>) -> Node<Msg> {
-    let button = StyledButton::build()
-        .icon(StyledIcon::build(icon).build())
-        .on_click(handler)
-        .empty()
-        .build()
-        .into_node();
-    span![
-        class!["styledRteButton"],
-        attrs![At::Title => title],
-        button
-    ]
-}
-
-fn code_tooltip(values: &StyledRte) -> Node<Msg> {
+fn code_tooltip(values: &StyledRte, click_handler: EventHandler<Msg>) -> Node<Msg> {
     let (visible, lang) = values
         .code_tooltip
         .as_ref()
@@ -1122,18 +1067,13 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
         ))))
         .into_node();
 
-    let close_tooltip = {
-        let field_id = values.field_id.clone();
-        StyledButton::build()
-            .empty()
-            .icon(Icon::Close)
-            .on_click(mouse_ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                Some(Msg::Rte(field_id, RteMsg::InsertCode(false)))
-            }))
-            .build()
-            .into_node()
-    };
+    let close_tooltip = StyledButton::build()
+        .empty()
+        .icon(Icon::Close)
+        .button_id(ButtonId::RteInsertCode)
+        .on_click(click_handler.clone())
+        .build()
+        .into_node();
 
     let input = {
         let field_id = values.field_id.clone();
@@ -1148,15 +1088,9 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
     };
 
     let actions = {
-        let field_id = values.field_id.clone();
-        let on_insert = ev(Ev::Click, move |ev| {
-            ev.stop_propagation();
-            ev.prevent_default();
-            ev.target().unwrap();
-            Msg::Rte(field_id, RteMsg::InjectCode)
-        });
         let insert = StyledButton::build()
-            .on_click(on_insert)
+            .button_id(ButtonId::RteInjectCode)
+            .on_click(click_handler)
             .text("Insert")
             .build()
             .into_node();
@@ -1172,4 +1106,24 @@ fn code_tooltip(values: &StyledRte) -> Node<Msg> {
         .add_child(actions)
         .build()
         .into_node()
+}
+
+fn styled_rte_button(
+    title: &str,
+    button_id: ButtonId,
+    icon: Icon,
+    handler: EventHandler<Msg>,
+) -> Node<Msg> {
+    let button = StyledButton::build()
+        .button_id(button_id)
+        .icon(StyledIcon::build(icon).build())
+        .on_click(handler)
+        .empty()
+        .build()
+        .into_node();
+    span![
+        class!["styledRteButton"],
+        attrs![At::Title => title],
+        button
+    ]
 }

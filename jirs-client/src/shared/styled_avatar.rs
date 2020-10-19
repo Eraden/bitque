@@ -104,23 +104,18 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
         size,
         name,
         on_click,
-        mut class_list,
+        class_list,
         user_index,
     } = values;
 
     let index = user_index % 8;
-
-    class_list.push("styledAvatar");
-    match avatar_url {
-        Some(_) => class_list.push("image"),
-        _ => class_list.push("letter"),
-    };
 
     let shared_style = format!("width: {size}px; height: {size}px", size = size);
     let handler = match on_click {
         None => vec![],
         Some(h) => vec![h],
     };
+    let class_list: Vec<Attrs> = class_list.into_iter().map(|s| class![s]).collect();
     let letter = name
         .chars()
         .rev()
@@ -135,8 +130,11 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
                 url = url
             );
             div![
-                attrs![At::Class => class_list.join(" "), At::Style => style],
-                handler,
+                class!["styledAvatar"],
+                class!["image"],
+                class_list,
+                attrs![At::Style => style, At::Title => name],
+                handler
             ]
         }
         _ => {
@@ -146,10 +144,11 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
                 size = size
             );
             div![
+                class!["styledAvatar"],
                 class!["letter"],
+                class_list,
                 attrs![
                     At::Class => format!("avatarColor{}", index + 1),
-                    At::Class => class_list.join(" "),
                     At::Style => style
                 ],
                 span![letter],

@@ -132,14 +132,17 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                     flush_queue(model, orders);
                     send_ws_msg(WsMsg::Ping, model.ws.as_ref(), orders);
                     authorize_or_redirect(model, orders);
+                    orders.skip();
                     return;
                 }
                 WebSocketChanged::SendPing => {
                     send_ws_msg(WsMsg::Ping, model.ws.as_ref(), orders);
+                    orders.skip();
                     return;
                 }
                 WebSocketChanged::WebSocketMessage(incoming) => {
                     orders.perform_cmd(read_incoming(incoming));
+                    orders.skip();
                     return;
                 }
                 WebSocketChanged::WsMsg(ref ws_msg) => {
@@ -276,8 +279,8 @@ pub fn render(host_url: String, ws_url: String) {
         HOST_URL = host_url;
         WS_URL = ws_url;
     }
-    {
-        // crate::hi::syntax_set::load();
+    if !cfg!(debug_assertions) {
+        crate::hi::syntax_set::load();
     }
     elements::define();
 
