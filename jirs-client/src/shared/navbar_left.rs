@@ -27,26 +27,13 @@ impl IntoNavItemIcon for Icon {
 }
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
-    match msg {
-        Msg::MessageInvitationApproved(token) => {
-            send_ws_msg(
-                WsMsg::InvitationAcceptRequest(*token),
-                model.ws.as_ref(),
-                orders,
-            );
-        }
-        Msg::MessageInvitationDismiss(token) => {
-            send_ws_msg(
-                WsMsg::InvitationRejectRequest(*token),
-                model.ws.as_ref(),
-                orders,
-            );
-        }
-        Msg::MessageSeen(id) => {
-            send_ws_msg(WsMsg::MessageMarkSeen(*id), model.ws.as_ref(), orders);
-        }
-        _ => (),
-    }
+    let m = match msg {
+        Msg::MessageInvitationApproved(token) => WsMsg::InvitationAcceptRequest(*token),
+        Msg::MessageInvitationDismiss(token) => WsMsg::InvitationRejectRequest(*token),
+        Msg::MessageSeen(id) => WsMsg::MessageMarkSeen(*id),
+        _ => return,
+    };
+    send_ws_msg(m, model.ws.as_ref(), orders);
 }
 
 pub fn render(model: &Model) -> Vec<Node<Msg>> {
@@ -82,6 +69,15 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
         )
     };
 
+    let issue_nav = if model.issue_statuses.is_empty() {
+        vec![]
+    } else {
+        vec![
+            navbar_left_item("Search issues", Icon::Search, None, None),
+            navbar_left_item("Create Issue", Icon::Plus, Some("/add-issue"), None),
+        ]
+    };
+
     vec![
         about_tooltip_popup(model),
         messages_tooltip_popup(model),
@@ -92,8 +88,7 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
                 attrs![At::Href => "/"],
                 div![class!["styledLogo"], logo_svg]
             ],
-            navbar_left_item("Search issues", Icon::Search, None, None),
-            navbar_left_item("Create Issue", Icon::Plus, Some("/add-issue"), None),
+            issue_nav,
             div![
                 class!["bottom"],
                 navbar_left_item("Profile", user_icon, Some("/profile"), None),
@@ -158,14 +153,11 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
 fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
     let Message {
         id,
-        receiver_id: _,
-        sender_id: _,
         summary,
         description,
         message_type,
         hyper_link,
-        created_at: _,
-        updated_at: _,
+        ..
     } = message;
     let message_id = *id;
 
@@ -203,10 +195,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
 
     let node = match message_type {
         MessageType::ReceivedInvitation => {
-            let token: InvitationToken = match hyper_link.trim_start_matches('#').parse() {
-                Err(_) => return None,
-                Ok(n) => n,
-            };
+            let token: InvitationToken = hyper_link.trim_start_matches('#').parse().ok()?;
             let accept = StyledButton::build()
                 .primary()
                 .text("Accept")

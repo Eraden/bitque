@@ -1,11 +1,11 @@
 use futures::executor::block_on;
 
-use jirs_data::{UserId, UserProject, WsMsg};
+use jirs_data::{UserId, UserProject, UserRole, WsMsg};
 
-use crate::db;
-use crate::db::users::Register as DbRegister;
-use crate::ws::auth::Authenticate;
-use crate::ws::{WebSocketActor, WsHandler, WsResult};
+use crate::{
+    db::{self, users::Register as DbRegister},
+    ws::{auth::Authenticate, WebSocketActor, WsHandler, WsResult},
+};
 
 pub struct LoadProjectUsers;
 
@@ -41,6 +41,7 @@ impl WsHandler<Register> for WebSocketActor {
             name: name.clone(),
             email: email.clone(),
             project_id: None,
+            role: UserRole::Owner,
         })) {
             Ok(Ok(_)) => Some(WsMsg::SignUpSuccess),
             Ok(Err(_)) => Some(WsMsg::SignUpPairTaken),

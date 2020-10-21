@@ -14,7 +14,7 @@ use crate::{
         drag::DragState, styled_checkbox::StyledCheckboxState,
         styled_date_time_input::StyledDateTimeInputState, styled_editor::Mode,
         styled_image_input::StyledImageInputState, styled_input::StyledInputState,
-        styled_rte::StyledRteState, styled_select::StyledSelectState,
+        /*styled_rte::StyledRteState,*/ styled_select::StyledSelectState,
     },
     EditIssueModalSection, FieldId, Msg, ProjectFieldId,
 };
@@ -371,7 +371,7 @@ pub struct ProjectSettingsPage {
     pub edit_column_id: Option<IssueStatusId>,
     pub creating_issue_status: bool,
     pub name: StyledInputState,
-    pub description_rte: StyledRteState,
+    // pub description_rte: StyledRteState,
 }
 
 impl ProjectSettingsPage {
@@ -411,9 +411,9 @@ impl ProjectSettingsPage {
                 FieldId::ProjectSettings(ProjectFieldId::IssueStatusName),
                 "",
             ),
-            description_rte: StyledRteState::new(FieldId::ProjectSettings(
-                ProjectFieldId::Description,
-            )),
+            // description_rte: StyledRteState::new(FieldId::ProjectSettings(
+            //     ProjectFieldId::Description,
+            // )),
         }
     }
 

@@ -8,12 +8,14 @@ extern crate diesel;
 extern crate log;
 
 use actix::Actor;
-use actix_cors::Cors;
+// use actix_cors::Cors;
 #[cfg(feature = "local-storage")]
 use actix_files as fs;
 use actix_web::{App, HttpServer};
 
 use crate::ws::WsServer;
+
+// use actix_web::http::Method;
 
 pub mod db;
 pub mod errors;
@@ -53,7 +55,6 @@ async fn main() -> Result<(), String> {
     HttpServer::new(move || {
         let app = App::new()
             .wrap(actix_web::middleware::Logger::default())
-            .wrap(Cors::default())
             .data(ws_server.clone())
             .data(db_addr.clone())
             .data(mail_addr.clone())

@@ -4,9 +4,10 @@ use diesel::expression::sql_literal::sql;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use jirs_data::msg::WsError;
 use jirs_data::{IssuePriority, IssueStatusId, IssueType};
 
-use crate::{db::DbExecutor, errors::ServiceErrors, models::Issue};
+use crate::{db::DbExecutor, db_pool, errors::ServiceErrors, models::Issue};
 
 const FAILED_CONNECT_USER_AND_ISSUE: &str = "Failed to create connection between user and issue";
 
@@ -24,19 +25,18 @@ impl Handler<LoadIssue> for DbExecutor {
 
     fn handle(&mut self, msg: LoadIssue, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issues::dsl::{id, issues};
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let conn = db_pool!(self);
 
         let query = issues.filter(id.eq(msg.issue_id)).distinct();
         debug!(
             "{}",
             diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
         );
-        query
-            .first::<Issue>(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("project issues".to_string()))
+        query.first::<Issue>(conn).map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::RecordNotFound("project issues".to_string())
+        })
     }
 }
 
@@ -54,18 +54,18 @@ impl Handler<LoadProjectIssues> for DbExecutor {
 
     fn handle(&mut self, msg: LoadProjectIssues, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issues::dsl::{issues, project_id};
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let conn = db_pool!(self);
+
         let chain = issues.filter(project_id.eq(msg.project_id)).distinct();
         debug!(
             "{}",
             diesel::debug_query::<diesel::pg::Pg, _>(&chain).to_string()
         );
-        let vec = chain
-            .load::<Issue>(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("project issues".to_string()))?;
+        let vec = chain.load::<Issue>(conn).map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::RecordNotFound("project issues".to_string())
+        })?;
         Ok(vec)
     }
 }
@@ -98,10 +98,8 @@ impl Handler<UpdateIssue> for DbExecutor {
 
     fn handle(&mut self, msg: UpdateIssue, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issues::dsl::{self, issues};
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+
+        let conn = db_pool!(self);
 
         let current_issue_id = msg.issue_id;
 
@@ -133,7 +131,8 @@ impl Handler<UpdateIssue> for DbExecutor {
             "{}",
             diesel::debug_query::<diesel::pg::Pg, _>(&chain).to_string()
         );
-        chain.get_result::<Issue>(conn).map_err(|_| {
+        chain.get_result::<Issue>(conn).map_err(|e| {
+            error!("{:?}", e);
             ServiceErrors::DatabaseQueryFailed("Failed to update issue".to_string())
         })?;
 
@@ -142,12 +141,18 @@ impl Handler<UpdateIssue> for DbExecutor {
             diesel::delete(dsl::issue_assignees)
                 .filter(not(dsl::user_id.eq_any(user_ids)).and(dsl::issue_id.eq(current_issue_id)))
                 .execute(conn)
-                .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+                .map_err(|e| {
+                    error!("{:?}", e);
+                    ServiceErrors::DatabaseConnectionLost
+                })?;
             let existing: Vec<i32> = dsl::issue_assignees
                 .select(dsl::user_id)
                 .filter(dsl::issue_id.eq(current_issue_id))
                 .get_results::<i32>(conn)
-                .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+                .map_err(|e| {
+                    error!("{:?}", e);
+                    ServiceErrors::DatabaseConnectionLost
+                })?;
             let mut values = vec![];
             for user_id in user_ids.iter() {
                 if !existing.contains(user_id) {
@@ -160,15 +165,16 @@ impl Handler<UpdateIssue> for DbExecutor {
             diesel::insert_into(dsl::issue_assignees)
                 .values(values)
                 .execute(conn)
-                .map_err(|_| {
+                .map_err(|e| {
+                    error!("{:?}", e);
                     ServiceErrors::DatabaseQueryFailed(FAILED_CONNECT_USER_AND_ISSUE.to_string())
                 })?;
         }
 
-        issues
-            .find(msg.issue_id)
-            .first::<Issue>(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)
+        issues.find(msg.issue_id).first::<Issue>(conn).map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::DatabaseConnectionLost
+        })
     }
 }
 
@@ -188,10 +194,7 @@ impl Handler<DeleteIssue> for DbExecutor {
         use crate::schema::issue_assignees::dsl::{issue_assignees, issue_id};
         use crate::schema::issues::dsl::issues;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
         diesel::delete(issue_assignees.filter(issue_id.eq(msg.issue_id)))
             .execute(conn)
@@ -231,16 +234,16 @@ impl Handler<CreateIssue> for DbExecutor {
         use crate::schema::issue_assignees::dsl;
         use crate::schema::issues::dsl::issues;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
         let list_position = issues
             // .filter(issue_status_id.eq(IssueStatus::Backlog))
-            .select(sql("max(list_position) + 1"))
+            .select(sql("COALESCE(max(list_position), 0) + 1"))
             .get_result::<i32>(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| {
+                error!("resolve new issue position failed {}", e);
+                ServiceErrors::DatabaseConnectionLost
+            })?;
 
         info!("{:?}", msg.issue_type);
         info!("msg.issue_status_id {:?}", msg.issue_status_id);
@@ -252,9 +255,12 @@ impl Handler<CreateIssue> for DbExecutor {
                 },
                 ctx,
             )
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?
+            .map_err(|e| {
+                error!("{:?}", e);
+                ServiceErrors::Error(WsError::FailedToFetchIssueStatuses)
+            })?
             .get(0)
-            .ok_or_else(|| ServiceErrors::DatabaseConnectionLost)?
+            .ok_or_else(|| ServiceErrors::Error(WsError::NoIssueStatuses))?
             .id
         } else {
             msg.issue_status_id
@@ -302,7 +308,10 @@ impl Handler<CreateIssue> for DbExecutor {
         diesel::insert_into(dsl::issue_assignees)
             .values(values)
             .execute(conn)
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+            .map_err(|e| {
+                error!("{:?}", e);
+                ServiceErrors::DatabaseConnectionLost
+            })?;
 
         Ok(issue)
     }

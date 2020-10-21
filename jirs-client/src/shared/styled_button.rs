@@ -70,10 +70,10 @@ impl<'l> StyledButtonBuilder<'l> {
         self.variant(Variant::Empty)
     }
 
-    pub fn button_id(mut self, button_id: ButtonId) -> Self {
-        self.button_id = Some(button_id);
-        self
-    }
+    // pub fn button_id(mut self, button_id: ButtonId) -> Self {
+    //     self.button_id = Some(button_id);
+    //     self
+    // }
 
     pub fn disabled(mut self, value: bool) -> Self {
         self.disabled = Some(value);

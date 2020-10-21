@@ -14,7 +14,7 @@ pub use payloads::*;
 pub use sql::*;
 
 mod fields;
-mod msg;
+pub mod msg;
 mod payloads;
 
 #[cfg(feature = "backend")]
@@ -80,6 +80,7 @@ impl IssueType {
     }
 }
 
+#[cfg(feature = "frontend")]
 impl Into<u32> for IssueType {
     fn into(self) -> u32 {
         match self {
@@ -90,6 +91,7 @@ impl Into<u32> for IssueType {
     }
 }
 
+#[cfg(feature = "frontend")]
 impl Into<IssueType> for u32 {
     fn into(self) -> IssueType {
         match self {
@@ -102,7 +104,7 @@ impl Into<IssueType> for u32 {
 }
 
 impl IssueType {
-    pub fn to_str(&self) -> &'static str {
+    pub fn to_str<'l>(&self) -> &'l str {
         match self {
             IssueType::Task => "task",
             IssueType::Bug => "bug",

@@ -9,14 +9,6 @@ use jirs_data::{
 
 use crate::schema::*;
 
-#[derive(Debug, Serialize, Deserialize, Insertable)]
-#[table_name = "comments"]
-pub struct CommentForm {
-    pub body: String,
-    pub user_id: i32,
-    pub issue_id: i32,
-}
-
 #[derive(Debug, Serialize, Deserialize, Queryable)]
 pub struct Issue {
     pub id: i32,

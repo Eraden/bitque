@@ -7,6 +7,24 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_HOST_AUTH_METHOD=trust
 
+  build-server:
+    build:
+      dockerfile: ./Dockerfile.build
+      context: .
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./build:/app/build
+      - type: volume
+        source: rs-target
+        target: /app/jirs-server/target
+      - ./Cargo.toml:/app/Cargo.toml
+      - ./Cargo.lock:/app/Cargo.lock
+      - ./jirs-server:/app/jirs-server
+      - ./jirs-data:/app/jirs-data
+      - ./jirs-cli:/app/jirs-cli
+      - ./jirs-client:/app/jirs-client
+      - ./jirs-css:/app/jirs-css
   server:
     build:
       dockerfile: ./jirs-server/Dockerfile
@@ -57,3 +75,5 @@ services:
 
 volumes:
   assets:
+  build:
+  rs-target:

@@ -5,6 +5,8 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};
 
+use crate::errors::ServiceErrors;
+
 pub mod authorize_user;
 pub mod comments;
 pub mod epics;
@@ -103,5 +105,70 @@ impl Configuration {
     #[cfg(test)]
     pub fn config_file() -> &'static str {
         "db.test.toml"
+    }
+}
+
+#[macro_export]
+macro_rules! db_pool {
+    ($self: expr) => {
+        &$self.pool.get().map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::DatabaseConnectionLost
+        })?
+    };
+}
+
+#[macro_export]
+macro_rules! q {
+    ($q: expr) => {{
+        let q = $q;
+        debug!(
+            "{}",
+            diesel::debug_query::<diesel::pg::Pg, _>(&q).to_string()
+        );
+        q
+    }};
+}
+
+pub struct Guard<'l> {
+    conn: &'l crate::db::DbPooledConn,
+    tm: &'l diesel::connection::AnsiTransactionManager,
+}
+
+impl<'l> Guard<'l> {
+    pub fn new(conn: &'l DbPooledConn) -> Result<Self, ServiceErrors> {
+        use diesel::{connection::TransactionManager, prelude::*};
+        let tm = conn.transaction_manager();
+        tm.begin_transaction(conn).map_err(|e| {
+            log::error!("{:?}", e);
+            ServiceErrors::DatabaseConnectionLost
+        })?;
+        Ok(Self { conn, tm })
+    }
+
+    pub fn run<R, F: FnOnce(&Guard) -> Result<R, ServiceErrors>>(
+        &self,
+        f: F,
+    ) -> Result<R, ServiceErrors> {
+        use diesel::connection::TransactionManager;
+
+        let r = f(self);
+        match r {
+            Ok(r) => {
+                self.tm.commit_transaction(self.conn).map_err(|e| {
+                    log::error!("{:?}", e);
+                    ServiceErrors::DatabaseConnectionLost
+                })?;
+                Ok(r)
+            }
+            Err(e) => {
+                log::error!("{:?}", e);
+                self.tm.rollback_transaction(self.conn).map_err(|e| {
+                    log::error!("{:?}", e);
+                    ServiceErrors::DatabaseConnectionLost
+                })?;
+                Err(e)
+            }
+        }
     }
 }

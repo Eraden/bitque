@@ -9,10 +9,10 @@ use jirs_data::*;
 
 use crate::model::{ModalType, Model, Page};
 use crate::shared::styled_date_time_input::StyledDateTimeChanged;
-use crate::shared::styled_rte::RteMsg;
+use crate::shared::{go_to_board, go_to_login, styled_tooltip};
+// use crate::shared::styled_rte::RteMsg;
 use crate::shared::styled_select::StyledSelectChanged;
 use crate::shared::styled_tooltip::{Variant as StyledTooltip, Variant};
-use crate::shared::{go_to_board, go_to_login, styled_tooltip};
 use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
 
 mod changes;
@@ -85,7 +85,7 @@ pub enum Msg {
     StrInputChanged(FieldId, String),
     U32InputChanged(FieldId, u32),
     FileInputChanged(FieldId, Vec<File>),
-    Rte(FieldId, RteMsg),
+    // Rte(FieldId, RteMsg),
 
     // issues
     AddIssue,
@@ -279,9 +279,9 @@ pub fn render(host_url: String, ws_url: String) {
         HOST_URL = host_url;
         WS_URL = ws_url;
     }
-    if !cfg!(debug_assertions) {
-        crate::hi::syntax_set::load();
-    }
+    // if !cfg!(debug_assertions) {
+    //     crate::hi::syntax_set::load();
+    // }
     elements::define();
 
     let _app = seed::App::builder(update, view)

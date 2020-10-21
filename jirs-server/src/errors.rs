@@ -1,6 +1,6 @@
 use actix_web::HttpResponse;
 
-use jirs_data::ErrorResponse;
+use jirs_data::{msg::WsError, ErrorResponse};
 
 const TOKEN_NOT_FOUND: &str = "Token not found";
 const DATABASE_CONNECTION_FAILED: &str = "Database connection failed";
@@ -12,6 +12,7 @@ pub enum ServiceErrors {
     DatabaseQueryFailed(String),
     RecordNotFound(String),
     RegisterCollision,
+    Error(WsError),
 }
 
 impl ServiceErrors {
@@ -43,6 +44,9 @@ impl Into<HttpResponse> for ServiceErrors {
             }
             ServiceErrors::RegisterCollision => HttpResponse::Unauthorized().json(ErrorResponse {
                 errors: vec!["Register collision".to_string()],
+            }),
+            ServiceErrors::Error(error) => HttpResponse::BadRequest().json(ErrorResponse {
+                errors: vec![error.to_str().to_string()],
             }),
         }
     }

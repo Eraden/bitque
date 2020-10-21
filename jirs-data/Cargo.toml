@@ -13,7 +13,8 @@ name = "jirs_data"
 path = "./src/lib.rs"
 
 [features]
-backend = [ "diesel" ]
+backend = ["diesel"]
+frontend = []
 
 [dependencies]
 serde = "*"

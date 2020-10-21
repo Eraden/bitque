@@ -1,13 +1,10 @@
 use actix::{Handler, Message};
-use diesel::pg::Pg;
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
 
-use jirs_data::Epic;
+use jirs_data::{msg::WsError, Epic};
 
-use crate::{db::DbExecutor, errors::ServiceErrors};
+use crate::{db::DbExecutor, db_pool, errors::ServiceErrors, q};
 
-#[derive(Serialize, Deserialize)]
 pub struct LoadEpics {
     pub project_id: i32,
 }
@@ -22,20 +19,17 @@ impl Handler<LoadEpics> for DbExecutor {
     fn handle(&mut self, msg: LoadEpics, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::epics::dsl::*;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
-        let epics_query = epics.distinct_on(id).filter(project_id.eq(msg.project_id));
-        debug!("{}", diesel::debug_query::<Pg, _>(&epics_query));
-        epics_query
+        q!(epics.distinct_on(id).filter(project_id.eq(msg.project_id)))
             .load(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("epics".to_string()))
+            .map_err(|e| {
+                error!("{:?}", e);
+                ServiceErrors::Error(WsError::FailedToLoadEpics)
+            })
     }
 }
 
-#[derive(Serialize, Deserialize)]
 pub struct CreateEpic {
     pub user_id: i32,
     pub project_id: i32,
@@ -52,24 +46,21 @@ impl Handler<CreateEpic> for DbExecutor {
     fn handle(&mut self, msg: CreateEpic, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::epics::dsl::*;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
-        let epic_query = diesel::insert_into(epics).values((
+        q!(diesel::insert_into(epics).values((
             name.eq(msg.name.as_str()),
             user_id.eq(msg.user_id),
             project_id.eq(msg.project_id),
-        ));
-        debug!("{}", diesel::debug_query::<Pg, _>(&epic_query));
-        epic_query
-            .get_result::<Epic>(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("epics".to_string()))
+        )))
+        .get_result::<Epic>(conn)
+        .map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::Error(WsError::InvalidEpic)
+        })
     }
 }
 
-#[derive(Serialize, Deserialize)]
 pub struct UpdateEpic {
     pub epic_id: i32,
     pub project_id: i32,
@@ -86,25 +77,22 @@ impl Handler<UpdateEpic> for DbExecutor {
     fn handle(&mut self, msg: UpdateEpic, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::epics::dsl::*;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-        let query = diesel::update(
+        let conn = db_pool!(self);
+
+        q!(diesel::update(
             epics
                 .filter(project_id.eq(msg.project_id))
                 .find(msg.epic_id),
         )
-        .set(name.eq(msg.name));
-        info!("{}", diesel::debug_query::<Pg, _>(&query));
-        let row: Epic = query
-            .get_result::<Epic>(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("epics".to_string()))?;
-        Ok(row)
+        .set(name.eq(msg.name)))
+        .get_result::<Epic>(conn)
+        .map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::Error(WsError::FailedToUpdateEpic)
+        })
     }
 }
 
-#[derive(Serialize, Deserialize)]
 pub struct DeleteEpic {
     pub epic_id: i32,
     pub user_id: i32,
@@ -120,16 +108,17 @@ impl Handler<DeleteEpic> for DbExecutor {
     fn handle(&mut self, msg: DeleteEpic, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::epics::dsl::*;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
-        let comment_query = diesel::delete(epics.filter(user_id.eq(msg.user_id)).find(msg.epic_id));
-        debug!("{}", diesel::debug_query::<Pg, _>(&comment_query));
-        comment_query
-            .execute(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("epics".to_string()))?;
+        q!(diesel::delete(
+            epics.filter(user_id.eq(msg.user_id)).find(msg.epic_id)
+        ))
+        .execute(conn)
+        .map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::Error(WsError::UnableToDeleteEpic)
+        })?;
+
         Ok(())
     }
 }

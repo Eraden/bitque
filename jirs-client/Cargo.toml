@@ -29,7 +29,7 @@ lto = true
 opt-level = 's'
 
 [dependencies]
-jirs-data = { path = "../jirs-data" }
+jirs-data = { path = "../jirs-data", features = ["frontend"] }
 
 wee_alloc = "*"
 

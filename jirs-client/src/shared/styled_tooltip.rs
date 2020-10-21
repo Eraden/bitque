@@ -89,15 +89,15 @@ impl<'l> StyledTooltipBuilder<'l> {
         self
     }
 
-    pub fn table_tooltip(mut self) -> Self {
-        self.variant = Variant::TableBuilder;
-        self
-    }
-
-    pub fn code_tooltip(mut self) -> Self {
-        self.variant = Variant::CodeBuilder;
-        self
-    }
+    // pub fn table_tooltip(mut self) -> Self {
+    //     self.variant = Variant::TableBuilder;
+    //     self
+    // }
+    //
+    // pub fn code_tooltip(mut self) -> Self {
+    //     self.variant = Variant::CodeBuilder;
+    //     self
+    // }
 
     pub fn date_time_picker(mut self) -> Self {
         self.variant = Variant::DateTimeBuilder;

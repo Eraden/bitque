@@ -8,7 +8,9 @@ use crate::{
         users::{FindUser, LookupUser},
         DbExecutor,
     },
+    db_pool,
     errors::ServiceErrors,
+    q,
 };
 
 #[derive(Debug)]
@@ -26,19 +28,14 @@ impl Handler<LoadMessages> for DbExecutor {
     fn handle(&mut self, msg: LoadMessages, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::messages::dsl::*;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
-        let query = messages.filter(receiver_id.eq(msg.user_id));
-        debug!(
-            "{}",
-            diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
-        );
-        query
+        q!(messages.filter(receiver_id.eq(msg.user_id)))
             .load(conn)
-            .map_err(|_| ServiceErrors::DatabaseQueryFailed("load user messages".to_string()))
+            .map_err(|e| {
+                error!("{:?}", e);
+                ServiceErrors::DatabaseQueryFailed("load user messages".to_string())
+            })
     }
 }
 
@@ -58,20 +55,18 @@ impl Handler<MarkMessageSeen> for DbExecutor {
     fn handle(&mut self, msg: MarkMessageSeen, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::messages::dsl::*;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
-        let query = diesel::delete(
+        let size = q!(diesel::delete(
             messages
                 .find(msg.message_id)
                 .filter(receiver_id.eq(msg.user_id)),
-        );
-        debug!("{}", diesel::debug_query::<diesel::pg::Pg, _>(&query));
-        let size = query
-            .execute(conn)
-            .map_err(|_| ServiceErrors::DatabaseQueryFailed("load user messages".to_string()))?;
+        ))
+        .execute(conn)
+        .map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::DatabaseQueryFailed("load user messages".to_string())
+        })?;
 
         if size > 0 {
             Ok(msg.message_id)
@@ -110,10 +105,7 @@ impl Handler<CreateMessage> for DbExecutor {
     fn handle(&mut self, msg: CreateMessage, ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::messages::dsl::*;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
         let user: User = match {
             match msg.receiver {
@@ -143,9 +135,10 @@ impl Handler<CreateMessage> for DbExecutor {
             "{}",
             diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
         );
-        query
-            .get_result(conn)
-            .map_err(|_| ServiceErrors::DatabaseQueryFailed("create message failed".to_string()))
+        query.get_result(conn).map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::DatabaseQueryFailed("create message failed".to_string())
+        })
     }
 }
 
@@ -165,22 +158,17 @@ impl Handler<LookupMessagesByToken> for DbExecutor {
     fn handle(&mut self, msg: LookupMessagesByToken, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::messages::dsl::*;
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
-        let query = messages.filter(
+        q!(messages.filter(
             hyper_link
                 .eq(format!("#{}", msg.token))
                 .and(receiver_id.eq(msg.user_id)),
-        );
-        debug!(
-            "{}",
-            diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
-        );
-        query
-            .load(conn)
-            .map_err(|_| ServiceErrors::DatabaseQueryFailed("create message failed".to_string()))
+        ))
+        .load(conn)
+        .map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::DatabaseQueryFailed("create message failed".to_string())
+        })
     }
 }

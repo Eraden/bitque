@@ -173,13 +173,13 @@ impl<'l> StyledSelectBuilder<'l> {
         }
     }
 
-    pub fn try_state<'state: 'l>(self, state: Option<&'state StyledSelectState>) -> Self {
-        if let Some(s) = state {
-            self.state(s)
-        } else {
-            self
-        }
-    }
+    // pub fn try_state<'state: 'l>(self, state: Option<&'state StyledSelectState>) -> Self {
+    //     if let Some(s) = state {
+    //         self.state(s)
+    //     } else {
+    //         self
+    //     }
+    // }
 
     pub fn state<'state: 'l>(self, state: &'state StyledSelectState) -> Self {
         self.opened(state.opened)

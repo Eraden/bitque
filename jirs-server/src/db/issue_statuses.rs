@@ -1,13 +1,28 @@
 use actix::{Handler, Message};
-use diesel::pg::Pg;
 use diesel::prelude::*;
 
 use jirs_data::{IssueStatus, IssueStatusId, Position, ProjectId, TitleString};
 
-use crate::{db::DbExecutor, errors::ServiceErrors};
+use crate::db::DbPooledConn;
+use crate::{db::DbExecutor, db_pool, errors::ServiceErrors, q};
 
 pub struct LoadIssueStatuses {
     pub project_id: ProjectId,
+}
+
+impl LoadIssueStatuses {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<IssueStatus>, ServiceErrors> {
+        use crate::schema::issue_statuses::dsl::{id, issue_statuses, project_id};
+
+        q!(issue_statuses
+            .distinct_on(id)
+            .filter(project_id.eq(self.project_id)))
+        .load::<IssueStatus>(conn)
+        .map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::RecordNotFound("issue users".to_string())
+        })
+    }
 }
 
 impl Message for LoadIssueStatuses {
@@ -18,20 +33,9 @@ impl Handler<LoadIssueStatuses> for DbExecutor {
     type Result = Result<Vec<IssueStatus>, ServiceErrors>;
 
     fn handle(&mut self, msg: LoadIssueStatuses, _ctx: &mut Self::Context) -> Self::Result {
-        use crate::schema::issue_statuses::dsl::{id, issue_statuses, project_id};
+        let conn = db_pool!(self);
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-
-        let issue_assignees_query = issue_statuses
-            .distinct_on(id)
-            .filter(project_id.eq(msg.project_id));
-        debug!("{}", diesel::debug_query::<Pg, _>(&issue_assignees_query));
-        issue_assignees_query
-            .load::<IssueStatus>(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("issue users".to_string()))
+        msg.execute(conn)
     }
 }
 
@@ -39,6 +43,22 @@ pub struct CreateIssueStatus {
     pub project_id: ProjectId,
     pub position: i32,
     pub name: TitleString,
+}
+
+impl CreateIssueStatus {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<IssueStatus, ServiceErrors> {
+        use crate::schema::issue_statuses::dsl::{issue_statuses, name, position, project_id};
+        q!(diesel::insert_into(issue_statuses).values((
+            project_id.eq(self.project_id),
+            name.eq(self.name),
+            position.eq(self.position),
+        )))
+        .get_result::<IssueStatus>(conn)
+        .map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::RecordNotFound("issue users".to_string())
+        })
+    }
 }
 
 impl Message for CreateIssueStatus {
@@ -49,22 +69,9 @@ impl Handler<CreateIssueStatus> for DbExecutor {
     type Result = Result<IssueStatus, ServiceErrors>;
 
     fn handle(&mut self, msg: CreateIssueStatus, _ctx: &mut Self::Context) -> Self::Result {
-        use crate::schema::issue_statuses::dsl::{issue_statuses, name, position, project_id};
+        let conn = db_pool!(self);
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
-
-        let issue_assignees_query = diesel::insert_into(issue_statuses).values((
-            project_id.eq(msg.project_id),
-            name.eq(msg.name),
-            position.eq(msg.position),
-        ));
-        debug!("{}", diesel::debug_query::<Pg, _>(&issue_assignees_query));
-        issue_assignees_query
-            .get_result::<IssueStatus>(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("issue users".to_string()))
+        msg.execute(conn)
     }
 }
 
@@ -83,18 +90,16 @@ impl Handler<DeleteIssueStatus> for DbExecutor {
     fn handle(&mut self, msg: DeleteIssueStatus, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issue_statuses::dsl::{id, issue_statuses, project_id};
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
-        let issue_assignees_query = diesel::delete(issue_statuses)
+        q!(diesel::delete(issue_statuses)
             .filter(id.eq(msg.issue_status_id))
-            .filter(project_id.eq(msg.project_id));
-        debug!("{}", diesel::debug_query::<Pg, _>(&issue_assignees_query));
-        issue_assignees_query
-            .execute(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("issue users".to_string()))?;
+            .filter(project_id.eq(msg.project_id)))
+        .execute(conn)
+        .map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::RecordNotFound("issue users".to_string())
+        })?;
         Ok(msg.issue_status_id)
     }
 }
@@ -118,22 +123,20 @@ impl Handler<UpdateIssueStatus> for DbExecutor {
             id, issue_statuses, name, position, project_id, updated_at,
         };
 
-        let conn = &self
-            .pool
-            .get()
-            .map_err(|_| ServiceErrors::DatabaseConnectionLost)?;
+        let conn = db_pool!(self);
 
-        let issue_assignees_query = diesel::update(issue_statuses)
+        q!(diesel::update(issue_statuses)
             .set((
                 name.eq(msg.name),
                 position.eq(msg.position),
                 updated_at.eq(chrono::Utc::now().naive_utc()),
             ))
             .filter(id.eq(msg.issue_status_id))
-            .filter(project_id.eq(msg.project_id));
-        debug!("{}", diesel::debug_query::<Pg, _>(&issue_assignees_query));
-        issue_assignees_query
-            .get_result::<IssueStatus>(conn)
-            .map_err(|_| ServiceErrors::RecordNotFound("issue users".to_string()))
+            .filter(project_id.eq(msg.project_id)))
+        .get_result::<IssueStatus>(conn)
+        .map_err(|e| {
+            error!("{:?}", e);
+            ServiceErrors::RecordNotFound("issue users".to_string())
+        })
     }
 }

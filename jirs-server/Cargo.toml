@@ -41,7 +41,6 @@ dotenv = { version = "*" }
 
 byteorder = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
-libc = { version = "0.2.0" }
 time = { version = "0.1" }
 url = { version = "2.1.0" }
 percent-encoding = { version = "2.1.0" }
@@ -66,6 +65,7 @@ async-trait = { version = "*" }
 
 futures = { version = "*" }
 openssl-sys = { version = "*", features = ["vendored"] }
+libc = { version = "0.2.0", default-features = false }
 
 lettre = { version = "*" }
 lettre_email = { version = "*" }

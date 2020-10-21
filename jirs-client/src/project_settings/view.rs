@@ -12,11 +12,11 @@ use crate::shared::styled_field::StyledField;
 use crate::shared::styled_form::StyledForm;
 use crate::shared::styled_icon::{Icon, StyledIcon};
 use crate::shared::styled_input::StyledInput;
-use crate::shared::styled_rte::StyledRte;
-use crate::shared::styled_select::StyledSelect;
-use crate::shared::styled_textarea::StyledTextarea;
 use crate::shared::{inner_layout, ToChild, ToNode};
 use crate::{model, FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange};
+// use crate::shared::styled_rte::StyledRte;
+use crate::shared::styled_select::StyledSelect;
+use crate::shared::styled_textarea::StyledTextarea;
 
 static TIME_TRACKING_FIBONACCI: &str = include_str!("./time_tracking_fibonacci.txt");
 static TIME_TRACKING_HOURLY: &str = include_str!("./time_tracking_hourly.txt");
@@ -32,15 +32,15 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let description_field = description_field(page);
 
-    let desc_rte = StyledField::build()
-        .input(
-            StyledRte::build(FieldId::ProjectSettings(ProjectFieldId::Description))
-                .state(&page.description_rte)
-                .build()
-                .into_node(),
-        )
-        .build()
-        .into_node();
+    // let desc_rte = StyledField::build()
+    //     .input(
+    //         StyledRte::build(FieldId::ProjectSettings(ProjectFieldId::Description))
+    //             .state(&page.description_rte)
+    //             .build()
+    //             .into_node(),
+    //     )
+    //     .build()
+    //     .into_node();
 
     let category_field = category_field(page);
 
@@ -89,7 +89,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         }))
         .add_field(name_field)
         .add_field(url_field)
-        .add_field(desc_rte)
+        // .add_field(desc_rte)
         .add_field(description_field)
         .add_field(category_field)
         .add_field(time_tracking_field)

@@ -262,10 +262,7 @@ impl WebSocketActor {
         self.current_user_project
             .as_ref()
             .map(|u| u)
-            .ok_or_else(|| {
-                let _x = 1;
-                WsMsg::AuthorizeExpired
-            })
+            .ok_or_else(|| WsMsg::AuthorizeExpired)
     }
 
     fn load_user_project(&self) -> Result<UserProject, WsMsg> {
@@ -273,11 +270,11 @@ impl WebSocketActor {
         match block_on(self.db.send(CurrentUserProject { user_id })) {
             Ok(Ok(user_project)) => Ok(user_project),
             Ok(Err(e)) => {
-                error!("{:?}", e);
+                error!("load_user_project encounter service error {:?}", e);
                 Err(WsMsg::AuthorizeExpired)
             }
             Err(e) => {
-                error!("{}", e);
+                error!("load_user_project encounter mailbox error {}", e);
                 Err(WsMsg::AuthorizeExpired)
             }
         }
