@@ -27,6 +27,7 @@
 
 #projectPage > #projectBoardFilters {
     display: flex;
+    flex-direction: column;
     align-items: center;
     margin-top: 24px;
 }
@@ -87,6 +88,7 @@
     display: flex;
     margin: 26px -5px 0;
     position: relative;
+    flex-direction: column;
 }
 
 #projectPage > .rows > .row > .rowName {
@@ -101,7 +103,6 @@
     flex-direction: column;
     margin: 0 5px;
     min-height: 400px;
-    width: 25%;
     border-radius: 3px;
     background: var(--backgroundLightest);
 }
@@ -147,7 +148,6 @@
 
 #projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue.isBeingDragged {
     transform: rotate(3deg);
-    /*box-shadow: 5px 10px 30px 0 rgba(9, 30, 66, 0.15);*/
     position: absolute;
     top: 0;
     left: 0;
@@ -162,16 +162,6 @@
 #projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .title {
     padding-bottom: 11px;
     font-size: 15px;
-}
-
-@media (max-width: 1100px) {
-    #projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue {
-        padding: 10px 8px;
-    }
-
-    #projectPage > .projectBoardLists > .list > .issues > .issueLink > .issue > .title {
-        font-size: 14.5px
-    }
 }
 
 #projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue > .bottom {
@@ -201,14 +191,39 @@
     box-shadow: 0 0 0 2px #fff;
 }
 
-@media (max-width: 1100px) {
-    #projectPage {
-        padding: 25px 20px 50px calc(var(--appNavBarLeftWidth) + var(--secondarySideBarWidth) + 20px);
-    }
+#projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue {
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
 }
 
-@media (max-width: 999px) {
-    #projectPage {
-        padding-left: calc(var(--appNavBarLeftWidth) + var(--secondarySideBarWidth) + 20px - var(--secondarySideBarWidth));
+#projectPage > #projectBoardFilters > .filterChild {
+    width: 90%;
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 1240px) {
+    #projectPage {}
+
+    #projectPage > #projectBoardFilters {
+        flex-direction: row;
+    }
+
+    #projectPage > #projectBoardFilters > .filterChild {
+        width: auto;
+        margin-bottom: auto;
+    }
+
+    #projectPage > .rows > .row > .projectBoardLists {
+        flex-direction: row;
+    }
+
+    #projectPage > .rows > .row > .projectBoardLists > .list {
+        width: 25%;
+    }
+
+    #projectPage > .rows > .row > .projectBoardLists > .list > .issues > .issueLink > .issue {
+        display: block;
+        padding: 10px 8px;
     }
 }

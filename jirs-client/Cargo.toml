@@ -38,18 +38,15 @@ seed = { version = "0.7.0" }
 serde = { version = "*" }
 serde_json = { version = "*" }
 bincode = { version = "*" }
-ron = { version = "*" }
-bson = "1.1.0"
 serde_cbor = "0.11.1"
 
 chrono = { version = "0.4", default-features = false, features = ["serde", "wasmbind"] }
 uuid = { version = "0.8.1", features = ["serde"] }
 futures = "^0.1.26"
 comrak = "*"
-num-traits = { version = "*" }
+flate2 = "*"
 
 lazy_static = "*"
-syntect = { version = "*", default-features = false, features = ["html", "regex-fancy", "dump-load-rs"] }
 
 [dependencies.wasm-bindgen]
 version = "*"
@@ -91,6 +88,18 @@ features = [
     "KeyEvent",
     "KeyboardEvent",
     "DragEvent",
+]
+
+[dependencies.syntect]
+version = "=4.2.0"
+default-features = false
+features = [
+    "parsing",
+    "dump-load",
+    "dump-load-rs",
+    "dump-create-rs",
+    "html",
+    "default-fancy"
 ]
 
 [dev-dependencies]

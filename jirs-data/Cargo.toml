@@ -24,5 +24,5 @@ uuid = { version = ">=0.7.0, <0.9.0", features = ["serde"] }
 
 [dependencies.diesel]
 optional = true
-version = "1.4.4"
+version = "1.4.5"
 features = [ "unstable", "postgres", "numeric", "extras", "uuidv07" ]

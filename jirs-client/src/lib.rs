@@ -279,8 +279,18 @@ pub fn render(host_url: String, ws_url: String) {
         HOST_URL = host_url;
         WS_URL = ws_url;
     }
-    // if !cfg!(debug_assertions) {
-    //     crate::hi::syntax_set::load();
+    // {
+    //     let now = chrono::Utc::now();
+    //     log!("Loading syntax");
+    //     let _ = crate::hi::SYNTAX_SET.find_syntax_by_name("varlink");
+    //     let end = chrono::Utc::now();
+    //     log!("Syntax loaded");
+    //     log!(end - now);
+    //     log!(crate::hi::SYNTAX_SET
+    //         .syntaxes()
+    //         .iter()
+    //         .map(|s| s.name.as_str())
+    //         .collect::<Vec<&str>>());
     // }
     elements::define();
 

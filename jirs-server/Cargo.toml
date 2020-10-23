@@ -71,7 +71,7 @@ lettre = { version = "*" }
 lettre_email = { version = "*" }
 
 [dependencies.diesel]
-version = "1.4.4"
+version = "1.4.5"
 features = [ "unstable", "postgres", "numeric", "extras", "uuidv07" ]
 
 [dependencies.jirs-data]

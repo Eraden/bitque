@@ -1,8 +1,7 @@
 #login > .styledForm {
+    margin-top: 5rem;
     display: flex;
     flex-direction: column;
-    margin: 0 auto 24px;
-    width: 400px;
     background: rgb(255, 255, 255) none repeat scroll 0 0;
     border-radius: 3px;
     box-shadow: rgba(0, 0, 0, 0.1) 0 0 10px;
@@ -11,7 +10,6 @@
 }
 
 #login > .styledForm:first-of-type {
-    margin-top: 124.5px;
     margin-bottom: 0;
 }
 
@@ -53,7 +51,19 @@
     line-height: 32px;
 }
 
-#login .twoRow {
+#login > .styledForm .twoRow {
     display: flex;
     justify-content: space-between;
+}
+
+@media (min-width: 1240px) {
+    #login > .styledForm {
+        margin: 0 auto 24px;
+        width: 400px;
+        max-width: 400px;
+    }
+
+    #login > .styledForm:first-of-type {
+        margin-top: 124.5px;
+    }
 }

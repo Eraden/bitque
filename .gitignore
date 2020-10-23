@@ -12,3 +12,4 @@ jirs-client/build
 tmp
 jirs-server/target
 jirs-cli/target
+jirs-bat/bat

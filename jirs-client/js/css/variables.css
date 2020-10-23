@@ -86,3 +86,8 @@
     --avatar-color-7: rgb(87, 218, 202);
     --avatar-color-8: rgb(87, 165, 218);
 }
+
+:root /* screen size */
+{
+    --desktop: 1240px;
+}

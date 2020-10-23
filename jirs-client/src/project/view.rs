@@ -47,7 +47,7 @@ fn header() -> Node<Msg> {
         .into_node();
     div![
         id!["projectBoardHeader"],
-        div![id!["boardName"], "Kanban board"],
+        div![id!["boardName"], class!["headerChild"], "Kanban board"],
         a![
             attrs![At::Href => "https://gitlab.com/adrian.wozniak/jirs", At::Target => "__blank", At::Rel => "noreferrer noopener"],
             button
@@ -72,6 +72,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
         .empty()
         .active(project_page.only_my_filter)
         .text("Only My Issues")
+        .add_class("filterChild")
         .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy))
         .build()
         .into_node();
@@ -79,6 +80,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
     let recently_updated = StyledButton::build()
         .empty()
         .text("Recently Updated")
+        .add_class("filterChild")
         .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated))
         .build()
         .into_node();
@@ -89,6 +91,7 @@ fn project_board_filters(model: &Model) -> Node<Msg> {
     {
         seed::button![
             id!["clearAllFilters"],
+            class!["filterChild"],
             "Clear all",
             mouse_ev(Ev::Click, |_| Msg::ProjectClearFilters),
         ]
@@ -136,7 +139,7 @@ fn avatars_filters(model: &Model) -> Node<Msg> {
         })
         .collect();
 
-    div![id!["avatars"], avatars]
+    div![id!["avatars"], class!["filterChild"], avatars]
 }
 
 fn project_board_lists(model: &Model) -> Node<Msg> {

@@ -10,7 +10,7 @@ mkdir -p target
 
 wasm-pack build --mode force --dev --out-name jirs --out-dir ./tmp --target web -- --verbose
 
-../target/debug/jirs-css -i ./js/styles.css -O ./tmp/styles.css
+../target/debug/jirs-css -i ./js/styles.css -o ./tmp/styles.css
 
 cp -r ./static/* ./tmp
 cat ./static/index.js |

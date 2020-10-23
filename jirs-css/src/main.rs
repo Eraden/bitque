@@ -94,9 +94,9 @@ impl std::fmt::Display for CssFile {
 }
 
 #[derive(Debug, Default)]
-struct Application {
-    input: String,
-    output: Option<String>,
+struct Application<'l> {
+    input: &'l str,
+    output: Option<&'l str>,
     watch: bool,
     prelude_selector: bool,
     files_map: HashMap<String, HashSet<String>>,
@@ -105,7 +105,7 @@ struct Application {
     sender: Option<Sender<DebouncedEvent>>,
 }
 
-impl Application {
+impl<'l> Application<'l> {
     fn read_timestamp(input: &Path) -> Result<SystemTime, String> {
         std::fs::File::open(input)
             .and_then(|file| file.metadata())
@@ -259,28 +259,30 @@ impl Application {
     }
 }
 
+#[derive(gumdrop::Options, Debug)]
+struct Opts {
+    #[options(help = "Root input file")]
+    input: Option<String>,
+    #[options(help = "Optional output file. If not given result will be printed to stdout")]
+    output: Option<String>,
+    #[options(help = "Watch file changes")]
+    watch: bool,
+    #[options(help = "Add reset css prelude")]
+    prelude: bool,
+    #[options(help = "Print help message")]
+    help: bool,
+}
+
 fn main() -> Result<(), String> {
-    let matches = clap::App::new("jirs-css")
-        .arg(
-            clap::Arg::with_name("input")
-                .short("i")
-                .default_value(INPUT)
-                .takes_value(true),
-        )
-        .arg(clap::Arg::with_name("output").short("O").takes_value(true))
-        .arg(clap::Arg::with_name("watch").short("W").takes_value(false))
-        .arg(
-            clap::Arg::with_name("prelude")
-                .short("p")
-                .help("Prepend file name as class to each selector"),
-        )
-        .get_matches();
+    use gumdrop::Options;
+
+    let opts: Opts = Opts::parse_args_default_or_exit();
 
     let mut app = Application {
-        input: matches.value_of("input").unwrap().to_string(),
-        output: matches.value_of("output").map(|s| s.to_string()),
-        watch: matches.is_present("watch"),
-        prelude_selector: matches.is_present("prelude"),
+        input: opts.input.as_deref().unwrap_or_else(|| INPUT),
+        output: opts.output.as_deref(),
+        watch: opts.watch,
+        prelude_selector: opts.prelude,
         files_map: Default::default(),
         fm: Default::default(),
         root_file: None,
@@ -289,15 +291,16 @@ fn main() -> Result<(), String> {
     let root_path = app.input.to_string();
     let root = std::path::Path::new(&root_path);
 
-    let output_timestamp = matches
-        .value_of("output")
+    let output_timestamp = opts
+        .output
+        .as_deref()
         .ok_or_else(|| std::io::Error::from_raw_os_error(0))
         .and_then(File::open)
         .and_then(|file| file.metadata())
         .and_then(|meta| meta.modified())
         .unwrap_or_else(|_| SystemTime::UNIX_EPOCH);
 
-    if app.check_timestamps(root, output_timestamp)? && !matches.is_present("watch") {
+    if app.check_timestamps(root, output_timestamp)? && !opts.watch {
         return Ok(());
     }
 
@@ -308,7 +311,7 @@ fn main() -> Result<(), String> {
     app.parse()?;
     app.print();
 
-    if !matches.is_present("watch") {
+    if !opts.watch {
         return Ok(());
     }
 
