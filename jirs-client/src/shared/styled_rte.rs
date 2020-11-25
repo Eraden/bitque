@@ -180,11 +180,11 @@ pub struct StyledRteCodeState {
 
 impl StyledRteCodeState {
     pub fn new(field_id: FieldId) -> Self {
-        let mut languages: Vec<String> = crate::hi::syntax_set::load()
-            .syntaxes()
-            .iter()
-            .map(|s| s.name.clone())
-            .collect();
+        let mut languages: Vec<String> = vec![]; /*crate::hi::syntax_set::load()
+                                                 .syntaxes()
+                                                 .iter()
+                                                 .map(|s| s.name.clone())
+                                                 .collect();*/
         languages.sort();
         Self {
             visible: false,

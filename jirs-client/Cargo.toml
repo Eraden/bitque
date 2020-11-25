@@ -8,25 +8,10 @@ repository = "https://gitlab.com/adrian.wozniak/jirs"
 license = "MPL-2.0"
 #license-file = "../LICENSE"
 
-[package.metadata.wasm-pack.profile.dev]
-wasm-opt = false
-
-[[bin]]
-name = "print"
-path = "./src/print.rs"
-
 [lib]
 crate-type = ["cdylib", "rlib"]
 name = "jirs_client"
 path = "src/lib.rs"
-
-[profile.dev]
-opt-level = 0               # Use slightly better optimizations.
-overflow-checks = false     # Disable integer overflow checks.
-
-[profile.release]
-lto = true
-opt-level = 's'
 
 [dependencies]
 jirs-data = { path = "../jirs-data", features = ["frontend"] }
@@ -38,15 +23,11 @@ seed = { version = "0.7.0" }
 serde = { version = "*" }
 serde_json = { version = "*" }
 bincode = { version = "*" }
-serde_cbor = "0.11.1"
 
 chrono = { version = "0.4", default-features = false, features = ["serde", "wasmbind"] }
 uuid = { version = "0.8.1", features = ["serde"] }
 futures = "^0.1.26"
 comrak = "*"
-flate2 = "*"
-
-lazy_static = "*"
 
 [dependencies.wasm-bindgen]
 version = "*"
@@ -88,18 +69,6 @@ features = [
     "KeyEvent",
     "KeyboardEvent",
     "DragEvent",
-]
-
-[dependencies.syntect]
-version = "=4.2.0"
-default-features = false
-features = [
-    "parsing",
-    "dump-load",
-    "dump-load-rs",
-    "dump-create-rs",
-    "html",
-    "default-fancy"
 ]
 
 [dev-dependencies]

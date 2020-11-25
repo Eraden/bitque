@@ -1,0 +1,69 @@
+
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
+use jirs_syntect::{*, parsing::*};
+use jirs_syntect::Pattern::*;
+use std::cell::*;
+
+#[inline(always)]
+pub fn load() -> Context {
+        Context {
+  meta_scope: vec![
+    Scope {
+        a: 46453494563012759,
+        b: 0,
+    },
+],
+  meta_content_scope: vec![
+    Scope {
+        a: 46453494563012759,
+        b: 0,
+    },
+],
+  meta_include_prototype: true,
+  clear_scopes: None,
+  prototype: None,
+  uses_backrefs: false,
+  patterns: vec![
+    Pattern::Match(MatchPattern {
+      has_captures: false,
+      regex: Regex::new("(</)\\s*(?:([_$\\p{L}][-$\\p{L}\\p{N}.]*)(?<!\\.|-)(:))?((?:[a-z][a-z0-9]*|([_$\\p{L}][-$\\p{L}\\p{N}.]*))(?<!\\.|-))?\\s*(>)"),
+      scope: vec![],
+      captures: Some(vec![(1, vec![
+        Scope {
+            a: 47288629324153014,
+            b: 42502721483309056,
+        },
+    ]),(2, vec![
+        Scope {
+            a: 59392130632122742,
+            b: 42502721483309056,
+        },
+    ]),(3, vec![
+        Scope {
+            a: 47288620745621655,
+            b: 0,
+        },
+    ]),(4, vec![
+        Scope {
+            a: 59392130632122519,
+            b: 0,
+        },
+    ]),(5, vec![
+        Scope {
+            a: 61925366922608791,
+            b: 0,
+        },
+    ]),(6, vec![
+        Scope {
+            a: 47288629324153003,
+            b: 42502721483309056,
+        },
+    ])]),
+      operation: MatchOperation::Pop,
+      with_prototype: None
+    }),
+    Pattern::Include(ContextReference::Direct(ContextId { index: 9915 })),
+]
+} }

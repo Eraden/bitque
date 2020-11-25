@@ -8,13 +8,20 @@ rm -Rf tmp
 mkdir -p tmp
 mkdir -p target
 
-wasm-pack build --mode force --dev --out-name jirs --out-dir ./tmp --target web -- --verbose
+cd ${CLIENT_ROOT}
+wasm-pack --verbose build --mode ${MODE} ${BUILD_TYPE} --out-name jirs --out-dir ${CLIENT_ROOT}/build --target web
 
-../target/debug/jirs-css -i ./js/styles.css -o ./tmp/styles.css
+cd ${HI_ROOT}
+wasm-pack --verbose build --mode ${MODE} ${BUILD_TYPE} --out-name hi --out-dir ${CLIENT_ROOT}/build --target web
 
-cp -r ./static/* ./tmp
+cd ${CLIENT_ROOT}
+${PROJECT_ROOT}/target/debug/jirs-css -i ${CLIENT_ROOT}/js/styles.css -o ${CLIENT_ROOT}/tmp/styles.css
+
+cp -r ${CLIENT_ROOT}/static/* ${CLIENT_ROOT}/tmp
+
 cat ./static/index.js |
   sed -e "s/process.env.JIRS_SERVER_BIND/'$JIRS_SERVER_BIND'/g" |
-  sed -e "s/process.env.JIRS_SERVER_PORT/'$JIRS_SERVER_PORT'/g" &>./tmp/index.js
+  sed -e "s/process.env.JIRS_SERVER_PORT/'$JIRS_SERVER_PORT'/g" &>${CLIENT_ROOT}/tmp/index.js
 
-cp ./js/template.html ./tmp/index.html
+cp ${CLIENT_ROOT}/build/*.{js,wasm} ${CLIENT_ROOT}/tmp/
+cp ${CLIENT_ROOT}/js/template.html ${CLIENT_ROOT}/tmp/index.html

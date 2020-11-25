@@ -5,8 +5,13 @@
 rm -Rf build
 mkdir build
 
-wasm-pack build --mode normal --release --out-name jirs --out-dir ./build --target web
-../target/debug/jirs-css -i ./js/styles.css -o ./build/styles.css
+cd $CLIENT_ROOT
+wasm-pack build --mode normal --release --out-name jirs --out-dir $CLIENT_ROOT/build --target web
+
+cd $HI_ROOT
+wasm-pack build --mode normal --release --out-name hi --out-dir $CLIENT_ROOT/build --target web
+
+cargo run --bin jirs-css -i ./js/styles.css -o ./build/styles.css
 
 cp -r ./static/* ./build
 cat ./static/index.js \

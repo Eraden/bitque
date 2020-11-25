@@ -18,7 +18,6 @@ use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
 mod changes;
 pub mod elements;
 mod fields;
-pub mod hi;
 mod invite;
 mod modal;
 mod model;
@@ -32,11 +31,6 @@ mod sign_up;
 mod users;
 pub mod validations;
 mod ws;
-
-#[link(wasm_import_module = "__wbindgen_thread_xform__")]
-extern "C" {
-    fn __wbindgen_thread_id() -> u32;
-}
 
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
@@ -151,6 +145,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                 WebSocketChanged::WebSocketMessageLoaded(v) => {
                     match bincode::deserialize(v.as_slice()) {
                         Ok(WsMsg::Ping | WsMsg::Pong) => {
+                            orders.skip();
                             orders.perform_cmd(cmds::timeout(300, || {
                                 Msg::WebSocketChange(WebSocketChanged::SendPing)
                             }));
@@ -192,6 +187,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
             return;
         }
         Msg::ChangePage(page) => {
+            orders.skip();
             model.page = *page;
         }
         Msg::ToggleTooltip(variant) => match variant {
@@ -279,19 +275,6 @@ pub fn render(host_url: String, ws_url: String) {
         HOST_URL = host_url;
         WS_URL = ws_url;
     }
-    // {
-    //     let now = chrono::Utc::now();
-    //     log!("Loading syntax");
-    //     let _ = crate::hi::SYNTAX_SET.find_syntax_by_name("varlink");
-    //     let end = chrono::Utc::now();
-    //     log!("Syntax loaded");
-    //     log!(end - now);
-    //     log!(crate::hi::SYNTAX_SET
-    //         .syntaxes()
-    //         .iter()
-    //         .map(|s| s.name.as_str())
-    //         .collect::<Vec<&str>>());
-    // }
     elements::define();
 
     let _app = seed::App::builder(update, view)

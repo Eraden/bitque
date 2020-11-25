@@ -11,3 +11,6 @@ import("/jirs.js").then(async module => {
     document.querySelector('.spinner').remove();
 });
 
+import("/hi.js").then(async module => {
+    await module.default();
+});

@@ -13,3 +13,5 @@ tmp
 jirs-server/target
 jirs-cli/target
 jirs-bat/bat
+
+highlight/jirs-highlight/build
