@@ -8,7 +8,7 @@ use jirs_data::{Token, UserId};
 use crate::{
     db::{DbExecutor, DbPooledConn},
     db_pool,
-    errors::ServiceErrors,
+    errors::ServiceError,
     q,
 };
 
@@ -17,24 +17,24 @@ pub struct FindUserId {
 }
 
 impl FindUserId {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceError> {
         use crate::schema::tokens::dsl::*;
 
         q!(tokens.filter(user_id.eq(self.user_id)).order_by(id.desc()))
             .first(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::Error(WsError::NoBindToken)
+                ServiceError::Error(WsError::NoBindToken)
             })
     }
 }
 
 impl Message for FindUserId {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 }
 
 impl Handler<FindUserId> for DbExecutor {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 
     fn handle(&mut self, msg: FindUserId, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -47,21 +47,21 @@ pub struct FindBindToken {
 }
 
 impl FindBindToken {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceError> {
         use crate::schema::tokens::dsl::{bind_token, tokens};
 
         let token: Token = q!(tokens.filter(bind_token.eq(Some(self.token))))
             .first(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::Error(WsError::BindTokenNotExists)
+                ServiceError::Error(WsError::BindTokenNotExists)
             })?;
 
         q!(diesel::update(tokens.find(token.id)).set(bind_token.eq(None as Option<Uuid>)))
             .execute(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::Error(WsError::FailedToDisableBindToken)
+                ServiceError::Error(WsError::FailedToDisableBindToken)
             })?;
 
         Ok(token)
@@ -69,11 +69,11 @@ impl FindBindToken {
 }
 
 impl Message for FindBindToken {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 }
 
 impl Handler<FindBindToken> for DbExecutor {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 
     fn handle(&mut self, msg: FindBindToken, _: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -86,24 +86,24 @@ pub struct FindAccessToken {
 }
 
 impl FindAccessToken {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceError> {
         use crate::schema::tokens::dsl::{access_token, tokens};
 
         q!(tokens.filter(access_token.eq(self.token)))
             .first(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::Error(WsError::AccessTokenNotExists)
+                ServiceError::Error(WsError::AccessTokenNotExists)
             })
     }
 }
 
 impl Message for FindAccessToken {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 }
 
 impl Handler<FindAccessToken> for DbExecutor {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 
     fn handle(&mut self, msg: FindAccessToken, _: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -116,7 +116,7 @@ pub struct CreateBindToken {
 }
 
 impl CreateBindToken {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceError> {
         use crate::schema::tokens::dsl::*;
 
         q!(diesel::insert_into(tokens).values((
@@ -128,17 +128,17 @@ impl CreateBindToken {
         .get_result(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::FailedToCreateBindToken)
+            ServiceError::Error(WsError::FailedToCreateBindToken)
         })
     }
 }
 
 impl Message for CreateBindToken {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 }
 
 impl Handler<CreateBindToken> for DbExecutor {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 
     fn handle(&mut self, msg: CreateBindToken, _: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);

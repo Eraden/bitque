@@ -15,10 +15,4 @@ members = [
     "./jirs-client",
     "./jirs-data",
     "./jirs-css",
-    "./jirs-bat",
-    "./jirs-syntect",
-    "./highlight/jirs-highlight",
-    "./highlight/jirs-contexts",
-    "./highlight/jirs-syntaxes",
-    "./highlight/jirs-themes",
 ]

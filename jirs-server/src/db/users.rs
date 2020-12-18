@@ -8,7 +8,7 @@ use crate::db::user_projects::CreateUserProject;
 use crate::{
     db::{projects::CreateProject, DbExecutor, DbPooledConn},
     db_pool,
-    errors::ServiceErrors,
+    errors::ServiceError,
     q,
     schema::users::all_columns,
 };
@@ -19,22 +19,22 @@ pub struct FindUser {
 }
 
 impl FindUser {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<User, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<User, ServiceError> {
         use crate::schema::users::dsl::*;
 
         q!(users.find(self.user_id)).first(conn).map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::UserNotExists(self.user_id))
+            ServiceError::Error(WsError::UserNotExists(self.user_id))
         })
     }
 }
 
 impl Message for FindUser {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 }
 
 impl Handler<FindUser> for DbExecutor {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 
     fn handle(&mut self, msg: FindUser, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -48,7 +48,7 @@ pub struct LookupUser {
 }
 
 impl LookupUser {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<User, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<User, ServiceError> {
         use crate::schema::users::dsl::*;
 
         q!(users
@@ -58,17 +58,17 @@ impl LookupUser {
         .first(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::NoMatchingPair(self.name, self.email))
+            ServiceError::Error(WsError::NoMatchingPair(self.name, self.email))
         })
     }
 }
 
 impl Message for LookupUser {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 }
 
 impl Handler<LookupUser> for DbExecutor {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 
     fn handle(&mut self, msg: LookupUser, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -81,7 +81,7 @@ pub struct LoadProjectUsers {
 }
 
 impl LoadProjectUsers {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<User>, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<User>, ServiceError> {
         use crate::schema::user_projects::dsl::{project_id, user_id, user_projects};
         use crate::schema::users::dsl::*;
 
@@ -93,17 +93,17 @@ impl LoadProjectUsers {
         .load(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::FailedToLoadProjectUsers)
+            ServiceError::Error(WsError::FailedToLoadProjectUsers)
         })
     }
 }
 
 impl Message for LoadProjectUsers {
-    type Result = Result<Vec<User>, ServiceErrors>;
+    type Result = Result<Vec<User>, ServiceError>;
 }
 
 impl Handler<LoadProjectUsers> for DbExecutor {
-    type Result = Result<Vec<User>, ServiceErrors>;
+    type Result = Result<Vec<User>, ServiceError>;
 
     fn handle(&mut self, msg: LoadProjectUsers, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -116,7 +116,7 @@ pub struct LoadIssueAssignees {
 }
 
 impl LoadIssueAssignees {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<User>, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<User>, ServiceError> {
         use crate::schema::issue_assignees::dsl::{issue_assignees, issue_id, user_id};
         use crate::schema::users::dsl::*;
 
@@ -128,17 +128,17 @@ impl LoadIssueAssignees {
         .load(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::FailedToLoadAssignees)
+            ServiceError::Error(WsError::FailedToLoadAssignees)
         })
     }
 }
 
 impl Message for LoadIssueAssignees {
-    type Result = Result<Vec<User>, ServiceErrors>;
+    type Result = Result<Vec<User>, ServiceError>;
 }
 
 impl Handler<LoadIssueAssignees> for DbExecutor {
-    type Result = Result<Vec<User>, ServiceErrors>;
+    type Result = Result<Vec<User>, ServiceError>;
 
     fn handle(&mut self, msg: LoadIssueAssignees, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -152,7 +152,7 @@ pub struct CreateUser {
 }
 
 impl CreateUser {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<User, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<User, ServiceError> {
         use crate::schema::users::dsl::*;
 
         q!(diesel::insert_into(users)
@@ -174,17 +174,17 @@ impl CreateUser {
                 Error::AlreadyInTransaction => WsError::InvalidPair(self.name, self.email),
                 Error::__Nonexhaustive => WsError::InvalidPair(self.name, self.email),
             };
-            ServiceErrors::Error(ws)
+            ServiceError::Error(ws)
         })
     }
 }
 
 impl Message for CreateUser {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 }
 
 impl Handler<CreateUser> for DbExecutor {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 
     fn handle(&mut self, msg: CreateUser, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -200,7 +200,7 @@ pub struct Register {
 }
 
 impl Register {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<(), ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<(), ServiceError> {
         let Register {
             name: given_name,
             email: given_email,
@@ -210,7 +210,7 @@ impl Register {
 
         crate::db::Guard::new(conn)?.run(|_guard| {
             if count_matching_users(given_name.as_str(), given_email.as_str(), conn) > 0 {
-                return Err(ServiceErrors::Error(WsError::InvalidLoginPair));
+                return Err(ServiceError::Error(WsError::InvalidLoginPair));
             }
 
             let current_project_id: ProjectId = match given_project_id {
@@ -248,11 +248,11 @@ impl Register {
 }
 
 impl Message for Register {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 }
 
 impl Handler<Register> for DbExecutor {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 
     fn handle(&mut self, msg: Register, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -265,11 +265,11 @@ pub struct LoadInvitedUsers {
 }
 
 impl Message for LoadInvitedUsers {
-    type Result = Result<Vec<User>, ServiceErrors>;
+    type Result = Result<Vec<User>, ServiceError>;
 }
 
 impl Handler<LoadInvitedUsers> for DbExecutor {
-    type Result = Result<Vec<User>, ServiceErrors>;
+    type Result = Result<Vec<User>, ServiceError>;
 
     fn handle(&mut self, msg: LoadInvitedUsers, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::invitations::dsl::{email as i_email, invitations, invited_by_id};
@@ -284,7 +284,7 @@ impl Handler<LoadInvitedUsers> for DbExecutor {
         .load(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::FailedToLoadInvitedUsers)
+            ServiceError::Error(WsError::FailedToLoadInvitedUsers)
         })
     }
 }
@@ -307,11 +307,11 @@ pub struct UpdateAvatarUrl {
 }
 
 impl Message for UpdateAvatarUrl {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 }
 
 impl Handler<UpdateAvatarUrl> for DbExecutor {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 
     fn handle(&mut self, msg: UpdateAvatarUrl, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::users::dsl::{avatar_url, id, users};
@@ -324,7 +324,7 @@ impl Handler<UpdateAvatarUrl> for DbExecutor {
         .execute(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::FailedToChangeAvatar)
+            ServiceError::Error(WsError::FailedToChangeAvatar)
         })?;
 
         FindUser {
@@ -341,11 +341,11 @@ pub struct ProfileUpdate {
 }
 
 impl Message for ProfileUpdate {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 }
 
 impl Handler<ProfileUpdate> for DbExecutor {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 
     fn handle(&mut self, msg: ProfileUpdate, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::users::dsl::{email, id, name, users};
@@ -356,11 +356,11 @@ impl Handler<ProfileUpdate> for DbExecutor {
             .set((email.eq(msg.email), name.eq(msg.name)))
             .filter(id.eq(msg.user_id)))
         .execute(conn)
-        .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+        .map_err(|e| ServiceError::DatabaseQueryFailed(format!("{}", e)))?;
 
         q!(users.find(msg.user_id))
             .first(conn)
-            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))
+            .map_err(|e| ServiceError::DatabaseQueryFailed(format!("{}", e)))
     }
 }
 

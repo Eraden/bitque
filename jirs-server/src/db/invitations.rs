@@ -14,7 +14,7 @@ use crate::{
         DbExecutor,
     },
     db_pool,
-    errors::ServiceErrors,
+    errors::ServiceError,
     q,
 };
 
@@ -23,20 +23,20 @@ pub struct FindByBindToken {
 }
 
 impl FindByBindToken {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Invitation, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Invitation, ServiceError> {
         use crate::schema::invitations::dsl::*;
         q!(invitations.filter(bind_token.eq(self.token)))
             .first(conn)
-            .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))
+            .map_err(|e| ServiceError::DatabaseQueryFailed(format!("{}", e)))
     }
 }
 
 impl Message for FindByBindToken {
-    type Result = Result<Invitation, ServiceErrors>;
+    type Result = Result<Invitation, ServiceError>;
 }
 
 impl Handler<FindByBindToken> for DbExecutor {
-    type Result = Result<Invitation, ServiceErrors>;
+    type Result = Result<Invitation, ServiceError>;
 
     fn handle(&mut self, msg: FindByBindToken, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -49,11 +49,11 @@ pub struct ListInvitation {
 }
 
 impl Message for ListInvitation {
-    type Result = Result<Vec<Invitation>, ServiceErrors>;
+    type Result = Result<Vec<Invitation>, ServiceError>;
 }
 
 impl Handler<ListInvitation> for DbExecutor {
-    type Result = Result<Vec<Invitation>, ServiceErrors>;
+    type Result = Result<Vec<Invitation>, ServiceError>;
 
     fn handle(&mut self, msg: ListInvitation, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::invitations::dsl::*;
@@ -68,7 +68,7 @@ impl Handler<ListInvitation> for DbExecutor {
         .load(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::FailedToLoadInvitations)
+            ServiceError::Error(WsError::FailedToLoadInvitations)
         })
     }
 }
@@ -82,7 +82,7 @@ pub struct CreateInvitation {
 }
 
 impl CreateInvitation {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Invitation, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Invitation, ServiceError> {
         use crate::schema::invitations::dsl::*;
         q!(diesel::insert_into(invitations).values((
             name.eq(self.name),
@@ -95,17 +95,17 @@ impl CreateInvitation {
         .get_result(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::InvalidInvitation)
+            ServiceError::Error(WsError::InvalidInvitation)
         })
     }
 }
 
 impl Message for CreateInvitation {
-    type Result = Result<Invitation, ServiceErrors>;
+    type Result = Result<Invitation, ServiceError>;
 }
 
 impl Handler<CreateInvitation> for DbExecutor {
-    type Result = Result<Invitation, ServiceErrors>;
+    type Result = Result<Invitation, ServiceError>;
 
     fn handle(&mut self, msg: CreateInvitation, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -118,23 +118,23 @@ pub struct DeleteInvitation {
 }
 
 impl DeleteInvitation {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceError> {
         use crate::schema::invitations::dsl::*;
         q!(diesel::delete(invitations).filter(id.eq(self.id)))
             .execute(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::Error(WsError::UnableToDeleteInvitation)
+                ServiceError::Error(WsError::UnableToDeleteInvitation)
             })
     }
 }
 
 impl Message for DeleteInvitation {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 }
 
 impl Handler<DeleteInvitation> for DbExecutor {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 
     fn handle(&mut self, msg: DeleteInvitation, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -149,7 +149,7 @@ struct UpdateInvitationState {
 }
 
 impl UpdateInvitationState {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceError> {
         use crate::schema::invitations::dsl::*;
 
         q!(diesel::update(invitations)
@@ -161,17 +161,17 @@ impl UpdateInvitationState {
         .execute(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::FailedToUpdateInvitation)
+            ServiceError::Error(WsError::FailedToUpdateInvitation)
         })
     }
 }
 
 impl Message for UpdateInvitationState {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 }
 
 impl Handler<UpdateInvitationState> for DbExecutor {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 
     fn handle(&mut self, msg: UpdateInvitationState, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -185,11 +185,11 @@ pub struct RevokeInvitation {
 }
 
 impl Message for RevokeInvitation {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 }
 
 impl Handler<RevokeInvitation> for DbExecutor {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 
     fn handle(&mut self, msg: RevokeInvitation, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -207,7 +207,7 @@ pub struct AcceptInvitation {
 }
 
 impl AcceptInvitation {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Token, ServiceError> {
         use crate::schema::invitations::dsl::*;
 
         crate::db::Guard::new(conn)?.run::<Token, _>(|_guard| {
@@ -217,7 +217,7 @@ impl AcceptInvitation {
             .execute(conn)?;
 
             if invitation.state == InvitationState::Revoked {
-                return Err(ServiceErrors::Error(WsError::InvitationRevoked));
+                return Err(ServiceError::Error(WsError::InvitationRevoked));
             }
 
             crate::db::invitations::UpdateInvitationState {
@@ -235,7 +235,7 @@ impl AcceptInvitation {
                 .filter(state.eq(InvitationState::Sent)))
             .execute(conn)
             .map_err(|e| {
-                ServiceErrors::DatabaseQueryFailed(format!(
+                ServiceError::DatabaseQueryFailed(format!(
                     "update invitation {} {}",
                     invitation.id, e
                 ))
@@ -251,7 +251,7 @@ impl AcceptInvitation {
                 .execute(conn)
             } {
                 Ok(_) => (),
-                Err(ServiceErrors::Error(WsError::InvalidPair(..))) => (),
+                Err(ServiceError::Error(WsError::InvalidPair(..))) => (),
                 Err(e) => return Err(e),
             };
 
@@ -273,7 +273,7 @@ impl AcceptInvitation {
         conn: &DbPooledConn,
         invitation: &Invitation,
         user: &User,
-    ) -> Result<usize, ServiceErrors> {
+    ) -> Result<usize, ServiceError> {
         crate::db::user_projects::CreateUserProject {
             user_id: user.id,
             project_id: invitation.project_id,
@@ -286,11 +286,11 @@ impl AcceptInvitation {
 }
 
 impl Message for AcceptInvitation {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 }
 
 impl Handler<AcceptInvitation> for DbExecutor {
-    type Result = Result<Token, ServiceErrors>;
+    type Result = Result<Token, ServiceError>;
 
     fn handle(&mut self, msg: AcceptInvitation, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);

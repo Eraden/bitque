@@ -70,13 +70,17 @@ libc = { version = "0.2.0", default-features = false }
 lettre = { version = "*" }
 lettre_email = { version = "*" }
 
+flate2 = { version = "*" }
+syntect = { version = "*" }
+lazy_static = { version = "*" }
+
 [dependencies.diesel]
 version = "1.4.5"
-features = [ "unstable", "postgres", "numeric", "extras", "uuidv07" ]
+features = ["unstable", "postgres", "numeric", "extras", "uuidv07"]
 
 [dependencies.jirs-data]
 path = "../jirs-data"
-features = [ "backend" ]
+features = ["backend"]
 
 # Amazon S3
 [dependencies.rusoto_s3]
@@ -91,3 +95,7 @@ version = "0.43.0"
 [dependencies.actix-files]
 optional = true
 version = "*"
+
+[dependencies.tokio]
+version = "0.2.23"
+features = ["dns"]

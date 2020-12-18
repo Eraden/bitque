@@ -5,7 +5,7 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};
 
-use crate::errors::ServiceErrors;
+use crate::errors::ServiceError;
 
 pub mod authorize_user;
 pub mod comments;
@@ -47,6 +47,7 @@ pub fn build_pool() -> DbPool {
 
     let manager = ConnectionManager::<PgConnection>::new(config.database_url);
     r2d2::Pool::builder()
+        .max_size(config.concurrency as u32)
         .build(manager)
         .unwrap_or_else(|e| panic!("Failed to create pool. {}", e))
 }
@@ -113,7 +114,7 @@ macro_rules! db_pool {
     ($self: expr) => {
         &$self.pool.get().map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::DatabaseConnectionLost
+            ServiceError::DatabaseConnectionLost
         })?
     };
 }
@@ -136,20 +137,20 @@ pub struct Guard<'l> {
 }
 
 impl<'l> Guard<'l> {
-    pub fn new(conn: &'l DbPooledConn) -> Result<Self, ServiceErrors> {
+    pub fn new(conn: &'l DbPooledConn) -> Result<Self, ServiceError> {
         use diesel::{connection::TransactionManager, prelude::*};
         let tm = conn.transaction_manager();
         tm.begin_transaction(conn).map_err(|e| {
             log::error!("{:?}", e);
-            ServiceErrors::DatabaseConnectionLost
+            ServiceError::DatabaseConnectionLost
         })?;
         Ok(Self { conn, tm })
     }
 
-    pub fn run<R, F: FnOnce(&Guard) -> Result<R, ServiceErrors>>(
+    pub fn run<R, F: FnOnce(&Guard) -> Result<R, ServiceError>>(
         &self,
         f: F,
-    ) -> Result<R, ServiceErrors> {
+    ) -> Result<R, ServiceError> {
         use diesel::connection::TransactionManager;
 
         let r = f(self);
@@ -157,7 +158,7 @@ impl<'l> Guard<'l> {
             Ok(r) => {
                 self.tm.commit_transaction(self.conn).map_err(|e| {
                     log::error!("{:?}", e);
-                    ServiceErrors::DatabaseConnectionLost
+                    ServiceError::DatabaseConnectionLost
                 })?;
                 Ok(r)
             }
@@ -165,7 +166,7 @@ impl<'l> Guard<'l> {
                 log::error!("{:?}", e);
                 self.tm.rollback_transaction(self.conn).map_err(|e| {
                     log::error!("{:?}", e);
-                    ServiceErrors::DatabaseConnectionLost
+                    ServiceError::DatabaseConnectionLost
                 })?;
                 Err(e)
             }

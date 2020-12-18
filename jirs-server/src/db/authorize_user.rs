@@ -5,7 +5,7 @@ use jirs_data::User;
 use crate::{
     db::{tokens::FindAccessToken, DbExecutor, DbPool, DbPooledConn, SyncQuery},
     db_pool,
-    errors::ServiceErrors,
+    errors::ServiceError,
 };
 
 pub struct AuthorizeUser {
@@ -13,11 +13,11 @@ pub struct AuthorizeUser {
 }
 
 impl Message for AuthorizeUser {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 }
 
 impl AuthorizeUser {
-    pub fn execute(&self, conn: &DbPooledConn) -> Result<User, ServiceErrors> {
+    pub fn execute(&self, conn: &DbPooledConn) -> Result<User, ServiceError> {
         let token = FindAccessToken {
             token: self.access_token,
         }
@@ -31,7 +31,7 @@ impl AuthorizeUser {
 }
 
 impl Handler<AuthorizeUser> for DbExecutor {
-    type Result = Result<User, ServiceErrors>;
+    type Result = Result<User, ServiceError>;
 
     fn handle(&mut self, msg: AuthorizeUser, _: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -40,12 +40,12 @@ impl Handler<AuthorizeUser> for DbExecutor {
 }
 
 impl SyncQuery for AuthorizeUser {
-    type Result = std::result::Result<User, crate::errors::ServiceErrors>;
+    type Result = std::result::Result<User, crate::errors::ServiceError>;
 
     fn handle(&self, pool: &DbPool) -> Self::Result {
         let conn = pool.get().map_err(|e| {
             error!("{:?}", e);
-            crate::errors::ServiceErrors::DatabaseConnectionLost
+            crate::errors::ServiceError::DatabaseConnectionLost
         })?;
         self.execute(&conn)
     }

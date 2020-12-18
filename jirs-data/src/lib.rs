@@ -433,6 +433,14 @@ pub struct ErrorResponse {
     pub errors: Vec<String>,
 }
 
+impl ErrorResponse {
+    pub fn single<S: Into<String>>(err: S) -> Self {
+        Self {
+            errors: vec![err.into()],
+        }
+    }
+}
+
 #[cfg_attr(feature = "backend", derive(Queryable))]
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Project {

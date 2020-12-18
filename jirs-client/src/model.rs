@@ -566,6 +566,7 @@ pub enum PageContent {
 
 #[derive(Debug)]
 pub struct Model {
+    // pub hi_worker: Worker,
     pub ws: Option<WebSocket>,
     pub ws_queue: Vec<WsMsg>,
     pub host_url: String,
@@ -604,6 +605,8 @@ pub struct Model {
 
 impl Model {
     pub fn new(host_url: String, ws_url: String) -> Self {
+        // let hi_worker = Worker::new("/hi.js");
+
         Self {
             ws: None,
             ws_queue: vec![],

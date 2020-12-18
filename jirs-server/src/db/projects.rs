@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use jirs_data::{NameString, Project, ProjectCategory, ProjectId, TimeTracking, UserId};
 
 use crate::db::DbPooledConn;
-use crate::{db::DbExecutor, db_pool, errors::ServiceErrors, q, schema::projects::all_columns};
+use crate::{db::DbExecutor, db_pool, errors::ServiceError, q, schema::projects::all_columns};
 
 #[derive(Serialize, Deserialize)]
 pub struct LoadCurrentProject {
@@ -13,24 +13,24 @@ pub struct LoadCurrentProject {
 }
 
 impl LoadCurrentProject {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Project, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Project, ServiceError> {
         use crate::schema::projects::dsl::projects;
 
         q!(projects.find(self.project_id))
             .first::<Project>(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::RecordNotFound("Project".to_string())
+                ServiceError::RecordNotFound("Project".to_string())
             })
     }
 }
 
 impl Message for LoadCurrentProject {
-    type Result = Result<Project, ServiceErrors>;
+    type Result = Result<Project, ServiceError>;
 }
 
 impl Handler<LoadCurrentProject> for DbExecutor {
-    type Result = Result<Project, ServiceErrors>;
+    type Result = Result<Project, ServiceError>;
 
     fn handle(&mut self, msg: LoadCurrentProject, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -48,7 +48,7 @@ pub struct CreateProject {
 }
 
 impl CreateProject {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Project, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Project, ServiceError> {
         use crate::schema::projects::dsl::*;
 
         crate::db::Guard::new(conn)?.run(|_guard| {
@@ -64,7 +64,7 @@ impl CreateProject {
             .get_result::<Project>(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::DatabaseQueryFailed(format!("{}", e))
+                ServiceError::DatabaseQueryFailed(format!("{}", e))
             })?;
 
             crate::db::issue_statuses::CreateIssueStatus {
@@ -80,11 +80,11 @@ impl CreateProject {
 }
 
 impl Message for CreateProject {
-    type Result = Result<Project, ServiceErrors>;
+    type Result = Result<Project, ServiceError>;
 }
 
 impl Handler<CreateProject> for DbExecutor {
-    type Result = Result<Project, ServiceErrors>;
+    type Result = Result<Project, ServiceError>;
 
     fn handle(&mut self, msg: CreateProject, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -103,7 +103,7 @@ pub struct UpdateProject {
 }
 
 impl UpdateProject {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Project, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Project, ServiceError> {
         use crate::schema::projects::dsl::*;
 
         q!(diesel::update(projects.find(self.project_id)).set((
@@ -114,7 +114,7 @@ impl UpdateProject {
             self.time_tracking.map(|v| time_tracking.eq(v)),
         )))
         .execute(conn)
-        .map_err(|e| ServiceErrors::DatabaseQueryFailed(format!("{}", e)))?;
+        .map_err(|e| ServiceError::DatabaseQueryFailed(format!("{}", e)))?;
 
         LoadCurrentProject {
             project_id: self.project_id,
@@ -124,11 +124,11 @@ impl UpdateProject {
 }
 
 impl Message for UpdateProject {
-    type Result = Result<Project, ServiceErrors>;
+    type Result = Result<Project, ServiceError>;
 }
 
 impl Handler<UpdateProject> for DbExecutor {
-    type Result = Result<Project, ServiceErrors>;
+    type Result = Result<Project, ServiceError>;
 
     fn handle(&mut self, msg: UpdateProject, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -142,7 +142,7 @@ pub struct LoadProjects {
 }
 
 impl LoadProjects {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<Project>, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<Project>, ServiceError> {
         use crate::schema::projects::dsl::*;
         use crate::schema::user_projects::dsl::{project_id, user_id, user_projects};
 
@@ -154,17 +154,17 @@ impl LoadProjects {
         .load::<Project>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::RecordNotFound("Project".to_string())
+            ServiceError::RecordNotFound("Project".to_string())
         })
     }
 }
 
 impl Message for LoadProjects {
-    type Result = Result<Vec<Project>, ServiceErrors>;
+    type Result = Result<Vec<Project>, ServiceError>;
 }
 
 impl Handler<LoadProjects> for DbExecutor {
-    type Result = Result<Vec<Project>, ServiceErrors>;
+    type Result = Result<Vec<Project>, ServiceError>;
 
     fn handle(&mut self, msg: LoadProjects, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);

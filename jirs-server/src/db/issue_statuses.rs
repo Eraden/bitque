@@ -4,14 +4,14 @@ use diesel::prelude::*;
 use jirs_data::{IssueStatus, IssueStatusId, Position, ProjectId, TitleString};
 
 use crate::db::DbPooledConn;
-use crate::{db::DbExecutor, db_pool, errors::ServiceErrors, q};
+use crate::{db::DbExecutor, db_pool, errors::ServiceError, q};
 
 pub struct LoadIssueStatuses {
     pub project_id: ProjectId,
 }
 
 impl LoadIssueStatuses {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<IssueStatus>, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<IssueStatus>, ServiceError> {
         use crate::schema::issue_statuses::dsl::{id, issue_statuses, project_id};
 
         q!(issue_statuses
@@ -20,17 +20,17 @@ impl LoadIssueStatuses {
         .load::<IssueStatus>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::RecordNotFound("issue users".to_string())
+            ServiceError::RecordNotFound("issue users".to_string())
         })
     }
 }
 
 impl Message for LoadIssueStatuses {
-    type Result = Result<Vec<IssueStatus>, ServiceErrors>;
+    type Result = Result<Vec<IssueStatus>, ServiceError>;
 }
 
 impl Handler<LoadIssueStatuses> for DbExecutor {
-    type Result = Result<Vec<IssueStatus>, ServiceErrors>;
+    type Result = Result<Vec<IssueStatus>, ServiceError>;
 
     fn handle(&mut self, msg: LoadIssueStatuses, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -46,7 +46,7 @@ pub struct CreateIssueStatus {
 }
 
 impl CreateIssueStatus {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<IssueStatus, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<IssueStatus, ServiceError> {
         use crate::schema::issue_statuses::dsl::{issue_statuses, name, position, project_id};
         q!(diesel::insert_into(issue_statuses).values((
             project_id.eq(self.project_id),
@@ -56,17 +56,17 @@ impl CreateIssueStatus {
         .get_result::<IssueStatus>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::RecordNotFound("issue users".to_string())
+            ServiceError::RecordNotFound("issue users".to_string())
         })
     }
 }
 
 impl Message for CreateIssueStatus {
-    type Result = Result<IssueStatus, ServiceErrors>;
+    type Result = Result<IssueStatus, ServiceError>;
 }
 
 impl Handler<CreateIssueStatus> for DbExecutor {
-    type Result = Result<IssueStatus, ServiceErrors>;
+    type Result = Result<IssueStatus, ServiceError>;
 
     fn handle(&mut self, msg: CreateIssueStatus, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -81,11 +81,11 @@ pub struct DeleteIssueStatus {
 }
 
 impl Message for DeleteIssueStatus {
-    type Result = Result<IssueStatusId, ServiceErrors>;
+    type Result = Result<IssueStatusId, ServiceError>;
 }
 
 impl Handler<DeleteIssueStatus> for DbExecutor {
-    type Result = Result<IssueStatusId, ServiceErrors>;
+    type Result = Result<IssueStatusId, ServiceError>;
 
     fn handle(&mut self, msg: DeleteIssueStatus, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issue_statuses::dsl::{id, issue_statuses, project_id};
@@ -98,7 +98,7 @@ impl Handler<DeleteIssueStatus> for DbExecutor {
         .execute(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::RecordNotFound("issue users".to_string())
+            ServiceError::RecordNotFound("issue users".to_string())
         })?;
         Ok(msg.issue_status_id)
     }
@@ -112,11 +112,11 @@ pub struct UpdateIssueStatus {
 }
 
 impl Message for UpdateIssueStatus {
-    type Result = Result<IssueStatus, ServiceErrors>;
+    type Result = Result<IssueStatus, ServiceError>;
 }
 
 impl Handler<UpdateIssueStatus> for DbExecutor {
-    type Result = Result<IssueStatus, ServiceErrors>;
+    type Result = Result<IssueStatus, ServiceError>;
 
     fn handle(&mut self, msg: UpdateIssueStatus, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issue_statuses::dsl::{
@@ -136,7 +136,7 @@ impl Handler<UpdateIssueStatus> for DbExecutor {
         .get_result::<IssueStatus>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::RecordNotFound("issue users".to_string())
+            ServiceError::RecordNotFound("issue users".to_string())
         })
     }
 }

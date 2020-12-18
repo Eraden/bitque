@@ -6,7 +6,7 @@ use jirs_data::IssueAssignee;
 use crate::{
     db::{DbExecutor, DbPooledConn},
     db_pool,
-    errors::ServiceErrors,
+    errors::ServiceError,
     q,
 };
 
@@ -15,7 +15,7 @@ pub struct LoadAssignees {
 }
 
 impl LoadAssignees {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<IssueAssignee>, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<IssueAssignee>, ServiceError> {
         use crate::schema::issue_assignees::dsl::*;
 
         q!(issue_assignees
@@ -24,17 +24,17 @@ impl LoadAssignees {
         .load::<IssueAssignee>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::RecordNotFound("issue users".to_string())
+            ServiceError::RecordNotFound("issue users".to_string())
         })
     }
 }
 
 impl Message for LoadAssignees {
-    type Result = Result<Vec<IssueAssignee>, ServiceErrors>;
+    type Result = Result<Vec<IssueAssignee>, ServiceError>;
 }
 
 impl Handler<LoadAssignees> for DbExecutor {
-    type Result = Result<Vec<IssueAssignee>, ServiceErrors>;
+    type Result = Result<Vec<IssueAssignee>, ServiceError>;
 
     fn handle(&mut self, msg: LoadAssignees, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);

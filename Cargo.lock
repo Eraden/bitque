@@ -674,21 +674,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bit-set"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e11e16035ea35e4e5997b393eacbf6f63983188f7a2ad25bfb13465f5ad59de"
-dependencies = [
- "bit-vec",
-]
-
-[[package]]
-name = "bit-vec"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f0dc55f2d8a1a85650ac47858bb001b4c0dd73d79e3c455a842925e68d29cd3"
-
-[[package]]
 name = "bitflags"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1276,16 +1261,6 @@ name = "fake-simd"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
-
-[[package]]
-name = "fancy-regex"
-version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae91abf6555234338687bb47913978d275539235fcb77ba9863b779090b42b14"
-dependencies = [
- "bit-set",
- "regex",
-]
 
 [[package]]
 name = "fast_chemail"
@@ -1917,9 +1892,11 @@ dependencies = [
  "diesel",
  "dotenv",
  "env_logger",
+ "flate2",
  "futures 0.3.8",
  "ipnetwork",
  "jirs-data",
+ "lazy_static",
  "lettre",
  "lettre_email",
  "libc",
@@ -1936,30 +1913,12 @@ dependencies = [
  "rusoto_s3",
  "serde",
  "serde_json",
+ "syntect",
  "time 0.1.44",
+ "tokio",
  "toml",
  "url",
  "uuid 0.8.1",
-]
-
-[[package]]
-name = "jirs_bat"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "bitflags",
- "fancy-regex",
- "flate2",
- "fnv",
- "lazy_static",
- "lazycell",
- "plist",
- "regex-syntax",
- "serde",
- "serde_derive",
- "serde_json",
- "walkdir",
- "yaml-rust",
 ]
 
 [[package]]
@@ -1980,64 +1939,6 @@ dependencies = [
  "wasm-bindgen-test",
  "web-sys",
  "wee_alloc",
-]
-
-[[package]]
-name = "jirs_contexts"
-version = "0.1.0"
-dependencies = [
- "jirs-data",
- "jirs_syntect",
- "lazycell",
-]
-
-[[package]]
-name = "jirs_highlight"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "flate2",
- "jirs-data",
- "jirs_contexts",
- "jirs_syntaxes",
- "jirs_syntect",
- "js-sys",
- "lazy_static",
- "lazycell",
- "serde",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
-name = "jirs_syntaxes"
-version = "0.1.0"
-dependencies = [
- "jirs-data",
- "jirs_syntect",
- "lazycell",
-]
-
-[[package]]
-name = "jirs_syntect"
-version = "4.2.0"
-dependencies = [
- "bitflags",
- "fancy-regex",
- "fnv",
- "lazy_static",
- "plist",
- "regex-syntax",
- "serde",
-]
-
-[[package]]
-name = "jirs_themes"
-version = "0.1.0"
-dependencies = [
- "jirs-data",
- "jirs_syntect",
 ]
 
 [[package]]
@@ -2424,6 +2325,28 @@ name = "once_cell"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13bd41f508810a131401606d54ac32a467c97172d74ba7662562ebba5ad07fa0"
+
+[[package]]
+name = "onig"
+version = "6.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30b46fd9edbc018f0be4e366c24c46db44fac49cd01c039ae85308088b089dd5"
+dependencies = [
+ "bitflags",
+ "lazy_static",
+ "libc",
+ "onig_sys",
+]
+
+[[package]]
+name = "onig_sys"
+version = "69.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed063c96cf4c0f2e5d09324409d158b38a0a85a7b90fbd68c8cad75c495d5775"
+dependencies = [
+ "cc",
+ "pkg-config",
+]
 
 [[package]]
 name = "opaque-debug"
@@ -3439,6 +3362,28 @@ dependencies = [
  "quote",
  "syn",
  "unicode-xid",
+]
+
+[[package]]
+name = "syntect"
+version = "4.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bfac2b23b4d049dc9a89353b4e06bbc85a8f42020cccbe5409a115cf19031e5"
+dependencies = [
+ "bincode",
+ "bitflags",
+ "flate2",
+ "fnv",
+ "lazy_static",
+ "lazycell",
+ "onig",
+ "plist",
+ "regex-syntax",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "walkdir",
+ "yaml-rust",
 ]
 
 [[package]]

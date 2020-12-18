@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use jirs_data::msg::WsError;
 use jirs_data::{IssuePriority, IssueStatusId, IssueType};
 
-use crate::{db::DbExecutor, db_pool, errors::ServiceErrors, models::Issue};
+use crate::{db::DbExecutor, db_pool, errors::ServiceError, models::Issue};
 
 const FAILED_CONNECT_USER_AND_ISSUE: &str = "Failed to create connection between user and issue";
 
@@ -17,11 +17,11 @@ pub struct LoadIssue {
 }
 
 impl Message for LoadIssue {
-    type Result = Result<Issue, ServiceErrors>;
+    type Result = Result<Issue, ServiceError>;
 }
 
 impl Handler<LoadIssue> for DbExecutor {
-    type Result = Result<Issue, ServiceErrors>;
+    type Result = Result<Issue, ServiceError>;
 
     fn handle(&mut self, msg: LoadIssue, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issues::dsl::{id, issues};
@@ -35,7 +35,7 @@ impl Handler<LoadIssue> for DbExecutor {
         );
         query.first::<Issue>(conn).map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::RecordNotFound("project issues".to_string())
+            ServiceError::RecordNotFound("project issues".to_string())
         })
     }
 }
@@ -46,11 +46,11 @@ pub struct LoadProjectIssues {
 }
 
 impl Message for LoadProjectIssues {
-    type Result = Result<Vec<Issue>, ServiceErrors>;
+    type Result = Result<Vec<Issue>, ServiceError>;
 }
 
 impl Handler<LoadProjectIssues> for DbExecutor {
-    type Result = Result<Vec<Issue>, ServiceErrors>;
+    type Result = Result<Vec<Issue>, ServiceError>;
 
     fn handle(&mut self, msg: LoadProjectIssues, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issues::dsl::{issues, project_id};
@@ -64,7 +64,7 @@ impl Handler<LoadProjectIssues> for DbExecutor {
         );
         let vec = chain.load::<Issue>(conn).map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::RecordNotFound("project issues".to_string())
+            ServiceError::RecordNotFound("project issues".to_string())
         })?;
         Ok(vec)
     }
@@ -90,11 +90,11 @@ pub struct UpdateIssue {
 }
 
 impl Message for UpdateIssue {
-    type Result = Result<Issue, ServiceErrors>;
+    type Result = Result<Issue, ServiceError>;
 }
 
 impl Handler<UpdateIssue> for DbExecutor {
-    type Result = Result<Issue, ServiceErrors>;
+    type Result = Result<Issue, ServiceError>;
 
     fn handle(&mut self, msg: UpdateIssue, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issues::dsl::{self, issues};
@@ -133,7 +133,7 @@ impl Handler<UpdateIssue> for DbExecutor {
         );
         chain.get_result::<Issue>(conn).map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::DatabaseQueryFailed("Failed to update issue".to_string())
+            ServiceError::DatabaseQueryFailed("Failed to update issue".to_string())
         })?;
 
         if let Some(user_ids) = msg.user_ids.as_ref() {
@@ -143,7 +143,7 @@ impl Handler<UpdateIssue> for DbExecutor {
                 .execute(conn)
                 .map_err(|e| {
                     error!("{:?}", e);
-                    ServiceErrors::DatabaseConnectionLost
+                    ServiceError::DatabaseConnectionLost
                 })?;
             let existing: Vec<i32> = dsl::issue_assignees
                 .select(dsl::user_id)
@@ -151,7 +151,7 @@ impl Handler<UpdateIssue> for DbExecutor {
                 .get_results::<i32>(conn)
                 .map_err(|e| {
                     error!("{:?}", e);
-                    ServiceErrors::DatabaseConnectionLost
+                    ServiceError::DatabaseConnectionLost
                 })?;
             let mut values = vec![];
             for user_id in user_ids.iter() {
@@ -167,13 +167,13 @@ impl Handler<UpdateIssue> for DbExecutor {
                 .execute(conn)
                 .map_err(|e| {
                     error!("{:?}", e);
-                    ServiceErrors::DatabaseQueryFailed(FAILED_CONNECT_USER_AND_ISSUE.to_string())
+                    ServiceError::DatabaseQueryFailed(FAILED_CONNECT_USER_AND_ISSUE.to_string())
                 })?;
         }
 
         issues.find(msg.issue_id).first::<Issue>(conn).map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::DatabaseConnectionLost
+            ServiceError::DatabaseConnectionLost
         })
     }
 }
@@ -184,11 +184,11 @@ pub struct DeleteIssue {
 }
 
 impl Message for DeleteIssue {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 }
 
 impl Handler<DeleteIssue> for DbExecutor {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 
     fn handle(&mut self, msg: DeleteIssue, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issue_assignees::dsl::{issue_assignees, issue_id};
@@ -198,10 +198,10 @@ impl Handler<DeleteIssue> for DbExecutor {
 
         diesel::delete(issue_assignees.filter(issue_id.eq(msg.issue_id)))
             .execute(conn)
-            .map_err(|e| ServiceErrors::RecordNotFound(format!("issue {}. {}", msg.issue_id, e)))?;
+            .map_err(|e| ServiceError::RecordNotFound(format!("issue {}. {}", msg.issue_id, e)))?;
         diesel::delete(issues.find(msg.issue_id))
             .execute(conn)
-            .map_err(|e| ServiceErrors::RecordNotFound(format!("issue {}. {}", msg.issue_id, e)))?;
+            .map_err(|e| ServiceError::RecordNotFound(format!("issue {}. {}", msg.issue_id, e)))?;
         Ok(())
     }
 }
@@ -224,11 +224,11 @@ pub struct CreateIssue {
 }
 
 impl Message for CreateIssue {
-    type Result = Result<Issue, ServiceErrors>;
+    type Result = Result<Issue, ServiceError>;
 }
 
 impl Handler<CreateIssue> for DbExecutor {
-    type Result = Result<Issue, ServiceErrors>;
+    type Result = Result<Issue, ServiceError>;
 
     fn handle(&mut self, msg: CreateIssue, ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::issue_assignees::dsl;
@@ -242,7 +242,7 @@ impl Handler<CreateIssue> for DbExecutor {
             .get_result::<i32>(conn)
             .map_err(|e| {
                 error!("resolve new issue position failed {}", e);
-                ServiceErrors::DatabaseConnectionLost
+                ServiceError::DatabaseConnectionLost
             })?;
 
         info!("{:?}", msg.issue_type);
@@ -257,10 +257,10 @@ impl Handler<CreateIssue> for DbExecutor {
             )
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::Error(WsError::FailedToFetchIssueStatuses)
+                ServiceError::Error(WsError::FailedToFetchIssueStatuses)
             })?
             .get(0)
-            .ok_or_else(|| ServiceErrors::Error(WsError::NoIssueStatuses))?
+            .ok_or_else(|| ServiceError::Error(WsError::NoIssueStatuses))?
             .id
         } else {
             msg.issue_status_id
@@ -288,7 +288,7 @@ impl Handler<CreateIssue> for DbExecutor {
             .get_result::<Issue>(conn)
             .map_err(|e| {
                 error!("{}", e);
-                ServiceErrors::DatabaseConnectionLost
+                ServiceError::DatabaseConnectionLost
             })?;
 
         let mut values = vec![];
@@ -310,7 +310,7 @@ impl Handler<CreateIssue> for DbExecutor {
             .execute(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::DatabaseConnectionLost
+                ServiceError::DatabaseConnectionLost
             })?;
 
         Ok(issue)

@@ -6,7 +6,7 @@ use jirs_data::{msg::WsError, Comment};
 use crate::{
     db::{DbExecutor, DbPooledConn},
     db_pool,
-    errors::ServiceErrors,
+    errors::ServiceError,
     q,
 };
 
@@ -15,24 +15,24 @@ pub struct LoadIssueComments {
 }
 
 impl LoadIssueComments {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<Comment>, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Vec<Comment>, ServiceError> {
         use crate::schema::comments::dsl::*;
 
         q!(comments.distinct_on(id).filter(issue_id.eq(self.issue_id)))
             .load(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::Error(WsError::FailedToLoadComments)
+                ServiceError::Error(WsError::FailedToLoadComments)
             })
     }
 }
 
 impl Message for LoadIssueComments {
-    type Result = Result<Vec<Comment>, ServiceErrors>;
+    type Result = Result<Vec<Comment>, ServiceError>;
 }
 
 impl Handler<LoadIssueComments> for DbExecutor {
-    type Result = Result<Vec<Comment>, ServiceErrors>;
+    type Result = Result<Vec<Comment>, ServiceError>;
 
     fn handle(&mut self, msg: LoadIssueComments, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -47,7 +47,7 @@ pub struct CreateComment {
 }
 
 impl CreateComment {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Comment, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Comment, ServiceError> {
         use crate::schema::comments::dsl::*;
         q!(diesel::insert_into(comments).values((
             body.eq(self.body),
@@ -57,17 +57,17 @@ impl CreateComment {
         .get_result::<Comment>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::InvalidComment)
+            ServiceError::Error(WsError::InvalidComment)
         })
     }
 }
 
 impl Message for CreateComment {
-    type Result = Result<Comment, ServiceErrors>;
+    type Result = Result<Comment, ServiceError>;
 }
 
 impl Handler<CreateComment> for DbExecutor {
-    type Result = Result<Comment, ServiceErrors>;
+    type Result = Result<Comment, ServiceError>;
 
     fn handle(&mut self, msg: CreateComment, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -82,7 +82,7 @@ pub struct UpdateComment {
 }
 
 impl UpdateComment {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<Comment, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<Comment, ServiceError> {
         use crate::schema::comments::dsl::*;
 
         q!(diesel::update(
@@ -94,17 +94,17 @@ impl UpdateComment {
         .get_result::<Comment>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::FailedToUpdateComment)
+            ServiceError::Error(WsError::FailedToUpdateComment)
         })
     }
 }
 
 impl Message for UpdateComment {
-    type Result = Result<Comment, ServiceErrors>;
+    type Result = Result<Comment, ServiceError>;
 }
 
 impl Handler<UpdateComment> for DbExecutor {
-    type Result = Result<Comment, ServiceErrors>;
+    type Result = Result<Comment, ServiceError>;
 
     fn handle(&mut self, msg: UpdateComment, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -118,7 +118,7 @@ pub struct DeleteComment {
 }
 
 impl DeleteComment {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceError> {
         use crate::schema::comments::dsl::*;
         q!(diesel::delete(
             comments
@@ -128,17 +128,17 @@ impl DeleteComment {
         .execute(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::UnableToDeleteComment)
+            ServiceError::Error(WsError::UnableToDeleteComment)
         })
     }
 }
 
 impl Message for DeleteComment {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 }
 
 impl Handler<DeleteComment> for DbExecutor {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 
     fn handle(&mut self, msg: DeleteComment, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);

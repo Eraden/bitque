@@ -9,7 +9,7 @@ use crate::{
         DbExecutor,
     },
     db_pool,
-    errors::ServiceErrors,
+    errors::ServiceError,
     q,
 };
 
@@ -19,11 +19,11 @@ pub struct LoadMessages {
 }
 
 impl actix::Message for LoadMessages {
-    type Result = Result<Vec<Message>, ServiceErrors>;
+    type Result = Result<Vec<Message>, ServiceError>;
 }
 
 impl Handler<LoadMessages> for DbExecutor {
-    type Result = Result<Vec<Message>, ServiceErrors>;
+    type Result = Result<Vec<Message>, ServiceError>;
 
     fn handle(&mut self, msg: LoadMessages, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::messages::dsl::*;
@@ -34,7 +34,7 @@ impl Handler<LoadMessages> for DbExecutor {
             .load(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::DatabaseQueryFailed("load user messages".to_string())
+                ServiceError::DatabaseQueryFailed("load user messages".to_string())
             })
     }
 }
@@ -46,11 +46,11 @@ pub struct MarkMessageSeen {
 }
 
 impl actix::Message for MarkMessageSeen {
-    type Result = Result<MessageId, ServiceErrors>;
+    type Result = Result<MessageId, ServiceError>;
 }
 
 impl Handler<MarkMessageSeen> for DbExecutor {
-    type Result = Result<MessageId, ServiceErrors>;
+    type Result = Result<MessageId, ServiceError>;
 
     fn handle(&mut self, msg: MarkMessageSeen, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::messages::dsl::*;
@@ -65,13 +65,13 @@ impl Handler<MarkMessageSeen> for DbExecutor {
         .execute(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::DatabaseQueryFailed("load user messages".to_string())
+            ServiceError::DatabaseQueryFailed("load user messages".to_string())
         })?;
 
         if size > 0 {
             Ok(msg.message_id)
         } else {
-            Err(ServiceErrors::DatabaseQueryFailed(format!(
+            Err(ServiceError::DatabaseQueryFailed(format!(
                 "failed to delete message for {:?}",
                 msg
             )))
@@ -96,11 +96,11 @@ pub struct CreateMessage {
 }
 
 impl actix::Message for CreateMessage {
-    type Result = Result<Message, ServiceErrors>;
+    type Result = Result<Message, ServiceError>;
 }
 
 impl Handler<CreateMessage> for DbExecutor {
-    type Result = Result<Message, ServiceErrors>;
+    type Result = Result<Message, ServiceError>;
 
     fn handle(&mut self, msg: CreateMessage, ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::messages::dsl::*;
@@ -117,7 +117,7 @@ impl Handler<CreateMessage> for DbExecutor {
         } {
             Ok(user) => user,
             _ => {
-                return Err(ServiceErrors::RecordNotFound(
+                return Err(ServiceError::RecordNotFound(
                     "No matching user found".to_string(),
                 ));
             }
@@ -137,7 +137,7 @@ impl Handler<CreateMessage> for DbExecutor {
         );
         query.get_result(conn).map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::DatabaseQueryFailed("create message failed".to_string())
+            ServiceError::DatabaseQueryFailed("create message failed".to_string())
         })
     }
 }
@@ -149,11 +149,11 @@ pub struct LookupMessagesByToken {
 }
 
 impl actix::Message for LookupMessagesByToken {
-    type Result = Result<Vec<Message>, ServiceErrors>;
+    type Result = Result<Vec<Message>, ServiceError>;
 }
 
 impl Handler<LookupMessagesByToken> for DbExecutor {
-    type Result = Result<Vec<Message>, ServiceErrors>;
+    type Result = Result<Vec<Message>, ServiceError>;
 
     fn handle(&mut self, msg: LookupMessagesByToken, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::messages::dsl::*;
@@ -168,7 +168,7 @@ impl Handler<LookupMessagesByToken> for DbExecutor {
         .load(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::DatabaseQueryFailed("create message failed".to_string())
+            ServiceError::DatabaseQueryFailed("create message failed".to_string())
         })
     }
 }

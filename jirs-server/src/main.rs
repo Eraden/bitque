@@ -19,6 +19,7 @@ use crate::ws::WsServer;
 
 pub mod db;
 pub mod errors;
+pub mod hi;
 pub mod mail;
 pub mod middleware;
 pub mod models;
@@ -49,6 +50,7 @@ async fn main() -> Result<(), String> {
         crate::mail::Configuration::read().concurrency,
         crate::mail::MailExecutor::default,
     );
+    let hi_addr = actix::SyncArbiter::start(10, crate::hi::HighlightActor::default);
 
     let ws_server = WsServer::default().start();
 
@@ -58,6 +60,7 @@ async fn main() -> Result<(), String> {
             .data(ws_server.clone())
             .data(db_addr.clone())
             .data(mail_addr.clone())
+            .data(hi_addr.clone())
             .data(crate::db::build_pool())
             .service(crate::ws::index)
             .service(actix_web::web::scope("/avatar").service(crate::web::avatar::upload));

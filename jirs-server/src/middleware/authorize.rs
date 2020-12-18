@@ -57,7 +57,7 @@ where
             Some(d) => d,
             _ => {
                 return async move {
-                    let res = crate::errors::ServiceErrors::DatabaseConnectionLost
+                    let res = crate::errors::ServiceError::DatabaseConnectionLost
                         .into_http_response()
                         .into_body();
                     Ok(req.into_response(res))
@@ -84,10 +84,10 @@ where
 
 pub fn token_from_headers(
     headers: &HeaderMap,
-) -> std::result::Result<uuid::Uuid, crate::errors::ServiceErrors> {
+) -> std::result::Result<uuid::Uuid, crate::errors::ServiceError> {
     headers
         .get(header::AUTHORIZATION)
-        .ok_or_else(|| crate::errors::ServiceErrors::Unauthorized)
+        .ok_or_else(|| crate::errors::ServiceError::Unauthorized)
         .map(|h| h.to_str().unwrap_or_default())
         .and_then(|s| parse_bearer(s))
 }
@@ -95,17 +95,17 @@ pub fn token_from_headers(
 fn check_token(
     headers: &HeaderMap,
     pool: Db,
-) -> std::result::Result<User, crate::errors::ServiceErrors> {
+) -> std::result::Result<User, crate::errors::ServiceError> {
     token_from_headers(headers).and_then(|access_token| {
         use crate::db::authorize_user::AuthorizeUser;
         AuthorizeUser { access_token }.handle(&pool)
     })
 }
 
-fn parse_bearer(header: &str) -> Result<uuid::Uuid, crate::errors::ServiceErrors> {
+fn parse_bearer(header: &str) -> Result<uuid::Uuid, crate::errors::ServiceError> {
     if !header.starts_with("Bearer ") {
-        return Err(crate::errors::ServiceErrors::Unauthorized);
+        return Err(crate::errors::ServiceError::Unauthorized);
     }
     let (_bearer, token) = header.split_at(7);
-    uuid::Uuid::parse_str(token).map_err(|_e| crate::errors::ServiceErrors::Unauthorized)
+    uuid::Uuid::parse_str(token).map_err(|_e| crate::errors::ServiceError::Unauthorized)
 }

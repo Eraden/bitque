@@ -1,18 +1,18 @@
-use std::fs::*;
-
-use actix::Addr;
-use actix_web::web::Data;
-use actix_web::{HttpRequest, HttpResponse};
 #[cfg(feature = "aws-s3")]
 use rusoto_core::Region;
-use serde::{Deserialize, Serialize};
 
-use jirs_data::User;
-
-use crate::db::authorize_user::AuthorizeUser;
-use crate::db::DbExecutor;
-use crate::errors::ServiceErrors;
-use crate::middleware::authorize::token_from_headers;
+use {
+    crate::{
+        db::{authorize_user::AuthorizeUser, DbExecutor},
+        errors::ServiceError,
+        middleware::authorize::token_from_headers,
+    },
+    actix::Addr,
+    actix_web::{web::Data, HttpRequest, HttpResponse},
+    jirs_data::User,
+    serde::{Deserialize, Serialize},
+    std::fs::*,
+};
 
 pub mod avatar;
 
@@ -22,7 +22,7 @@ pub async fn user_from_request(
 ) -> Result<User, HttpResponse> {
     let token = match token_from_headers(req.headers()) {
         Ok(uuid) => uuid,
-        _ => return Err(ServiceErrors::Unauthorized.into_http_response()),
+        _ => return Err(ServiceError::Unauthorized.into_http_response()),
     };
     match db
         .send(AuthorizeUser {
@@ -32,7 +32,7 @@ pub async fn user_from_request(
     {
         Ok(Ok(user)) => Ok(user),
         Ok(Err(e)) => Err(e.into_http_response()),
-        _ => Err(ServiceErrors::Unauthorized.into_http_response()),
+        _ => Err(ServiceError::Unauthorized.into_http_response()),
     }
 }
 

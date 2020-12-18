@@ -7,7 +7,7 @@ use jirs_data::{ProjectId, UserId, UserProject, UserProjectId, UserRole};
 use crate::{
     db::{DbExecutor, DbPooledConn},
     db_pool,
-    errors::ServiceErrors,
+    errors::ServiceError,
     q,
 };
 
@@ -16,11 +16,11 @@ pub struct CurrentUserProject {
 }
 
 impl Message for CurrentUserProject {
-    type Result = Result<UserProject, ServiceErrors>;
+    type Result = Result<UserProject, ServiceError>;
 }
 
 impl Handler<CurrentUserProject> for DbExecutor {
-    type Result = Result<UserProject, ServiceErrors>;
+    type Result = Result<UserProject, ServiceError>;
 
     fn handle(&mut self, msg: CurrentUserProject, _: &mut Self::Context) -> Self::Result {
         use crate::schema::user_projects::dsl::*;
@@ -31,7 +31,7 @@ impl Handler<CurrentUserProject> for DbExecutor {
             .first(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::RecordNotFound(format!("user project {}", msg.user_id))
+                ServiceError::RecordNotFound(format!("user project {}", msg.user_id))
             })
     }
 }
@@ -41,11 +41,11 @@ pub struct LoadUserProjects {
 }
 
 impl Message for LoadUserProjects {
-    type Result = Result<Vec<UserProject>, ServiceErrors>;
+    type Result = Result<Vec<UserProject>, ServiceError>;
 }
 
 impl Handler<LoadUserProjects> for DbExecutor {
-    type Result = Result<Vec<UserProject>, ServiceErrors>;
+    type Result = Result<Vec<UserProject>, ServiceError>;
 
     fn handle(&mut self, msg: LoadUserProjects, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::user_projects::dsl::*;
@@ -56,7 +56,7 @@ impl Handler<LoadUserProjects> for DbExecutor {
             .load(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::RecordNotFound(format!("user project {}", msg.user_id))
+                ServiceError::RecordNotFound(format!("user project {}", msg.user_id))
             })
     }
 }
@@ -67,7 +67,7 @@ pub struct ChangeCurrentUserProject {
 }
 
 impl ChangeCurrentUserProject {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<UserProject, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<UserProject, ServiceError> {
         use crate::schema::user_projects::dsl::*;
 
         crate::db::Guard::new(conn)?.run(|_guard| {
@@ -76,7 +76,7 @@ impl ChangeCurrentUserProject {
                     .first(conn)
                     .map_err(|e| {
                         error!("{:?}", e);
-                        ServiceErrors::RecordNotFound(format!("user project {}", self.user_id))
+                        ServiceError::RecordNotFound(format!("user project {}", self.user_id))
                     })?;
 
             q!(diesel::update(user_projects)
@@ -86,7 +86,7 @@ impl ChangeCurrentUserProject {
             .map(|_| ())
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::DatabaseQueryFailed(format!(
+                ServiceError::DatabaseQueryFailed(format!(
                     "setting current flag to false while updating current project {}",
                     self.user_id
                 ))
@@ -99,7 +99,7 @@ impl ChangeCurrentUserProject {
             .map(|_| ())
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::DatabaseQueryFailed(format!(
+                ServiceError::DatabaseQueryFailed(format!(
                     "set current flag on project while updating current project {}",
                     self.user_id
                 ))
@@ -112,11 +112,11 @@ impl ChangeCurrentUserProject {
 }
 
 impl Message for ChangeCurrentUserProject {
-    type Result = Result<UserProject, ServiceErrors>;
+    type Result = Result<UserProject, ServiceError>;
 }
 
 impl Handler<ChangeCurrentUserProject> for DbExecutor {
-    type Result = Result<UserProject, ServiceErrors>;
+    type Result = Result<UserProject, ServiceError>;
 
     fn handle(&mut self, msg: ChangeCurrentUserProject, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -131,11 +131,11 @@ pub struct RemoveInvitedUser {
 }
 
 impl RemoveInvitedUser {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceError> {
         use crate::schema::user_projects::dsl::*;
 
         if self.invited_id == self.inviter_id {
-            return Err(ServiceErrors::Unauthorized);
+            return Err(ServiceError::Unauthorized);
         }
 
         q!(user_projects.filter(
@@ -147,7 +147,7 @@ impl RemoveInvitedUser {
         .first::<UserProject>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Unauthorized
+            ServiceError::Unauthorized
         })?;
 
         q!(diesel::delete(user_projects).filter(
@@ -158,7 +158,7 @@ impl RemoveInvitedUser {
         .execute(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::RecordNotFound(format!(
+            ServiceError::RecordNotFound(format!(
                 "user project user with id {} for project {}",
                 self.invited_id, self.project_id
             ))
@@ -167,11 +167,11 @@ impl RemoveInvitedUser {
 }
 
 impl Message for RemoveInvitedUser {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 }
 
 impl Handler<RemoveInvitedUser> for DbExecutor {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 
     fn handle(&mut self, msg: RemoveInvitedUser, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);
@@ -189,7 +189,7 @@ pub struct CreateUserProject {
 }
 
 impl CreateUserProject {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceErrors> {
+    pub fn execute(self, conn: &DbPooledConn) -> Result<usize, ServiceError> {
         use crate::schema::user_projects::dsl::*;
         q!(diesel::insert_into(user_projects).values((
             user_id.eq(self.user_id),
@@ -201,17 +201,17 @@ impl CreateUserProject {
         .execute(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::InvalidUserProject)
+            ServiceError::Error(WsError::InvalidUserProject)
         })
     }
 }
 
 impl Message for CreateUserProject {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 }
 
 impl Handler<CreateUserProject> for DbExecutor {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 
     fn handle(&mut self, msg: CreateUserProject, _ctx: &mut Self::Context) -> Self::Result {
         let conn = db_pool!(self);

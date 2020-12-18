@@ -3,18 +3,18 @@ use diesel::prelude::*;
 
 use jirs_data::{msg::WsError, Epic};
 
-use crate::{db::DbExecutor, db_pool, errors::ServiceErrors, q};
+use crate::{db::DbExecutor, db_pool, errors::ServiceError, q};
 
 pub struct LoadEpics {
     pub project_id: i32,
 }
 
 impl Message for LoadEpics {
-    type Result = Result<Vec<Epic>, ServiceErrors>;
+    type Result = Result<Vec<Epic>, ServiceError>;
 }
 
 impl Handler<LoadEpics> for DbExecutor {
-    type Result = Result<Vec<Epic>, ServiceErrors>;
+    type Result = Result<Vec<Epic>, ServiceError>;
 
     fn handle(&mut self, msg: LoadEpics, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::epics::dsl::*;
@@ -25,7 +25,7 @@ impl Handler<LoadEpics> for DbExecutor {
             .load(conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                ServiceErrors::Error(WsError::FailedToLoadEpics)
+                ServiceError::Error(WsError::FailedToLoadEpics)
             })
     }
 }
@@ -37,11 +37,11 @@ pub struct CreateEpic {
 }
 
 impl Message for CreateEpic {
-    type Result = Result<Epic, ServiceErrors>;
+    type Result = Result<Epic, ServiceError>;
 }
 
 impl Handler<CreateEpic> for DbExecutor {
-    type Result = Result<Epic, ServiceErrors>;
+    type Result = Result<Epic, ServiceError>;
 
     fn handle(&mut self, msg: CreateEpic, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::epics::dsl::*;
@@ -56,7 +56,7 @@ impl Handler<CreateEpic> for DbExecutor {
         .get_result::<Epic>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::InvalidEpic)
+            ServiceError::Error(WsError::InvalidEpic)
         })
     }
 }
@@ -68,11 +68,11 @@ pub struct UpdateEpic {
 }
 
 impl Message for UpdateEpic {
-    type Result = Result<Epic, ServiceErrors>;
+    type Result = Result<Epic, ServiceError>;
 }
 
 impl Handler<UpdateEpic> for DbExecutor {
-    type Result = Result<Epic, ServiceErrors>;
+    type Result = Result<Epic, ServiceError>;
 
     fn handle(&mut self, msg: UpdateEpic, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::epics::dsl::*;
@@ -88,7 +88,7 @@ impl Handler<UpdateEpic> for DbExecutor {
         .get_result::<Epic>(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::FailedToUpdateEpic)
+            ServiceError::Error(WsError::FailedToUpdateEpic)
         })
     }
 }
@@ -99,11 +99,11 @@ pub struct DeleteEpic {
 }
 
 impl Message for DeleteEpic {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 }
 
 impl Handler<DeleteEpic> for DbExecutor {
-    type Result = Result<(), ServiceErrors>;
+    type Result = Result<(), ServiceError>;
 
     fn handle(&mut self, msg: DeleteEpic, _ctx: &mut Self::Context) -> Self::Result {
         use crate::schema::epics::dsl::*;
@@ -116,7 +116,7 @@ impl Handler<DeleteEpic> for DbExecutor {
         .execute(conn)
         .map_err(|e| {
             error!("{:?}", e);
-            ServiceErrors::Error(WsError::UnableToDeleteEpic)
+            ServiceError::Error(WsError::UnableToDeleteEpic)
         })?;
 
         Ok(())
