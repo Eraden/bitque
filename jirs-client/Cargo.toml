@@ -14,7 +14,7 @@ name = "jirs_client"
 path = "src/lib.rs"
 
 [dependencies]
-jirs-data = { path = "../jirs-data", features = ["frontend"] }
+jirs-data = { path = "../shared/jirs-data", features = ["frontend"] }
 
 wee_alloc = "*"
 

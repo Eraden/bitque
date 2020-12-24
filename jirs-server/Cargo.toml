@@ -13,29 +13,20 @@ name = "jirs_server"
 path = "./src/main.rs"
 
 [features]
-aws-s3 = [
-    "rusoto_s3",
-    "rusoto_core"
-]
-local-storage = [
-    "actix-files"
-]
+aws-s3 = []
+local-storage = []
 default = [
     "aws-s3",
     "local-storage",
 ]
 
 [dependencies]
-actix = { version = "*" }
+actix = { version = "0.10.0" }
 actix-web = { version = "*" }
 actix-cors = { version = "*" }
 actix-service = { version = "*" }
 actix-rt = "1"
 actix-web-actors = "*"
-actix-multipart = { version = "*" }
-
-pq-sys = { version = ">=0.3.0, <0.5.0" }
-r2d2 = { version = ">= 0.8, < 0.9" }
 
 dotenv = { version = "*" }
 
@@ -67,34 +58,45 @@ futures = { version = "*" }
 openssl-sys = { version = "*", features = ["vendored"] }
 libc = { version = "0.2.0", default-features = false }
 
-lettre = { version = "*" }
-lettre_email = { version = "*" }
-
-flate2 = { version = "*" }
-syntect = { version = "*" }
-lazy_static = { version = "*" }
-
-[dependencies.diesel]
-version = "1.4.5"
-features = ["unstable", "postgres", "numeric", "extras", "uuidv07"]
+[dependencies.jirs-config]
+path = "../shared/jirs-config"
+features = ["web", "websocket", "local-storage", "hi", "database"]
 
 [dependencies.jirs-data]
-path = "../jirs-data"
+path = "../shared/jirs-data"
 features = ["backend"]
 
-# Amazon S3
-[dependencies.rusoto_s3]
-optional = true
-version = "0.43.0"
+[dependencies.highlight-actor]
+path = "../actors/highlight-actor"
 
-[dependencies.rusoto_core]
-optional = true
-version = "0.43.0"
+[dependencies.database-actor]
+path = "../actors/database-actor"
+
+[dependencies.web-actor]
+path = "../actors/web-actor"
+
+[dependencies.websocket-actor]
+path = "../actors/websocket-actor"
+
+[dependencies.mail-actor]
+path = "../actors/mail-actor"
+
+[dependencies.filesystem-actor]
+path = "../actors/filesystem-actor"
+
+# Amazon S3
+#[dependencies.rusoto_s3]
+#optional = true
+#version = "0.43.0"
+#
+#[dependencies.rusoto_core]
+#optional = true
+#version = "0.43.0"
 
 # Local storage
-[dependencies.actix-files]
-optional = true
-version = "*"
+#[dependencies.actix-files]
+#optional = true
+#version = "*"
 
 [dependencies.tokio]
 version = "0.2.23"

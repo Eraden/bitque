@@ -160,10 +160,10 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
             model
-                .issue_statuses
-                .sort_by(|a, b| a.position.cmp(&b.position));
+              .issue_statuses
+              .sort_by(|a, b| a.position.cmp(&b.position));
         }
-        WsMsg::IssueStatusDeleted(dropped_id) => {
+        WsMsg::IssueStatusDeleted(dropped_id, _count) => {
             let mut old = vec![];
             std::mem::swap(&mut model.issue_statuses, &mut old);
             for is in old {
@@ -172,10 +172,10 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
             model
-                .issue_statuses
-                .sort_by(|a, b| a.position.cmp(&b.position));
+              .issue_statuses
+              .sort_by(|a, b| a.position.cmp(&b.position));
         }
-        WsMsg::IssueDeleted(id) => {
+        WsMsg::IssueDeleted(id, _count) => {
             let mut old = vec![];
             std::mem::swap(&mut model.issue_statuses, &mut old);
             for is in old {
@@ -185,7 +185,7 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 model.issue_statuses.push(is);
             }
             model
-                .issue_statuses
+              .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
         }
         // users
@@ -216,7 +216,7 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
         }
-        WsMsg::CommentDeleted(comment_id) => {
+        WsMsg::CommentDeleted(comment_id, _count) => {
             let mut old = vec![];
             std::mem::swap(&mut model.comments, &mut old);
             for comment in old.into_iter() {
@@ -254,7 +254,7 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             model.messages = v.clone();
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
         }
-        WsMsg::MessageMarkedSeen(id) => {
+        WsMsg::MessageMarkedSeen(id, _count) => {
             let mut old = vec![];
             std::mem::swap(&mut old, &mut model.messages);
             for m in old {
@@ -285,7 +285,7 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             }
             model.epics.sort_by(|a, b| a.id.cmp(&b.id));
         }
-        WsMsg::EpicDeleted(id) => {
+        WsMsg::EpicDeleted(id, _count) => {
             let mut old = vec![];
             std::mem::swap(&mut old, &mut model.epics);
             for current in old {

@@ -1,10 +1,16 @@
 /target
+
 mail.toml
 mail.test.toml
 web.toml
 web.test.toml
 db.toml
 db.test.toml
+fs.toml
+fs.test.toml
+highlight.toml
+highlight.test.toml
+
 pkg
 jirs-client/pkg
 jirs-client/tmp
@@ -15,3 +21,5 @@ jirs-cli/target
 jirs-bat/bat
 
 highlight/jirs-highlight/build
+uploads
+config

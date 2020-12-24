@@ -292,7 +292,7 @@ fn after_mount(url: Url, orders: &mut impl Orders<Msg>) -> AfterMount<Model> {
         HOST_URL = "".to_string();
         WS_URL = "".to_string();
     }
-    model.page = resolve_page(url).unwrap_or_else(|| Page::Project);
+    model.page = resolve_page(url).unwrap_or(Page::Project);
     open_socket(&mut model, orders);
     AfterMount::new(model).url_handling(UrlHandling::PassToRoutes)
 }

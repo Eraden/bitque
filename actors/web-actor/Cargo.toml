@@ -1,0 +1,85 @@
+[package]
+name = "web-actor"
+version = "0.1.0"
+authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
+edition = "2018"
+description = "JIRS (Simplified JIRA in Rust) shared data types"
+repository = "https://gitlab.com/adrian.wozniak/jirs"
+license = "MPL-2.0"
+#license-file = "../LICENSE"
+
+[lib]
+name = "web_actor"
+path = "./src/lib.rs"
+
+[features]
+local-storage = ["filesystem-actor"]
+aws-s3 = ["rusoto_s3", "rusoto_core"]
+default = ["local-storage", "aws-s3"]
+
+[dependencies]
+serde = "*"
+bincode = "*"
+toml = { version = "*" }
+
+actix = { version = "0.10.0" }
+actix-web = { version = "*" }
+actix-cors = { version = "*" }
+actix-service = { version = "*" }
+actix-rt = "1"
+actix-web-actors = "*"
+actix-multipart = "*"
+
+bytes = { version = "0.5.6" }
+
+futures = { version = "0.3.8" }
+openssl-sys = { version = "*", features = ["vendored"] }
+libc = { version = "0.2.0", default-features = false }
+
+flate2 = { version = "*" }
+syntect = { version = "*" }
+lazy_static = { version = "*" }
+
+log = "0.4"
+pretty_env_logger = "0.4"
+env_logger = "0.7"
+
+uuid = { version = "0.8.1", features = ["serde", "v4", "v5"] }
+
+[dependencies.jirs-config]
+path = "../../shared/jirs-config"
+features = ["mail", "web", "local-storage"]
+
+[dependencies.jirs-data]
+path = "../../shared/jirs-data"
+features = ["backend"]
+
+[dependencies.database-actor]
+path = "../database-actor"
+
+[dependencies.mail-actor]
+path = "../mail-actor"
+
+[dependencies.websocket-actor]
+path = "../websocket-actor"
+
+[dependencies.filesystem-actor]
+path = "../filesystem-actor"
+optional = true
+
+# Amazon S3
+[dependencies.rusoto_s3]
+optional = true
+version = "0.45.0"
+
+[dependencies.rusoto_core]
+optional = true
+version = "0.45.0"
+
+[dependencies.rusoto_signature]
+optional = true
+version = "0.45.0"
+
+[dependencies.tokio]
+version = "0.2.23"
+features = ["dns"]

@@ -45,16 +45,18 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 }
             }
         }
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueDeleted(id))) => {
-            let mut old: Vec<Issue> = vec![];
-            std::mem::swap(&mut old, &mut model.issues);
-            for is in old {
-                if is.id != id {
-                    model.issues.push(is);
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueDeleted(id, count)))
+        if count > 0 =>
+            {
+                let mut old: Vec<Issue> = vec![];
+                std::mem::swap(&mut old, &mut model.issues);
+                for is in old {
+                    if is.id != id {
+                        model.issues.push(is);
+                    }
                 }
+                orders.skip().send_msg(Msg::ModalDropped);
             }
-            orders.skip().send_msg(Msg::ModalDropped);
-        }
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
             StyledSelectChanged::Text(text),

@@ -1,0 +1,39 @@
+[package]
+name = "jirs-config"
+version = "0.1.0"
+authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
+edition = "2018"
+description = "JIRS (Simplified JIRA in Rust) shared data types"
+repository = "https://gitlab.com/adrian.wozniak/jirs"
+license = "MPL-2.0"
+#license-file = "../LICENSE"
+
+[lib]
+name = "jirs_config"
+path = "./src/lib.rs"
+
+[features]
+aws-s3 = ["rusoto_s3", "rusoto_core", "rusoto_signature"]
+local-storage = []
+database = []
+hi = []
+mail = []
+web = ["aws-s3", "local-storage"]
+websocket = []
+
+[dependencies]
+serde = "*"
+toml = { version = "*" }
+
+# Amazon S3
+[dependencies.rusoto_s3]
+optional = true
+version = "0.45.0"
+
+[dependencies.rusoto_core]
+optional = true
+version = "0.45.0"
+
+[dependencies.rusoto_signature]
+optional = true
+version = "0.45.0"

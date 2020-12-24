@@ -1,0 +1,36 @@
+[package]
+name = "highlight-actor"
+version = "0.1.0"
+authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
+edition = "2018"
+description = "JIRS (Simplified JIRA in Rust) shared data types"
+repository = "https://gitlab.com/adrian.wozniak/jirs"
+license = "MPL-2.0"
+#license-file = "../LICENSE"
+
+[lib]
+name = "highlight_actor"
+path = "./src/lib.rs"
+
+[dependencies]
+serde = "*"
+bincode = "*"
+toml = { version = "*" }
+
+actix = { version = "0.10.0" }
+
+flate2 = { version = "*" }
+syntect = { version = "*" }
+lazy_static = { version = "*" }
+
+log = "0.4"
+pretty_env_logger = "0.4"
+env_logger = "0.7"
+
+[dependencies.jirs-config]
+path = "../../shared/jirs-config"
+features = ["hi"]
+
+[dependencies.jirs-data]
+path = "../../shared/jirs-data"
+features = ["backend"]

@@ -13,6 +13,14 @@ members = [
     "./jirs-cli",
     "./jirs-server",
     "./jirs-client",
-    "./jirs-data",
     "./jirs-css",
+    "./shared/jirs-config",
+    "./shared/jirs-data",
+    "./actors/highlight-actor",
+    "./actors/database-actor",
+    "./actors/database-actor/database_actor-derive",
+    "./actors/web-actor",
+    "./actors/websocket-actor",
+    "./actors/mail-actor",
+    "./actors/filesystem-actor"
 ]

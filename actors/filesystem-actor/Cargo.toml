@@ -1,0 +1,36 @@
+[package]
+name = "filesystem-actor"
+version = "0.1.0"
+authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
+edition = "2018"
+description = "JIRS (Simplified JIRA in Rust) shared data types"
+repository = "https://gitlab.com/adrian.wozniak/jirs"
+license = "MPL-2.0"
+#license-file = "../LICENSE"
+
+[lib]
+name = "filesystem_actor"
+path = "./src/lib.rs"
+
+[dependencies]
+actix = { version = "0.10.0" }
+
+futures = { version = "0.3.8" }
+
+log = "0.4"
+pretty_env_logger = "0.4"
+env_logger = "0.7"
+
+bytes = { version = "0.5.6" }
+
+# Local storage
+[dependencies.actix-files]
+version = "*"
+
+[dependencies.jirs-config]
+path = "../../shared/jirs-config"
+features = ["local-storage"]
+
+[dependencies.tokio]
+version = "0.2.23"
+features = ["dns"]
