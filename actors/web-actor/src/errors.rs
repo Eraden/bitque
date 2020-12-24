@@ -57,13 +57,13 @@ impl Into<HttpResponse> for ServiceError {
                 errors: vec![error.to_str().to_string()],
             }),
             ServiceError::Highlight(HighlightError::UnknownTheme) => HttpResponse::BadRequest()
-              .json(ErrorResponse::single(
-                  "Code highlight Failed. Unexpected theme",
-              )),
+                .json(ErrorResponse::single(
+                    "Code highlight Failed. Unexpected theme",
+                )),
             ServiceError::Highlight(HighlightError::UnknownLanguage) => HttpResponse::BadRequest()
-              .json(ErrorResponse::single(
-                  "Can't highlight in given language. It's unknown",
-              )),
+                .json(ErrorResponse::single(
+                    "Can't highlight in given language. It's unknown",
+                )),
             ServiceError::Highlight(HighlightError::ResultUnserializable) => {
                 HttpResponse::BadRequest().json(ErrorResponse::single(
                     "Highlight succeed but result can't be send",

@@ -1,7 +1,7 @@
 use {
-  crate::{db_create, db_delete, db_load, db_update},
-  diesel::prelude::*,
-  jirs_data::{IssueStatus, IssueStatusId, Position, ProjectId, TitleString},
+    crate::{db_create, db_delete, db_load, db_update},
+    diesel::prelude::*,
+    jirs_data::{IssueStatus, IssueStatusId, Position, ProjectId, TitleString},
 };
 
 db_load! {

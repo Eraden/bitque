@@ -1,10 +1,10 @@
 use {
-  crate::{
-    db_create, db_create_with_conn, db_find, db_load, db_update, projects::CreateProject, q,
-    user_projects::CreateUserProject, DbPooledConn,
-  },
-  diesel::prelude::*,
-  jirs_data::{EmailString, IssueId, ProjectId, User, UserId, UserRole, UsernameString},
+    crate::{
+        db_create, db_create_with_conn, db_find, db_load, db_update, projects::CreateProject, q,
+        user_projects::CreateUserProject, DbPooledConn,
+    },
+    diesel::prelude::*,
+    jirs_data::{EmailString, IssueId, ProjectId, User, UserId, UserRole, UsernameString},
 };
 
 db_find! {
@@ -205,7 +205,7 @@ mod tests {
 
     use jirs_data::{Project, ProjectCategory};
 
-  use crate::build_pool;
+    use crate::build_pool;
 
     use super::*;
 

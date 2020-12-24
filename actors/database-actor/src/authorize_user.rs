@@ -1,7 +1,7 @@
 use {
-  crate::{db_find, tokens::FindAccessToken},
-  diesel::prelude::*,
-  jirs_data::User,
+    crate::{db_find, tokens::FindAccessToken},
+    diesel::prelude::*,
+    jirs_data::User,
 };
 
 db_find! {

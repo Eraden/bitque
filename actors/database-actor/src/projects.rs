@@ -1,7 +1,7 @@
 use {
-  crate::{db_create_with_conn, db_find, db_load, db_update},
-  diesel::prelude::*,
-  jirs_data::{NameString, Project, ProjectCategory, ProjectId, TimeTracking, UserId},
+    crate::{db_create_with_conn, db_find, db_load, db_update},
+    diesel::prelude::*,
+    jirs_data::{NameString, Project, ProjectCategory, ProjectId, TimeTracking, UserId},
 };
 
 db_find! {
@@ -12,13 +12,13 @@ db_find! {
 }
 
 mod inner {
-  use {
-    crate::db_create,
-    diesel::prelude::*,
-    jirs_data::{NameString, Project, ProjectCategory, TimeTracking},
-  };
+    use {
+        crate::db_create,
+        diesel::prelude::*,
+        jirs_data::{NameString, Project, ProjectCategory, TimeTracking},
+    };
 
-  db_create! {
+    db_create! {
         CreateProject,
         msg => projects => diesel::insert_into(projects)
             .values((

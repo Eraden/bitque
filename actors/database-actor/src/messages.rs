@@ -1,10 +1,10 @@
 use {
-  crate::{
-    db_create_with_conn, db_delete, db_load,
-    users::{FindUser, LookupUser},
-  },
-  diesel::prelude::*,
-  jirs_data::{BindToken, Message, MessageId, MessageType, User, UserId},
+    crate::{
+        db_create_with_conn, db_delete, db_load,
+        users::{FindUser, LookupUser},
+    },
+    diesel::prelude::*,
+    jirs_data::{BindToken, Message, MessageId, MessageType, User, UserId},
 };
 
 db_load! {

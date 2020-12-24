@@ -160,8 +160,8 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
             model
-              .issue_statuses
-              .sort_by(|a, b| a.position.cmp(&b.position));
+                .issue_statuses
+                .sort_by(|a, b| a.position.cmp(&b.position));
         }
         WsMsg::IssueStatusDeleted(dropped_id, _count) => {
             let mut old = vec![];
@@ -172,8 +172,8 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 }
             }
             model
-              .issue_statuses
-              .sort_by(|a, b| a.position.cmp(&b.position));
+                .issue_statuses
+                .sort_by(|a, b| a.position.cmp(&b.position));
         }
         WsMsg::IssueDeleted(id, _count) => {
             let mut old = vec![];
@@ -185,7 +185,7 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 model.issue_statuses.push(is);
             }
             model
-              .issue_statuses
+                .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
         }
         // users

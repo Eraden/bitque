@@ -36,7 +36,7 @@ async fn main() -> Result<(), String> {
         highlight_actor::HighlightActor::default,
     );
     #[cfg(feature = "local-storage")]
-      let fs_addr = actix::SyncArbiter::start(
+    let fs_addr = actix::SyncArbiter::start(
         jirs_config::fs::Configuration::read().concurrency,
         filesystem_actor::FileSystemExecutor::default,
     );
@@ -48,21 +48,19 @@ async fn main() -> Result<(), String> {
 
         // data step
         let app = app
-          .data(ws_server.clone())
-          .data(db_addr.clone())
-          .data(mail_addr.clone())
-          .data(hi_addr.clone())
-          .data(database_actor::build_pool());
-        featured! { app, "local-storage", app.data(fs_addr.clone()) }
-        ;
+            .data(ws_server.clone())
+            .data(db_addr.clone())
+            .data(mail_addr.clone())
+            .data(hi_addr.clone())
+            .data(database_actor::build_pool());
+        featured! { app, "local-storage", app.data(fs_addr.clone()) };
 
         // services step
         let app = app
-          .service(websocket_actor::index)
-          .service(actix_web::web::scope("/avatar").service(web_actor::avatar::upload));
+            .service(websocket_actor::index)
+            .service(actix_web::web::scope("/avatar").service(web_actor::avatar::upload));
 
-        featured! { app, "local-storage", app.service(filesystem_actor::service()) }
-        ;
+        featured! { app, "local-storage", app.service(filesystem_actor::service()) };
         app
     })
     .workers(web_config.concurrency)

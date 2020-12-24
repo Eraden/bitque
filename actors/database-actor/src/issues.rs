@@ -1,10 +1,10 @@
 use {
-  crate::{
-    db_create_with_conn, db_delete_with_conn, db_find, db_load, db_update_with_conn,
-    models::Issue,
-  },
-  diesel::{expression::sql_literal::sql, prelude::*},
-  jirs_data::{IssueId, IssuePriority, IssueStatusId, IssueType, ProjectId, UserId},
+    crate::{
+        db_create_with_conn, db_delete_with_conn, db_find, db_load, db_update_with_conn,
+        models::Issue,
+    },
+    diesel::{expression::sql_literal::sql, prelude::*},
+    jirs_data::{IssueId, IssuePriority, IssueStatusId, IssueType, ProjectId, UserId},
 };
 
 db_find! {
@@ -91,13 +91,13 @@ db_delete_with_conn! {
 }
 
 mod inner {
-  use {
-    crate::{db_create, models::Issue},
-    diesel::prelude::*,
-    jirs_data::{IssuePriority, IssueStatusId, IssueType},
-  };
+    use {
+        crate::{db_create, models::Issue},
+        diesel::prelude::*,
+        jirs_data::{IssuePriority, IssueStatusId, IssueType},
+    };
 
-  db_create! {
+    db_create! {
         CreateIssue,
         msg => issues => diesel::insert_into(issues)
             .values((

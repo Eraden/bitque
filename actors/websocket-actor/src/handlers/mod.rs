@@ -1,6 +1,6 @@
 pub use {
-  auth::*, comments::*, epics::*, invitations::*, issue_statuses::*, issues::*, messages::*,
-  projects::*, user_projects::*, users::*,
+    auth::*, comments::*, epics::*, invitations::*, issue_statuses::*, issues::*, messages::*,
+    projects::*, user_projects::*, users::*,
 };
 
 pub mod auth;

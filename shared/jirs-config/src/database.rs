@@ -12,7 +12,7 @@ impl Default for Configuration {
             "postgres://postgres@localhost:5432/jirs_test".to_string()
         } else {
             std::env::var("DATABASE_URL")
-              .unwrap_or_else(|_| "postgres://postgres@localhost:5432/jirs".to_string())
+                .unwrap_or_else(|_| "postgres://postgres@localhost:5432/jirs".to_string())
         };
         Self {
             concurrency: 2,

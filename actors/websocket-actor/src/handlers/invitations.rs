@@ -46,23 +46,23 @@ impl WsHandler<CreateInvitation> for WebSocketActor {
 
         let CreateInvitation { email, name, role } = msg;
         let invitation =
-          match block_on(self.db.send(database_actor::invitations::CreateInvitation {
-              user_id,
-              project_id,
-              email: email.clone(),
-              name: name.clone(),
-              role,
-          })) {
-              Ok(Ok(invitation)) => invitation,
-              Ok(Err(e)) => {
-                  error!("{:?}", e);
-                  return Ok(Some(WsMsg::InvitationSendFailure));
-              }
-              Err(e) => {
-                  error!("{}", e);
-                  return Ok(Some(WsMsg::InvitationSendFailure));
-              }
-          };
+            match block_on(self.db.send(database_actor::invitations::CreateInvitation {
+                user_id,
+                project_id,
+                email: email.clone(),
+                name: name.clone(),
+                role,
+            })) {
+                Ok(Ok(invitation)) => invitation,
+                Ok(Err(e)) => {
+                    error!("{:?}", e);
+                    return Ok(Some(WsMsg::InvitationSendFailure));
+                }
+                Err(e) => {
+                    error!("{}", e);
+                    return Ok(Some(WsMsg::InvitationSendFailure));
+                }
+            };
         match block_on(self.mail.send(mail_actor::invite::Invite {
             bind_token: invitation.bind_token,
             email: invitation.email,
@@ -168,13 +168,13 @@ impl WsHandler<AcceptInvitation> for WebSocketActor {
 
         for message in block_on(
             self.db
-              .send(database_actor::messages::LookupMessagesByToken {
-                  token: invitation_token,
-                  user_id: token.user_id,
-              }),
+                .send(database_actor::messages::LookupMessagesByToken {
+                    token: invitation_token,
+                    user_id: token.user_id,
+                }),
         )
-          .unwrap_or_else(|_| Ok(vec![]))
-          .unwrap_or_default()
+        .unwrap_or_else(|_| Ok(vec![]))
+        .unwrap_or_default()
         {
             match block_on(self.db.send(database_actor::messages::MarkMessageSeen {
                 user_id: token.user_id,

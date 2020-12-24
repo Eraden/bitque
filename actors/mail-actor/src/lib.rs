@@ -32,13 +32,13 @@ fn mail_client(config: &jirs_config::mail::Configuration) -> lettre::SmtpClient 
     let mail_host = config.host.as_str();
 
     lettre::SmtpClient::new_simple(mail_host)
-      .expect("Failed to init SMTP client")
-      .credentials(lettre::smtp::authentication::Credentials::new(
-          mail_user.to_string(),
-          mail_pass.to_string(),
-      ))
-      .connection_reuse(lettre::smtp::ConnectionReuseParameters::ReuseUnlimited)
-      .smtp_utf8(true)
+        .expect("Failed to init SMTP client")
+        .credentials(lettre::smtp::authentication::Credentials::new(
+            mail_user.to_string(),
+            mail_pass.to_string(),
+        ))
+        .connection_reuse(lettre::smtp::ConnectionReuseParameters::ReuseUnlimited)
+        .smtp_utf8(true)
 }
 
 fn mail_transport(config: &jirs_config::mail::Configuration) -> MailTransport {

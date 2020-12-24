@@ -1,7 +1,7 @@
 use {
-  crate::{db_create, db_delete_with_conn, db_find, db_load, db_update_with_conn},
-  diesel::prelude::*,
-  jirs_data::{ProjectId, UserId, UserProject, UserProjectId, UserRole},
+    crate::{db_create, db_delete_with_conn, db_find, db_load, db_update_with_conn},
+    diesel::prelude::*,
+    jirs_data::{ProjectId, UserId, UserProject, UserProjectId, UserRole},
 };
 
 db_find! {
@@ -27,13 +27,13 @@ db_load! {
 }
 
 mod inner {
-  use {
-    crate::db_update,
-    diesel::prelude::*,
-    jirs_data::{UserId, UserProject, UserProjectId},
-  };
+    use {
+        crate::db_update,
+        diesel::prelude::*,
+        jirs_data::{UserId, UserProject, UserProjectId},
+    };
 
-  db_update! {
+    db_update! {
         ChangeProjectIsCurrent,
         msg => user_projects => {
             match msg.id {

@@ -76,11 +76,11 @@ pub(crate) async fn handle_image(
     {
         use filesystem_actor::RemoveTmpFile;
         let _ = fs
-          .send(RemoveTmpFile {
-              file_name: format!("{}-{}", user_id, filename),
-          })
-          .await
-          .ok();
+            .send(RemoveTmpFile {
+                file_name: format!("{}-{}", user_id, filename),
+            })
+            .await
+            .ok();
     };
     Ok(new_link.unwrap_or_default())
 }
@@ -113,11 +113,11 @@ pub(crate) async fn handle_image(
     {
         use filesystem_actor::RemoveTmpFile;
         let _ = fs
-          .send(RemoveTmpFile {
-              file_name: format!("{}-{}", user_id, filename),
-          })
-          .await
-          .ok();
+            .send(RemoveTmpFile {
+                file_name: format!("{}-{}", user_id, filename),
+            })
+            .await
+            .ok();
     };
     Ok(new_link.unwrap_or_default())
 }
@@ -183,11 +183,11 @@ async fn local_storage_write(
     let fs_config = jirs_config::fs::Configuration::read();
 
     let _ = fs
-      .send(filesystem_actor::CreateFile {
-          source: receiver,
-          file_name: system_file_name.clone(),
-      })
-      .await;
+        .send(filesystem_actor::CreateFile {
+            source: receiver,
+            file_name: system_file_name.clone(),
+        })
+        .await;
 
     Some(format!(
         "{proto}://{bind}{port}{client_path}/{user_id}-{filename}",

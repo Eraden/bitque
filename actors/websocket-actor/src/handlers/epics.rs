@@ -10,7 +10,7 @@ impl WsHandler<LoadEpics> for WebSocketActor {
     fn handle_msg(&mut self, _msg: LoadEpics, _ctx: &mut Self::Context) -> WsResult {
         let project_id = self.require_user_project()?.project_id;
         let epics =
-          crate::query_db_or_print!(self, database_actor::epics::LoadEpics { project_id });
+            crate::query_db_or_print!(self, database_actor::epics::LoadEpics { project_id });
         Ok(Some(WsMsg::EpicsLoaded(epics)))
     }
 }

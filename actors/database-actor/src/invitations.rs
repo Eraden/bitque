@@ -101,7 +101,7 @@ impl AcceptInvitation {
             let invitation = crate::invitations::FindByBindToken {
                 token: self.invitation_token,
             }
-              .execute(conn)?;
+            .execute(conn)?;
 
             if invitation.state == InvitationState::Revoked {
                 return Err(crate::DatabaseError::Invitation(
@@ -113,13 +113,13 @@ impl AcceptInvitation {
                 id: invitation.id,
                 state: InvitationState::Accepted,
             }
-              .execute(conn)?;
+            .execute(conn)?;
 
             UpdateInvitationState {
                 id: invitation.id,
                 state: InvitationState::Accepted,
             }
-              .execute(conn)?;
+            .execute(conn)?;
 
             match {
                 Register {
@@ -128,7 +128,7 @@ impl AcceptInvitation {
                     project_id: Some(invitation.project_id),
                     role: UserRole::User,
                 }
-                  .execute(conn)
+                .execute(conn)
             } {
                 Ok(_) => (),
                 Err(crate::DatabaseError::User(crate::UserError::InvalidPair(..))) => (),
@@ -139,7 +139,7 @@ impl AcceptInvitation {
                 name: invitation.name.clone(),
                 email: invitation.email.clone(),
             }
-              .execute(conn)?;
+            .execute(conn)?;
             CreateBindToken { user_id: user.id }.execute(conn)?;
 
             crate::user_projects::CreateUserProject {
@@ -149,7 +149,7 @@ impl AcceptInvitation {
                 is_default: false,
                 role: invitation.role,
             }
-              .execute(conn)?;
+            .execute(conn)?;
 
             crate::tokens::FindUserId { user_id: user.id }.execute(conn)
         })

@@ -67,7 +67,7 @@ impl WsHandler<LoadInvitedUsers> for WebSocketActor {
 
         let users = match block_on(
             self.db
-              .send(database_actor::users::LoadInvitedUsers { user_id }),
+                .send(database_actor::users::LoadInvitedUsers { user_id }),
         ) {
             Ok(Ok(users)) => users,
             _ => return Ok(None),
@@ -123,11 +123,11 @@ impl WsHandler<RemoveInvitedUser> for WebSocketActor {
         } = self.require_user_project()?.clone();
         match block_on(
             self.db
-              .send(database_actor::user_projects::RemoveInvitedUser {
-                  invited_id,
-                  inviter_id,
-                  project_id,
-              }),
+                .send(database_actor::user_projects::RemoveInvitedUser {
+                    invited_id,
+                    inviter_id,
+                    project_id,
+                }),
         ) {
             Ok(Ok(_users)) => Ok(Some(WsMsg::InvitedUserRemoveSuccess(invited_id))),
             Ok(Err(e)) => {

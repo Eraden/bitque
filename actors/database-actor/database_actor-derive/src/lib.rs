@@ -20,8 +20,8 @@ pub fn db_msg(item: TokenStream) -> TokenStream {
         panic!("Expect to find keyword struct but nothing was found")
     }
     let _name = it
-      .next()
-      .expect("Expect to struct name but nothing was found");
+        .next()
+        .expect("Expect to struct name but nothing was found");
 
     "".parse().unwrap()
 }

@@ -46,7 +46,7 @@ pub async fn upload(
                         disposition,
                         fs.clone(),
                     )
-                      .await?,
+                    .await?,
                 );
             }
             _ => continue,

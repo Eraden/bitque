@@ -32,7 +32,7 @@ impl WsHandler<UpdateProjectPayload> for WebSocketActor {
         };
         let projects = match block_on(
             self.db
-              .send(database_actor::projects::LoadProjects { user_id: *user_id }),
+                .send(database_actor::projects::LoadProjects { user_id: *user_id }),
         ) {
             Ok(Ok(projects)) => projects,
             Ok(Err(e)) => {

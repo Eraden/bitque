@@ -44,9 +44,9 @@ impl actix::Handler<InnerMsg> for WsServer {
         match msg {
             InnerMsg::Join(project_id, user_id, recipient) => {
                 let v = self
-                  .sessions
-                  .entry(user_id)
-                  .or_insert_with(Default::default);
+                    .sessions
+                    .entry(user_id)
+                    .or_insert_with(Default::default);
                 v.push(recipient);
                 self.ensure_room(project_id);
 

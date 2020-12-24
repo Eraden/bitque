@@ -151,7 +151,7 @@ impl WsHandler<DeleteIssue> for WebSocketActor {
         self.require_user()?;
         let m = match block_on(
             self.db
-              .send(database_actor::issues::DeleteIssue { issue_id: msg.id }),
+                .send(database_actor::issues::DeleteIssue { issue_id: msg.id }),
         ) {
             Ok(Ok(n)) => Some(WsMsg::IssueDeleted(msg.id, n)),
             Ok(Err(e)) => {

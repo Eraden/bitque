@@ -100,11 +100,11 @@ fn check_token(
     token_from_headers(headers).and_then(|access_token| {
         use database_actor::authorize_user::AuthorizeUser;
         let conn = pool
-          .get()
-          .map_err(|_| crate::errors::ServiceError::DatabaseConnectionLost)?;
+            .get()
+            .map_err(|_| crate::errors::ServiceError::DatabaseConnectionLost)?;
         AuthorizeUser { access_token }
-          .execute(&conn)
-          .map_err(|_| crate::errors::ServiceError::Unauthorized)
+            .execute(&conn)
+            .map_err(|_| crate::errors::ServiceError::Unauthorized)
     })
 }
 
