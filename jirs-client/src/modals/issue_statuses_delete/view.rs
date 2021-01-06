@@ -1,11 +1,11 @@
-use seed::prelude::*;
-
-use jirs_data::IssueStatusId;
-
-use crate::{
-    model,
-    shared::{styled_confirm_modal::StyledConfirmModal, ToNode},
-    Msg,
+use {
+    crate::{
+        model,
+        shared::{styled_confirm_modal::StyledConfirmModal, ToNode},
+        Msg,
+    },
+    jirs_data::IssueStatusId,
+    seed::prelude::*,
 };
 
 pub fn view(_model: &model::Model, issue_status_id: IssueStatusId) -> Node<Msg> {

@@ -1,10 +1,10 @@
-use seed::{prelude::*, *};
-
-use jirs_data::*;
-
-use crate::{
-    model::{Model, Page},
-    resolve_page, Msg,
+use {
+    crate::{
+        model::{Model, Page},
+        resolve_page, Msg,
+    },
+    jirs_data::*,
+    seed::{prelude::*, *},
 };
 
 pub mod aside;
@@ -65,10 +65,12 @@ pub trait ToNode {
     fn into_node(self) -> Node<Msg>;
 }
 
+#[inline]
 pub fn divider() -> Node<Msg> {
     div![C!["divider"], ""]
 }
 
+#[inline]
 pub fn inner_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
     let modal_node = crate::modal::view(model);
     article![
@@ -81,6 +83,7 @@ pub fn inner_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) ->
     ]
 }
 
+#[inline]
 pub fn outer_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
     let modal = crate::modal::view(model);
     article![

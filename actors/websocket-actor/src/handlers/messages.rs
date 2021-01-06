@@ -1,9 +1,9 @@
-use futures::executor::block_on;
-
-use database_actor::messages;
-use jirs_data::{MessageId, WsMsg};
-
-use crate::{WebSocketActor, WsHandler, WsResult};
+use {
+    crate::{WebSocketActor, WsHandler, WsResult},
+    database_actor::messages,
+    futures::executor::block_on,
+    jirs_data::{MessageId, WsMsg},
+};
 
 pub struct LoadMessages;
 

@@ -1,9 +1,9 @@
-use futures::executor::block_on;
-
-use database_actor::issue_statuses;
-use jirs_data::{IssueStatusId, Position, TitleString, WsMsg};
-
-use crate::{WebSocketActor, WsHandler, WsResult};
+use {
+    crate::{WebSocketActor, WsHandler, WsResult},
+    database_actor::issue_statuses,
+    futures::executor::block_on,
+    jirs_data::{IssueStatusId, Position, TitleString, WsMsg},
+};
 
 pub struct LoadIssueStatuses;
 

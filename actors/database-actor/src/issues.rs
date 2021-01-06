@@ -193,36 +193,3 @@ db_create_with_conn! {
     user_ids => Vec<jirs_data::UserId>,
     epic_id => Option<jirs_data::EpicId>
 }
-
-// impl Handler<CreateIssue> for DbExecutor {
-//     type Result = Result<Issue, crate::DatabaseError>;
-//
-//     fn handle(&mut self, msg: CreateIssue, ctx: &mut Self::Context) -> Self::Result {
-//         use crate::schema::issue_assignees::dsl;
-//         use crate::schema::issues::dsl::issues;
-//
-//         let mut values = vec![];
-//         for user_id in msg.user_ids.iter() {
-//             values.push(crate::models::CreateIssueAssigneeForm {
-//                 issue_id: issue.id,
-//                 user_id: *user_id,
-//             });
-//         }
-//         if !msg.user_ids.contains(&msg.reporter_id) {
-//             values.push(crate::models::CreateIssueAssigneeForm {
-//                 issue_id: issue.id,
-//                 user_id: msg.reporter_id,
-//             });
-//         }
-//
-//         diesel::insert_into(dsl::issue_assignees)
-//             .values(values)
-//             .execute(conn)
-//             .map_err(|e| {
-//                 log::error!("{:?}", e);
-//                 crate::DatabaseError::DatabaseConnectionLost
-//             })?;
-//
-//         Ok(issue)
-//     }
-// }

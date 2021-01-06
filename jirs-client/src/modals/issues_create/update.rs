@@ -10,10 +10,10 @@ use {
 };
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
-    let modal = model.modals.iter_mut().find(|modal| match modal {
-        ModalType::AddIssue(..) => true,
-        _ => false,
-    });
+    let modal = model
+        .modals
+        .iter_mut()
+        .find(|modal| matches!(modal, ModalType::AddIssue(..)));
     let modal = match modal {
         Some(ModalType::AddIssue(modal)) => modal,
         _ => return,

@@ -1,9 +1,10 @@
-use std::io::Write;
-
-use diesel::{deserialize::*, pg::*, serialize::*, *};
-
-use crate::{
-    InvitationState, IssuePriority, IssueType, MessageType, ProjectCategory, TimeTracking, UserRole,
+use {
+    crate::{
+        InvitationState, IssuePriority, IssueType, MessageType, ProjectCategory, TimeTracking,
+        UserRole,
+    },
+    diesel::{deserialize::*, pg::*, serialize::*, *},
+    std::io::Write,
 };
 
 #[derive(SqlType)]

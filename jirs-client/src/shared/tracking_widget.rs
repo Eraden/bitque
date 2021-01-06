@@ -1,7 +1,6 @@
 use {
     crate::{
-        modal::time_tracking::value_for_time_tracking,
-        modals::issues_edit::Model as EditIssueModal,
+        modals::{issues_edit::Model as EditIssueModal, time_tracking::value_for_time_tracking},
         model::{ModalType, Model},
         shared::{
             styled_icon::{Icon, StyledIcon},

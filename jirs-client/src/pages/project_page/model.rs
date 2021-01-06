@@ -1,8 +1,4 @@
-use std::collections::HashMap;
-
-use jirs_data::*;
-
-use crate::shared::drag::DragState;
+use {crate::shared::drag::DragState, jirs_data::*, std::collections::HashMap};
 
 #[derive(Default, Debug)]
 pub struct StatusIssueIds {
@@ -17,9 +13,6 @@ pub struct EpicIssuePerStatus {
     pub per_status_issues: Vec<StatusIssueIds>,
 }
 
-// pub type VisibleIssueMap =
-//     HashMap<EpicName, HashMap<(IssueStatusId, IssueStatusName), Vec<IssueId>>>;
-
 #[derive(Debug, Default)]
 pub struct ProjectPage {
     pub text_filter: String,
@@ -33,9 +26,9 @@ pub struct ProjectPage {
 impl ProjectPage {
     pub fn rebuild_visible(
         &mut self,
-        epics: &Vec<Epic>,
-        statuses: &Vec<IssueStatus>,
-        issues: &Vec<Issue>,
+        epics: &[Epic],
+        statuses: &[IssueStatus],
+        issues: &[Issue],
         user: &Option<User>,
     ) {
         let mut map = vec![];
@@ -66,7 +59,7 @@ impl ProjectPage {
             let mut per_epic_map = EpicIssuePerStatus::default();
             per_epic_map.epic_name = epic.map(|(_, name)| name).unwrap_or_default().to_string();
 
-            for (current_status_id, issue_status_name) in statuses.clone() {
+            for (current_status_id, issue_status_name) in statuses.to_owned() {
                 let mut per_status_map = StatusIssueIds::default();
                 per_status_map.status_id = current_status_id;
                 per_status_map.status_name = issue_status_name.to_string();
@@ -111,8 +104,3 @@ fn issue_filter_with_only_my(issue: &Issue, only_my: bool, user: &Option<User>) 
     let my_id = user.as_ref().map(|u| u.id).unwrap_or_default();
     !only_my || issue.user_ids.contains(&my_id)
 }
-
-// #[inline]
-// fn issue_filter_with_only_recent(issue: &Issue, ids: &[IssueId]) -> bool {
-//     ids.is_empty() || ids.contains(&issue.id)
-// }

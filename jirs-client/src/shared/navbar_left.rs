@@ -1,18 +1,18 @@
-use seed::{prelude::*, *};
-
-use jirs_data::{InvitationToken, Message, MessageType, WsMsg};
-
-use crate::{
-    model::Model,
-    shared::{
-        divider,
-        styled_avatar::StyledAvatar,
-        styled_button::StyledButton,
-        styled_icon::{Icon, StyledIcon},
-        styled_tooltip, ToNode,
+use {
+    crate::{
+        model::Model,
+        shared::{
+            divider,
+            styled_avatar::StyledAvatar,
+            styled_button::StyledButton,
+            styled_icon::{Icon, StyledIcon},
+            styled_tooltip, ToNode,
+        },
+        ws::send_ws_msg,
+        Msg, Page,
     },
-    ws::send_ws_msg,
-    Msg, Page,
+    jirs_data::{InvitationToken, Message, MessageType, WsMsg},
+    seed::{prelude::*, *},
 };
 
 trait IntoNavItemIcon {
@@ -45,7 +45,6 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
     let logo_svg = img![
         attrs![At::Src => "/logo2.svg"; At::Style => "background: rgba(244,244,244,.8); border-radius: 24px;"]
     ];
-    // let logo_svg = Node::from_html(include_str!("../../static/logo.svg"));
 
     let user_icon = match model.user.as_ref() {
         Some(user) => i![

@@ -11,6 +11,7 @@ pub enum Variant {
 }
 
 impl Variant {
+    #[inline]
     pub fn to_str<'l>(&self) -> &'l str {
         match self {
             Variant::Normal => "normal",
@@ -20,6 +21,7 @@ impl Variant {
 }
 
 impl ToString for Variant {
+    #[inline]
     fn to_string(&self) -> String {
         self.to_str().to_string()
     }
@@ -33,6 +35,7 @@ pub struct StyledInputState {
 }
 
 impl StyledInputState {
+    #[inline]
     pub fn new<S>(id: FieldId, value: S) -> Self
     where
         S: Into<String>,
@@ -44,18 +47,22 @@ impl StyledInputState {
         }
     }
 
+    #[inline]
     pub fn to_i32(&self) -> Option<i32> {
         self.value.parse::<i32>().ok()
     }
 
+    #[inline]
     pub fn to_f64(&self) -> Option<f64> {
         self.value.parse::<f64>().ok()
     }
 
+    #[inline]
     pub fn represent_f64_as_i32(&self) -> Option<i32> {
         self.to_f64().map(|f| (f * 10.0f64) as i32)
     }
 
+    #[inline]
     pub fn update(&mut self, msg: &Msg) {
         match msg {
             Msg::StrInputChanged(field_id, s) if field_id == &self.id => {
@@ -66,6 +73,7 @@ impl StyledInputState {
         }
     }
 
+    #[inline]
     pub fn reset(&mut self) {
         self.value.clear();
     }
@@ -86,6 +94,7 @@ pub struct StyledInput<'l> {
 }
 
 impl<'l> StyledInput<'l> {
+    #[inline]
     pub fn build() -> StyledInputBuilder<'l> {
         StyledInputBuilder {
             icon: None,
@@ -115,16 +124,19 @@ pub struct StyledInputBuilder<'l> {
 }
 
 impl<'l> StyledInputBuilder<'l> {
+    #[inline]
     pub fn icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
         self
     }
 
+    #[inline]
     pub fn valid(mut self, valid: bool) -> Self {
         self.valid = Some(valid);
         self
     }
 
+    #[inline]
     pub fn value<S>(mut self, v: S) -> Self
     where
         S: Into<String>,
@@ -133,36 +145,43 @@ impl<'l> StyledInputBuilder<'l> {
         self
     }
 
+    #[inline]
     pub fn state(self, state: &StyledInputState) -> Self {
         self.value(state.value.as_str())
             .valid(!state.touched || !state.value.is_empty())
     }
 
+    #[inline]
     pub fn add_input_class(mut self, name: &'l str) -> Self {
         self.input_class_list.push(name);
         self
     }
 
+    #[inline]
     pub fn add_wrapper_class(mut self, name: &'l str) -> Self {
         self.wrapper_class_list.push(name);
         self
     }
 
+    #[inline]
     pub fn primary(mut self) -> Self {
         self.variant = Variant::Primary;
         self
     }
 
+    #[inline]
     pub fn auto_focus(mut self) -> Self {
         self.auto_focus = true;
         self
     }
 
+    #[inline]
     pub fn on_input_ev(mut self, handler: EventHandler<Msg>) -> Self {
         self.input_handlers.push(handler);
         self
     }
 
+    #[inline]
     pub fn build(self, id: FieldId) -> StyledInput<'l> {
         StyledInput {
             id,
@@ -180,6 +199,7 @@ impl<'l> StyledInputBuilder<'l> {
 }
 
 impl<'l> ToNode for StyledInput<'l> {
+    #[inline]
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
@@ -209,10 +229,10 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         input_class_list.push("withIcon");
     }
 
-    let icon = match icon {
-        Some(icon) => StyledIcon::build(icon).build().into_node(),
-        _ => empty![],
-    };
+    let icon = icon
+        .map(|icon| StyledIcon::build(icon).build().into_node())
+        .unwrap_or(Node::Empty);
+
     let on_input = {
         let field_id = id.clone();
         ev(Ev::Input, move |event| {

@@ -1,7 +1,7 @@
-use std::fs::{read_to_string, write};
-
-use serde::export::PhantomData;
-use serde::{de::DeserializeOwned, Serialize};
+use {
+    serde::{de::DeserializeOwned, export::PhantomData, Serialize},
+    std::fs::{read_to_string, write},
+};
 
 pub struct Reader<T: DeserializeOwned + Default + Serialize> {
     __phantom: PhantomData<T>,

@@ -1,6 +1,7 @@
 use {
     crate::{
         model::{Model, Page, PageContent},
+        pages::project_settings_page::ProjectSettingsPage,
         shared::styled_select::StyledSelectChanged,
         ws::{board_load, send_ws_msg},
         FieldChange::TabChanged,
@@ -10,8 +11,6 @@ use {
     seed::{error, prelude::Orders},
     std::collections::HashSet,
 };
-
-use crate::pages::project_settings_page::ProjectSettingsPage;
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::ProjectSettings {

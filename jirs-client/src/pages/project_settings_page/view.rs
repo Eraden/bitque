@@ -1,27 +1,26 @@
-use std::collections::HashMap;
-
-use seed::{prelude::*, *};
-
-use jirs_data::{IssueStatus, ProjectCategory, TimeTracking, ToVec};
-
-use crate::{
-    modals::issue_statuses_delete::Model as DeleteIssueStatusModal,
-    model::{self, ModalType, Model, PageContent},
-    pages::project_settings_page::ProjectSettingsPage,
-    shared::{
-        inner_layout,
-        styled_button::StyledButton,
-        styled_checkbox::StyledCheckbox,
-        styled_editor::StyledEditor,
-        styled_field::StyledField,
-        styled_form::StyledForm,
-        styled_icon::{Icon, StyledIcon},
-        styled_input::StyledInput,
-        styled_select::StyledSelect,
-        styled_textarea::StyledTextarea,
-        ToChild, ToNode,
+use {
+    crate::{
+        modals::issue_statuses_delete::Model as DeleteIssueStatusModal,
+        model::{self, ModalType, Model, PageContent},
+        pages::project_settings_page::ProjectSettingsPage,
+        shared::{
+            inner_layout,
+            styled_button::StyledButton,
+            styled_checkbox::StyledCheckbox,
+            styled_editor::StyledEditor,
+            styled_field::StyledField,
+            styled_form::StyledForm,
+            styled_icon::{Icon, StyledIcon},
+            styled_input::StyledInput,
+            styled_select::StyledSelect,
+            styled_textarea::StyledTextarea,
+            ToChild, ToNode,
+        },
+        FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange,
     },
-    FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange,
+    jirs_data::{IssueStatus, ProjectCategory, TimeTracking, ToVec},
+    seed::{prelude::*, *},
+    std::collections::HashMap,
 };
 
 // use crate::shared::styled_rte::StyledRte;
@@ -225,6 +224,7 @@ fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
         .into_node()
 }
 
+#[inline]
 fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
     let on_click = mouse_ev(Ev::Click, move |_| {
         Msg::PageChanged(PageChanged::ProjectSettings(
@@ -268,6 +268,7 @@ fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
     }
 }
 
+#[inline]
 fn column_preview(
     is: &IssueStatus,
     page: &ProjectSettingsPage,

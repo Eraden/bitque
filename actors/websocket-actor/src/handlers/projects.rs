@@ -1,9 +1,9 @@
-use futures::executor::block_on;
-
-use database_actor as db;
-use jirs_data::{UpdateProjectPayload, UserProject, WsMsg};
-
-use crate::{WebSocketActor, WsHandler, WsResult};
+use {
+    crate::{WebSocketActor, WsHandler, WsResult},
+    database_actor as db,
+    futures::executor::block_on,
+    jirs_data::{UpdateProjectPayload, UserProject, WsMsg},
+};
 
 impl WsHandler<UpdateProjectPayload> for WebSocketActor {
     fn handle_msg(&mut self, msg: UpdateProjectPayload, _ctx: &mut Self::Context) -> WsResult {

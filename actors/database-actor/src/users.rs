@@ -64,52 +64,6 @@ db_create! {
     email => EmailString
 }
 
-/*impl CreateUser {
-    pub fn execute(self, conn: &DbPooledConn) -> Result<User, crate::DatabaseError> {
-        use crate::schema::users::dsl::*;
-
-        q!(diesel::insert_into(users)
-            .values((name.eq(self.name.as_str()), email.eq(self.email.as_str()))))
-        .get_result(conn)
-        .map_err(|e| {
-            log::error!("{:?}", e);
-            let ws = match e {
-                Error::InvalidCString(_) => {
-                    crate::DatabaseError::User(UserError::InvalidPair(self.name, self.email))
-                }
-                Error::DatabaseError(diesel::result::DatabaseErrorKind::UniqueViolation, _) => {
-                    crate::DatabaseError::User(UserError::TakenPair(self.name, self.email))
-                }
-                Error::DatabaseError(_, _) => {
-                    crate::DatabaseError::User(UserError::InvalidPair(self.name, self.email))
-                }
-                Error::NotFound => {
-                    crate::DatabaseError::User(UserError::InvalidPair(self.name, self.email))
-                }
-                Error::QueryBuilderError(_) => {
-                    crate::DatabaseError::User(UserError::InvalidPair(self.name, self.email))
-                }
-                Error::DeserializationError(_) => {
-                    crate::DatabaseError::User(UserError::InvalidPair(self.name, self.email))
-                }
-                Error::SerializationError(_) => {
-                    crate::DatabaseError::User(UserError::InvalidPair(self.name, self.email))
-                }
-                Error::RollbackTransaction => {
-                    crate::DatabaseError::User(UserError::InvalidPair(self.name, self.email))
-                }
-                Error::AlreadyInTransaction => {
-                    crate::DatabaseError::User(UserError::InvalidPair(self.name, self.email))
-                }
-                Error::__Nonexhaustive => {
-                    crate::DatabaseError::User(UserError::InvalidPair(self.name, self.email))
-                }
-            };
-            crate::DatabaseError::Error(ws)
-        })
-    }
-}*/
-
 db_create_with_conn! {
     Register,
     msg => conn => users => {

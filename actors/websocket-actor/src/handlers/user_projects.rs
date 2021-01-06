@@ -1,9 +1,9 @@
-use futures::executor::block_on;
-
-use database_actor as db;
-use jirs_data::{UserProjectId, WsMsg};
-
-use crate::{WebSocketActor, WsHandler, WsResult};
+use {
+    crate::{WebSocketActor, WsHandler, WsResult},
+    database_actor as db,
+    futures::executor::block_on,
+    jirs_data::{UserProjectId, WsMsg},
+};
 
 pub struct LoadUserProjects;
 

@@ -236,21 +236,6 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
                 .into_node()
         })
         .collect();
-    // let avatars: Vec<Node<Msg>> = model
-    //     .users
-    //     .iter()
-    //     .enumerate()
-    //     .filter(|(_, user)| issue.user_ids.contains(&user.id))
-    //     .map(|(idx, user)| {
-    //         StyledAvatar::build()
-    //             .size(24)
-    //             .name(user.name.as_str())
-    //             .avatar_url(user.avatar_url.as_deref().unwrap_or_default())
-    //             .user_index(idx)
-    //             .build()
-    //             .into_node()
-    //     })
-    //     .collect();
 
     let issue_type_icon = StyledIcon::build(issue.issue_type.clone().into())
         .with_color(issue.issue_type.to_str())

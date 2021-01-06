@@ -1,9 +1,8 @@
-use futures::executor::block_on;
-
-use jirs_data::{UserId, UserProject, UserRole, WsMsg};
 use {
     crate::{handlers::auth::Authenticate, WebSocketActor, WsHandler, WsResult},
     database_actor::{self, users::Register as DbRegister},
+    futures::executor::block_on,
+    jirs_data::{UserId, UserProject, UserRole, WsMsg},
 };
 
 pub struct LoadProjectUsers;

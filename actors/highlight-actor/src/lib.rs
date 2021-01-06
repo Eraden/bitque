@@ -1,6 +1,6 @@
-use jirs_data::HighlightedCode;
 use {
     actix::{Actor, Handler, SyncContext},
+    jirs_data::HighlightedCode,
     std::sync::Arc,
     syntect::{
         easy::HighlightLines,

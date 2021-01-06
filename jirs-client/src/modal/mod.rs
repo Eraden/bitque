@@ -1,24 +1,20 @@
-use seed::{prelude::*, *};
-
-use jirs_data::{TimeTracking, WsMsg};
-
-use crate::{
-    model::{self, ModalType, Model, Page},
-    shared::{
-        find_issue, go_to_board,
-        styled_confirm_modal::StyledConfirmModal,
-        styled_modal::{StyledModal, Variant as ModalVariant},
-        ToNode,
+use {
+    crate::{
+        model::{self, ModalType, Model, Page},
+        shared::{
+            find_issue, go_to_board,
+            styled_confirm_modal::StyledConfirmModal,
+            styled_modal::{StyledModal, Variant as ModalVariant},
+            ToNode,
+        },
+        ws::send_ws_msg,
+        FieldChange, FieldId, Msg, WebSocketChanged,
     },
-    ws::send_ws_msg,
-    FieldChange, FieldId, Msg, WebSocketChanged,
+    jirs_data::{TimeTracking, WsMsg},
+    seed::{prelude::*, *},
 };
 
-mod confirm_delete_issue;
-#[cfg(debug_assertions)]
-mod debug_modal;
 pub mod issues;
-pub mod time_tracking;
 
 pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -102,7 +98,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                     empty![]
                 }
             }
-            ModalType::DeleteIssueConfirm(_id) => confirm_delete_issue::view(model),
+            ModalType::DeleteIssueConfirm(_id) => crate::modals::issues_delete::view(model),
             ModalType::AddIssue(modal) => issues_create::view(model, modal),
             ModalType::DeleteCommentConfirm(comment_id) => {
                 let comment_id = *comment_id;
@@ -114,12 +110,14 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                     .build()
                     .into_node()
             }
-            ModalType::TimeTracking(issue_id) => time_tracking::view(model, *issue_id),
+            ModalType::TimeTracking(issue_id) => {
+                crate::modals::time_tracking::view(model, *issue_id)
+            }
             ModalType::DeleteIssueStatusModal(delete_issue_modal) => {
                 issue_statuses_delete::view(model, delete_issue_modal.delete_id)
             }
             #[cfg(debug_assertions)]
-            ModalType::DebugModal => debug_modal::view(model),
+            ModalType::DebugModal => crate::modals::debug::view(model),
         })
         .collect();
     section![id!["modals"], modals]

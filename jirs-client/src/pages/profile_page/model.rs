@@ -1,11 +1,12 @@
-use jirs_data::{ProjectId, User, UsersFieldId};
-
-use crate::{
-    shared::{
-        styled_image_input::StyledImageInputState, styled_input::StyledInputState,
-        styled_select::StyledSelectState,
+use {
+    crate::{
+        shared::{
+            styled_image_input::StyledImageInputState, styled_input::StyledInputState,
+            styled_select::StyledSelectState,
+        },
+        FieldId,
     },
-    FieldId,
+    jirs_data::{ProjectId, User, UsersFieldId},
 };
 
 #[derive(Debug)]

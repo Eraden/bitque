@@ -1,16 +1,15 @@
-use std::str::FromStr;
-
-use seed::{prelude::*, *};
-use uuid::Uuid;
-
-use jirs_data::{SignInFieldId, WsMsg};
-
-use crate::pages::sign_in_page::model::SignInPage;
-use crate::{
-    model::{self, Model, Page, PageContent},
-    shared::write_auth_token,
-    ws::send_ws_msg,
-    FieldId, Msg, WebSocketChanged,
+use {
+    crate::{
+        model::{self, Model, Page, PageContent},
+        pages::sign_in_page::model::SignInPage,
+        shared::write_auth_token,
+        ws::send_ws_msg,
+        FieldId, Msg, WebSocketChanged,
+    },
+    jirs_data::{SignInFieldId, WsMsg},
+    seed::{prelude::*, *},
+    std::str::FromStr,
+    uuid::Uuid,
 };
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {

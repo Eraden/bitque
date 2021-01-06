@@ -1,16 +1,16 @@
-use seed::{prelude::*, *};
-
-use jirs_data::{InvitationState, ToVec, UserRole, UsersFieldId};
-
-use crate::{
-    model::{InvitationFormState, Model, PageContent},
-    shared::{
-        inner_layout, styled_button::StyledButton, styled_field::StyledField,
-        styled_form::StyledForm, styled_input::StyledInput, styled_select::StyledSelect, ToChild,
-        ToNode,
+use {
+    crate::{
+        model::{InvitationFormState, Model, PageContent},
+        shared::{
+            inner_layout, styled_button::StyledButton, styled_field::StyledField,
+            styled_form::StyledForm, styled_input::StyledInput, styled_select::StyledSelect,
+            ToChild, ToNode,
+        },
+        validations::is_email,
+        FieldId, Msg, PageChanged, UsersPageChange,
     },
-    validations::is_email,
-    FieldId, Msg, PageChanged, UsersPageChange,
+    jirs_data::{InvitationState, ToVec, UserRole, UsersFieldId},
+    seed::{prelude::*, *},
 };
 
 pub fn view(model: &Model) -> Node<Msg> {

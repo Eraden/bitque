@@ -15,7 +15,7 @@ use {
     seed::{prelude::*, *},
 };
 
-pub fn view(model: &Model, modal: &Box<AddIssueModal>) -> Node<Msg> {
+pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let issue_type = modal
         .type_state
         .values
@@ -64,11 +64,8 @@ pub fn view(model: &Model, modal: &Box<AddIssueModal>) -> Node<Msg> {
             let reporter_field = reporter_field(model, modal);
             let assignees_field = assignees_field(model, modal);
             let issue_priority_field = issue_priority_field(modal);
-            let epic_field = epic_field(
-                model,
-                modal.as_ref(),
-                FieldId::AddIssueModal(IssueFieldId::EpicName),
-            );
+            let epic_field =
+                epic_field(model, modal, FieldId::AddIssueModal(IssueFieldId::EpicName));
 
             form.add_field(short_summary_field)
                 .add_field(description_field)
@@ -120,7 +117,7 @@ pub fn view(model: &Model, modal: &Box<AddIssueModal>) -> Node<Msg> {
         .into_node()
 }
 
-fn issue_type_field(modal: &Box<AddIssueModal>) -> Node<Msg> {
+fn issue_type_field(modal: &AddIssueModal) -> Node<Msg> {
     let select_type = StyledSelect::build()
         .name("type")
         .normal()
@@ -148,7 +145,8 @@ fn issue_type_field(modal: &Box<AddIssueModal>) -> Node<Msg> {
         .into_node()
 }
 
-fn short_summary_field(modal: &Box<AddIssueModal>) -> Node<Msg> {
+#[inline]
+fn short_summary_field(modal: &AddIssueModal) -> Node<Msg> {
     let short_summary = StyledInput::build()
         .state(&modal.title_state)
         .build(FieldId::AddIssueModal(IssueFieldId::Title))

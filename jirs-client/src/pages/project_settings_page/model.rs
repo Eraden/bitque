@@ -1,11 +1,12 @@
-use jirs_data::{IssueStatusId, Project, ProjectFieldId, UpdateProjectPayload};
-
-use crate::{
-    shared::{
-        drag::DragState, styled_checkbox::StyledCheckboxState, styled_input::StyledInputState,
-        styled_select::StyledSelectState,
+use {
+    crate::{
+        shared::{
+            drag::DragState, styled_checkbox::StyledCheckboxState, styled_input::StyledInputState,
+            styled_select::StyledSelectState,
+        },
+        FieldId,
     },
-    FieldId,
+    jirs_data::{IssueStatusId, Project, ProjectFieldId, UpdateProjectPayload},
 };
 
 #[derive(Debug)]
@@ -18,7 +19,6 @@ pub struct ProjectSettingsPage {
     pub edit_column_id: Option<IssueStatusId>,
     pub creating_issue_status: bool,
     pub name: StyledInputState,
-    // pub description_rte: StyledRteState,
 }
 
 impl ProjectSettingsPage {
@@ -58,9 +58,6 @@ impl ProjectSettingsPage {
                 FieldId::ProjectSettings(ProjectFieldId::IssueStatusName),
                 "",
             ),
-            // description_rte: StyledRteState::new(FieldId::ProjectSettings(
-            //     ProjectFieldId::Description,
-            // )),
         }
     }
 

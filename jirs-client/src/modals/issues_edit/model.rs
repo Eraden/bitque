@@ -1,18 +1,17 @@
 use {
     crate::{
-        modal::time_tracking::value_for_time_tracking,
+        modals::time_tracking::value_for_time_tracking,
         model::{CommentForm, IssueModal},
         shared::{
             styled_date_time_input::StyledDateTimeInputState, styled_editor::Mode,
-            styled_input::StyledInputState, styled_select::StyledSelectState,
+            styled_editor::StyledEditorState, styled_input::StyledInputState,
+            styled_select::StyledSelectState,
         },
         EditIssueModalSection, FieldId, Msg,
     },
     jirs_data::{Issue, IssueFieldId, IssueId, TimeTracking, UpdateIssuePayload},
     seed::prelude::*,
 };
-
-use crate::shared::styled_editor::StyledEditorState;
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct Model {

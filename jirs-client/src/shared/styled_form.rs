@@ -1,7 +1,7 @@
-use seed::{prelude::*, *};
-
-use crate::shared::ToNode;
-use crate::Msg;
+use {
+    crate::{shared::ToNode, Msg},
+    seed::{prelude::*, *},
+};
 
 #[derive(Debug, Clone)]
 pub struct StyledForm<'l> {
@@ -11,12 +11,14 @@ pub struct StyledForm<'l> {
 }
 
 impl<'l> StyledForm<'l> {
+    #[inline]
     pub fn build() -> StyledFormBuilder<'l> {
         StyledFormBuilder::default()
     }
 }
 
 impl<'l> ToNode for StyledForm<'l> {
+    #[inline]
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
@@ -30,11 +32,13 @@ pub struct StyledFormBuilder<'l> {
 }
 
 impl<'l> StyledFormBuilder<'l> {
+    #[inline]
     pub fn add_field(mut self, node: Node<Msg>) -> Self {
         self.fields.push(node);
         self
     }
 
+    #[inline]
     pub fn try_field(mut self, node: Option<Node<Msg>>) -> Self {
         if let Some(n) = node {
             self.fields.push(n);
@@ -42,16 +46,19 @@ impl<'l> StyledFormBuilder<'l> {
         self
     }
 
+    #[inline]
     pub fn heading(mut self, heading: &'l str) -> Self {
         self.heading = heading;
         self
     }
 
+    #[inline]
     pub fn on_submit(mut self, on_submit: EventHandler<Msg>) -> Self {
         self.on_submit = Some(on_submit);
         self
     }
 
+    #[inline]
     pub fn build(self) -> StyledForm<'l> {
         StyledForm {
             heading: self.heading,
@@ -61,6 +68,7 @@ impl<'l> StyledFormBuilder<'l> {
     }
 }
 
+#[inline]
 pub fn render(values: StyledForm) -> Node<Msg> {
     let StyledForm {
         heading,
@@ -73,7 +81,7 @@ pub fn render(values: StyledForm) -> Node<Msg> {
     };
     seed::form![
         handlers,
-        attrs![At::Class => "styledForm"],
+        C!["styledForm"],
         div![C!["formElement"], div![C!["formHeading"], heading], fields],
     ]
 }

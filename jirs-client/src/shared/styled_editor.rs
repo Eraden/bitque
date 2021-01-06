@@ -38,6 +38,7 @@ pub struct StyledEditor {
 }
 
 impl StyledEditor {
+    #[inline]
     pub fn build(id: FieldId) -> StyledEditorBuilder {
         StyledEditorBuilder {
             id,
@@ -61,6 +62,7 @@ pub struct StyledEditorBuilder {
 }
 
 impl StyledEditorBuilder {
+    #[inline]
     pub fn text<S>(mut self, text: S) -> Self
     where
         S: Into<String>,
@@ -69,6 +71,7 @@ impl StyledEditorBuilder {
         self
     }
 
+    #[inline]
     pub fn initial_text<S>(mut self, text: S) -> Self
     where
         S: Into<String>,
@@ -77,6 +80,7 @@ impl StyledEditorBuilder {
         self
     }
 
+    #[inline]
     pub fn html<S>(mut self, text: S) -> Self
     where
         S: Into<String>,
@@ -85,11 +89,13 @@ impl StyledEditorBuilder {
         self
     }
 
+    #[inline]
     pub fn mode(mut self, mode: Mode) -> Self {
         self.mode = mode;
         self
     }
 
+    #[inline]
     pub fn build(self) -> StyledEditor {
         StyledEditor {
             id: self.id,
@@ -101,6 +107,7 @@ impl StyledEditorBuilder {
         }
     }
 
+    #[inline]
     pub fn update_on(mut self, ev: Ev) -> Self {
         self.update_event = Some(ev);
         self
@@ -108,11 +115,13 @@ impl StyledEditorBuilder {
 }
 
 impl ToNode for StyledEditor {
+    #[inline]
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
+#[inline]
 pub fn render(values: StyledEditor) -> Node<Msg> {
     let StyledEditor {
         id,

@@ -1,7 +1,5 @@
 use actix::{Actor, SyncContext};
 
-// use lettre;
-
 pub mod invite;
 pub mod welcome;
 
@@ -27,15 +25,18 @@ impl Default for MailExecutor {
 }
 
 fn mail_client(config: &jirs_config::mail::Configuration) -> lettre::SmtpClient {
-    let mail_user = config.user.as_str();
-    let mail_pass = config.pass.as_str();
-    let mail_host = config.host.as_str();
+    let jirs_config::mail::Configuration {
+        user: mail_user,
+        pass: mail_pass,
+        host: mail_host,
+        ..
+    } = &config;
 
     lettre::SmtpClient::new_simple(mail_host)
         .expect("Failed to init SMTP client")
         .credentials(lettre::smtp::authentication::Credentials::new(
-            mail_user.to_string(),
-            mail_pass.to_string(),
+            mail_user.clone(),
+            mail_pass.clone(),
         ))
         .connection_reuse(lettre::smtp::ConnectionReuseParameters::ReuseUnlimited)
         .smtp_utf8(true)

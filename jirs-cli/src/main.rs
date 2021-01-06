@@ -1,16 +1,21 @@
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{mpsc, Arc};
-use std::time::Duration;
-use std::{error::Error, io /*, thread*/};
-
-// use termion::input::TermRead;
-use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
-use tui::{
-    backend::TermionBackend,
-    layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
-    widgets::{Block, Borders, Tabs},
-    Terminal,
+use {
+    std::{
+        error::Error,
+        io,
+        sync::{
+            atomic::{AtomicBool, Ordering},
+            mpsc, Arc,
+        },
+        time::Duration,
+    },
+    termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen},
+    tui::{
+        backend::TermionBackend,
+        layout::{Constraint, Direction, Layout},
+        style::{Color, Style},
+        widgets::{Block, Borders, Tabs},
+        Terminal,
+    },
 };
 
 #[derive(Debug, Clone, Copy)]

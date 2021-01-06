@@ -1,21 +1,21 @@
-use seed::{prelude::*, *};
-
-use jirs_data::SignUpFieldId;
-
-use crate::{
-    model::{self, PageContent},
-    shared::{
-        outer_layout,
-        styled_button::StyledButton,
-        styled_field::StyledField,
-        styled_form::StyledForm,
-        styled_icon::{Icon, StyledIcon},
-        styled_input::StyledInput,
-        styled_link::StyledLink,
-        ToNode,
+use {
+    crate::{
+        model::{self, PageContent},
+        shared::{
+            outer_layout,
+            styled_button::StyledButton,
+            styled_field::StyledField,
+            styled_form::StyledForm,
+            styled_icon::{Icon, StyledIcon},
+            styled_input::StyledInput,
+            styled_link::StyledLink,
+            ToNode,
+        },
+        validations::is_email,
+        FieldId, Msg,
     },
-    validations::is_email,
-    FieldId, Msg,
+    jirs_data::SignUpFieldId,
+    seed::{prelude::*, *},
 };
 
 pub fn view(model: &model::Model) -> Node<Msg> {

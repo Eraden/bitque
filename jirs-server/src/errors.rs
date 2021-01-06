@@ -1,6 +1,7 @@
-use actix_web::HttpResponse;
-
-use jirs_data::{msg::WsError, ErrorResponse};
+use {
+    actix_web::HttpResponse,
+    jirs_data::{msg::WsError, ErrorResponse},
+};
 
 const TOKEN_NOT_FOUND: &str = "Token not found";
 const DATABASE_CONNECTION_FAILED: &str = "Database connection failed";

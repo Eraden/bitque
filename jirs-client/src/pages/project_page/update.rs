@@ -4,13 +4,12 @@ use {
         pages::project_page::model::ProjectPage,
         shared::styled_select::StyledSelectChanged,
         ws::{board_load, send_ws_msg},
-        BoardPageChange, EditIssueModalSection, FieldId, Msg, PageChanged, WebSocketChanged,
+        BoardPageChange, EditIssueModalSection, FieldId, Msg, OperationKind, PageChanged,
+        ResourceKind,
     },
     jirs_data::*,
     seed::prelude::Orders,
 };
-
-use crate::{OperationKind, ResourceKind};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     if model.user.is_none() {
@@ -32,8 +31,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
     };
 
     match msg {
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)))
-        | Msg::UserChanged(..)
+        Msg::UserChanged(..)
         | Msg::ProjectChanged(Some(..))
         | Msg::ChangePage(Page::Project)
         | Msg::ChangePage(Page::AddIssue)

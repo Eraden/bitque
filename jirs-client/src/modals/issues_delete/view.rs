@@ -1,9 +1,10 @@
-use seed::{prelude::*, *};
-
-use crate::model::ModalType;
-use crate::shared::styled_confirm_modal::StyledConfirmModal;
-use crate::shared::ToNode;
-use crate::{model, Msg};
+use {
+    crate::{
+        model, model::ModalType, shared::styled_confirm_modal::StyledConfirmModal, shared::ToNode,
+        Msg,
+    },
+    seed::{prelude::*, *},
+};
 
 pub fn view(model: &model::Model) -> Node<Msg> {
     let opt_id = model

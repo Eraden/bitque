@@ -1,13 +1,13 @@
-use seed::prelude::*;
-
-use jirs_data::WsMsg;
-
-use crate::pages::reports_page::model::ReportsPage;
-use crate::{
-    changes::{PageChanged, ReportsPageChange},
-    model::{Model, Page, PageContent},
-    ws::board_load,
-    Msg, WebSocketChanged,
+use {
+    crate::{
+        changes::{PageChanged, ReportsPageChange},
+        model::{Model, Page, PageContent},
+        pages::reports_page::model::ReportsPage,
+        ws::board_load,
+        Msg, WebSocketChanged,
+    },
+    jirs_data::WsMsg,
+    seed::prelude::*,
 };
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {

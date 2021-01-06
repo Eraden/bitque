@@ -1,5 +1,7 @@
-use rusoto_signature::Region;
-use serde::{Deserialize, Serialize};
+use {
+    rusoto_signature::Region,
+    serde::{Deserialize, Serialize},
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Configuration {

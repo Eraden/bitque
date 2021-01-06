@@ -1,15 +1,14 @@
-use std::collections::HashMap;
-
-use chrono::Datelike;
-use seed::{prelude::*, *};
-
-use jirs_data::Issue;
-
-use crate::pages::reports_page::model::ReportsPage;
-use crate::{
-    model::{Model, PageContent},
-    shared::{inner_layout, styled_icon::StyledIcon, ToNode},
-    Msg, PageChanged, ReportsPageChange,
+use {
+    crate::{
+        model::{Model, PageContent},
+        pages::reports_page::model::ReportsPage,
+        shared::{inner_layout, styled_icon::StyledIcon, ToNode},
+        Msg, PageChanged, ReportsPageChange,
+    },
+    chrono::Datelike,
+    jirs_data::Issue,
+    seed::{prelude::*, *},
+    std::collections::HashMap,
 };
 
 const SVG_MARGIN_X: u32 = 10;
