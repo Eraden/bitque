@@ -104,19 +104,15 @@ fn render(values: StyledImageInput) -> Node<Msg> {
     let input_id = id.to_string();
 
     div![
-        class!["styledImageInput"],
+        C!["styledImageInput"],
         attrs![At::Class => class_list.join(" ")],
         label![
-            class!["label"],
+            C!["label"],
             attrs![At::For => input_id],
-            img![
-                class!["mask"],
-                attrs![At::Src => url.unwrap_or_default()],
-                " "
-            ]
+            img![C!["mask"], attrs![At::Src => url.unwrap_or_default()], " "]
         ],
         input![
-            class!["input"],
+            C!["input"],
             attrs![At::Type => "file", At::Id => input_id],
             on_change
         ]

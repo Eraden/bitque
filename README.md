@@ -42,6 +42,14 @@ https://git.sr.ht/~tsumanu/jirs
 * Add personal settings to choose MDE (Markdown Editor) or RTE
 * Add issues and filters
 
+##### Version 1.1.1
+
+* Refactor actors
+* Extract code highlight to server actor
+* Handle upload avatar with stream
+* Move config to `./config` directory
+* Fix S3 upload with upgraded version of `rusoto`
+
 ##### Work Progress
 
 * [X] Add Epic

@@ -223,18 +223,14 @@ pub fn render(values: StyledInput) -> Node<Msg> {
             Msg::StrInputChanged(field_id, value)
         })
     };
-    let on_keyup = {
-        ev(Ev::KeyUp, move |event| {
-            event.stop_propagation();
-            None as Option<Msg>
-        })
-    };
-    let on_click = {
-        ev(Ev::Click, move |event| {
-            event.stop_propagation();
-            None as Option<Msg>
-        })
-    };
+    let on_keyup = ev(Ev::KeyUp, move |event| {
+        event.stop_propagation();
+        None as Option<Msg>
+    });
+    let on_click = ev(Ev::Click, move |event| {
+        event.stop_propagation();
+        None as Option<Msg>
+    });
 
     div![
         C!["styledInput"],
@@ -251,7 +247,7 @@ pub fn render(values: StyledInput) -> Node<Msg> {
                 At::Id => format!("{}", id),
                 At::Class => input_class_list.join(" "),
                 At::Value => value.unwrap_or_default(),
-                At::Type => input_type.unwrap_or_else(|| "text"),
+                At::Type => input_type.unwrap_or("text"),
 
             ],
             if auto_focus {

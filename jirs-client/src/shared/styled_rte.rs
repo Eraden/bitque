@@ -682,7 +682,7 @@ fn first_row(click_handler: EventHandler<Msg>) -> Node<Msg> {
             click_handler.clone(),
         );
         div![
-            class!["group justify"],
+            C!["group justify"],
             justify_all_button,
             justify_center_button,
             justify_left_button,
@@ -723,7 +723,7 @@ fn first_row(click_handler: EventHandler<Msg>) -> Node<Msg> {
             }),
         );*/
         div![
-            class!["group system"],
+            C!["group system"],
             // clip_board_button,
             // copy_button,
             // cut_button,
@@ -777,7 +777,7 @@ fn first_row(click_handler: EventHandler<Msg>) -> Node<Msg> {
         );
 
         div![
-            class!["group formatting"],
+            C!["group formatting"],
             bold_button,
             italic_button,
             underline_button,
@@ -788,7 +788,7 @@ fn first_row(click_handler: EventHandler<Msg>) -> Node<Msg> {
         ]
     };
 
-    div![class!["row firstRow"], system, formatting, justify]
+    div![C!["row firstRow"], system, formatting, justify]
 }
 
 fn second_row(
@@ -825,7 +825,7 @@ fn second_row(
             }),
         );
         div![
-            class!["group align"],
+            C!["group align"],
             align_center_button,
             align_left_button,
             align_right_button,
@@ -848,10 +848,10 @@ fn second_row(
                     .empty()
                     .build()
                     .into_node();
-                span![class!["headingOption"], button]
+                span![C!["headingOption"], button]
             })
             .collect();
-        let heading_button = span![class!["headingList"], options];
+        let heading_button = span![C!["headingList"], options];
 
         /*let _field_id = values.field_id.clone();
         let _small_cap_button = styled_rte_button(
@@ -872,7 +872,7 @@ fn second_row(
             }),
         );*/
         div![
-            class!["group font"],
+            C!["group font"],
             // font_button,
             heading_button,
             // small_cap_button,
@@ -924,7 +924,7 @@ fn second_row(
         code_alt_button.add_child(code_tooltip(values, click_handler.clone()));
 
         div![
-            class!["group insert"],
+            C!["group insert"],
             paragraph_button,
             table_button,
             code_alt_button,
@@ -943,11 +943,11 @@ fn second_row(
         );
         let outdent_button =
             styled_rte_button("Outdent", ButtonId::Outdent, Icon::Outdent, click_handler);
-        div![class!["group indentOutdent"], indent_button, outdent_button]
+        div![C!["group indentOutdent"], indent_button, outdent_button]
     };
 
     div![
-        class!["row secondRow"],
+        C!["row secondRow"],
         font_group,
         // align_group,
         insert_group,
@@ -1000,15 +1000,15 @@ fn table_tooltip(
     let on_submit = click_handler;
 
     StyledTooltip::build()
-    .table_tooltip()
-    .visible(visible)
-    .add_child(h2![span!["Add table"], close_table_tooltip])
-    .add_child(div![class!["inputs"], span!["Rows"], seed::input![
+        .table_tooltip()
+        .visible(visible)
+        .add_child(h2![span!["Add table"], close_table_tooltip])
+        .add_child(div![C!["inputs"], span!["Rows"], seed::input![
                 attrs![At::Type => "range"; At::Step => "1"; At::Min => "1"; At::Max => "10"; At::Value => rows],
                 on_rows_change
             ]])
     .add_child(div![
-            class!["inputs"],
+            C!["inputs"],
             span!["Columns"],
             seed::input![
                 attrs![At::Type => "range"; At::Step => "1"; At::Min => "1"; At::Max => "10"; At::Value => cols],
@@ -1025,7 +1025,7 @@ fn table_tooltip(
         })
         .collect();
       seed::div![
-                class!["tablePreview"],
+                C!["tablePreview"],
                 seed::table![tbody![body]],
                 input![attrs![At::Type => "button"; At::Id => "rteInsertTable"; At::Value => "Insert"], on_submit],
             ]
@@ -1121,9 +1121,5 @@ fn styled_rte_button(
         .empty()
         .build()
         .into_node();
-    span![
-        class!["styledRteButton"],
-        attrs![At::Title => title],
-        button
-    ]
+    span![C!["styledRteButton"], attrs![At::Title => title], button]
 }

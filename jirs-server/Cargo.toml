@@ -13,8 +13,8 @@ name = "jirs_server"
 path = "./src/main.rs"
 
 [features]
-aws-s3 = []
-local-storage = []
+aws-s3 = ["amazon-actor"]
+local-storage = ["filesystem-actor"]
 default = [
     "aws-s3",
     "local-storage",
@@ -83,20 +83,11 @@ path = "../actors/mail-actor"
 
 [dependencies.filesystem-actor]
 path = "../actors/filesystem-actor"
+optional = true
 
-# Amazon S3
-#[dependencies.rusoto_s3]
-#optional = true
-#version = "0.43.0"
-#
-#[dependencies.rusoto_core]
-#optional = true
-#version = "0.43.0"
-
-# Local storage
-#[dependencies.actix-files]
-#optional = true
-#version = "*"
+[dependencies.amazon-actor]
+path = "../actors/amazon-actor"
+optional = true
 
 [dependencies.tokio]
 version = "0.2.23"

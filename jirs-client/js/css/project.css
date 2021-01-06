@@ -84,9 +84,13 @@
     color: var(--textMedium);
 }
 
+#projectPage > .rows > .row > .epicName {
+    margin: 18px 0 10px 0;
+}
+
 #projectPage > .rows > .row > .projectBoardLists {
     display: flex;
-    margin: 26px -5px 0;
+    margin: 10px -5px 0;
     position: relative;
     flex-direction: column;
 }

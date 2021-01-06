@@ -11,6 +11,7 @@ pub fn board_load(model: &mut Model, orders: &mut impl Orders<Msg>) {
         vec![
             WsMsg::IssueStatusesLoad,
             WsMsg::ProjectIssuesLoad,
+            WsMsg::ProjectUsersLoad,
             WsMsg::EpicsLoad,
         ],
         model.ws.as_ref(),

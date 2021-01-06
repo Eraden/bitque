@@ -3,8 +3,7 @@ use seed::{prelude::*, *};
 use jirs_data::{TimeTracking, WsMsg};
 
 use crate::{
-    modal::issues::*,
-    model::{self, AddIssueModal, EditIssueModal, ModalType, Model, Page},
+    model::{self, ModalType, Model, Page},
     shared::{
         find_issue, go_to_board,
         styled_confirm_modal::StyledConfirmModal,
@@ -18,7 +17,6 @@ use crate::{
 mod confirm_delete_issue;
 #[cfg(debug_assertions)]
 mod debug_modal;
-mod delete_issue_status;
 pub mod issues;
 pub mod time_tracking;
 
@@ -57,7 +55,7 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
         }
 
         Msg::ChangePage(Page::AddIssue) => {
-            let mut modal = AddIssueModal::default();
+            let mut modal = crate::modals::issues_create::Model::default();
             modal.project_id = model.project.as_ref().map(|p| p.id);
             model.modals.push(ModalType::AddIssue(Box::new(modal)));
         }
@@ -69,24 +67,31 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
 
         #[cfg(debug_assertions)]
         Msg::GlobalKeyDown { key, .. } if key.eq(">") => {
+            orders.skip();
             log!(model);
+        }
+        Msg::GlobalKeyDown { .. } => {
+            orders.skip();
         }
 
         _ => (),
     }
-    add_issue::update(msg, model, orders);
-    issue_details::update(msg, model, orders);
-    delete_issue_status::update(msg, model, orders);
+
+    use crate::modals::{issue_statuses_delete, issues_create, issues_edit};
+    issues_create::update(msg, model, orders);
+    issues_edit::update(msg, model, orders);
+    issue_statuses_delete::update(msg, model, orders);
 }
 
 pub fn view(model: &model::Model) -> Node<Msg> {
+    use crate::modals::{issue_statuses_delete, issues_create, issues_edit};
     let modals: Vec<Node<Msg>> = model
         .modals
         .iter()
         .map(|modal| match modal {
             ModalType::EditIssue(issue_id, modal) => {
                 if let Some(_issue) = find_issue(model, *issue_id) {
-                    let details = issue_details::view(model, &modal);
+                    let details = issues_edit::view(model, modal.as_ref());
                     StyledModal::build()
                         .variant(ModalVariant::Center)
                         .width(1040)
@@ -98,7 +103,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
                 }
             }
             ModalType::DeleteIssueConfirm(_id) => confirm_delete_issue::view(model),
-            ModalType::AddIssue(modal) => add_issue::view(model, modal),
+            ModalType::AddIssue(modal) => issues_create::view(model, modal),
             ModalType::DeleteCommentConfirm(comment_id) => {
                 let comment_id = *comment_id;
                 StyledConfirmModal::build()
@@ -111,7 +116,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             }
             ModalType::TimeTracking(issue_id) => time_tracking::view(model, *issue_id),
             ModalType::DeleteIssueStatusModal(delete_issue_modal) => {
-                delete_issue_status::view(model, delete_issue_modal.delete_id)
+                issue_statuses_delete::view(model, delete_issue_modal.delete_id)
             }
             #[cfg(debug_assertions)]
             ModalType::DebugModal => debug_modal::view(model),
@@ -133,7 +138,10 @@ fn push_edit_modal(issue_id: i32, model: &mut Model, orders: &mut impl Orders<Ms
         };
         ModalType::EditIssue(
             issue_id,
-            Box::new(EditIssueModal::new(issue, time_tracking_type)),
+            Box::new(crate::modals::issues_edit::Model::new(
+                issue,
+                time_tracking_type,
+            )),
         )
     };
     send_ws_msg(

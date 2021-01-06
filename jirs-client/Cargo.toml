@@ -13,12 +13,14 @@ crate-type = ["cdylib", "rlib"]
 name = "jirs_client"
 path = "src/lib.rs"
 
+[features]
+print-model = []
+default = []
+
 [dependencies]
 jirs-data = { path = "../shared/jirs-data", features = ["frontend"] }
 
-wee_alloc = "*"
-
-seed = { version = "0.7.0" }
+seed = { version = "0.8.0" }
 
 serde = { version = "*" }
 serde_json = { version = "*" }
@@ -27,7 +29,10 @@ bincode = { version = "*" }
 chrono = { version = "0.4", default-features = false, features = ["serde", "wasmbind"] }
 uuid = { version = "0.8.1", features = ["serde"] }
 futures = "^0.1.26"
-comrak = "*"
+
+[dependencies.wee_alloc]
+version = "*"
+features = ["static_array_backend"]
 
 [dependencies.wasm-bindgen]
 version = "*"

@@ -5,8 +5,9 @@ const wsUrl = () => `${getProtocol()}//${getWsHostName()}:${process.env.JIRS_SER
 import("/jirs.js").then(async module => {
     // window.module = module;
     await module.default();
-    const host_url = `${location.protocol}//${process.env.JIRS_SERVER_BIND}:${process.env.JIRS_SERVER_PORT}`;
+    const host_url = `${ location.protocol }//${ process.env.JIRS_SERVER_BIND }:${ process.env.JIRS_SERVER_PORT }`;
     module.render(host_url, wsUrl());
     document.querySelector('main').className = '';
-    document.querySelector('.spinner').remove();
+    const spinner = document.querySelector('.spinner');
+    spinner && spinner.remove();
 });

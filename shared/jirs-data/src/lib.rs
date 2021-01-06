@@ -13,7 +13,7 @@ pub use payloads::*;
 #[cfg(feature = "backend")]
 pub use sql::*;
 
-mod fields;
+pub mod fields;
 pub mod msg;
 mod payloads;
 
@@ -28,15 +28,18 @@ pub trait ToVec {
 pub type NumberOfDeleted = usize;
 pub type IssueId = i32;
 pub type ProjectId = i32;
+pub type ProjectName = String;
 pub type UserId = i32;
 pub type UserProjectId = i32;
 pub type CommentId = i32;
 pub type TokenId = i32;
 pub type IssueStatusId = i32;
+pub type IssueStatusName = String;
 pub type InvitationId = i32;
 pub type Position = i32;
 pub type MessageId = i32;
 pub type EpicId = i32;
+pub type EpicName = String;
 
 pub type EmailString = String;
 pub type UsernameString = String;
@@ -564,4 +567,37 @@ pub struct Epic {
     pub updated_at: NaiveDateTime,
     pub starts_at: Option<NaiveDateTime>,
     pub ends_at: Option<NaiveDateTime>,
+}
+
+pub type FontStyle = u8;
+
+pub static BOLD: FontStyle = 1;
+pub static UNDERLINE: FontStyle = 2;
+pub static ITALIC: FontStyle = 4;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Color {
+    /// Red component
+    pub r: u8,
+    /// Green component
+    pub g: u8,
+    /// Blue component
+    pub b: u8,
+    /// Alpha (transparency) component
+    pub a: u8,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct Style {
+    /// Foreground color
+    pub foreground: Color,
+    /// Background color
+    pub background: Color,
+    /// Style of the font
+    pub font_style: FontStyle,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct HighlightedCode {
+    pub parts: Vec<(Style, String)>,
 }

@@ -1,26 +1,24 @@
-use std::collections::hash_map::HashMap;
-
-use chrono::{prelude::*, NaiveDate};
-use seed::app::Orders;
-use seed::browser::web_socket::WebSocket;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
-use jirs_data::*;
-
-use crate::{
-    modal::time_tracking::value_for_time_tracking,
-    shared::{
-        drag::DragState, styled_checkbox::StyledCheckboxState,
-        styled_date_time_input::StyledDateTimeInputState, styled_editor::Mode,
-        styled_image_input::StyledImageInputState, styled_input::StyledInputState,
-        /*styled_rte::StyledRteState,*/ styled_select::StyledSelectState,
+use {
+    crate::{
+        pages::{
+            invite_page::InvitePage, profile_page::model::ProfilePage,
+            project_page::model::ProjectPage, project_settings_page::ProjectSettingsPage,
+            reports_page::model::ReportsPage, sign_in_page::model::SignInPage,
+            sign_up_page::model::SignUpPage, users_page::model::UsersPage,
+        },
+        shared::styled_select::StyledSelectState,
+        Msg,
     },
-    EditIssueModalSection, FieldId, Msg, ProjectFieldId,
+    jirs_data::*,
+    seed::{app::Orders, browser::web_socket::WebSocket},
+    serde::{Deserialize, Serialize},
+    std::collections::hash_map::HashMap,
+    uuid::Uuid,
 };
 
 pub trait IssueModal {
     fn epic_id_value(&self) -> Option<u32>;
+
     fn epic_state(&self) -> &StyledSelectState;
 
     fn update_states(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>);
@@ -28,12 +26,12 @@ pub trait IssueModal {
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
-    AddIssue(Box<AddIssueModal>),
-    EditIssue(IssueId, Box<EditIssueModal>),
+    AddIssue(Box<crate::modals::issues_create::Model>),
+    EditIssue(IssueId, Box<crate::modals::issues_edit::Model>),
     DeleteIssueConfirm(IssueId),
     DeleteCommentConfirm(CommentId),
     TimeTracking(IssueId),
-    DeleteIssueStatusModal(Box<DeleteIssueStatusModal>),
+    DeleteIssueStatusModal(Box<crate::modals::issue_statuses_delete::Model>),
     #[cfg(debug_assertions)]
     DebugModal,
 }
@@ -43,259 +41,6 @@ pub struct CommentForm {
     pub id: Option<CommentId>,
     pub body: String,
     pub creating: bool,
-}
-
-#[derive(Clone, Debug, PartialOrd, PartialEq)]
-pub struct DeleteIssueStatusModal {
-    pub delete_id: IssueStatusId,
-    pub receiver_id: Option<IssueStatusId>,
-}
-
-impl DeleteIssueStatusModal {
-    pub fn new(delete_id: IssueStatusId) -> Self {
-        Self {
-            delete_id,
-            receiver_id: None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialOrd, PartialEq)]
-pub struct EditIssueModal {
-    pub id: IssueId,
-    pub link_copied: bool,
-    pub payload: UpdateIssuePayload,
-    pub top_type_state: StyledSelectState,
-    pub status_state: StyledSelectState,
-    pub reporter_state: StyledSelectState,
-    pub assignees_state: StyledSelectState,
-    pub priority_state: StyledSelectState,
-    pub epic_name_state: StyledSelectState,
-    pub epic_starts_at_state: StyledDateTimeInputState,
-    pub epic_ends_at_state: StyledDateTimeInputState,
-
-    pub estimate: StyledInputState,
-    pub estimate_select: StyledSelectState,
-    pub time_spent: StyledInputState,
-    pub time_spent_select: StyledSelectState,
-    pub time_remaining: StyledInputState,
-    pub time_remaining_select: StyledSelectState,
-
-    pub description_editor_mode: Mode,
-
-    // comments
-    pub comment_form: CommentForm,
-}
-
-impl IssueModal for EditIssueModal {
-    fn epic_id_value(&self) -> Option<u32> {
-        self.epic_name_state.values.get(0).cloned()
-    }
-
-    fn epic_state(&self) -> &StyledSelectState {
-        &self.epic_name_state
-    }
-
-    fn update_states(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
-        self.top_type_state.update(msg, orders);
-        self.status_state.update(msg, orders);
-        self.reporter_state.update(msg, orders);
-        self.assignees_state.update(msg, orders);
-        self.priority_state.update(msg, orders);
-        self.estimate.update(msg);
-        self.estimate_select.update(msg, orders);
-        self.time_spent.update(msg);
-        self.time_spent_select.update(msg, orders);
-        self.time_remaining.update(msg);
-        self.time_remaining_select.update(msg, orders);
-        self.epic_name_state.update(msg, orders);
-    }
-}
-
-impl EditIssueModal {
-    pub fn new(issue: &Issue, time_tracking_type: TimeTracking) -> Self {
-        Self {
-            id: issue.id,
-            link_copied: false,
-            payload: UpdateIssuePayload {
-                title: issue.title.clone(),
-                issue_type: issue.issue_type,
-                issue_status_id: issue.issue_status_id,
-                priority: issue.priority,
-                list_position: issue.list_position,
-                description: issue.description.clone(),
-                description_text: issue.description_text.clone(),
-                estimate: issue.estimate,
-                time_spent: issue.time_spent,
-                time_remaining: issue.time_remaining,
-                project_id: issue.project_id,
-                reporter_id: issue.reporter_id,
-                user_ids: issue.user_ids.clone(),
-            },
-            top_type_state: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
-                issue.estimate.map(|v| vec![v as u32]).unwrap_or_default(),
-            ),
-            status_state: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::IssueStatusId)),
-                vec![issue.issue_status_id as u32],
-            ),
-            reporter_state: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Reporter)),
-                vec![issue.reporter_id as u32],
-            ),
-            assignees_state: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
-                issue.user_ids.iter().map(|n| *n as u32).collect(),
-            ),
-            priority_state: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Priority)),
-                vec![issue.priority.into()],
-            ),
-            estimate: StyledInputState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
-                value_for_time_tracking(&issue.estimate, &time_tracking_type),
-            ),
-            estimate_select: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Estimate)),
-                issue.estimate.map(|n| vec![n as u32]).unwrap_or_default(),
-            ),
-            time_spent: StyledInputState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
-                value_for_time_tracking(&issue.time_spent, &time_tracking_type),
-            ),
-            time_spent_select: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeSpent)),
-                issue.time_spent.map(|n| vec![n as u32]).unwrap_or_default(),
-            ),
-            time_remaining: StyledInputState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
-                value_for_time_tracking(&issue.time_remaining, &time_tracking_type),
-            ),
-            time_remaining_select: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::TimeRemaining)),
-                issue
-                    .time_remaining
-                    .map(|n| vec![n as u32])
-                    .unwrap_or_default(),
-            ),
-            description_editor_mode: Mode::View,
-            comment_form: CommentForm {
-                id: None,
-                body: String::new(),
-                creating: false,
-            },
-            // epic
-            epic_name_state: StyledSelectState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::EpicName)),
-                issue
-                    .epic_id
-                    .as_ref()
-                    .map(|id| vec![*id as u32])
-                    .unwrap_or_default(),
-            ),
-            epic_starts_at_state: StyledDateTimeInputState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::EpicStartsAt)),
-                None,
-            ),
-            epic_ends_at_state: StyledDateTimeInputState::new(
-                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::EpicStartsAt)),
-                None,
-            ),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialOrd, PartialEq)]
-pub struct AddIssueModal {
-    pub priority: IssuePriority,
-    pub description: Option<String>,
-    pub description_text: Option<String>,
-    pub estimate: Option<i32>,
-    pub time_spent: Option<i32>,
-    pub time_remaining: Option<i32>,
-    pub project_id: Option<jirs_data::ProjectId>,
-    pub user_ids: Vec<jirs_data::UserId>,
-    pub reporter_id: Option<jirs_data::UserId>,
-    pub issue_status_id: jirs_data::IssueStatusId,
-    pub epic_id: Option<jirs_data::UserId>,
-
-    // modal fields
-    pub title_state: StyledInputState,
-    pub type_state: StyledSelectState,
-    pub reporter_state: StyledSelectState,
-    pub assignees_state: StyledSelectState,
-    pub priority_state: StyledSelectState,
-    // epic
-    pub epic_name_state: StyledSelectState,
-    pub epic_starts_at_state: StyledDateTimeInputState,
-    pub epic_ends_at_state: StyledDateTimeInputState,
-}
-
-impl IssueModal for AddIssueModal {
-    fn epic_id_value(&self) -> Option<u32> {
-        self.epic_name_state.values.get(0).cloned()
-    }
-
-    fn epic_state(&self) -> &StyledSelectState {
-        &self.epic_name_state
-    }
-
-    fn update_states(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
-        self.title_state.update(msg);
-        self.assignees_state.update(msg, orders);
-        self.reporter_state.update(msg, orders);
-        self.type_state.update(msg, orders);
-        self.priority_state.update(msg, orders);
-        self.epic_name_state.update(msg, orders);
-        self.epic_starts_at_state.update(msg, orders);
-        self.epic_ends_at_state.update(msg, orders);
-    }
-}
-
-impl Default for AddIssueModal {
-    fn default() -> Self {
-        Self {
-            priority: Default::default(),
-            description: Default::default(),
-            description_text: Default::default(),
-            estimate: Default::default(),
-            time_spent: Default::default(),
-            time_remaining: Default::default(),
-            project_id: Default::default(),
-            user_ids: Default::default(),
-            reporter_id: Default::default(),
-            issue_status_id: Default::default(),
-            epic_id: Default::default(),
-            title_state: StyledInputState::new(FieldId::AddIssueModal(IssueFieldId::Title), ""),
-            type_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Type), vec![]),
-            reporter_state: StyledSelectState::new(
-                FieldId::AddIssueModal(IssueFieldId::Reporter),
-                vec![],
-            ),
-            assignees_state: StyledSelectState::new(
-                FieldId::AddIssueModal(IssueFieldId::Assignees),
-                vec![],
-            ),
-            priority_state: StyledSelectState::new(
-                FieldId::AddIssueModal(IssueFieldId::Priority),
-                vec![],
-            ),
-            // epic
-            epic_name_state: StyledSelectState::new(
-                FieldId::AddIssueModal(IssueFieldId::EpicName),
-                vec![],
-            ),
-            epic_starts_at_state: StyledDateTimeInputState::new(
-                FieldId::AddIssueModal(IssueFieldId::EpicStartsAt),
-                None,
-            ),
-            epic_ends_at_state: StyledDateTimeInputState::new(
-                FieldId::AddIssueModal(IssueFieldId::EpicEndsAt),
-                None,
-            ),
-        }
-    }
 }
 
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
@@ -345,109 +90,6 @@ pub struct UpdateProjectForm {
     pub fields: UpdateProjectPayload,
 }
 
-#[derive(Debug, Default)]
-pub struct ProjectPage {
-    pub text_filter: String,
-    pub active_avatar_filters: Vec<UserId>,
-    pub only_my_filter: bool,
-    pub recently_updated_filter: bool,
-    pub issue_drag: DragState,
-}
-
-#[derive(Debug, Default)]
-pub struct InvitePage {
-    pub token: String,
-    pub token_touched: bool,
-    pub error: Option<String>,
-}
-
-#[derive(Debug)]
-pub struct ProjectSettingsPage {
-    pub payload: UpdateProjectPayload,
-    pub project_category_state: StyledSelectState,
-    pub description_mode: crate::shared::styled_editor::Mode,
-    pub time_tracking: StyledCheckboxState,
-    pub column_drag: DragState,
-    pub edit_column_id: Option<IssueStatusId>,
-    pub creating_issue_status: bool,
-    pub name: StyledInputState,
-    // pub description_rte: StyledRteState,
-}
-
-impl ProjectSettingsPage {
-    pub fn new(project: &Project) -> Self {
-        use crate::shared::styled_editor::Mode as EditorMode;
-        let jirs_data::Project {
-            id,
-            name,
-            url,
-            description,
-            category,
-            time_tracking,
-            ..
-        } = project;
-        Self {
-            payload: UpdateProjectPayload {
-                id: *id,
-                name: Some(name.clone()),
-                url: Some(url.clone()),
-                description: Some(description.clone()),
-                category: Some(*category),
-                time_tracking: Some(*time_tracking),
-            },
-            description_mode: EditorMode::View,
-            project_category_state: StyledSelectState::new(
-                FieldId::ProjectSettings(ProjectFieldId::Category),
-                vec![(*category).into()],
-            ),
-            time_tracking: StyledCheckboxState::new(
-                FieldId::ProjectSettings(ProjectFieldId::TimeTracking),
-                (*time_tracking).into(),
-            ),
-            column_drag: Default::default(),
-            edit_column_id: None,
-            creating_issue_status: false,
-            name: StyledInputState::new(
-                FieldId::ProjectSettings(ProjectFieldId::IssueStatusName),
-                "",
-            ),
-            // description_rte: StyledRteState::new(FieldId::ProjectSettings(
-            //     ProjectFieldId::Description,
-            // )),
-        }
-    }
-
-    pub fn reset(&mut self) {
-        self.edit_column_id = None;
-        self.name.reset();
-        self.creating_issue_status = false;
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct SignInPage {
-    pub username: String,
-    pub email: String,
-    pub token: String,
-    pub login_success: bool,
-    pub bad_token: String,
-    // touched
-    pub username_touched: bool,
-    pub email_touched: bool,
-    pub token_touched: bool,
-}
-
-#[derive(Debug, Default)]
-pub struct SignUpPage {
-    pub username: String,
-    pub email: String,
-    pub sign_up_success: bool,
-    pub error: String,
-    // touched
-    pub username_touched: bool,
-    pub email_touched: bool,
-}
-
 #[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
 pub enum InvitationFormState {
     Initial = 1,
@@ -459,96 +101,6 @@ pub enum InvitationFormState {
 impl Default for InvitationFormState {
     fn default() -> Self {
         InvitationFormState::Initial
-    }
-}
-
-#[derive(Debug)]
-pub struct UsersPage {
-    pub name: String,
-    pub name_touched: bool,
-    pub email: String,
-    pub email_touched: bool,
-    pub user_role: UserRole,
-
-    pub user_role_state: StyledSelectState,
-    pub pending_invitations: Vec<String>,
-    pub error: String,
-    pub form_state: InvitationFormState,
-
-    pub invited_users: Vec<User>,
-    pub invitations: Vec<Invitation>,
-}
-
-impl Default for UsersPage {
-    fn default() -> Self {
-        Self {
-            name: "".to_string(),
-            name_touched: false,
-            email: "".to_string(),
-            email_touched: false,
-            user_role: Default::default(),
-            user_role_state: StyledSelectState::new(FieldId::Users(UsersFieldId::UserRole), vec![]),
-            pending_invitations: vec![],
-            error: "".to_string(),
-            form_state: Default::default(),
-            invited_users: vec![],
-            invitations: vec![],
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct ProfilePage {
-    pub name: StyledInputState,
-    pub email: StyledInputState,
-    pub avatar: StyledImageInputState,
-    pub current_project: StyledSelectState,
-}
-
-impl ProfilePage {
-    pub fn new(user: &User, project_ids: Vec<ProjectId>) -> Self {
-        Self {
-            name: StyledInputState::new(
-                FieldId::Profile(UsersFieldId::Username),
-                user.name.as_str(),
-            ),
-            email: StyledInputState::new(
-                FieldId::Profile(UsersFieldId::Email),
-                user.email.as_str(),
-            ),
-            avatar: StyledImageInputState::new(
-                FieldId::Profile(UsersFieldId::Avatar),
-                user.avatar_url.as_ref().cloned(),
-            ),
-            current_project: StyledSelectState::new(
-                FieldId::Profile(UsersFieldId::CurrentProject),
-                project_ids.into_iter().map(|n| n as u32).collect(),
-            ),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct ReportsPage {
-    pub selected_day: Option<chrono::NaiveDate>,
-    pub hovered_day: Option<chrono::NaiveDate>,
-    pub first_day: NaiveDate,
-    pub last_day: NaiveDate,
-}
-
-impl Default for ReportsPage {
-    fn default() -> Self {
-        let first_day = chrono::Utc::today().with_day(1).unwrap().naive_local();
-        let last_day = (first_day + chrono::Duration::days(32))
-            .with_day(1)
-            .unwrap()
-            - chrono::Duration::days(1);
-        Self {
-            first_day,
-            last_day,
-            selected_day: None,
-            hovered_day: None,
-        }
     }
 }
 
@@ -591,12 +143,22 @@ pub struct Model {
     pub page_content: PageContent,
 
     pub project: Option<Project>,
-    pub user: Option<User>,
+
     pub current_user_project: Option<UserProject>,
+
     pub issues: Vec<Issue>,
+    pub issues_by_id: HashMap<IssueId, Issue>,
+
+    pub user: Option<User>,
     pub users: Vec<User>,
+    pub users_by_id: HashMap<UserId, User>,
+
     pub comments: Vec<Comment>,
+
     pub issue_statuses: Vec<IssueStatus>,
+    pub issue_statuses_by_id: HashMap<IssueStatusId, IssueStatus>,
+    pub issue_statuses_by_name: HashMap<String, IssueStatus>,
+
     pub messages: Vec<Message>,
     pub user_projects: Vec<UserProject>,
     pub projects: Vec<Project>,
@@ -605,8 +167,6 @@ pub struct Model {
 
 impl Model {
     pub fn new(host_url: String, ws_url: String) -> Self {
-        // let hi_worker = Worker::new("/hi.js");
-
         Self {
             ws: None,
             ws_queue: vec![],
@@ -627,12 +187,16 @@ impl Model {
             messages_tooltip_visible: false,
             issues: vec![],
             users: vec![],
+            users_by_id: Default::default(),
             comments: vec![],
             issue_statuses: vec![],
+            issue_statuses_by_id: Default::default(),
+            issue_statuses_by_name: Default::default(),
             messages: vec![],
             user_projects: vec![],
             projects: vec![],
             epics: vec![],
+            issues_by_id: Default::default(),
         }
     }
 
@@ -642,10 +206,4 @@ impl Model {
             .map(|up| up.role)
             .unwrap_or_default()
     }
-    // pub fn current_project_id(&self) -> ProjectId {
-    //     self.current_user_project
-    //         .as_ref()
-    //         .map(|up| up.project_id)
-    //         .unwrap_or_default()
-    // }
 }

@@ -1,15 +1,12 @@
-use seed::prelude::Node;
-
-use jirs_data::EpicId;
-
-use crate::{
-    model::{IssueModal, Model},
-    shared::{styled_field::StyledField, styled_select::StyledSelect, ToChild, ToNode},
-    FieldId, Msg,
+use {
+    crate::{
+        model::{IssueModal, Model},
+        shared::{styled_field::StyledField, styled_select::StyledSelect, ToChild, ToNode},
+        FieldId, Msg,
+    },
+    jirs_data::EpicId,
+    seed::prelude::Node,
 };
-
-pub mod add_issue;
-pub mod issue_details;
 
 pub fn epic_field<Modal>(model: &Model, modal: &Modal, field_id: FieldId) -> Option<Node<Msg>>
 where

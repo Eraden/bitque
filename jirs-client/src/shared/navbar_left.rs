@@ -2,13 +2,18 @@ use seed::{prelude::*, *};
 
 use jirs_data::{InvitationToken, Message, MessageType, WsMsg};
 
-use crate::model::Model;
-use crate::shared::styled_avatar::StyledAvatar;
-use crate::shared::styled_button::StyledButton;
-use crate::shared::styled_icon::{Icon, StyledIcon};
-use crate::shared::{divider, styled_tooltip, ToNode};
-use crate::ws::send_ws_msg;
-use crate::Msg;
+use crate::{
+    model::Model,
+    shared::{
+        divider,
+        styled_avatar::StyledAvatar,
+        styled_button::StyledButton,
+        styled_icon::{Icon, StyledIcon},
+        styled_tooltip, ToNode,
+    },
+    ws::send_ws_msg,
+    Msg, Page,
+};
 
 trait IntoNavItemIcon {
     fn into_nav_item_icon(self) -> Node<Msg>;
@@ -44,7 +49,7 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
 
     let user_icon = match model.user.as_ref() {
         Some(user) => i![
-            class!["styledIcon"],
+            C!["styledIcon"],
             StyledAvatar::build()
                 .size(27)
                 .name(user.name.as_str())
@@ -77,6 +82,12 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
             navbar_left_item("Create Issue", Icon::Plus, Some("/add-issue"), None),
         ]
     };
+    let go_to_profile = mouse_ev("click", move |ev| {
+        ev.stop_propagation();
+        ev.prevent_default();
+        seed::Url::new().add_path_part("profile").go_and_push();
+        Msg::ChangePage(Page::Profile)
+    });
 
     vec![
         about_tooltip_popup(model),
@@ -84,14 +95,14 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
         aside![
             id!["navbar-left"],
             a![
-                class!["logoLink"],
+                C!["logoLink"],
                 attrs![At::Href => "/"],
-                div![class!["styledLogo"], logo_svg]
+                div![C!["styledLogo"], logo_svg]
             ],
             issue_nav,
             div![
-                class!["bottom"],
-                navbar_left_item("Profile", user_icon, Some("/profile"), None),
+                C!["bottom"],
+                navbar_left_item("Profile", user_icon, Some("/profile"), Some(go_to_profile)),
                 messages,
                 about_tooltip(model, navbar_left_item("About", Icon::Help, None, None)),
             ],
@@ -99,6 +110,7 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
     ]
 }
 
+#[inline]
 fn navbar_left_item<I>(
     text: &str,
     icon: I,
@@ -109,13 +121,12 @@ where
     I: IntoNavItemIcon,
 {
     let styled_icon = icon.into_nav_item_icon();
-    let href = href.unwrap_or_else(|| "#");
 
     a![
-        class!["item"],
-        attrs![At::Href => href],
+        C!["item"],
+        attrs![At::Href => href.unwrap_or("#")],
         styled_icon,
-        span![class!["itemText"], text],
+        span![C!["itemText"], text],
         on_click,
     ]
 }
@@ -124,7 +135,7 @@ pub fn about_tooltip(_model: &Model, children: Node<Msg>) -> Node<Msg> {
     let on_click: EventHandler<Msg> = ev(Ev::Click, move |_| {
         Some(Msg::ToggleTooltip(styled_tooltip::Variant::About))
     });
-    div![class!["aboutTooltip"], on_click, children]
+    div![C!["aboutTooltip"], on_click, children]
 }
 
 fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
@@ -140,7 +151,7 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
             }
         };
     }
-    let body = div![on_click, class!["messagesList"], messages];
+    let body = div![on_click, C!["messagesList"], messages];
     styled_tooltip::StyledTooltip::build()
         .add_class("messagesPopup")
         .visible(model.messages_tooltip_visible)
@@ -166,9 +177,9 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
     } else {
         let link_icon = StyledIcon::build(Icon::Link).build().into_node();
         div![
-            class!["hyperlink"],
+            C!["hyperlink"],
             a![
-                class!["styledLink"],
+                C!["styledLink"],
                 attrs![At::Href => hyper_link],
                 link_icon,
                 hyper_link
@@ -188,9 +199,9 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
         .build()
         .into_node();
     let top = div![
-        class!["top"],
-        div![class!["summary"], summary],
-        div![class!["action"], close_button],
+        C!["top"],
+        div![C!["summary"], summary],
+        div![C!["action"], close_button],
     ];
 
     let node = match message_type {
@@ -221,23 +232,23 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
                 .build()
                 .into_node();
             div![
-                class!["message"],
+                C!["message"],
                 attrs![At::Class => format!("{}", message_type)],
                 top,
-                div![class!["description"], message_description],
-                div![class!["actions"], accept, reject],
+                div![C!["description"], message_description],
+                div![C!["actions"], accept, reject],
             ]
         }
         MessageType::AssignedToIssue => div![
-            class!["message assignedToIssue"],
+            C!["message assignedToIssue"],
             top,
-            div![class!["description"], message_description],
+            div![C!["description"], message_description],
             hyperlink,
         ],
         MessageType::Mention => div![
-            class!["message mention"],
+            C!["message mention"],
             top,
-            div![class!["description"], message_description],
+            div![C!["description"], message_description],
             hyperlink,
         ],
     };
@@ -262,18 +273,18 @@ fn about_tooltip_popup(model: &Model) -> Node<Msg> {
     });
     let body = div![
         on_click,
-        class!["feedbackDropdown"],
+        C!["feedbackDropdown"],
         div![
-            class!["feedbackImageCont"],
+            C!["feedbackImageCont"],
             img![attrs![At::Src => "/feedback.png"]],
-            class!["feedbackImage"],
+            C!["feedbackImage"],
         ],
         div![
-            class!["feedbackParagraph"],
+            C!["feedbackParagraph"],
             "This simplified Jira clone is built with Seed.rs on the front-end and Actix-Web on the back-end."
         ],
         div![
-            class!["feedbackParagraph"],
+            C!["feedbackParagraph"],
             "Read more on my website or reach out via ",
             a![
                 attrs![At::Href => "mailto:adrian.wozniak@ita-prog.pl"],
@@ -326,7 +337,7 @@ fn parse_description(model: &Model, desc: &str) -> Node<Msg> {
                     .size(16)
                     .build()
                     .into_node();
-                span![class!["mention"], avatar, user.name.as_str()]
+                span![C!["mention"], avatar, user.name.as_str()]
             })
             .unwrap_or_else(|| span![word]);
         container.add_child(child).add_text(" ");

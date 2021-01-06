@@ -1,7 +1,7 @@
-use seed::{prelude::*, *};
-
-use crate::shared::ToNode;
-use crate::Msg;
+use {
+    crate::{shared::ToNode, Msg},
+    seed::{prelude::*, *},
+};
 
 pub struct StyledAvatar<'l> {
     avatar_url: Option<&'l str>,
@@ -26,6 +26,7 @@ impl<'l> Default for StyledAvatar<'l> {
 }
 
 impl<'l> StyledAvatar<'l> {
+    #[inline(always)]
     pub fn build() -> StyledAvatarBuilder<'l> {
         StyledAvatarBuilder {
             avatar_url: None,
@@ -39,6 +40,7 @@ impl<'l> StyledAvatar<'l> {
 }
 
 impl<'l> ToNode for StyledAvatar<'l> {
+    #[inline(always)]
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
@@ -54,6 +56,7 @@ pub struct StyledAvatarBuilder<'l> {
 }
 
 impl<'l> StyledAvatarBuilder<'l> {
+    #[inline(always)]
     pub fn avatar_url<'m: 'l>(mut self, avatar_url: &'m str) -> Self {
         if !avatar_url.is_empty() {
             self.avatar_url = Some(avatar_url);
@@ -61,31 +64,37 @@ impl<'l> StyledAvatarBuilder<'l> {
         self
     }
 
+    #[inline(always)]
     pub fn size(mut self, size: u32) -> Self {
         self.size = Some(size);
         self
     }
 
+    #[inline(always)]
     pub fn name<'m: 'l>(mut self, name: &'m str) -> Self {
         self.name = name;
         self
     }
 
+    #[inline(always)]
     pub fn on_click(mut self, on_click: EventHandler<Msg>) -> Self {
         self.on_click = Some(on_click);
         self
     }
 
+    #[inline(always)]
     pub fn add_class<'m: 'l>(mut self, name: &'m str) -> Self {
         self.class_list.push(name);
         self
     }
 
+    #[inline(always)]
     pub fn user_index(mut self, user_index: usize) -> Self {
         self.user_index = user_index;
         self
     }
 
+    #[inline(always)]
     pub fn build(self) -> StyledAvatar<'l> {
         StyledAvatar {
             avatar_url: self.avatar_url,
@@ -111,11 +120,10 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
     let index = user_index % 8;
 
     let shared_style = format!("width: {size}px; height: {size}px", size = size);
-    let handler = match on_click {
-        None => vec![],
-        Some(h) => vec![h],
+    let class_list: Attrs = {
+        let s: String = class_list.join(" ");
+        C![s.as_str()]
     };
-    let class_list: Vec<Attrs> = class_list.into_iter().map(|s| class![s]).collect();
     let letter = name
         .chars()
         .rev()
@@ -130,11 +138,10 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
                 url = url
             );
             div![
-                class!["styledAvatar"],
-                class!["image"],
+                C!["styledAvatar image"],
                 class_list,
                 attrs![At::Style => style, At::Title => name],
-                handler
+                on_click
             ]
         }
         _ => {
@@ -144,15 +151,14 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
                 size = size
             );
             div![
-                class!["styledAvatar"],
-                class!["letter"],
+                C!["styledAvatar letter"],
                 class_list,
                 attrs![
                     At::Class => format!("avatarColor{}", index + 1),
                     At::Style => style
                 ],
                 span![letter],
-                handler,
+                on_click,
             ]
         }
     }

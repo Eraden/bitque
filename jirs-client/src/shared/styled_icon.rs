@@ -346,30 +346,33 @@ pub fn render(values: StyledIcon) -> Node<Msg> {
         }),
     ]
     .into_iter()
-    .filter(Option::is_some)
-    .map(|o| o.unwrap())
+    .filter_map(|o| o)
     .collect();
 
     let class_list: Vec<seed::Attrs> = class_list
         .into_iter()
         .map(|s| match s {
-            Cow::Borrowed(s) => class![s],
-            Cow::Owned(s) => class![s.as_str()],
+            Cow::Borrowed(s) => C![s],
+            Cow::Owned(s) => C![s.as_str()],
         })
         .collect();
-    let style_list = style_list
-        .iter()
-        .map(|s| match s {
-            Cow::Borrowed(s) => s,
-            Cow::Owned(s) => s.as_str(),
-        })
-        .collect::<Vec<&str>>()
-        .join(";");
+    let style_list = style_list.into_iter().fold("".to_string(), |mut mem, s| {
+        match s {
+            Cow::Borrowed(s) => {
+                mem.push_str(s);
+            }
+            Cow::Owned(owned) => {
+                mem.push_str(owned.as_str());
+            }
+        }
+        mem.push(';');
+        mem
+    });
 
     i![
-        class!["styledIcon"],
+        C!["styledIcon"],
         class_list,
-        class![icon.to_str()],
+        C![icon.to_str()],
         styles,
         attrs![ At::Style => style_list ],
         on_click,

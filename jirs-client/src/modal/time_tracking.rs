@@ -38,7 +38,7 @@ pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
         .map(|p| p.time_tracking)
         .unwrap_or_else(|| TimeTracking::Untracked);
 
-    let modal_title = div![class!["modalTitle"], "Time tracking"];
+    let modal_title = div![C!["modalTitle"], "Time tracking"];
 
     let tracking = tracking_widget(model, edit_issue_modal);
 
@@ -58,9 +58,9 @@ pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
     );
 
     let inputs = div![
-        class!["inputs"],
-        div![class!["inputContainer"], time_spent_field],
-        div![class!["inputContainer"], time_remaining_field]
+        C!["inputs"],
+        div![C!["inputContainer"], time_spent_field],
+        div![C!["inputContainer"], time_remaining_field]
     ];
 
     let close = StyledButton::build()
@@ -75,7 +75,7 @@ pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
             modal_title,
             tracking,
             inputs,
-            div![class!["actions"], close],
+            div![C!["actions"], close],
         ])
         .width(400)
         .build()

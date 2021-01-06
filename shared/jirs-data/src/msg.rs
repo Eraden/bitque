@@ -1,12 +1,14 @@
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
-use crate::{
-    AvatarUrl, BindToken, Code, Comment, CommentId, CreateCommentPayload, CreateIssuePayload,
-    EmailString, Epic, EpicId, Invitation, InvitationId, InvitationToken, Issue, IssueFieldId,
-    IssueId, IssueStatus, IssueStatusId, Lang, Message, MessageId, NameString, NumberOfDeleted,
-    PayloadVariant, Position, Project, TitleString, UpdateCommentPayload, UpdateProjectPayload,
-    User, UserId, UserProject, UserProjectId, UserRole, UsernameString,
+use {
+    crate::{
+        AvatarUrl, BindToken, Code, Comment, CommentId, CreateCommentPayload, CreateIssuePayload,
+        EmailString, Epic, EpicId, HighlightedCode, Invitation, InvitationId, InvitationToken,
+        Issue, IssueFieldId, IssueId, IssueStatus, IssueStatusId, Lang, Message, MessageId,
+        NameString, NumberOfDeleted, PayloadVariant, Position, Project, TitleString,
+        UpdateCommentPayload, UpdateProjectPayload, User, UserId, UserProject, UserProjectId,
+        UserRole, UsernameString,
+    },
+    serde::{Deserialize, Serialize},
+    uuid::Uuid,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -217,7 +219,7 @@ pub enum WsMsg {
     UserProjectCurrentChanged(UserProject),
 
     // messages
-    Message(Message),
+    MessageUpdated(Message),
     MessagesLoad,
     MessagesLoaded(Vec<Message>),
     MessageMarkSeen(MessageId),
@@ -235,7 +237,7 @@ pub enum WsMsg {
 
     // highlight
     HighlightCode(Lang, Code),
-    HighlightedCode(Code),
+    HighlightedCode(HighlightedCode),
 
     // errors
     Error(WsError),

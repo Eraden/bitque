@@ -189,7 +189,7 @@ fn render(values: StyledCheckbox) -> Node<Msg> {
         .collect();
 
     div![
-        class!["styledCheckbox"],
+        C!["styledCheckbox"],
         attrs![At::Class => class_list.join(" ")],
         opt,
     ]

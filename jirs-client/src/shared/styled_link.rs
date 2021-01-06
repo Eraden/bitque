@@ -65,7 +65,7 @@ pub fn render(values: StyledLink) -> Node<Msg> {
     } = values;
 
     a![
-        class!["styledLink"],
+        C!["styledLink"],
         attrs![
             At::Class => class_list.join(" "),
             At::Href => href,

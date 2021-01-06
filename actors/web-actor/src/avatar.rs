@@ -21,6 +21,7 @@ pub async fn upload(
     db: Data<Addr<DbExecutor>>,
     ws: Data<Addr<WsServer>>,
     fs: Data<Addr<filesystem_actor::FileSystemExecutor>>,
+    amazon: Data<Addr<amazon_actor::AmazonExecutor>>,
 ) -> Result<HttpResponse, Error> {
     let mut user_id: Option<UserId> = None;
     let mut avatar_url: Option<String> = None;
@@ -45,6 +46,7 @@ pub async fn upload(
                         field,
                         disposition,
                         fs.clone(),
+                        amazon.clone(),
                     )
                     .await?,
                 );

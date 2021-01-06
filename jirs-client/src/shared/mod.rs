@@ -1,12 +1,11 @@
-use std::str::FromStr;
-
 use seed::{prelude::*, *};
 
 use jirs_data::*;
 
-use crate::model::Model;
-use crate::model::Page;
-use crate::Msg;
+use crate::{
+    model::{Model, Page},
+    resolve_page, Msg,
+};
 
 pub mod aside;
 pub mod drag;
@@ -37,21 +36,28 @@ pub trait ToChild<'l> {
     fn to_child<'m: 'l>(&'m self) -> Self::Builder;
 }
 
+#[inline]
 pub fn go_to_board(orders: &mut impl Orders<Msg>) {
-    go_to("/board");
+    go_to("board", orders);
     orders.skip().send_msg(Msg::ChangePage(Page::Project));
 }
 
+#[inline]
 pub fn go_to_login(orders: &mut impl Orders<Msg>) {
-    go_to("/login");
+    go_to("login", orders);
     orders.skip().send_msg(Msg::ChangePage(Page::SignIn));
 }
 
-pub fn go_to(url: &str) {
-    seed::push_route(Url::from_str(url).unwrap());
+#[inline]
+pub fn go_to(url: &str, orders: &mut impl Orders<Msg>) {
+    let url = seed::Url::new().add_path_part(url);
+    url.go_and_push();
+    if let Some(page) = resolve_page(url) {
+        orders.skip().send_msg(Msg::ChangePage(page));
+    }
 }
 
-pub fn find_issue<'l>(model: &'l Model, issue_id: IssueId) -> Option<&'l Issue> {
+pub fn find_issue(model: &'_ Model, issue_id: IssueId) -> Option<&'_ Issue> {
     model.issues.iter().find(|issue| issue.id == issue_id)
 }
 
@@ -60,14 +66,14 @@ pub trait ToNode {
 }
 
 pub fn divider() -> Node<Msg> {
-    div![class!["divider"], ""]
+    div![C!["divider"], ""]
 }
 
 pub fn inner_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
     let modal_node = crate::modal::view(model);
     article![
         modal_node,
-        class!["inner-layout", "innerPage"],
+        C!["inner-layout", "innerPage"],
         id![page_name],
         navbar_left::render(model),
         aside::render(model),
@@ -78,7 +84,7 @@ pub fn inner_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) ->
 pub fn outer_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
     let modal = crate::modal::view(model);
     article![
-        class!["outer-layout", "outerPage"],
+        C!["outer-layout", "outerPage"],
         id![page_name],
         modal,
         children

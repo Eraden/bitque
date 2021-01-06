@@ -34,6 +34,7 @@ struct WebSocketActor {
     db: Data<Addr<DbExecutor>>,
     mail: Data<Addr<MailExecutor>>,
     addr: Addr<WsServer>,
+    hi: Data<Addr<highlight_actor::HighlightActor>>,
     current_user: Option<jirs_data::User>,
     current_user_project: Option<jirs_data::UserProject>,
     current_project: Option<jirs_data::Project>,
@@ -186,6 +187,9 @@ impl WebSocketActor {
                 self.handle_msg(epics::UpdateEpic { epic_id, name }, ctx)?
             }
             WsMsg::EpicDelete(epic_id) => self.handle_msg(epics::DeleteEpic { epic_id }, ctx)?,
+            WsMsg::HighlightCode(lang, code) => {
+                self.handle_msg(hi::HighlightCode(lang, code), ctx)?
+            }
 
             // else fail
             _ => {
@@ -323,11 +327,13 @@ pub async fn index(
     db: Data<Addr<DbExecutor>>,
     mail: Data<Addr<MailExecutor>>,
     ws_server: Data<Addr<WsServer>>,
+    hi: Data<Addr<highlight_actor::HighlightActor>>,
 ) -> Result<HttpResponse, Error> {
     ws::start(
         WebSocketActor {
             db,
             mail,
+            hi,
             current_user: None,
             current_user_project: None,
             current_project: None,

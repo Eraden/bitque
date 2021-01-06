@@ -1,20 +1,25 @@
-use seed::{prelude::*, *};
-
-use jirs_data::{TimeTracking, UpdateIssuePayload};
-
-use crate::modal::time_tracking::value_for_time_tracking;
-use crate::model::{EditIssueModal, ModalType, Model};
-use crate::shared::styled_icon::{Icon, StyledIcon};
-use crate::shared::ToNode;
-use crate::Msg;
+use {
+    crate::{
+        modal::time_tracking::value_for_time_tracking,
+        modals::issues_edit::Model as EditIssueModal,
+        model::{ModalType, Model},
+        shared::{
+            styled_icon::{Icon, StyledIcon},
+            ToNode,
+        },
+        Msg,
+    },
+    jirs_data::{TimeTracking, UpdateIssuePayload},
+    seed::{prelude::*, *},
+};
 
 #[inline]
 pub fn fibonacci_values() -> Vec<u32> {
     vec![0, 1, 2, 3, 5, 8, 13, 21, 34, 55]
 }
 
-pub fn tracking_link(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
-    let EditIssueModal { id, .. } = modal;
+pub fn tracking_link(model: &Model, modal: &crate::modals::issues_edit::Model) -> Node<Msg> {
+    let crate::modals::issues_edit::Model { id, .. } = modal;
 
     let issue_id = *id;
 
@@ -22,11 +27,7 @@ pub fn tracking_link(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         Msg::ModalOpened(Box::new(ModalType::TimeTracking(issue_id)))
     });
 
-    div![
-        class!["trackingLink"],
-        handler,
-        tracking_widget(model, modal),
-    ]
+    div![C!["trackingLink"], handler, tracking_widget(model, modal),]
 }
 
 pub fn tracking_widget(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
@@ -71,18 +72,18 @@ pub fn tracking_widget(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let remaining_node: Node<Msg> = remaining_node(time_remaining, estimate, time_tracking_type);
 
     div![
-        class!["trackingWidget"],
+        C!["trackingWidget"],
         icon,
         div![
-            class!["right"],
+            C!["right"],
             div![
-                class!["barCounter"],
+                C!["barCounter"],
                 div![
-                    class!["bar"],
+                    C!["bar"],
                     attrs![At::Style => format!("width: {}%", bar_width)]
                 ]
             ],
-            div![class!["values"], div![spent_text], remaining_node,]
+            div![C!["values"], div![spent_text], remaining_node,]
         ]
     ]
 }

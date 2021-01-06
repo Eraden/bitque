@@ -74,10 +74,6 @@ pub fn render(values: StyledForm) -> Node<Msg> {
     seed::form![
         handlers,
         attrs![At::Class => "styledForm"],
-        div![
-            class!["formElement"],
-            div![class!["formHeading"], heading],
-            fields
-        ],
+        div![C!["formElement"], div![C!["formHeading"], heading], fields],
     ]
 }

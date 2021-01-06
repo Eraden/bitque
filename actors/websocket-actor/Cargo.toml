@@ -35,6 +35,12 @@ env_logger = "0.7"
 
 uuid = { version = "0.8.1", features = ["serde", "v4", "v5"] }
 
+[dependencies.comrak]
+version = "*"
+
+[dependencies.pulldown-cmark]
+version = "*"
+
 [dependencies.jirs-config]
 path = "../../shared/jirs-config"
 features = ["websocket"]
@@ -48,3 +54,6 @@ path = "../database-actor"
 
 [dependencies.mail-actor]
 path = "../mail-actor"
+
+[dependencies.highlight-actor]
+path = "../highlight-actor"

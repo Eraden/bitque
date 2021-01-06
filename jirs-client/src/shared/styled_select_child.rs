@@ -154,15 +154,15 @@ pub fn render(values: StyledSelectChild) -> Node<Msg> {
                 At::Class => name.as_deref().map(|s| format!("{}Label", s)).unwrap_or_default(),
                 At::Class => class_list.join(" "),
             ],
-            class![label_class.as_str()],
+            C![label_class.as_str()],
             text
         ],
         _ => empty![],
     };
 
     div![
-        class![variant.to_str()],
-        class![wrapper_class.as_str()],
+        C![variant.to_str()],
+        C![wrapper_class.as_str()],
         attrs![At::Class => class_list.join(" ")],
         icon_node,
         label_node

@@ -276,8 +276,8 @@ impl ElementBuilder {
     pub fn mount(&self) {
         let source = self.to_js();
         {
-            use seed::*;
-            log!(source);
+            // use seed::*;
+            // log!(source);
         }
         use seed::*;
         match js_sys::eval(source.as_str()) {

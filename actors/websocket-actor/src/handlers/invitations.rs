@@ -90,7 +90,7 @@ impl WsHandler<CreateInvitation> for WebSocketActor {
         })) {
             self.addr.do_send(InnerMsg::SendToUser(
                 message.receiver_id,
-                WsMsg::Message(message),
+                WsMsg::MessageUpdated(message),
             ));
         }
 

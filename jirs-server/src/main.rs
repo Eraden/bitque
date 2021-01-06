@@ -40,6 +40,11 @@ async fn main() -> Result<(), String> {
         jirs_config::fs::Configuration::read().concurrency,
         filesystem_actor::FileSystemExecutor::default,
     );
+    #[cfg(feature = "aws-s3")]
+    let amazon_addr = actix::SyncArbiter::start(
+        jirs_config::web::Configuration::read().concurrency,
+        amazon_actor::AmazonExecutor::default,
+    );
 
     let ws_server = websocket_actor::server::WsServer::start_default();
 
@@ -54,6 +59,7 @@ async fn main() -> Result<(), String> {
             .data(hi_addr.clone())
             .data(database_actor::build_pool());
         featured! { app, "local-storage", app.data(fs_addr.clone()) };
+        featured! { app, "aws-s3", app.data(amazon_addr.clone()) };
 
         // services step
         let app = app

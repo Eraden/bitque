@@ -50,7 +50,64 @@ impl WsHandler<UpdateIssueHandler> for WebSocketActor {
                 msg.title = Some(s);
             }
             (IssueFieldId::Description, PayloadVariant::String(s)) => {
-                msg.description = Some(s);
+                // let mut opts = comrak::ComrakOptions::default();
+                // opts.render.github_pre_lang = true;
+                // let html = comrak::markdown_to_html(s.as_str(), &opts);
+
+                let html: String = {
+                    use pulldown_cmark::*;
+                    let parser = pulldown_cmark::Parser::new(s.as_str());
+                    enum ParseState {
+                        Code(highlight_actor::TextHighlightCode),
+                        Other,
+                    };
+                    let mut state = ParseState::Other;
+
+                    let parser = parser.flat_map(|event| match event {
+                        Event::Text(s) => {
+                            if let ParseState::Code(h) = &mut state {
+                                h.code.push_str(s.as_ref());
+                                return vec![];
+                            }
+                            vec![Event::Text(s)]
+                        }
+                        Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(name))) => {
+                            state = ParseState::Code(highlight_actor::TextHighlightCode {
+                                lang: name.to_string(),
+                                code: String::new(),
+                            });
+                            vec![Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(name)))]
+                        }
+                        Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(lang))) => {
+                            let ev = if let ParseState::Code(h) = &mut state {
+                                let mut msg = highlight_actor::TextHighlightCode {
+                                    code: String::new(),
+                                    lang: String::new(),
+                                };
+                                std::mem::swap(h, &mut msg);
+                                let highlighted =
+                                    match futures::executor::block_on(self.hi.send(msg)) {
+                                        Ok(Ok(res)) => res,
+                                        _ => s.to_string(),
+                                    };
+                                vec![
+                                    Event::Html(highlighted.into()),
+                                    Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(lang))),
+                                ]
+                            } else {
+                                vec![]
+                            };
+                            state = ParseState::Other;
+                            ev
+                        }
+                        _ => vec![event],
+                    });
+                    let mut buff = String::new();
+                    let _ = html::push_html(&mut buff, parser);
+                    buff
+                };
+                msg.description = Some(html);
+                msg.description_text = Some(s);
             }
             (IssueFieldId::IssueStatusId, PayloadVariant::I32(s)) => {
                 msg.issue_status_id = Some(s);

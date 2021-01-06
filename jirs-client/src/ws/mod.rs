@@ -1,11 +1,13 @@
 use seed::prelude::*;
 
 pub use init_load_sets::*;
-use jirs_data::WsMsg;
+use jirs_data::*;
 
-use crate::model::*;
-use crate::shared::{go_to_board, write_auth_token};
-use crate::{Msg, WebSocketChanged};
+use crate::{
+    model::*,
+    shared::{go_to_board, write_auth_token},
+    Msg, OperationKind, ResourceKind, WebSocketChanged,
+};
 
 mod init_load_sets;
 
@@ -88,36 +90,60 @@ pub async fn read_incoming(msg: WebSocketMessage) -> Msg {
     Msg::WebSocketChange(WebSocketChanged::WebSocketMessageLoaded(bytes))
 }
 
-pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
+pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         // auth
         WsMsg::AuthorizeLoaded(Ok(user)) => {
-            model.user = Some(user.clone());
+            model.user = Some(user);
             if is_non_logged_area() {
                 go_to_board(orders);
             }
             orders
                 .skip()
-                .send_msg(Msg::UserChanged(model.user.as_ref().cloned()));
+                .send_msg(Msg::UserChanged(model.user.as_ref().cloned()))
+                .send_msg(Msg::ResourceChanged(
+                    ResourceKind::User,
+                    OperationKind::SingleLoaded,
+                    model.user.as_ref().map(|u| u.id),
+                ))
+                .send_msg(Msg::ResourceChanged(
+                    ResourceKind::Auth,
+                    OperationKind::SingleLoaded,
+                    model.user.as_ref().map(|u| u.id),
+                ));
         }
         WsMsg::AuthorizeExpired => {
             use seed::*;
 
             log!("Received token expired");
             if let Ok(msg) = write_auth_token(None) {
-                orders.skip().send_msg(msg);
+                orders.skip().send_msg(msg).send_msg(Msg::ResourceChanged(
+                    ResourceKind::Auth,
+                    OperationKind::SingleRemoved,
+                    model.user.as_ref().map(|u| u.id),
+                ));
             }
         }
         // project
         WsMsg::ProjectsLoaded(v) => {
-            model.projects = v.clone();
+            model.projects = v;
             init_current_project(model, orders);
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Project,
+                OperationKind::ListLoaded,
+                None,
+            ));
         }
         // user projects
         WsMsg::UserProjectsLoaded(v) => {
-            model.user_projects = v.clone();
             model.current_user_project = v.iter().find(|up| up.is_current).cloned();
+            model.user_projects = v;
             init_current_project(model, orders);
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::UserProject,
+                OperationKind::ListLoaded,
+                None,
+            ));
         }
         WsMsg::UserProjectCurrentChanged(user_project) => {
             let mut old = vec![];
@@ -126,60 +152,102 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 up.is_current = up.id == user_project.id;
                 model.user_projects.push(up);
             }
-            model.current_user_project = Some(user_project.clone());
+            model.current_user_project = Some(user_project);
             init_current_project(model, orders);
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::UserProject,
+                OperationKind::SingleModified,
+                model.current_user_project.as_ref().map(|up| up.id),
+            ));
         }
 
         // issues
-        WsMsg::ProjectIssuesLoaded(v) => {
-            let mut v = v.clone();
+        WsMsg::ProjectIssuesLoaded(mut v) => {
             v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
             model.issues = v;
+            model.issues_by_id.clear();
+            for issue in model.issues.iter() {
+                model.issues_by_id.insert(issue.id, issue.clone());
+            }
+
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Issue,
+                OperationKind::ListLoaded,
+                None,
+            ));
         }
         // issue statuses
         WsMsg::IssueStatusesLoaded(v) => {
-            model.issue_statuses = v.clone();
+            model.issue_statuses = v;
             model
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::IssueStatus,
+                OperationKind::ListLoaded,
+                None,
+            ));
         }
         WsMsg::IssueStatusCreated(is) => {
-            model.issue_statuses.push(is.clone());
+            let id = is.id;
+            model.issue_statuses.push(is);
             model
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::IssueStatus,
+                OperationKind::SingleCreated,
+                Some(id),
+            ));
         }
-        WsMsg::IssueStatusUpdated(changed) => {
-            let mut old = vec![];
-            std::mem::swap(&mut model.issue_statuses, &mut old);
-            for is in old {
-                if is.id == changed.id {
-                    model.issue_statuses.push(changed.clone());
-                } else {
-                    model.issue_statuses.push(is);
-                }
+        WsMsg::IssueStatusUpdated(mut changed) => {
+            let id = changed.id;
+            if let Some(idx) = model.issue_statuses.iter().position(|c| c.id == changed.id) {
+                std::mem::swap(&mut model.issue_statuses[idx], &mut changed);
             }
             model
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::IssueStatus,
+                OperationKind::SingleModified,
+                Some(id),
+            ));
         }
         WsMsg::IssueStatusDeleted(dropped_id, _count) => {
             let mut old = vec![];
             std::mem::swap(&mut model.issue_statuses, &mut old);
             for is in old {
-                if is.id != *dropped_id {
+                if is.id != dropped_id {
                     model.issue_statuses.push(is);
                 }
             }
             model
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::IssueStatus,
+                OperationKind::SingleRemoved,
+                Some(dropped_id),
+            ));
+        }
+        // issues
+        WsMsg::IssueUpdated(mut issue) => {
+            let id = issue.id;
+            if let Some(idx) = model.issues.iter().position(|i| i.id == issue.id) {
+                std::mem::swap(&mut model.issues[idx], &mut issue);
+            }
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Issue,
+                OperationKind::SingleModified,
+                Some(id),
+            ));
         }
         WsMsg::IssueDeleted(id, _count) => {
             let mut old = vec![];
             std::mem::swap(&mut model.issue_statuses, &mut old);
             for is in old {
-                if is.id == *id {
+                if is.id == id {
                     continue;
                 }
                 model.issue_statuses.push(is);
@@ -187,13 +255,26 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             model
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Issue,
+                OperationKind::SingleRemoved,
+                Some(id),
+            ));
         }
         // users
         WsMsg::ProjectUsersLoaded(v) => {
             model.users = v.clone();
+            for user in v {
+                model.users_by_id.insert(user.id, user.clone());
+            }
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::User,
+                OperationKind::ListLoaded,
+                None,
+            ));
         }
         // comments
-        WsMsg::IssueCommentsLoaded(comments) => {
+        WsMsg::IssueCommentsLoaded(mut comments) => {
             let issue_id = match model.modals.get(0) {
                 Some(ModalType::EditIssue(issue_id, _)) => *issue_id,
                 _ => return,
@@ -201,99 +282,124 @@ pub fn update(msg: &WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             if comments.iter().any(|c| c.issue_id != issue_id) {
                 return;
             }
-            let mut v = comments.clone();
-            v.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
-            model.comments = v;
+            comments.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
+            model.comments = comments;
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Comment,
+                OperationKind::ListLoaded,
+                None,
+            ));
         }
-        WsMsg::CommentUpdated(comment) => {
-            let mut old = vec![];
-            std::mem::swap(&mut model.comments, &mut old);
-            for current in old.into_iter() {
-                if current.id != comment.id {
-                    model.comments.push(current);
-                } else {
-                    model.comments.push(comment.clone());
-                }
+        WsMsg::CommentUpdated(mut comment) => {
+            if let Some(idx) = model.comments.iter().position(|c| c.id == comment.id) {
+                std::mem::swap(&mut model.comments[idx], &mut comment);
             }
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Comment,
+                OperationKind::SingleModified,
+                Some(comment.id),
+            ));
         }
         WsMsg::CommentDeleted(comment_id, _count) => {
-            let mut old = vec![];
-            std::mem::swap(&mut model.comments, &mut old);
-            for comment in old.into_iter() {
-                if *comment_id != comment.id {
-                    model.comments.push(comment);
-                }
+            if let Some(idx) = model.comments.iter().position(|c| c.id == comment_id) {
+                model.comments.remove(idx);
             }
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Comment,
+                OperationKind::SingleRemoved,
+                Some(comment_id),
+            ));
         }
         WsMsg::AvatarUrlChanged(user_id, avatar_url) => {
             for user in model.users.iter_mut() {
-                if user.id == *user_id {
+                if user.id == user_id {
                     user.avatar_url = Some(avatar_url.clone());
                 }
             }
             if let Some(me) = model.user.as_mut() {
-                if me.id == *user_id {
+                if me.id == user_id {
                     me.avatar_url = Some(avatar_url.clone());
                 }
             }
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::User,
+                OperationKind::SingleModified,
+                Some(user_id),
+            ));
         }
         // messages
-        WsMsg::Message(received) => {
-            let mut old = vec![];
-            std::mem::swap(&mut old, &mut model.messages);
-            for m in old {
-                if m.id != received.id {
-                    model.messages.push(m);
-                } else {
-                    model.messages.push(received.clone());
-                }
+        WsMsg::MessageUpdated(mut received) => {
+            if let Some(idx) = model.messages.iter().position(|m| m.id == received.id) {
+                std::mem::swap(&mut model.messages[idx], &mut received);
             }
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Message,
+                OperationKind::SingleModified,
+                Some(received.id),
+            ));
         }
         WsMsg::MessagesLoaded(v) => {
-            model.messages = v.clone();
+            model.messages = v;
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Message,
+                OperationKind::ListLoaded,
+                None,
+            ));
         }
         WsMsg::MessageMarkedSeen(id, _count) => {
-            let mut old = vec![];
-            std::mem::swap(&mut old, &mut model.messages);
-            for m in old {
-                if m.id != *id {
-                    model.messages.push(m);
-                }
+            if let Some(idx) = model.messages.iter().position(|m| m.id == id) {
+                model.messages.remove(idx);
             }
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Message,
+                OperationKind::SingleRemoved,
+                Some(id),
+            ));
         }
 
         // epics
         WsMsg::EpicsLoaded(epics) => {
-            model.epics = epics.clone();
+            model.epics = epics;
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Epic,
+                OperationKind::ListLoaded,
+                None,
+            ));
         }
         WsMsg::EpicCreated(epic) => {
-            model.epics.push(epic.clone());
+            let id = epic.id;
+            model.epics.push(epic);
             model.epics.sort_by(|a, b| a.id.cmp(&b.id));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Epic,
+                OperationKind::SingleCreated,
+                Some(id),
+            ));
         }
-        WsMsg::EpicUpdated(epic) => {
-            let mut old = vec![];
-            std::mem::swap(&mut old, &mut model.epics);
-            for current in old {
-                if current.id != epic.id {
-                    model.epics.push(current);
-                } else {
-                    model.epics.push(epic.clone());
-                }
+        WsMsg::EpicUpdated(mut epic) => {
+            if let Some(idx) = model.epics.iter().position(|e| e.id == epic.id) {
+                std::mem::swap(&mut model.epics[idx], &mut epic);
             }
             model.epics.sort_by(|a, b| a.id.cmp(&b.id));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Epic,
+                OperationKind::SingleModified,
+                Some(epic.id),
+            ));
         }
         WsMsg::EpicDeleted(id, _count) => {
-            let mut old = vec![];
-            std::mem::swap(&mut old, &mut model.epics);
-            for current in old {
-                if current.id != *id {
-                    model.epics.push(current);
-                }
+            if let Some(idx) = model.epics.iter().position(|e| e.id == id) {
+                model.epics.remove(idx);
             }
             model.epics.sort_by(|a, b| a.id.cmp(&b.id));
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Epic,
+                OperationKind::SingleRemoved,
+                Some(id),
+            ));
         }
         _ => (),
     };
@@ -317,8 +423,5 @@ fn init_current_project(model: &mut Model, orders: &mut impl Orders<Msg>) {
 
 fn is_non_logged_area() -> bool {
     let pathname = seed::document().location().unwrap().pathname().unwrap();
-    match pathname.as_str() {
-        "/login" | "/register" | "/invite" => true,
-        _ => false,
-    }
+    matches!(pathname.as_str(), "/login" | "/register" | "/invite")
 }

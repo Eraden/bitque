@@ -98,7 +98,7 @@ impl<'l> StyledTextareaBuilder<'l> {
             height: self.height.unwrap_or(110),
             class_list: self.class_list,
             max_height: self.max_height.unwrap_or_default(),
-            update_event: self.update_event.unwrap_or_else(|| Ev::KeyUp),
+            update_event: self.update_event.unwrap_or(Ev::KeyUp),
             placeholder: self.placeholder,
             disable_auto_resize: self.disable_auto_resize,
         }
@@ -170,36 +170,37 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
     let text_input_handler = ev(update_event, move |event| {
         event.stop_propagation();
 
-        let target = event.target().unwrap();
-        let textarea = seed::to_textarea(&target);
-        let value = textarea.value();
+        let value = event
+            .target()
+            .map(|target| seed::to_textarea(&target).value())
+            .unwrap_or_default();
 
         if handler_disable_auto_resize && value.contains('\n') {
             event.prevent_default();
         }
 
-        Msg::StrInputChanged(
+        Some(Msg::StrInputChanged(
             id,
             if handler_disable_auto_resize {
                 value.trim().to_string()
             } else {
                 value
             },
-        )
+        ))
     });
 
     class_list.push("textAreaInput");
 
     div![
-        attrs![At::Class => "styledTextArea"],
-        div![attrs![At::Class => "textAreaHeading"]],
+        C!["styledTextArea"],
+        div![C!["textAreaHeading"]],
         textarea![
             attrs![
                 At::Class => class_list.join(" ");
                 At::AutoFocus => "true";
                 At::Style => style_list.join(";");
                 At::Placeholder => placeholder.unwrap_or_default();
-                At::Rows => if disable_auto_resize { "1" } else { "auto" }
+                At::Rows => if disable_auto_resize { "5" } else { "auto" }
             ],
             value,
             resize_handler,

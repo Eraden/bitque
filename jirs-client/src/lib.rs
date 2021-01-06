@@ -1,39 +1,61 @@
 #![feature(or_patterns, type_ascription)]
 
-use seed::{prelude::*, *};
-use web_sys::File;
+use {
+    crate::{
+        model::{ModalType, Model, Page},
+        shared::{
+            go_to_board, go_to_login,
+            styled_date_time_input::StyledDateTimeChanged,
+            styled_select::StyledSelectChanged,
+            styled_tooltip,
+            styled_tooltip::{Variant as StyledTooltip, Variant},
+        },
+        ws::{flush_queue, open_socket, read_incoming, send_ws_msg},
+    },
+    jirs_data::*,
+    seed::{prelude::*, *},
+    web_sys::File,
+};
+pub use {changes::*, fields::*, images::*};
 
-pub use changes::*;
-pub use fields::*;
-use jirs_data::*;
-
-use crate::model::{ModalType, Model, Page};
-use crate::shared::styled_date_time_input::StyledDateTimeChanged;
-use crate::shared::{go_to_board, go_to_login, styled_tooltip};
 // use crate::shared::styled_rte::RteMsg;
-use crate::shared::styled_select::StyledSelectChanged;
-use crate::shared::styled_tooltip::{Variant as StyledTooltip, Variant};
-use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
 
 mod changes;
 pub mod elements;
 mod fields;
-mod invite;
+mod images;
 mod modal;
+mod modals;
 mod model;
-mod profile;
-mod project;
-mod project_settings;
-mod reports;
+mod pages;
 mod shared;
-mod sign_in;
-mod sign_up;
-mod users;
 pub mod validations;
 mod ws;
 
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+// #[global_allocator]
+// static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+#[derive(Debug)]
+pub enum ResourceKind {
+    Issue,
+    IssueStatus,
+    Epic,
+    Project,
+    User,
+    UserProject,
+    Message,
+    Comment,
+    Auth,
+}
+
+#[derive(Debug)]
+pub enum OperationKind {
+    ListLoaded,
+    SingleLoaded,
+    SingleCreated,
+    SingleRemoved,
+    SingleModified,
+}
 
 #[derive(Debug)]
 pub enum Msg {
@@ -112,6 +134,9 @@ pub enum Msg {
 
     // WebSocket
     WebSocketChange(WebSocketChanged),
+
+    // resource changes
+    ResourceChanged(ResourceKind, OperationKind, Option<i32>),
 }
 
 fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
@@ -139,8 +164,10 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                     orders.skip();
                     return;
                 }
-                WebSocketChanged::WsMsg(ref ws_msg) => {
+                WebSocketChanged::WsMsg(ws_msg) => {
                     ws::update(ws_msg, model, orders);
+                    orders.skip();
+                    return;
                 }
                 WebSocketChanged::WebSocketMessageLoaded(v) => {
                     match bincode::deserialize(v.as_slice()) {
@@ -187,7 +214,6 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
             return;
         }
         Msg::ChangePage(page) => {
-            orders.skip();
             model.page = *page;
         }
         Msg::ToggleTooltip(variant) => match variant {
@@ -203,42 +229,42 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         },
         _ => (),
     }
-    crate::shared::aside::update(&msg, model, orders);
-    crate::shared::navbar_left::update(&msg, model, orders);
-    crate::modal::update(&msg, model, orders);
-    match model.page {
-        Page::Project | Page::AddIssue | Page::EditIssue(..) => project::update(msg, model, orders),
-        Page::ProjectSettings => project_settings::update(msg, model, orders),
-        Page::SignIn => sign_in::update(msg, model, orders),
-        Page::SignUp => sign_up::update(msg, model, orders),
-        Page::Invite => invite::update(msg, model, orders),
-        Page::Users => users::update(msg, model, orders),
-        Page::Profile => profile::update(msg, model, orders),
-        Page::Reports => reports::update(msg, model, orders),
+
+    {
+        use crate::shared::{aside, navbar_left};
+        aside::update(&msg, model, orders);
+        navbar_left::update(&msg, model, orders);
     }
-    if cfg!(debug_assertions) {
-        // debug!(model);
+    crate::modal::update(&msg, model, orders);
+
+    match model.page {
+        Page::Project | Page::AddIssue | Page::EditIssue(..) => {
+            pages::project_page::update(msg, model, orders)
+        }
+        Page::ProjectSettings => pages::project_settings_page::update(msg, model, orders),
+        Page::SignIn => pages::sign_in_page::update(msg, model, orders),
+        Page::SignUp => pages::sign_up_page::update(msg, model, orders),
+        Page::Invite => pages::invite_page::update(msg, model, orders),
+        Page::Users => pages::users_page::update(msg, model, orders),
+        Page::Profile => pages::profile_page::update(msg, model, orders),
+        Page::Reports => pages::reports_page::update(msg, model, orders),
+    }
+    if cfg!(features = "print-model") {
+        log!(model);
     }
 }
 
 fn view(model: &model::Model) -> Node<Msg> {
     match model.page {
-        Page::Project | Page::AddIssue => project::view(model),
-        Page::EditIssue(_id) => project::view(model),
-        Page::ProjectSettings => project_settings::view(model),
-        Page::SignIn => sign_in::view(model),
-        Page::SignUp => sign_up::view(model),
-        Page::Invite => invite::view(model),
-        Page::Users => users::view(model),
-        Page::Profile => profile::view(model),
-        Page::Reports => reports::view(model),
-    }
-}
-
-fn routes(url: Url) -> Option<Msg> {
-    match resolve_page(url) {
-        Some(page) => Some(Msg::ChangePage(page)),
-        _ => None,
+        Page::Project | Page::AddIssue => pages::project_page::view(model),
+        Page::EditIssue(_id) => pages::project_page::view(model),
+        Page::ProjectSettings => pages::project_settings_page::view(model),
+        Page::SignIn => pages::sign_in_page::view(model),
+        Page::SignUp => pages::sign_up_page::view(model),
+        Page::Invite => pages::invite_page::view(model),
+        Page::Users => pages::users_page::view(model),
+        Page::Profile => pages::profile_page::view(model),
+        Page::Reports => pages::reports_page::view(model),
     }
 }
 
@@ -277,14 +303,39 @@ pub fn render(host_url: String, ws_url: String) {
     }
     elements::define();
 
-    let _app = seed::App::builder(update, view)
-        .routes(routes)
-        .after_mount(after_mount)
-        .window_events(window_events)
-        .build_and_start();
+    let app = seed::App::start("app", init, update, view);
+
+    {
+        let app_clone = app.clone();
+        let on_key_down = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
+            let event: web_sys::KeyboardEvent = event.unchecked_into();
+
+            let tag_name: String = seed::document()
+                .active_element()
+                .map(|el| el.tag_name())
+                .unwrap_or_default();
+
+            let key = match tag_name.to_lowercase().as_str() {
+                "input" | "textarea" => return,
+                _ => event.key(),
+            };
+
+            let msg = Msg::GlobalKeyDown {
+                key,
+                shift: event.shift_key(),
+                ctrl: event.ctrl_key(),
+                alt: event.alt_key(),
+            };
+            app_clone.update(msg);
+        }) as Box<dyn FnMut(_)>);
+        seed::body()
+            .add_event_listener_with_callback("keyup", on_key_down.as_ref().unchecked_ref())
+            .expect("Failed to mount global key handler");
+        on_key_down.forget();
+    }
 }
 
-fn after_mount(url: Url, orders: &mut impl Orders<Msg>) -> AfterMount<Model> {
+fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     let host_url = unsafe { HOST_URL.clone() };
     let ws_url = unsafe { WS_URL.clone() };
     let mut model = Model::new(host_url, ws_url);
@@ -294,31 +345,13 @@ fn after_mount(url: Url, orders: &mut impl Orders<Msg>) -> AfterMount<Model> {
     }
     model.page = resolve_page(url).unwrap_or(Page::Project);
     open_socket(&mut model, orders);
-    AfterMount::new(model).url_handling(UrlHandling::PassToRoutes)
-}
 
-fn window_events(_model: &Model) -> Vec<EventHandler<Msg>> {
-    vec![keyboard_ev(
-        Ev::KeyDown,
-        move |event: web_sys::KeyboardEvent| {
-            let tag_name: String = seed::document()
-                .active_element()
-                .map(|el| el.tag_name())
-                .unwrap_or_default();
-
-            let key = match tag_name.to_lowercase().as_str() {
-                "" | "input" | "textarea" => return None,
-                _ => event.key(),
-            };
-
-            Some(Msg::GlobalKeyDown {
-                key,
-                shift: event.shift_key(),
-                ctrl: event.ctrl_key(),
-                alt: event.alt_key(),
-            })
-        },
-    )]
+    // orders.subscribe(|subs::UrlChanged(url)| {
+    //     if let Some(page) = resolve_page(url) {
+    //         orders.send_msg(Msg::ChangePage(page));
+    //     }
+    // });
+    model
 }
 
 #[inline]

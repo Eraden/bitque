@@ -14,7 +14,7 @@ path = "./src/lib.rs"
 
 [features]
 local-storage = ["filesystem-actor"]
-aws-s3 = ["rusoto_s3", "rusoto_core"]
+aws-s3 = ["amazon-actor"]
 default = ["local-storage", "aws-s3"]
 
 [dependencies]
@@ -35,10 +35,6 @@ bytes = { version = "0.5.6" }
 futures = { version = "0.3.8" }
 openssl-sys = { version = "*", features = ["vendored"] }
 libc = { version = "0.2.0", default-features = false }
-
-flate2 = { version = "*" }
-syntect = { version = "*" }
-lazy_static = { version = "*" }
 
 log = "0.4"
 pretty_env_logger = "0.4"
@@ -67,18 +63,9 @@ path = "../websocket-actor"
 path = "../filesystem-actor"
 optional = true
 
-# Amazon S3
-[dependencies.rusoto_s3]
+[dependencies.amazon-actor]
+path = "../amazon-actor"
 optional = true
-version = "0.45.0"
-
-[dependencies.rusoto_core]
-optional = true
-version = "0.45.0"
-
-[dependencies.rusoto_signature]
-optional = true
-version = "0.45.0"
 
 [dependencies.tokio]
 version = "0.2.23"

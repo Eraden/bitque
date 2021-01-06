@@ -116,9 +116,14 @@ pub fn render(values: StyledModal) -> Node<Msg> {
         empty![]
     };
 
-    let close_handler = mouse_ev(Ev::Click, |_| Msg::ModalDropped);
+    let close_handler = mouse_ev(Ev::Click, |ev| {
+        ev.stop_propagation();
+        ev.prevent_default();
+        Msg::ModalDropped
+    });
     let body_handler = mouse_ev(Ev::Click, |ev| {
         ev.stop_propagation();
+        ev.prevent_default();
         None as Option<Msg>
     });
 
