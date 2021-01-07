@@ -15,7 +15,6 @@ environment:
   JIRS_SERVER_PORT: 5000
   JIRS_SERVER_BIND: 0.0.0.0
 secrets:
-  - 7ebab768-e5e4-4c9d-ba57-ec41a72c5665
   - 46f739e5-4538-45dd-a79f-bf173b7a2ed9
 tasks:
   - build_config: |

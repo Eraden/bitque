@@ -14,7 +14,6 @@ environment:
   JIRS_SERVER_BIND: jirs.ita-prog.pl
   CI: true
 secrets:
-  - 7ebab768-e5e4-4c9d-ba57-ec41a72c5665
   - 46f739e5-4538-45dd-a79f-bf173b7a2ed9
 tasks:
   - setup: |
