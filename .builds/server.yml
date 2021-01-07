@@ -16,6 +16,7 @@ environment:
   JIRS_SERVER_BIND: 0.0.0.0
 secrets:
   - 7ebab768-e5e4-4c9d-ba57-ec41a72c5665
+  - 46f739e5-4538-45dd-a79f-bf173b7a2ed9
 tasks:
   - build_config: |
       cp ~/jirs/.builds/db.toml ~/jirs/jirs-server/db.toml
@@ -42,5 +43,7 @@ tasks:
       tar -cJvf ~/server.tar.xz ./target/release/jirs_server
   - deploy: |
       cp ~/server.tar.xz ~/latest.tar.xz
+      scp ~/latest.tar.xz rpi.ita-prog.pl:/www/http/static/jirs-server-{TAR_NAME}.tar.xz
+      scp ~/latest.tar.xz rpi.ita-prog.pl:/www/http/static/jirs-server-latest.tar.xz
 artifacts:
   - jirs_server

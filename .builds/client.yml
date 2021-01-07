@@ -15,6 +15,7 @@ environment:
   CI: true
 secrets:
   - 7ebab768-e5e4-4c9d-ba57-ec41a72c5665
+  - 46f739e5-4538-45dd-a79f-bf173b7a2ed9
 tasks:
   - setup: |
       rustup toolchain install nightly
@@ -31,5 +32,7 @@ tasks:
       export TAR_NAME=$(date -u +"%Y%m%d%H%M%s")
       tar -cJvf ~/${TAR_NAME}.tar.xz ./build
       cp ~/${TAR_NAME}.tar.xz ~/latest.tar.xz
+      scp ~/latest.tar.xz rpi.ita-prog.pl:/www/http/static/jirs-client-{TAR_NAME}.tar.xz
+      scp ~/latest.tar.xz rpi.ita-prog.pl:/www/http/static/jirs-client-latest.tar.xz
 artifacts:
   - latest.tar.gz
