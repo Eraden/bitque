@@ -7,11 +7,11 @@ use {
             styled_button::StyledButton, styled_date_time_input::StyledDateTimeInput,
             styled_field::StyledField, styled_form::StyledForm, styled_input::StyledInput,
             styled_modal::StyledModal, styled_select::StyledSelect,
-            styled_textarea::StyledTextarea, ToChild, ToNode,
+            styled_textarea::StyledTextarea, IntoChild, ToChild, ToNode,
         },
         FieldId, Msg,
     },
-    jirs_data::{IssueFieldId, IssuePriority, ToVec},
+    jirs_data::{IssueFieldId, IssuePriority},
     seed::{prelude::*, *},
 };
 
@@ -124,12 +124,7 @@ fn issue_type_field(modal: &AddIssueModal) -> Node<Msg> {
         .text_filter(modal.type_state.text_filter.as_str())
         .opened(modal.type_state.opened)
         .valid(true)
-        .options(
-            Type::ordered()
-                .iter()
-                .map(|t| t.to_child().name("type"))
-                .collect(),
-        )
+        .options(Type::ordered().iter().map(|t| t.to_child().name("type")))
         .selected(vec![Type::from(
             modal.type_state.values.get(0).cloned().unwrap_or_default(),
         )
@@ -182,13 +177,7 @@ fn reporter_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .normal()
         .text_filter(modal.reporter_state.text_filter.as_str())
         .opened(modal.reporter_state.opened)
-        .options(
-            model
-                .users
-                .iter()
-                .map(|u| u.to_child().name("reporter"))
-                .collect(),
-        )
+        .options(model.users.iter().map(|u| u.to_child().name("reporter")))
         .selected(
             model
                 .users
@@ -219,13 +208,7 @@ fn assignees_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .multi()
         .text_filter(modal.assignees_state.text_filter.as_str())
         .opened(modal.assignees_state.opened)
-        .options(
-            model
-                .users
-                .iter()
-                .map(|u| u.to_child().name("assignees"))
-                .collect(),
-        )
+        .options(model.users.iter().map(|u| u.to_child().name("assignees")))
         .selected(
             model
                 .users
@@ -251,19 +234,15 @@ fn assignees_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
 }
 
 fn issue_priority_field(modal: &AddIssueModal) -> Node<Msg> {
+    let priorities = IssuePriority::default().into_iter();
     let select_priority = StyledSelect::build()
         .name("priority")
         .normal()
         .text_filter(modal.priority_state.text_filter.as_str())
         .opened(modal.priority_state.opened)
         .valid(true)
-        .options(
-            IssuePriority::ordered()
-                .iter()
-                .map(|p| p.to_child().name("priority"))
-                .collect(),
-        )
-        .selected(vec![modal.priority.to_child().name("priority")])
+        .options(priorities.map(|p| p.into_child().name("priority")))
+        .selected(vec![modal.priority.into_child().name("priority")])
         .build(FieldId::AddIssueModal(IssueFieldId::Priority))
         .into_node();
     StyledField::build()

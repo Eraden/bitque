@@ -108,7 +108,7 @@ pub fn time_tracking_field(
                     .collect(),
             )
             .state(select_state)
-            .options(fibonacci_values.iter().map(|v| v.to_child()).collect())
+            .options(fibonacci_values.iter().map(|v| v.to_child()))
             .build(field_id)
             .into_node(),
         TimeTracking::Hourly => StyledInput::build()

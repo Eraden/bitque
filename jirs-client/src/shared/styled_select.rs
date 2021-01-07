@@ -1,9 +1,16 @@
-use seed::{prelude::*, *};
+use {
+    crate::{
+        shared::{
+            styled_icon::{Icon, StyledIcon},
+            styled_select_child::*,
+            ToNode,
+        },
+        FieldId, Msg,
+    },
+    seed::{prelude::*, *},
+};
 
-use crate::shared::styled_icon::{Icon, StyledIcon};
-use crate::shared::styled_select_child::*;
-use crate::shared::ToNode;
-use crate::{FieldId, Msg};
+// pub trait ChildIter<'l> = Iterator<Item = StyledSelectChildBuilder<'l>>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum StyledSelectChanged {
@@ -105,28 +112,37 @@ impl StyledSelectState {
     }
 }
 
-pub struct StyledSelect<'l> {
+pub struct StyledSelect<'l, Options>
+where
+    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+{
     id: FieldId,
     variant: Variant,
     dropdown_width: Option<usize>,
     name: Option<&'l str>,
     valid: bool,
     is_multi: bool,
-    options: Vec<StyledSelectChildBuilder<'l>>,
+    options: Option<Options>,
     selected: Vec<StyledSelectChildBuilder<'l>>,
     text_filter: &'l str,
     opened: bool,
     clearable: bool,
 }
 
-impl<'l> ToNode for StyledSelect<'l> {
+impl<'l, Options> ToNode for StyledSelect<'l, Options>
+where
+    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+{
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-impl<'l> StyledSelect<'l> {
-    pub fn build() -> StyledSelectBuilder<'l> {
+impl<'l, Options> StyledSelect<'l, Options>
+where
+    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+{
+    pub fn build() -> StyledSelectBuilder<'l, Options> {
         StyledSelectBuilder {
             variant: None,
             dropdown_width: None,
@@ -143,21 +159,27 @@ impl<'l> StyledSelect<'l> {
 }
 
 #[derive(Debug)]
-pub struct StyledSelectBuilder<'l> {
+pub struct StyledSelectBuilder<'l, Options>
+where
+    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+{
     variant: Option<Variant>,
     dropdown_width: Option<usize>,
     name: Option<&'l str>,
     valid: Option<bool>,
     is_multi: Option<bool>,
-    options: Option<Vec<StyledSelectChildBuilder<'l>>>,
+    options: Option<Options>,
     selected: Option<Vec<StyledSelectChildBuilder<'l>>>,
     text_filter: Option<&'l str>,
     opened: Option<bool>,
     clearable: bool,
 }
 
-impl<'l> StyledSelectBuilder<'l> {
-    pub fn build(self, id: FieldId) -> StyledSelect<'l> {
+impl<'l, Options> StyledSelectBuilder<'l, Options>
+where
+    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+{
+    pub fn build(self, id: FieldId) -> StyledSelect<'l, Options> {
         StyledSelect {
             id,
             variant: self.variant.unwrap_or_default(),
@@ -165,21 +187,13 @@ impl<'l> StyledSelectBuilder<'l> {
             name: self.name,
             valid: self.valid.unwrap_or(true),
             is_multi: self.is_multi.unwrap_or_default(),
-            options: self.options.unwrap_or_default(),
+            options: self.options,
             selected: self.selected.unwrap_or_default(),
             text_filter: self.text_filter.unwrap_or_default(),
             opened: self.opened.unwrap_or_default(),
             clearable: self.clearable,
         }
     }
-
-    // pub fn try_state<'state: 'l>(self, state: Option<&'state StyledSelectState>) -> Self {
-    //     if let Some(s) = state {
-    //         self.state(s)
-    //     } else {
-    //         self
-    //     }
-    // }
 
     pub fn state<'state: 'l>(self, state: &'state StyledSelectState) -> Self {
         self.opened(state.opened)
@@ -211,7 +225,7 @@ impl<'l> StyledSelectBuilder<'l> {
         self
     }
 
-    pub fn options(mut self, options: Vec<StyledSelectChildBuilder<'l>>) -> Self {
+    pub fn options(mut self, options: Options) -> Self {
         self.options = Some(options);
         self
     }
@@ -242,7 +256,10 @@ impl<'l> StyledSelectBuilder<'l> {
     }
 }
 
-pub fn render(values: StyledSelect) -> Node<Msg> {
+pub fn render<'l, Options>(values: StyledSelect<'l, Options>) -> Node<Msg>
+where
+    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+{
     let StyledSelect {
         id,
         variant,
@@ -303,28 +320,34 @@ pub fn render(values: StyledSelect) -> Node<Msg> {
         empty![]
     };
 
-    let children: Vec<Node<Msg>> = options
-        .into_iter()
-        .filter(|o| !selected.contains(&o) && o.match_text(text_filter))
-        .map(|child| {
-            let child = child.build(DisplayType::SelectOption);
-            let value = child.value();
-            let node = child.into_node();
+    let children: Vec<Node<Msg>> = if let Some(options) = options {
+        options
+            .filter(|o| !selected.contains(&o) && o.match_text(text_filter))
+            .map(|child| {
+                let child = child.build(DisplayType::SelectOption);
+                let value = child.value();
+                let node = child.into_node();
 
-            let on_change = {
-                let field_id = id.clone();
-                mouse_ev(Ev::Click, move |_| {
-                    Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(Some(value)))
-                })
-            };
-            div![
-                attrs![At::Class => "option"],
-                on_change,
-                on_handler.clone(),
-                node
-            ]
-        })
-        .collect();
+                let on_change = {
+                    let field_id = id.clone();
+                    mouse_ev(Ev::Click, move |_| {
+                        Msg::StyledSelectChanged(
+                            field_id,
+                            StyledSelectChanged::Changed(Some(value)),
+                        )
+                    })
+                };
+                div![
+                    attrs![At::Class => "option"],
+                    on_change,
+                    on_handler.clone(),
+                    node
+                ]
+            })
+            .collect()
+    } else {
+        vec![]
+    };
 
     let text_input = if opened {
         seed::input![

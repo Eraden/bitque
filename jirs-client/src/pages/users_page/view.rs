@@ -4,12 +4,12 @@ use {
         shared::{
             inner_layout, styled_button::StyledButton, styled_field::StyledField,
             styled_form::StyledForm, styled_input::StyledInput, styled_select::StyledSelect,
-            ToChild, ToNode,
+            IntoChild, ToNode,
         },
         validations::is_email,
         FieldId, Msg, PageChanged, UsersPageChange,
     },
-    jirs_data::{InvitationState, ToVec, UserRole, UsersFieldId},
+    jirs_data::{InvitationState, UserRole, UsersFieldId},
     seed::{prelude::*, *},
 };
 
@@ -45,14 +45,17 @@ pub fn view(model: &Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let roles = UserRole::ordered();
     let user_role = StyledSelect::build()
         .name("user_role")
         .valid(true)
         .normal()
         .state(&page.user_role_state)
-        .selected(vec![page.user_role.to_child()])
-        .options(roles.iter().map(|role| role.to_child()).collect())
+        .selected(vec![page.user_role.into_child()])
+        .options(
+            UserRole::default()
+                .into_iter()
+                .map(|role| role.into_child()),
+        )
         .build(FieldId::Users(UsersFieldId::UserRole))
         .into_node();
     let user_role_field = StyledField::build()

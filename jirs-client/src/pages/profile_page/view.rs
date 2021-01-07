@@ -80,46 +80,41 @@ pub fn view(model: &Model) -> Node<Msg> {
 }
 
 fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
-    let inner = if model.projects.len() <= 1 {
-        let name = model
-            .project
-            .as_ref()
-            .map(|p| p.name.as_str())
-            .unwrap_or_default();
-        span![name]
-    } else {
-        let mut project_by_id = HashMap::new();
-        for p in model.projects.iter() {
-            project_by_id.insert(p.id, p);
-        }
-        let mut joined_projects = HashMap::new();
-        for p in model.user_projects.iter() {
-            joined_projects.insert(p.project_id, p);
-        }
+    let inner =
+        if model.projects.len() <= 1 {
+            let name = model
+                .project
+                .as_ref()
+                .map(|p| p.name.as_str())
+                .unwrap_or_default();
+            span![name]
+        } else {
+            let mut project_by_id = HashMap::new();
+            for p in model.projects.iter() {
+                project_by_id.insert(p.id, p);
+            }
+            let mut joined_projects = HashMap::new();
+            for p in model.user_projects.iter() {
+                joined_projects.insert(p.project_id, p);
+            }
 
-        StyledSelect::build()
-            .name("current_project")
-            .normal()
-            .options(
-                model
-                    .projects
-                    .iter()
-                    .filter_map(|project| {
-                        joined_projects.get(&project.id).map(|_| project.to_child())
-                    })
-                    .collect(),
-            )
-            .selected(
-                page.current_project
-                    .values
-                    .iter()
-                    .filter_map(|id| project_by_id.get(&((*id) as i32)).map(|p| p.to_child()))
-                    .collect(),
-            )
-            .state(&page.current_project)
-            .build(FieldId::Profile(UsersFieldId::CurrentProject))
-            .into_node()
-    };
+            StyledSelect::build()
+                .name("current_project")
+                .normal()
+                .options(model.projects.iter().filter_map(|project| {
+                    joined_projects.get(&project.id).map(|_| project.to_child())
+                }))
+                .selected(
+                    page.current_project
+                        .values
+                        .iter()
+                        .filter_map(|id| project_by_id.get(&((*id) as i32)).map(|p| p.to_child()))
+                        .collect(),
+                )
+                .state(&page.current_project)
+                .build(FieldId::Profile(UsersFieldId::CurrentProject))
+                .into_node()
+        };
     StyledField::build()
         .label("Current project")
         .input(div![C!["project-name"], inner])

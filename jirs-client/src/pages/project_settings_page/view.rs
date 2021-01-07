@@ -14,11 +14,11 @@ use {
             styled_input::StyledInput,
             styled_select::StyledSelect,
             styled_textarea::StyledTextarea,
-            ToChild, ToNode,
+            IntoChild, ToChild, ToNode,
         },
         FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange,
     },
-    jirs_data::{IssueStatus, ProjectCategory, TimeTracking, ToVec},
+    jirs_data::{IssueStatus, ProjectCategory, TimeTracking},
     seed::{prelude::*, *},
     std::collections::HashMap,
 };
@@ -168,20 +168,23 @@ fn description_field(page: &ProjectSettingsPage) -> Node<Msg> {
 
 /// Build project category dropdown with styled field wrapper
 fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
-    let project_categories = ProjectCategory::ordered();
     let category = StyledSelect::build()
         .opened(page.project_category_state.opened)
         .text_filter(page.project_category_state.text_filter.as_str())
         .valid(true)
         .normal()
-        .options(project_categories.iter().map(|c| c.to_child()).collect())
+        .options(
+            ProjectCategory::default()
+                .into_iter()
+                .map(|c| c.into_child()),
+        )
         .selected(vec![page
             .payload
             .category
             .as_ref()
             .cloned()
             .unwrap_or_default()
-            .to_child()])
+            .into_child()])
         .build(FieldId::ProjectSettings(ProjectFieldId::Category))
         .into_node();
     StyledField::build()

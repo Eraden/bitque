@@ -3,6 +3,6 @@
 
 [print_schema]
 file = "actors/database-actor/src/schema.rs"
-import_types = ["diesel::sql_types::*", "jirs_data::sql::*"]
+import_types = ["diesel::sql_types::*", "jirs_data::*"]
 with_docs = true
 patch_file = "./actors/database-actor/src/schema.patch"

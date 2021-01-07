@@ -2,7 +2,7 @@
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `comments` table.
     ///
@@ -49,7 +49,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `epics` table.
     ///
@@ -108,7 +108,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `invitations` table.
     ///
@@ -179,7 +179,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `issue_assignees` table.
     ///
@@ -220,7 +220,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `issue_statuses` table.
     ///
@@ -267,7 +267,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `issues` table.
     ///
@@ -374,7 +374,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `messages` table.
     ///
@@ -439,7 +439,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `projects` table.
     ///
@@ -498,7 +498,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `tokens` table.
     ///
@@ -551,7 +551,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `user_projects` table.
     ///
@@ -610,7 +610,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use jirs_data::sql::*;
+    use jirs_data::*;
 
     /// Representation of the `users` table.
     ///

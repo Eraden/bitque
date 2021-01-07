@@ -21,6 +21,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::ResourceChanged(ResourceKind::Issue, OperationKind::SingleModified, Some(id)) => {
             if let Some(issue) = model.issues_by_id.get(id) {
                 modal.payload = issue.clone().into();
+                modal.description_state.initial_text =
+                    issue.description_text.clone().unwrap_or_default();
             }
         }
         Msg::StyledSelectChanged(
@@ -139,7 +141,6 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Description)),
             value,
         ) => {
-            // modal.payload.description = Some(value.clone());
             modal.payload.description_text = Some(value.clone());
             send_ws_msg(
                 WsMsg::IssueUpdate(
@@ -148,7 +149,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     PayloadVariant::String(
                         modal
                             .payload
-                            .description
+                            .description_text
                             .as_ref()
                             .cloned()
                             .unwrap_or_default(),

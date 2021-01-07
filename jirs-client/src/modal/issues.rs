@@ -23,7 +23,7 @@ where
         let input = StyledSelect::build()
             .name("epic")
             .selected(selected)
-            .options(model.epics.iter().map(|epic| epic.to_child()).collect())
+            .options(model.epics.iter().map(|epic| epic.to_child()))
             .normal()
             .clearable()
             .text_filter(modal.epic_state().text_filter.as_str())

@@ -161,21 +161,6 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
 
-        // issues
-        WsMsg::ProjectIssuesLoaded(mut v) => {
-            v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
-            model.issues = v;
-            model.issues_by_id.clear();
-            for issue in model.issues.iter() {
-                model.issues_by_id.insert(issue.id, issue.clone());
-            }
-
-            orders.send_msg(Msg::ResourceChanged(
-                ResourceKind::Issue,
-                OperationKind::ListLoaded,
-                None,
-            ));
-        }
         // issue statuses
         WsMsg::IssueStatusesLoaded(v) => {
             model.issue_statuses = v;
@@ -232,8 +217,24 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         // issues
+        WsMsg::ProjectIssuesLoaded(mut v) => {
+            v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
+            model.issues = v;
+            model.issues_by_id.clear();
+            for issue in model.issues.iter() {
+                model.issues_by_id.insert(issue.id, issue.clone());
+            }
+
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Issue,
+                OperationKind::ListLoaded,
+                None,
+            ));
+        }
         WsMsg::IssueUpdated(mut issue) => {
             let id = issue.id;
+            model.issues_by_id.remove(&id);
+            model.issues_by_id.insert(id, issue.clone());
             if let Some(idx) = model.issues.iter().position(|i| i.id == issue.id) {
                 std::mem::swap(&mut model.issues[idx], &mut issue);
             }
@@ -245,16 +246,13 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         WsMsg::IssueDeleted(id, _count) => {
             let mut old = vec![];
-            std::mem::swap(&mut model.issue_statuses, &mut old);
+            std::mem::swap(&mut model.issues, &mut old);
             for is in old {
                 if is.id == id {
                     continue;
                 }
-                model.issue_statuses.push(is);
+                model.issues.push(is);
             }
-            model
-                .issue_statuses
-                .sort_by(|a, b| a.position.cmp(&b.position));
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Issue,
                 OperationKind::SingleRemoved,
@@ -264,6 +262,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         // users
         WsMsg::ProjectUsersLoaded(v) => {
             model.users = v.clone();
+            model.users_by_id.clear();
             for user in v {
                 model.users_by_id.insert(user.id, user.clone());
             }

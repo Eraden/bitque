@@ -6,12 +6,13 @@ use {
         shared::{
             styled_avatar::StyledAvatar, styled_button::StyledButton, styled_editor::StyledEditor,
             styled_field::StyledField, styled_icon::Icon, styled_input::StyledInput,
-            styled_select::StyledSelect, tracking_widget::tracking_link, ToChild, ToNode,
+            styled_select::StyledSelect, tracking_widget::tracking_link, IntoChild, ToChild,
+            ToNode,
         },
         EditIssueModalSection, FieldChange, FieldId, Msg,
     },
     comments::*,
-    jirs_data::{CommentFieldId, IssueFieldId, IssuePriority, IssueType, TimeTracking, ToVec},
+    jirs_data::{CommentFieldId, IssueFieldId, IssuePriority, IssueType, TimeTracking},
     seed::{prelude::*, *},
 };
 
@@ -41,7 +42,14 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let issue_id = *id;
 
     let click_handler = mouse_ev(Ev::Click, move |_| {
-        let link = format!("http://localhost:7000/issues/{id}", id = issue_id);
+        let proto = seed::window().location().protocol().unwrap_or_default();
+        let hostname = seed::window().location().hostname().unwrap_or_default();
+        let link = format!(
+            "{proto}//{hostname}/issues/{id}",
+            proto = proto,
+            hostname = hostname,
+            id = issue_id
+        );
         let el = match seed::html_document().create_element("textarea") {
             Ok(el) => el
                 .dyn_ref::<web_sys::HtmlTextAreaElement>()
@@ -95,7 +103,6 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let issue_types = IssueType::ordered();
     let issue_type_select = StyledSelect::build()
         .dropdown_width(150)
         .name("type")
@@ -103,16 +110,15 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .opened(top_type_state.opened)
         .valid(true)
         .options(
-            issue_types
-                .iter()
-                .map(|t| t.to_child().name("type"))
-                .collect(),
+            IssueType::default()
+                .into_iter()
+                .map(|t| t.into_child().name("type")),
         )
         .selected(vec![{
             let id = modal.id;
             let issue_type = &payload.issue_type;
             issue_type
-                .to_child()
+                .into_child()
                 .name("type")
                 .text_owned(format!("{} - {}", issue_type, id))
         }])
@@ -244,8 +250,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             model
                 .issue_statuses
                 .iter()
-                .map(|opt| opt.to_child().name("status"))
-                .collect(),
+                .map(|opt| opt.to_child().name("status")),
         )
         .selected(
             model
@@ -276,8 +281,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             model
                 .users
                 .iter()
-                .map(|user| user.to_child().name("assignees"))
-                .collect(),
+                .map(|user| user.to_child().name("assignees")),
         )
         .selected(
             model
@@ -306,8 +310,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             model
                 .users
                 .iter()
-                .map(|user| user.to_child().name("reporter"))
-                .collect(),
+                .map(|user| user.to_child().name("reporter")),
         )
         .selected(
             model
@@ -327,19 +330,17 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .build()
         .into_node();
 
-    let issue_priorities = IssuePriority::ordered();
     let priority = StyledSelect::build()
         .name("priority")
         .opened(priority_state.opened)
         .empty()
         .text_filter(priority_state.text_filter.as_str())
         .options(
-            issue_priorities
-                .iter()
-                .map(|p| p.to_child().name("priority"))
-                .collect(),
+            IssuePriority::default()
+                .into_iter()
+                .map(|p| p.into_child().name("priority")),
         )
-        .selected(vec![payload.priority.to_child().name("priority")])
+        .selected(vec![payload.priority.into_child().name("priority")])
         .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
             IssueFieldId::Priority,
         )))

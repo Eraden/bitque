@@ -13,7 +13,7 @@ name = "jirs_data"
 path = "./src/lib.rs"
 
 [features]
-backend = ["diesel", "actix"]
+backend = ["diesel", "actix", "derive_enum_sql"]
 frontend = []
 
 [dependencies]
@@ -30,3 +30,13 @@ optional = true
 optional = true
 version = "1.4.5"
 features = ["unstable", "postgres", "numeric", "extras", "uuidv07"]
+
+[dependencies.derive_enum_iter]
+path = "../../derive/derive_enum_iter"
+
+[dependencies.derive_enum_primitive]
+path = "../../derive/derive_enum_primitive"
+
+[dependencies.derive_enum_sql]
+path = "../../derive/derive_enum_sql"
+optional = true

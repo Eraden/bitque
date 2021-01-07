@@ -36,6 +36,12 @@ pub trait ToChild<'l> {
     fn to_child<'m: 'l>(&'m self) -> Self::Builder;
 }
 
+pub trait IntoChild<'l> {
+    type Builder: 'l;
+
+    fn into_child(self) -> Self::Builder;
+}
+
 #[inline]
 pub fn go_to_board(orders: &mut impl Orders<Msg>) {
     go_to("board", orders);

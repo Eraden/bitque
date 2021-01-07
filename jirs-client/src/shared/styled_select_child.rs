@@ -1,10 +1,12 @@
-use std::borrow::Cow;
-
-use seed::{prelude::*, *};
-
-use crate::shared::styled_select::Variant;
-use crate::shared::{ToChild, ToNode};
-use crate::Msg;
+use {
+    crate::{
+        shared::styled_select::Variant,
+        shared::{IntoChild, ToChild, ToNode},
+        Msg,
+    },
+    seed::{prelude::*, *},
+    std::borrow::Cow,
+};
 
 pub enum DisplayType {
     SelectOption,
@@ -186,9 +188,10 @@ impl<'l> ToChild<'l> for jirs_data::User {
     }
 }
 
-impl<'l> ToChild<'l> for jirs_data::IssuePriority {
+impl<'l> IntoChild<'l> for jirs_data::IssuePriority {
     type Builder = StyledSelectChildBuilder<'l>;
-    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
+
+    fn into_child(self) -> Self::Builder {
         let icon = crate::shared::styled_icon::StyledIcon::build(self.clone().into())
             .add_class(self.to_str())
             .build()
@@ -214,10 +217,10 @@ impl<'l> ToChild<'l> for jirs_data::IssueStatus {
     }
 }
 
-impl<'l> ToChild<'l> for jirs_data::IssueType {
+impl<'l> IntoChild<'l> for jirs_data::IssueType {
     type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
+    fn into_child(self) -> Self::Builder {
         let name = self.to_label();
 
         let type_icon = crate::shared::styled_icon::StyledIcon::build(self.clone().into())
@@ -233,10 +236,10 @@ impl<'l> ToChild<'l> for jirs_data::IssueType {
     }
 }
 
-impl<'l> ToChild<'l> for jirs_data::ProjectCategory {
+impl<'l> IntoChild<'l> for jirs_data::ProjectCategory {
     type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
+    fn into_child(self) -> Self::Builder {
         StyledSelectChild::build()
             .add_class(self.to_str())
             .text(self.to_str())
@@ -244,10 +247,10 @@ impl<'l> ToChild<'l> for jirs_data::ProjectCategory {
     }
 }
 
-impl<'l> ToChild<'l> for jirs_data::UserRole {
+impl<'l> IntoChild<'l> for jirs_data::UserRole {
     type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
+    fn into_child(self) -> Self::Builder {
         let name = self.to_str();
 
         StyledSelectChild::build()

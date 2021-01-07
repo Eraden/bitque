@@ -7,7 +7,7 @@ index 00d1c0b..5b82ccf 100644
 +
  table! {
      use diesel::sql_types::*;
-     use jirs_data::sql::*;
+     use jirs_data::*;
  
      /// Representation of the `comments` table.
      ///
