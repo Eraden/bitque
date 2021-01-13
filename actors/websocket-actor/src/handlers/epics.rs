@@ -1,8 +1,8 @@
-use futures::executor::block_on;
-
-use jirs_data::{EpicId, NameString, UserProject, WsMsg};
-
-use crate::{WebSocketActor, WsHandler, WsResult};
+use {
+    crate::{WebSocketActor, WsHandler, WsResult},
+    futures::executor::block_on,
+    jirs_data::{EpicId, NameString, UserProject, WsMsg},
+};
 
 pub struct LoadEpics;
 

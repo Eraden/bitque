@@ -384,3 +384,40 @@ i.styledIcon.double-left:before {
 i.styledIcon.double-right:before {
     content: "\ea7c";
 }
+
+
+i.styledIcon.task {
+    color: var(--task);
+}
+
+i.styledIcon.bug {
+    color: var(--bug);
+}
+
+i.styledIcon.story {
+    color: var(--story);
+}
+
+i.styledIcon.epic {
+    color: var(--epic);
+}
+
+i.styledIcon.highest {
+    color: var(--highest);
+}
+
+i.styledIcon.high {
+    color: var(--high);
+}
+
+i.styledIcon.medium {
+    color: var(--medium);
+}
+
+i.styledIcon.low {
+    color: var(--low);
+}
+
+i.styledIcon.lowest {
+    color: var(--lowest);
+}

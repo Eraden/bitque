@@ -3,7 +3,7 @@ use {
         model::{IssueModal, ModalType},
         shared::styled_select::StyledSelectChanged,
         ws::send_ws_msg,
-        FieldId, Msg, WebSocketChanged,
+        FieldId, Msg, OperationKind, ResourceKind,
     },
     jirs_data::{IssueFieldId, UserId, WsMsg},
     seed::prelude::*,
@@ -48,7 +48,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
                         time_remaining: modal.time_remaining,
                         project_id: modal.project_id.unwrap_or(project_id),
                         user_ids: modal.user_ids.clone(),
-                        reporter_id: modal.reporter_id.unwrap_or_else(|| user_id),
+                        reporter_id: modal.reporter_id.unwrap_or(user_id),
                         epic_id: modal.epic_id,
                     };
 
@@ -64,12 +64,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             };
         }
 
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueCreated(issue))) => {
-            model.issues.push(issue.clone());
-            orders.skip().send_msg(Msg::ModalDropped);
-        }
-
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::EpicCreated(_))) => {
+        Msg::ResourceChanged(ResourceKind::Issue, OperationKind::SingleCreated, _) => {
             orders.skip().send_msg(Msg::ModalDropped);
         }
 

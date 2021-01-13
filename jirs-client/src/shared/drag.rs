@@ -9,6 +9,11 @@ pub struct DragState {
 
 impl DragState {
     #[inline]
+    pub fn is_dragging(&self) -> bool {
+        self.dragged_id.is_some()
+    }
+
+    #[inline]
     pub fn mark_dirty(&mut self, id: i32) {
         self.dirty.insert(id);
     }

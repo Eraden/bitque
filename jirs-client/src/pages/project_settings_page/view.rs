@@ -105,9 +105,9 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let project_section = vec![div![C!["formContainer"], form]];
+    let project_section = [div![C!["formContainer"], form]];
 
-    inner_layout(model, "projectSettings", project_section)
+    inner_layout(model, "projectSettings", &project_section)
 }
 
 /// Build project name input with styled field wrapper

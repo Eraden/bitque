@@ -25,6 +25,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     issue.description_text.clone().unwrap_or_default();
             }
         }
+
+        // type
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
             StyledSelectChanged::Changed(Some(value)),
@@ -40,6 +42,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 orders,
             );
         }
+
+        // issue status id
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::IssueStatusId)),
             StyledSelectChanged::Changed(Some(value)),
@@ -55,6 +59,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 orders,
             );
         }
+
+        // reporter id
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Reporter)),
             StyledSelectChanged::Changed(Some(value)),
@@ -70,6 +76,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 orders,
             );
         }
+
+        // assignees
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
             StyledSelectChanged::Changed(Some(value)),
@@ -89,8 +97,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
             StyledSelectChanged::RemoveMulti(value),
         ) => {
-            let mut old = vec![];
-            std::mem::swap(&mut old, &mut modal.payload.user_ids);
+            let old = std::mem::replace(&mut modal.payload.user_ids, vec![]);
             let dropped = *value as i32;
             for id in old.into_iter() {
                 if id != dropped {
@@ -107,6 +114,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 orders,
             );
         }
+
+        // priority
         Msg::StyledSelectChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Priority)),
             StyledSelectChanged::Changed(Some(value)),
@@ -122,6 +131,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 orders,
             );
         }
+
+        // Title
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Title)),
             value,
@@ -136,7 +147,10 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 model.ws.as_ref(),
                 orders,
             );
+            orders.skip();
         }
+
+        // Description
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Description)),
             value,

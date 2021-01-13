@@ -1,9 +1,8 @@
-use futures::executor::block_on;
-
-use jirs_data::WsMsg;
-use jirs_data::{Code, Lang};
-
-use crate::{WebSocketActor, WsHandler, WsResult};
+use {
+    crate::{WebSocketActor, WsHandler, WsResult},
+    futures::executor::block_on,
+    jirs_data::{Code, Lang, WsMsg},
+};
 
 pub struct HighlightCode(pub Lang, pub Code);
 

@@ -76,7 +76,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         .add_field(submit_field)
         .build()
         .into_node();
-    inner_layout(model, "profile", vec![content])
+    inner_layout(model, "profile", &[content])
 }
 
 fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {

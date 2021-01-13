@@ -79,28 +79,58 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::StrInputChanged(FieldId::TextFilterBoard, text) => {
             project_page.text_filter = text;
+            project_page.rebuild_visible(
+                &model.epics,
+                &model.issue_statuses,
+                &model.issues,
+                &model.user,
+            );
         }
         Msg::ProjectAvatarFilterChanged(user_id, active) => {
             if active {
-                project_page.active_avatar_filters = project_page
-                    .active_avatar_filters
-                    .iter()
-                    .filter_map(|id| if *id != user_id { Some(*id) } else { None })
-                    .collect();
+                project_page.active_avatar_filters =
+                    std::mem::replace(&mut project_page.active_avatar_filters, vec![])
+                        .into_iter()
+                        .filter(|id| *id != user_id)
+                        .collect();
             } else {
                 project_page.active_avatar_filters.push(user_id);
             }
+            project_page.rebuild_visible(
+                &model.epics,
+                &model.issue_statuses,
+                &model.issues,
+                &model.user,
+            );
         }
         Msg::ProjectToggleOnlyMy => {
             project_page.only_my_filter = !project_page.only_my_filter;
+            project_page.rebuild_visible(
+                &model.epics,
+                &model.issue_statuses,
+                &model.issues,
+                &model.user,
+            );
         }
         Msg::ProjectToggleRecentlyUpdated => {
             project_page.recently_updated_filter = !project_page.recently_updated_filter;
+            project_page.rebuild_visible(
+                &model.epics,
+                &model.issue_statuses,
+                &model.issues,
+                &model.user,
+            );
         }
         Msg::ProjectClearFilters => {
             project_page.active_avatar_filters = vec![];
             project_page.recently_updated_filter = false;
             project_page.only_my_filter = false;
+            project_page.rebuild_visible(
+                &model.epics,
+                &model.issue_statuses,
+                &model.issues,
+                &model.user,
+            );
         }
         Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStarted(issue_id))) => {
             crate::ws::issue::drag_started(issue_id, model)

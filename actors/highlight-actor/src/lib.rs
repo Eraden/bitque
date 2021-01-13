@@ -1,6 +1,7 @@
 use {
     actix::{Actor, Handler, SyncContext},
     jirs_data::HighlightedCode,
+    simsearch::SimSearch,
     std::sync::Arc,
     syntect::{
         easy::HighlightLines,
@@ -14,6 +15,20 @@ mod load;
 lazy_static::lazy_static! {
     pub static ref THEME_SET: Arc<ThemeSet> = Arc::new(load::integrated_themeset());
     pub static ref SYNTAX_SET: Arc<SyntaxSet> = Arc::new(load::integrated_syntaxset());
+    pub static ref SIM_SEARCH: Arc<SimSearch<usize>> = Arc::new(create_search_engine());
+}
+
+fn create_search_engine() -> SimSearch<usize> {
+    let mut engine = SimSearch::new();
+    for (idx, name) in SYNTAX_SET
+        .syntaxes()
+        .iter()
+        .map(|s| s.name.as_str())
+        .enumerate()
+    {
+        engine.insert(idx, name);
+    }
+    engine
 }
 
 #[derive(Debug)]
@@ -23,23 +38,53 @@ pub enum HighlightError {
     ResultUnserializable,
 }
 
-fn hi<'l>(code: &'l str, lang: &'l str) -> Result<Vec<(Style, &'l str)>, HighlightError> {
-    let set = SYNTAX_SET
-        .as_ref()
-        .find_syntax_by_name(lang)
-        .ok_or_else(|| HighlightError::UnknownLanguage)?;
-    let theme: &syntect::highlighting::Theme = THEME_SET
-        .as_ref()
-        .themes
-        .get("GitHub")
-        .ok_or_else(|| HighlightError::UnknownTheme)?;
-
-    let mut hi = HighlightLines::new(set, theme);
-    Ok(hi.highlight(code, SYNTAX_SET.as_ref()))
+#[derive(Debug)]
+pub struct HighlightActor {
+    theme_set: Arc<ThemeSet>,
+    syntax_set: Arc<SyntaxSet>,
 }
 
-#[derive(Debug, Default)]
-pub struct HighlightActor {}
+impl Default for HighlightActor {
+    fn default() -> Self {
+        let theme_set = THEME_SET.clone();
+        let syntax_set = SYNTAX_SET.clone();
+
+        Self {
+            theme_set,
+            syntax_set,
+        }
+    }
+}
+
+impl HighlightActor {
+    fn hi<'l>(
+        &self,
+        code: &'l str,
+        lang: &'l str,
+    ) -> Result<Vec<(Style, &'l str)>, HighlightError> {
+        let lang = SIM_SEARCH
+            .search(lang)
+            .first()
+            .and_then(|idx| self.syntax_set.syntaxes().get(*idx))
+            .map(|st| st.name.as_str())
+            .ok_or_else(|| HighlightError::UnknownLanguage)?;
+
+        let set = self
+            .syntax_set
+            .as_ref()
+            .find_syntax_by_name(lang)
+            .ok_or_else(|| HighlightError::UnknownLanguage)?;
+        let theme: &syntect::highlighting::Theme = self
+            .theme_set
+            .as_ref()
+            .themes
+            .get("GitHub")
+            .ok_or_else(|| HighlightError::UnknownTheme)?;
+
+        let mut hi = HighlightLines::new(set, theme);
+        Ok(hi.highlight(code, self.syntax_set.as_ref()))
+    }
+}
 
 impl Actor for HighlightActor {
     type Context = SyncContext<Self>;
@@ -56,7 +101,7 @@ impl Handler<HighlightCode> for HighlightActor {
     type Result = Result<HighlightedCode, HighlightError>;
 
     fn handle(&mut self, msg: HighlightCode, _ctx: &mut Self::Context) -> Self::Result {
-        let res: Vec<(Style, &str)> = hi(&msg.code, &msg.lang)?;
+        let res: Vec<(Style, &str)> = self.hi(&msg.code, &msg.lang)?;
 
         Ok(HighlightedCode {
             parts: res
@@ -115,5 +160,22 @@ impl Handler<TextHighlightCode> for HighlightActor {
                     txt = text
                 )
             }))
+    }
+}
+
+#[derive(actix::Message)]
+#[rtype(result = "Result<Vec<String>, HighlightError>")]
+pub struct LoadSyntaxSet;
+
+impl Handler<LoadSyntaxSet> for HighlightActor {
+    type Result = Result<Vec<String>, HighlightError>;
+
+    fn handle(&mut self, _msg: LoadSyntaxSet, _ctx: &mut Self::Context) -> Self::Result {
+        Ok(self
+            .syntax_set
+            .syntaxes()
+            .iter()
+            .map(|s| s.name.clone())
+            .collect())
     }
 }

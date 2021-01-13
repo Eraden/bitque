@@ -77,7 +77,7 @@ pub fn divider() -> Node<Msg> {
 }
 
 #[inline]
-pub fn inner_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
+pub fn inner_layout(model: &Model, page_name: &str, children: &[Node<Msg>]) -> Node<Msg> {
     let modal_node = crate::modal::view(model);
     article![
         modal_node,

@@ -15,67 +15,88 @@ pub fn drag_started(issue_id: IssueId, model: &mut Model) {
     project_page.issue_drag.drag(issue_id);
 }
 
-pub fn exchange_position(issue_bellow_id: IssueId, model: &mut Model) {
+pub fn exchange_position(below_id: IssueId, model: &mut Model) {
     let project_page = match &mut model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return,
     };
-    if project_page.issue_drag.dragged_or_last(issue_bellow_id) {
-        return;
-    }
     let dragged_id = match project_page.issue_drag.dragged_id.as_ref().cloned() {
         Some(id) => id,
         _ => return error!("Nothing is dragged"),
     };
-
-    let mut below = None;
-    let mut dragged = None;
-    let mut issues = vec![];
-    std::mem::swap(&mut issues, &mut model.issues);
-
-    for issue in issues.into_iter() {
-        match issue.id {
-            id if id == issue_bellow_id => below = Some(issue),
-            id if id == dragged_id => dragged = Some(issue),
-            _ => model.issues.push(issue),
-        };
+    if below_id == dragged_id {
+        return;
     }
-
-    let mut below = match below {
-        Some(below) => below,
-        _ => return,
-    };
-    let mut dragged = match dragged {
-        Some(issue) => issue,
-        _ => {
-            model.issues.push(below);
-            return;
-        }
-    };
-    if dragged.issue_status_id != below.issue_status_id {
-        let mut issues = vec![];
-        std::mem::swap(&mut issues, &mut model.issues);
-        for mut c in issues.into_iter() {
-            if c.issue_status_id == below.issue_status_id && c.list_position > below.list_position {
-                c.list_position += 1;
-                project_page.issue_drag.mark_dirty(c.id);
-            }
-            model.issues.push(c);
-        }
-        dragged.list_position = below.list_position + 1;
-        dragged.issue_status_id = below.issue_status_id;
-    }
-    std::mem::swap(&mut dragged.list_position, &mut below.list_position);
-
-    project_page.issue_drag.mark_dirty(dragged.id);
-    project_page.issue_drag.mark_dirty(below.id);
-
-    model.issues.push(below);
-    model.issues.push(dragged);
-    model
+    let below_idx = model
         .issues
-        .sort_by(|a, b| a.list_position.cmp(&b.list_position));
-    project_page.issue_drag.last_id = Some(issue_bellow_id);
+        .iter()
+        .position(|issue| issue.id == below_id)
+        .unwrap_or(model.issues.len());
+    let dragged = model
+        .issues
+        .iter()
+        .position(|issue| issue.id == dragged_id)
+        .map(|idx| model.issues.remove(idx))
+        .unwrap();
+    let epic_id = dragged.epic_id;
+    model.issues.insert(below_idx, dragged);
+    let changed: Vec<(IssueId, i32)> = model
+        .issues
+        .iter_mut()
+        .filter(|issue| issue.epic_id == epic_id)
+        .enumerate()
+        .map(|(idx, issue)| {
+            issue.list_position = idx as i32;
+            (issue.id, issue.list_position)
+        })
+        .collect();
+    for (id, pos) in changed {
+        if let Some(iss) = model.issues_by_id.get_mut(&id) {
+            iss.list_position = pos;
+        }
+    }
+
+    // let dragged_pos = match model.issues_by_id.get(&dragged_id) {
+    //     Some(i) => i.list_position,
+    //     _ => return,
+    // };
+    // let below_pos = match model.issues_by_id.get(&below_id) {
+    //     Some(i) => i.list_position,
+    //     _ => return,
+    // };
+    // use seed::*;
+    // log!(format!(
+    //     "exchange dragged {} {} below {} {}",
+    //     dragged_id, dragged_pos, below_id, below_pos
+    // ));
+    // for issue in model.issues_by_id.values_mut() {
+    //     if issue.id == below_id {
+    //         issue.list_position = dragged_pos;
+    //     } else if issue.id == dragged_id {
+    //         issue.list_position = below_pos;
+    //     }
+    // }
+    //
+    // for issue in model.issues.iter_mut() {
+    //     if issue.id == below_id {
+    //         issue.list_position = dragged_pos;
+    //     } else if issue.id == dragged_id {
+    //         issue.list_position = below_pos;
+    //     }
+    // }
+    // model
+    //     .issues
+    //     .sort_by(|a, b| a.list_position.cmp(&b.list_position));
+    if let PageContent::Project(project_page) = &mut model.page_content {
+        project_page.rebuild_visible(
+            &model.epics,
+            &model.issue_statuses,
+            &model.issues,
+            &model.user,
+        );
+        project_page.issue_drag.mark_dirty(dragged_id);
+        project_page.issue_drag.mark_dirty(below_id);
+    }
 }
 
 pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {

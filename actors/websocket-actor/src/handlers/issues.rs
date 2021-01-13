@@ -50,17 +50,13 @@ impl WsHandler<UpdateIssueHandler> for WebSocketActor {
                 msg.title = Some(s);
             }
             (IssueFieldId::Description, PayloadVariant::String(s)) => {
-                // let mut opts = comrak::ComrakOptions::default();
-                // opts.render.github_pre_lang = true;
-                // let html = comrak::markdown_to_html(s.as_str(), &opts);
-
                 let html: String = {
                     use pulldown_cmark::*;
                     let parser = pulldown_cmark::Parser::new(s.as_str());
                     enum ParseState {
                         Code(highlight_actor::TextHighlightCode),
                         Other,
-                    };
+                    }
                     let mut state = ParseState::Other;
 
                     let parser = parser.flat_map(|event| match event {

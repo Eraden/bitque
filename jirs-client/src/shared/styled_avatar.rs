@@ -145,17 +145,13 @@ pub fn render(values: StyledAvatar) -> Node<Msg> {
             ]
         }
         _ => {
-            let style = format!(
-                "{shared}; width: {size}px; height: {size}px; font-size: calc({size}px / 1.7);",
-                shared = shared_style,
-                size = size
-            );
             div![
                 C!["styledAvatar letter"],
                 class_list,
                 attrs![
                     At::Class => format!("avatarColor{}", index + 1),
-                    At::Style => style
+                    At::Style => shared_style,
+                    At::Title => name
                 ],
                 span![letter],
                 on_click,

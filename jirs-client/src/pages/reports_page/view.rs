@@ -29,7 +29,7 @@ pub fn view(model: &Model) -> Node<Msg> {
 
     let body = section![C!["top"], h1![C!["header"], "Reports"], graph, list];
 
-    inner_layout(model, "reports", vec![body])
+    inner_layout(model, "reports", &[body])
 }
 
 fn this_month_graph(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<Msg> {

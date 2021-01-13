@@ -8,7 +8,7 @@ use {
             ToNode,
         },
         ws::send_ws_msg,
-        FieldChange, FieldId, Msg, WebSocketChanged,
+        FieldChange, FieldId, Msg, OperationKind, ResourceKind,
     },
     jirs_data::{TimeTracking, WsMsg},
     seed::{prelude::*, *},
@@ -37,24 +37,19 @@ pub fn update(msg: &Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>
             model.modals.push(modal_type.as_ref().clone());
         }
 
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::ProjectIssuesLoaded(_issues))) => {
+        Msg::ResourceChanged(ResourceKind::Issue, OperationKind::ListLoaded, _) => {
             match model.page {
                 Page::EditIssue(issue_id) if model.modals.is_empty() => {
                     push_edit_modal(issue_id, model, orders)
                 }
+                Page::AddIssue if model.modals.is_empty() => push_add_modal(model, orders),
                 _ => (),
             }
         }
 
-        Msg::ChangePage(Page::EditIssue(issue_id)) => {
-            push_edit_modal(*issue_id, model, orders);
-        }
+        Msg::ChangePage(Page::EditIssue(issue_id)) => push_edit_modal(*issue_id, model, orders),
 
-        Msg::ChangePage(Page::AddIssue) => {
-            let mut modal = crate::modals::issues_create::Model::default();
-            modal.project_id = model.project.as_ref().map(|p| p.id);
-            model.modals.push(ModalType::AddIssue(Box::new(modal)));
-        }
+        Msg::ChangePage(Page::AddIssue) => push_add_modal(model, orders),
 
         #[cfg(debug_assertions)]
         Msg::GlobalKeyDown { key, .. } if key.eq("#") => {
@@ -121,6 +116,14 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         })
         .collect();
     section![id!["modals"], modals]
+}
+
+fn push_add_modal(model: &mut Model, _orders: &mut impl Orders<Msg>) {
+    use crate::modals::issues_create::Model;
+    model.modals.push(ModalType::AddIssue(Box::new(Model {
+        project_id: model.project.as_ref().map(|p| p.id),
+        ..Model::default()
+    })));
 }
 
 fn push_edit_modal(issue_id: i32, model: &mut Model, orders: &mut impl Orders<Msg>) {

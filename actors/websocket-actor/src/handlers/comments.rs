@@ -1,8 +1,8 @@
-use futures::executor::block_on;
-
-use jirs_data::{CommentId, CreateCommentPayload, IssueId, UpdateCommentPayload, WsMsg};
-
-use crate::{WebSocketActor, WsHandler, WsResult};
+use {
+    crate::{WebSocketActor, WsHandler, WsResult},
+    futures::executor::block_on,
+    jirs_data::{CommentId, CreateCommentPayload, IssueId, UpdateCommentPayload, WsMsg},
+};
 
 pub struct LoadIssueComments {
     pub issue_id: IssueId,

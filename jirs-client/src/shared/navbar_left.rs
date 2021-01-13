@@ -103,7 +103,10 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
                 C!["bottom"],
                 navbar_left_item("Profile", user_icon, Some("/profile"), Some(go_to_profile)),
                 messages,
-                about_tooltip(model, navbar_left_item("About", Icon::Help, None, None)),
+                IF![model.show_extras => about_tooltip(
+                    model,
+                    navbar_left_item("About", Icon::Help, None, None)
+                )],
             ],
         ],
     ]

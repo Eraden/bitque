@@ -99,6 +99,7 @@ pub enum Msg {
 
     // inputs
     StrInputChanged(FieldId, String),
+
     U32InputChanged(FieldId, u32),
     FileInputChanged(FieldId, Vec<File>),
     // Rte(FieldId, RteMsg),

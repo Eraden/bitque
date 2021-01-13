@@ -34,6 +34,7 @@ pub struct Model {
     pub time_remaining: StyledInputState,
     pub time_remaining_select: StyledSelectState,
 
+    pub title_state: StyledInputState,
     pub description_state: StyledEditorState,
 
     // comments
@@ -107,6 +108,11 @@ impl Model {
                     .map(|n| vec![n as u32])
                     .unwrap_or_default(),
             ),
+            title_state: StyledInputState::new(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Title)),
+                issue.title.clone(),
+            )
+            .with_min(Some(3)),
             description_state: StyledEditorState::new(
                 Mode::View,
                 issue.description_text.as_deref().unwrap_or(""),
@@ -159,5 +165,7 @@ impl IssueModal for Model {
         self.time_remaining.update(msg);
         self.time_remaining_select.update(msg, orders);
         self.epic_name_state.update(msg, orders);
+
+        self.title_state.update(msg);
     }
 }

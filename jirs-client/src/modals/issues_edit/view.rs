@@ -151,8 +151,7 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .add_input_class("issueSummary")
         .add_wrapper_class("issueSummary")
         .add_wrapper_class("textarea")
-        .value(payload.title.as_str())
-        .valid(payload.title.len() >= 3)
+        .state(&modal.title_state)
         .build(FieldId::EditIssueModal(EditIssueModalSection::Issue(
             IssueFieldId::Title,
         )))

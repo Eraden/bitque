@@ -62,7 +62,7 @@ impl Page {
         match self {
             Page::Project => "/board".to_string(),
             Page::EditIssue(id) => format!("/issues/{id}", id = id),
-            Page::AddIssue => "/add-issues".to_string(),
+            Page::AddIssue => "/add-issue".to_string(),
             Page::ProjectSettings => "/project-settings".to_string(),
             Page::SignIn => "/login".to_string(),
             Page::SignUp => "/register".to_string(),
@@ -163,6 +163,8 @@ pub struct Model {
     pub user_projects: Vec<UserProject>,
     pub projects: Vec<Project>,
     pub epics: Vec<Epic>,
+
+    pub show_extras: bool,
 }
 
 impl Model {
@@ -197,6 +199,7 @@ impl Model {
             projects: vec![],
             epics: vec![],
             issues_by_id: Default::default(),
+            show_extras: false,
         }
     }
 

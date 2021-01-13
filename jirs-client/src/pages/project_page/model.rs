@@ -38,31 +38,35 @@ impl ProjectPage {
 
         let statuses = statuses.iter().map(|s| (s.id, s.name.as_str()));
 
-        let mut issues: Vec<&Issue> = {
+        let mut issues: Vec<&Issue> = issues.iter().collect();
+        if self.recently_updated_filter {
             let mut m = HashMap::new();
             let mut sorted = vec![];
-            for issue in issues.iter() {
+            for issue in issues.into_iter() {
                 sorted.push((issue.id, issue.updated_at));
                 m.insert(issue.id, issue);
             }
             sorted.sort_by(|(_, a_time), (_, b_time)| a_time.cmp(b_time));
-            sorted
+            issues = sorted
                 .into_iter()
+                .take(10)
                 .flat_map(|(id, _)| m.remove(&id))
-                .collect()
-        };
-        if self.recently_updated_filter {
-            issues = issues[0..10].to_vec()
+                .collect();
+            issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
         }
 
         for epic in epics {
-            let mut per_epic_map = EpicIssuePerStatus::default();
-            per_epic_map.epic_name = epic.map(|(_, name)| name).unwrap_or_default().to_string();
+            let mut per_epic_map = EpicIssuePerStatus {
+                epic_name: epic.map(|(_, name)| name).unwrap_or_default().to_string(),
+                ..Default::default()
+            };
 
             for (current_status_id, issue_status_name) in statuses.to_owned() {
-                let mut per_status_map = StatusIssueIds::default();
-                per_status_map.status_id = current_status_id;
-                per_status_map.status_name = issue_status_name.to_string();
+                let mut per_status_map = StatusIssueIds {
+                    status_id: current_status_id,
+                    status_name: issue_status_name.to_string(),
+                    ..Default::default()
+                };
                 for issue in issues.iter() {
                     if issue.epic_id == epic.map(|(id, _)| id)
                         && issue_filter_status(issue, current_status_id)

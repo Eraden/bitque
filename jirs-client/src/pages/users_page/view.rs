@@ -167,9 +167,5 @@ pub fn view(model: &Model) -> Node<Msg> {
         ul![C!["invitationsList"], invitations],
     ];
 
-    inner_layout(
-        model,
-        "users",
-        vec![form, users_section, invitations_section],
-    )
+    inner_layout(model, "users", &[form, users_section, invitations_section])
 }

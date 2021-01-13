@@ -17,6 +17,7 @@ serde = "*"
 bincode = "*"
 toml = { version = "*" }
 
+simsearch = { version = "0.2" }
 actix = { version = "0.10.0" }
 
 flate2 = { version = "*" }
