@@ -49,6 +49,8 @@ https://git.sr.ht/~tsumanu/jirs
 * Handle upload avatar with stream
 * Move config to `./config` directory
 * Fix S3 upload with upgraded version of `rusoto`
+* Remove Custom Elements
+* Replace CSS with SCSS
 
 ##### Work Progress
 

@@ -2,7 +2,7 @@ use {
     crate::{
         modals::issue_statuses_delete::Model as DeleteIssueStatusModal,
         model::{ModalType, Model},
-        Msg, WebSocketChanged,
+        Msg, OperationKind, ResourceKind,
     },
     jirs_data::WsMsg,
     seed::prelude::*,
@@ -26,10 +26,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 orders,
             );
         }
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::IssueStatusDeleted(
-            _id,
-            _n_deleted,
-        ))) => {
+        Msg::ResourceChanged(ResourceKind::IssueStatus, OperationKind::SingleRemoved, Some(_)) => {
             orders.skip().send_msg(Msg::ModalDropped);
         }
         _ => (),

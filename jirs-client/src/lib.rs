@@ -21,7 +21,6 @@ pub use {changes::*, fields::*, images::*};
 // use crate::shared::styled_rte::RteMsg;
 
 mod changes;
-pub mod elements;
 mod fields;
 mod images;
 mod modal;
@@ -302,7 +301,6 @@ pub fn render(host_url: String, ws_url: String) {
         HOST_URL = host_url;
         WS_URL = ws_url;
     }
-    elements::define();
 
     let app = seed::App::start("app", init, update, view);
 
@@ -347,11 +345,6 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     model.page = resolve_page(url).unwrap_or(Page::Project);
     open_socket(&mut model, orders);
 
-    // orders.subscribe(|subs::UrlChanged(url)| {
-    //     if let Some(page) = resolve_page(url) {
-    //         orders.send_msg(Msg::ChangePage(page));
-    //     }
-    // });
     model
 }
 
