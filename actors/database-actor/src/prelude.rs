@@ -147,13 +147,9 @@ macro_rules! db_load_field {
 #[macro_export]
 macro_rules! db_create {
   ($action: ident, $self: ident => $schema: ident => $q: expr, $resource: ident, $($field: ident => $ty: ty),+) => {
-      $crate::db_create_with_conn! { $action, $self => conn => $schema => $q, $resource, $($field => $ty),+ }
-  }
-}
-
-#[macro_export]
-macro_rules! db_create_with_conn {
-    ($action: ident, $self: ident => $conn: ident => $schema: ident => $q: expr, $resource: ident, $($field: ident => $ty: ty),+) => {
+      $crate::db_create! { $action, $self => conn => $schema => $q, $resource, $($field => $ty),+ }
+  };
+  ($action: ident, $self: ident => $conn: ident => $schema: ident => $q: expr, $resource: ident, $($field: ident => $ty: ty),+) => {
         pub struct $action {
           $(pub $field : $ty),+
         }
@@ -191,15 +187,12 @@ macro_rules! db_create_with_conn {
         }
     };
 }
+
 #[macro_export]
 macro_rules! db_update {
     ($action: ident, $self: ident => $schema: ident => $q: expr, $resource: ident, $($field: ident => $ty: ty),+) => {
-      $crate::db_update_with_conn! { $action, $self => conn => $schema => $q, $resource, $($field => $ty),+ }
+      $crate::db_update! { $action, $self => conn => $schema => $q, $resource, $($field => $ty),+ }
     };
-}
-
-#[macro_export]
-macro_rules! db_update_with_conn {
     ($action: ident, $self: ident => $conn: ident => $schema: ident => $q: expr, $resource: ident, $($field: ident => $ty: ty),+) => {
         pub struct $action {
           $(pub $field : $ty),+
@@ -240,12 +233,8 @@ macro_rules! db_update_with_conn {
 #[macro_export]
 macro_rules! db_delete {
     ($action: ident, $self: ident => $schema: ident => $q: expr, $resource: ident, $($field: ident => $ty: ty),+) => {
-        $crate::db_delete_with_conn! { $action, $self => conn => $schema => $q, $resource, $($field => $ty),+ }
+        $crate::db_delete! { $action, $self => conn => $schema => $q, $resource, $($field => $ty),+ }
     };
-}
-
-#[macro_export]
-macro_rules! db_delete_with_conn {
     ($action: ident, $self: ident => $conn: ident => $schema: ident => $q: expr, $resource: ident, $($field: ident => $ty: ty),+) => {
         pub struct $action {
           $(pub $field : $ty),+

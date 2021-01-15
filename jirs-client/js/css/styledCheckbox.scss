@@ -1,0 +1,43 @@
+.styledCheckbox {
+    display: flex;
+    justify-content: space-between;
+
+    > .styledCheckboxChild {
+        display: block;
+        border: 1px solid var(--borderLight);
+        font-family: var(--font-medium);
+        line-height: 2;
+        white-space: nowrap;
+        cursor: pointer;
+        font-size: 14.5px;
+        padding: 0 12px;
+
+        &:focus {
+            border-color: var(--borderInputFocus);
+        }
+
+        > input[type=radio] {
+            display: none;
+        }
+    }
+
+    > .styledCheckboxChild.selected {
+        border-color: var(--borderInputFocus);
+        color: var(--borderInputFocus);
+    }
+
+    > .styledCheckboxChild.untracking.selected {
+        color: var(--success);
+        border-color: var(--success);
+    }
+
+    > .styledCheckboxChild.fibonacci.selected {
+        color: var(--warning);
+        border-color: var(--warning);
+    }
+
+    > .styledCheckboxChild.hourly.selected {
+        color: var(--danger);
+        border-color: var(--danger);
+    }
+}

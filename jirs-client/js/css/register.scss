@@ -1,0 +1,53 @@
+#register {
+    > .styledForm {
+        display: flex;
+        flex-direction: column;
+        margin: 0 auto 24px;
+        width: 400px;
+        background: rgb(255, 255, 255) none repeat scroll 0 0;
+        border-radius: 3px;
+        box-shadow: rgba(0, 0, 0, 0.1) 0 0 10px;
+        box-sizing: border-box;
+        color: var(--textMedium);
+
+        &:first-of-type {
+            margin-top: 124.5px;
+        }
+
+        > .formElement {
+            > .noPasswordSection {
+                line-height: 32px;
+                margin-top: 15px;
+                display: flex;
+                cursor: pointer;
+
+                > .styledIcon {
+                    margin-right: 5px;
+                    line-height: 32px;
+                }
+
+                > span {
+                    display: block;
+                    line-height: 32px;
+                }
+            }
+        }
+    }
+
+    .twoRow {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .error {
+        > p {
+            line-height: 1.4285;
+            color: var(--danger);
+            font-family: var(--font-medium);
+            text-align: center;
+            font-size: 14.5px;
+            border-top: 1px solid var(--danger);
+            margin-top: 15px;
+        }
+    }
+}

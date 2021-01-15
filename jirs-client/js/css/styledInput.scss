@@ -1,0 +1,58 @@
+.styledInput {
+    position: relative;
+    display: inline-block;
+    min-height: 32px;
+    width: 100%;
+
+    > .inputElement {
+        min-height: 32px;
+        height: 100%;
+        width: 100%;
+        padding: 0 7px;
+        border-radius: 3px;
+        border: 1px solid var(--borderLightest);
+        color: var(--textDarkest);
+        background: var(--backgroundLightest);
+        transition: background 0.1s;
+        font-family: var(--font-regular);
+        font-size: 15px;
+
+        &:hover {
+            background: var(--backgroundLight);
+        }
+
+        &:focus {
+            background: #fff;
+            border: 1px solid var(--borderInputFocus);
+            box-shadow: 0 0 0 1px var(--borderInputFocus);
+        }
+    }
+
+    > .inputElement.withIcon {
+        padding-left: 32px;
+    }
+
+    > .inputElement.primary {
+        padding: 8px 12px 9px;
+        height: 39px;
+    }
+
+    > i.styledIcon {
+        font-size: 15px;
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        pointer-events: none;
+        color: #5E6C84;
+    }
+}
+
+.styledInput.invalid {
+    border: 1px solid var(--danger);
+    box-shadow: none;
+
+    &:focus {
+        border: 1px solid var(--danger);
+        box-shadow: none;
+    }
+}

@@ -1,0 +1,164 @@
+/*.styledTooltip.messages > .messagesList > .message:hover {*/
+/*    max-height: 100%;*/
+/*}*/
+nav#sidebar {
+    position: fixed;
+    z-index: calc(var(--navLeft) - 1);
+    top: 0;
+    left: var(--appNavBarLeftWidth);
+    height: 100vh;
+    width: var(--secondarySideBarWidth);
+    padding: 0 16px 24px;
+    background: var(--backgroundLightest);
+    border-right: 1px solid var(--borderLightest);
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: none;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        border-radius: 99px;
+        background: var(--backgroundMedium);
+    }
+
+    #projectInfo {
+        display: flex;
+        padding: 24px 4px;
+
+        > .projectTexts {
+            padding: 3px 0 0 10px;
+
+            > .projectName {
+                color: var(--textDark);
+                font-size: 15px;
+                font-family: var(--font-medium);
+            }
+
+            > .projectCategory {
+                color: var(--textMedium);
+                font-size: 13px;
+            }
+        }
+    }
+
+    .linkItem {
+        position: relative;
+        display: flex;
+        padding: 8px 12px;
+        border-radius: 3px;
+        cursor: pointer;
+        user-select: none;
+
+        > a {
+            width: 100%;
+            display: flex;
+
+            > i.styledIcon {
+                margin-right: 15px;
+                font-size: 20px;
+            }
+
+            > .linkText {
+                padding-top: 2px;
+                font-size: 14.7px;
+            }
+        }
+
+        &:hover {
+            background: var(--backgroundLight);
+        }
+    }
+
+    .linkItem.notAllowed {
+        cursor: not-allowed;
+        color: var(--textDark);
+
+        > a {
+            cursor: not-allowed;
+            color: var(--textDark);
+
+            > .styledIcon {
+                cursor: not-allowed;
+                color: var(--textDark);
+            }
+        }
+    }
+
+    .linkItem.active {
+        color: var(--primary);
+        background: var(--backgroundLight);
+    }
+}
+
+.styledTooltip.messages {
+    min-width: 800px;
+
+    > .messagesList {
+        > .message {
+            padding: 15px;
+
+            > .top {
+                display: flex;
+                justify-content: space-between;
+
+                > .summary {
+                    font-family: var(--font-bold);
+                    font-size: 20px;
+                    line-height: 32px;
+                }
+
+                > .action {
+                    width: 32px;
+                }
+            }
+
+            > .description {
+                font-family: var(--font-regular);
+            }
+
+            > .hyperlink {
+                margin-top: 15px;
+
+                > a {
+                    color: var(--primary);
+
+                    &:hover {
+                        text-decoration: underline;
+                    }
+
+                    > .styledIcon {
+                        padding-right: 5px;
+                        font-size: 14.5px;
+                    }
+                }
+            }
+
+            > .actions {
+                margin-top: 15px;
+
+                > .styledButton {
+                    margin-right: 15px;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 1100px) {
+    nav#sidebar {
+        width: calc(var(--secondarySideBarWidth) - 10px);
+    }
+}
+
+@media (max-width: 999px) {
+    nav#sidebar {
+        display: none;
+    }
+}

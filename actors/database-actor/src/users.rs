@@ -1,6 +1,6 @@
 use {
     crate::{
-        db_create, db_create_with_conn, db_find, db_load, db_update, projects::CreateProject, q,
+        db_create, db_find, db_load, db_update, projects::CreateProject, q,
         user_projects::CreateUserProject, DbPooledConn,
     },
     diesel::prelude::*,
@@ -64,7 +64,7 @@ db_create! {
     email => EmailString
 }
 
-db_create_with_conn! {
+db_create! {
     Register,
     msg => conn => users => {
         if count_matching_users(msg.name.as_str(), msg.email.as_str(), conn) > 0 {

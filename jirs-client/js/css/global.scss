@@ -1,0 +1,231 @@
+/* Workaround for IE11 focus highlighting for select elements */
+html {
+    height: 100%;
+    min-height: 100%;
+    touch-action: manipulation;
+}
+
+body {
+    height: 100%;
+    min-height: 100%;
+    font-weight: normal;
+    color: var(--textDark);
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1.2;
+    font-size: 16px;
+    font-family: var(--font-regular);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+    height: 100%;
+    min-height: 100%;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+}
+
+button {
+    font-family: var(--font-regular);
+    font-weight: normal;
+    background: none;
+    border: none;
+    outline: none;
+    appearance: none;
+
+    &:disabled {
+        opacity: 1;
+    }
+}
+
+input {
+    font-family: var(--font-regular);
+    font-weight: normal;
+    outline: none;
+    appearance: none;
+
+    &:disabled {
+        opacity: 1;
+    }
+}
+
+optgroup {
+    font-family: var(--font-regular);
+    font-weight: normal;
+}
+
+select {
+    font-family: var(--font-regular);
+    font-weight: normal;
+    outline: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    &::-ms-value {
+        background: none;
+        color: #42413d;
+    }
+
+    &:disabled {
+        opacity: 1;
+    }
+
+    &:-moz-focusring {
+        color: transparent;
+        text-shadow: 0 0 0 #000;
+    }
+
+    &::-ms-expand {
+        display: none;
+    }
+
+    option {
+        color: var(--textDark);
+    }
+}
+
+textarea {
+    font-family: var(--font-regular);
+    font-weight: normal;
+    outline: none;
+    appearance: none;
+    line-height: 1.4285;
+
+    &:disabled {
+        opacity: 1;
+    }
+}
+
+* {
+    box-sizing: border-box;
+
+    &:after {
+        box-sizing: border-box;
+    }
+
+    &:before {
+        box-sizing: border-box;
+    }
+}
+
+input[type="search"] {
+    box-sizing: border-box;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    padding: 0;
+    margin: 0;
+}
+
+ol {
+    padding: 0;
+    margin: 0;
+}
+
+dd {
+    padding: 0;
+    margin: 0;
+}
+
+h1 {
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-bold);
+}
+
+h2 {
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-bold);
+}
+
+h3 {
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-bold);
+}
+
+h4 {
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-bold);
+}
+
+h5 {
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-bold);
+}
+
+h6 {
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-bold);
+}
+
+p {
+    padding: 0;
+    margin: 0;
+    line-height: 1.4285;
+
+    a {
+        &::-webkit-input-placeholder {
+            color: var(--textLight);
+            opacity: 1 !important;
+        }
+
+        &:-moz-placeholder {
+            color: var(--textLight);
+            opacity: 1 !important;
+        }
+
+        &::-moz-placeholder {
+            color: var(--textLight);
+            opacity: 1 !important;
+        }
+
+        &:-ms-input-placeholder {
+            color: var(--textLight);
+            opacity: 1 !important;
+        }
+    }
+}
+
+strong {
+    font-family: var(--font-bold);
+}
+
+[role="button"] {
+    outline: none;
+    appearance: none;
+
+    &:disabled {
+        opacity: 1;
+    }
+}
+
+@media (min-width: 1240px) {
+    html {
+        min-width: 768px;
+    }
+    body {
+        min-width: 768px;
+    }
+    #root {
+        min-width: 768px;
+    }
+}

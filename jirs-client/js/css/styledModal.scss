@@ -1,0 +1,142 @@
+.modal {
+    z-index: var(--modal);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    > .clickableOverlay {
+        min-height: 100%;
+        background: rgba(9, 30, 66, 0.54);
+
+        &.center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+        }
+
+        > .styledModal {
+            display: inline-block;
+            position: relative;
+            width: 100%;
+            background: #fff;
+
+            &.center {
+                vertical-align: middle;
+                border-radius: 3px;
+                box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
+            }
+
+            &.aside {
+                min-height: 100vh;
+                box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.15);
+
+                > .styledIcon {
+                    position: absolute;
+                    font-size: 25px;
+                    color: var(--textMedium);
+                    transition: all 0.1s;
+                    cursor: pointer;
+                    user-select: none;
+
+                    &.modalVariantCenter {
+                        top: 10px;
+                        right: 12px;
+                        padding: 3px 5px 0 5px;
+                        border-radius: 4px;
+
+                        &:hover {
+                            background: var(--backgroundLight);
+                        }
+                    }
+
+                    &.modalVariantAside {
+                        top: 10px;
+                        right: -30px;
+                        width: 50px;
+                        height: 50px;
+                        padding-top: 10px;
+                        border-radius: 3px;
+                        text-align: center;
+                        background: #fff;
+                        border: 1px solid var(--borderLightest);
+                        box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
+
+                        &:hover {
+                            color: var(--primary);
+                        }
+                    }
+                }
+            }
+
+            &.addIssue {
+                max-width: 800px;
+            }
+
+            &.confirmModal {
+                padding: 35px 40px 40px;
+
+                > .title {
+                    padding-bottom: 25px;
+                    font-family: var(--font-medium);
+                    font-weight: normal;
+                    font-size: 22px;
+                    line-height: 1.5;
+                }
+
+                > .message {
+                    padding-bottom: 25px;
+                    white-space: pre-wrap;
+                    font-size: 15px
+                }
+
+                > .actions {
+                    display: flex;
+                    padding-top: 6px;
+
+                    > .styledButton {
+                        margin-right: 10px;
+                    }
+                }
+            }
+
+            &.debugModal {
+                padding-left: 15px;
+            }
+        }
+    }
+}
+
+@media (max-width: 1100px) {
+    .modal {
+        z-index: var(--modal);
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+
+        > .clickableOverlay {
+            min-height: 100%;
+            background: rgba(9, 30, 66, 0.54);
+
+            &.center {
+                display: block;
+                padding: 0;
+            }
+
+            > .styledModal.addIssue {
+                max-width: none;
+                width: auto;
+            }
+        }
+    }
+}

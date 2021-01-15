@@ -1,5 +1,5 @@
 use {
-    crate::{db_create, db_delete_with_conn, db_find, db_load, db_update_with_conn},
+    crate::{db_create, db_delete, db_find, db_load, db_update},
     diesel::prelude::*,
     jirs_data::{ProjectId, UserId, UserProject, UserProjectId, UserRole},
 };
@@ -48,7 +48,7 @@ mod inner {
     }
 }
 
-db_update_with_conn! {
+db_update! {
     ChangeCurrentUserProject,
     msg => conn => user_projects => {
         FindUserProject {
@@ -91,7 +91,7 @@ db_find! {
     role => UserRole
 }
 
-db_delete_with_conn! {
+db_delete! {
     RemoveInvitedUser,
     msg => conn => user_projects => {
         if msg.invited_id == msg.inviter_id {

@@ -9,7 +9,7 @@ pub struct StatusIssueIds {
 
 #[derive(Default, Debug)]
 pub struct EpicIssuePerStatus {
-    pub epic_name: EpicName,
+    pub epic_name: Option<EpicName>,
     pub per_status_issues: Vec<StatusIssueIds>,
 }
 
@@ -57,7 +57,7 @@ impl ProjectPage {
 
         for epic in epics {
             let mut per_epic_map = EpicIssuePerStatus {
-                epic_name: epic.map(|(_, name)| name).unwrap_or_default().to_string(),
+                epic_name: epic.map(|(_, name)| name.to_string()),
                 ..Default::default()
             };
 

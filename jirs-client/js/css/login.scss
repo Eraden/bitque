@@ -1,0 +1,75 @@
+#login {
+    > .styledForm {
+        margin-top: 5rem;
+        display: flex;
+        flex-direction: column;
+        background: rgb(255, 255, 255) none repeat scroll 0 0;
+        border-radius: 3px;
+        box-shadow: rgba(0, 0, 0, 0.1) 0 0 10px;
+        box-sizing: border-box;
+        color: var(--textMedium);
+
+        &:first-of-type {
+            margin-bottom: 0;
+
+            > .formElement {
+                padding-bottom: 0;
+            }
+        }
+
+        &:last-of-type {
+            box-shadow: rgba(0, 0, 0, 0.1) 0 10px 10px;
+
+            > .formElement {
+                padding-top: 0;
+            }
+        }
+
+        > .formElement {
+            > .formHeading {
+                color: var(--textMedium);
+                font-size: 1em;
+                line-height: 1.1428571428571428;
+                letter-spacing: -.003em;
+                font-family: var(--font-bold);
+                text-align: center;
+            }
+
+            > .noPasswordSection {
+                line-height: 32px;
+                margin-top: 15px;
+                display: flex;
+                cursor: pointer;
+
+                > .styledIcon {
+                    margin-right: 5px;
+                    line-height: 32px;
+                }
+
+                > span {
+                    display: block;
+                    line-height: 32px;
+                }
+            }
+        }
+
+        .twoRow {
+            display: flex;
+            justify-content: space-between;
+        }
+    }
+}
+
+@media (min-width: 1240px) {
+    #login {
+        > .styledForm {
+            margin: 0 auto 24px;
+            width: 400px;
+            max-width: 400px;
+
+            &:first-of-type {
+                margin-top: 124.5px;
+            }
+        }
+    }
+}

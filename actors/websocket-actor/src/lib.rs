@@ -94,6 +94,9 @@ impl WebSocketActor {
             )?,
             WsMsg::IssueCreate(payload) => self.handle_msg(payload, ctx)?,
             WsMsg::IssueDelete(id) => self.handle_msg(DeleteIssue { id }, ctx)?,
+            WsMsg::IssueSyncListPosition(sync) => {
+                self.handle_msg(SyncIssueListPosition(sync), ctx)?
+            }
             WsMsg::ProjectIssuesLoad => self.handle_msg(LoadIssues, ctx)?,
 
             // issue statuses

@@ -1,3 +1,4 @@
+use crate::shared::styled_button::StyledButton;
 use {
     crate::{
         model::PageContent,
@@ -31,11 +32,28 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                 )
             })
             .collect();
-        div![
-            C!["row"],
-            div![C!["epicName"], per_epic.epic_name.as_str()],
-            div![C!["projectBoardLists"], columns]
-        ]
+        let epic_name = match per_epic.epic_name.as_deref() {
+            Some(name) => {
+                let edit_button = StyledButton::build()
+                    .empty()
+                    .icon(Icon::EditAlt)
+                    .build()
+                    .into_node();
+                let delete_button = StyledButton::build()
+                    .empty()
+                    .icon(Icon::DeleteAlt)
+                    .build()
+                    .into_node();
+
+                div![
+                    C!["epicHeader"],
+                    div![C!["epicName"], name],
+                    div![C!["epicActions"], edit_button, delete_button],
+                ]
+            }
+            _ => Node::Empty,
+        };
+        div![C!["row"], epic_name, div![C!["projectBoardLists"], columns]]
     });
     div![C!["rows"], rows]
 }
@@ -108,25 +126,21 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
         .build()
         .into_node();
 
-    let priority_icon = {
-        let icon = match issue.priority {
-            IssuePriority::Low | IssuePriority::Lowest => Icon::ArrowDown,
-            _ => Icon::ArrowUp,
-        };
-        StyledIcon::build(icon)
-            .add_class(issue.priority.to_str())
-            .with_color(issue.priority.to_str())
-            .build()
-            .into_node()
-    };
+    let priority_icon = StyledIcon::build(issue.priority.into())
+        .add_class(issue.priority.to_str())
+        .with_color(issue.priority.to_str())
+        .build()
+        .into_node();
 
     let issue_id = issue.id;
-    let drag_started = drag_ev(Ev::DragStart, move |_| {
+    let drag_started = drag_ev(Ev::DragStart, move |ev| {
+        ev.stop_propagation();
         Some(Msg::PageChanged(PageChanged::Board(
             BoardPageChange::IssueDragStarted(issue_id),
         )))
     });
-    let drag_stopped = drag_ev(Ev::DragEnd, move |_| {
+    let drag_stopped = drag_ev(Ev::DragEnd, move |ev| {
+        ev.stop_propagation();
         Some(Msg::PageChanged(PageChanged::Board(
             BoardPageChange::IssueDragStopped(issue_id),
         )))

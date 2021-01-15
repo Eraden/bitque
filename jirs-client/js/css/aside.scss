@@ -1,0 +1,140 @@
+aside#navbar-left {
+    z-index: var(--navLeft);
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-x: hidden;
+    height: 100vh;
+    width: var(--appNavBarLeftWidth);
+    background: var(--backgroundDarkPrimary);
+    transition: all 0.1s;
+    transform: translateZ(0);
+
+    &:hover {
+        width: 200px;
+        box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.6);
+
+        > .logoLink {
+            margin: 20px calc((200px - 64px) / 2) 10px;
+
+            > .styledLogo {
+                border-radius: 34px;
+            }
+        }
+
+        .item {
+            > .itemText {
+                right: 0;
+                visibility: visible;
+                opacity: 1;
+            }
+        }
+    }
+
+    > .logoLink {
+        display: block;
+        position: relative;
+        left: 0;
+        margin: 20px 0 10px;
+        transition: left 0.1s;
+
+        > .styledLogo {
+            display: inline-block;
+            margin-left: 0;
+            padding: 11px;
+            cursor: pointer;
+            user-select: none;
+            background: rgb(246, 246, 246);
+
+            > img {
+                width: 42px;
+            }
+        }
+    }
+
+    .item {
+        position: relative;
+        width: 100%;
+        height: 42px;
+        line-height: 42px;
+        padding-left: 64px;
+        color: #deebff;
+        transition: color 0.1s;
+        cursor: pointer;
+        user-select: none;
+        display: block;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        > .styledIcon {
+            position: absolute;
+            left: 18px;
+            height: 42px;
+            line-height: 42px;
+
+            > .styledAvatar {
+                margin-top: 7px;
+                width: 27px;
+                height: 27px;
+            }
+        }
+
+        > .itemText {
+            position: relative;
+            right: 12px;
+            visibility: hidden;
+            opacity: 0;
+            text-transform: uppercase;
+            transition: all 0.1s;
+            font-family: var(--font-bold);
+            font-size: 12px;
+            transition-property: right, visibility, opacity;
+            display: block;
+        }
+    }
+
+    > .item {
+        > i.styledIcon.search {
+            font-size: 22px;
+            color: var(--asideIcon);
+        }
+
+        > i.styledIcon {
+            font-size: 27px;
+            color: var(--asideIcon);
+        }
+    }
+
+    > .bottom {
+        > .item {
+            > i.styledIcon {
+                font-size: 27px;
+                color: var(--asideIcon);
+            }
+        }
+
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+
+        > .aboutTooltip {
+            > .item {
+                > i.styledIcon {
+                    color: var(--asideIcon);
+                }
+            }
+        }
+    }
+}
+
+.styledTooltip.aboutTooltipPopup {
+    bottom: 48px;
+    left: 120px;
+
+    #about-github-button {
+        margin-left: 10px;
+    }
+}

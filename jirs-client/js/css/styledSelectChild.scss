@@ -1,0 +1,106 @@
+/* edit issue */
+.selectItem {
+    padding: 4px 8px;
+    >.selectItemLabel {
+        padding: 0 5px 0 7px;
+        font-size: 15px;
+    }
+}
+.selectItem.capitalize {
+    text-transform: capitalize;
+}
+.optionItem.capitalize {
+    text-transform: capitalize;
+}
+.selectItem.priority.highest {
+    >.styledIcon {
+        color: var(--highest);
+    }
+}
+.optionItem.priority.highest {
+    >.styledIcon {
+        color: var(--highest);
+    }
+}
+.selectItem.priority.high {
+    >.styledIcon {
+        color: var(--high);
+    }
+}
+.optionItem.priority.high {
+    >.styledIcon {
+        color: var(--high);
+    }
+}
+.selectItem.priority.medium {
+    >.styledIcon {
+        color: var(--medium);
+    }
+}
+.optionItem.priority.medium {
+    >.styledIcon {
+        color: var(--medium);
+    }
+}
+.selectItem.priority.low {
+    >.styledIcon {
+        color: var(--low);
+    }
+}
+.optionItem.priority.low {
+    >.styledIcon {
+        color: var(--low);
+    }
+}
+.selectItem.priority.lowest {
+    >.styledIcon {
+        color: var(--lowest);
+    }
+}
+.optionItem.priority.lowest {
+    >.styledIcon {
+        color: var(--lowest);
+    }
+}
+.selectItem.priority {
+    >.selectItemLabel {
+        text-transform: capitalize;
+    }
+}
+.optionItem {
+    display: flex;
+    align-items: center;
+    >.styledIcon {
+        font-size: 18px;
+    }
+    >.optionLabel {
+        padding: 0 5px 0 7px;
+        font-size: 15px;
+    }
+}
+.optionItem.priority {
+    >.optionLabel {
+        padding: 0 5px 0 7px;
+        font-size: 15px;
+        text-transform: capitalize;
+    }
+    >.styledIcon {
+        font-size: 18px;
+    }
+}
+.topActions {
+    >.styledSelect {
+        >.valueContainer {
+            height: 100%;
+            >.selectItem {
+                height: 100%;
+            }
+        }
+    }
+    .selectItem {
+        padding: 0 12px;
+    }
+    .optionItem {
+        padding: 0 12px;
+    }
+}

@@ -24,7 +24,6 @@ services:
       - ./jirs-data:/app/jirs-data
       - ./jirs-cli:/app/jirs-cli
       - ./jirs-client:/app/jirs-client
-      - ./jirs-css:/app/jirs-css
   server:
     build:
       dockerfile: ./jirs-server/Dockerfile

@@ -1,0 +1,96 @@
+/*         TOOLTIP           */
+.styledDateTimeInput {
+    position: relative;
+}
+
+.dateTimeTooltip {
+    padding: 15px;
+    position: absolute;
+    top: -50px;
+    left: 110px;
+    width: 610px;
+    min-width: 610px;
+    max-width: 610px;
+
+    &:before {
+        content: '';
+        display: block;
+        width: 20px;
+        height: 20px;
+        position: absolute;
+        left: -10px;
+        top: 56px;
+        transform: rotate(45deg);
+        background: white;
+        z-index: -1;
+        border-left: 1px solid rgba(9, 30, 66, 0.25);
+        border-bottom: 1px solid rgba(9, 30, 66, 0.25);
+    }
+
+    > h2 {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+    }
+
+    > .actions {
+        display: flex;
+        justify-content: space-between;
+        height: 2rem;
+        line-height: 2rem;
+    }
+
+    > .calendar {
+        > .week {
+            display: flex;
+
+            > .day {
+                width: calc(100% / 7);
+                text-align: center;
+                height: 2rem;
+                line-height: 2rem;
+                cursor: pointer;
+                font-family: var(--font-medium);
+                font-size: 1rem;
+            }
+
+            > .day.inCurrentMonth {
+                &:hover {
+                    background: var(--primary);
+                    color: var(--asideIcon);
+                }
+
+                color: var(--textDarkest);
+            }
+
+            > .day.outCurrentMonth {
+                &:hover {
+                    background: var(--primary);
+                    color: var(--asideIcon);
+                }
+
+                color: var(--textLight);
+            }
+
+            > .day.inCurrentMonth.selected {
+                color: var(--primary);
+                background: var(--asideIcon);
+            }
+
+            > .day.outCurrentMonth.selected {
+                color: var(--primary);
+                background: var(--asideIcon);
+            }
+        }
+
+        > .week.weekHeader {
+            border-bottom: 1px solid var(--textDarkest);
+            cursor: auto;
+
+            > .day {
+                cursor: auto;
+            }
+        }
+    }
+}

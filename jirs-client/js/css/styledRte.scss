@@ -1,0 +1,244 @@
+.styledRte {
+    display: block;
+
+    > .bar {
+        display: block;
+        border-radius: 3px;
+        border: 1px solid var(--borderLightest);
+        background: var(--backgroundLightest);
+        font-family: var(--font-regular);
+
+        > .row {
+            padding: 0 0 var(--rte-indent) 0;
+            display: flex;
+            margin: 0 var(--rte-indent);
+
+            &:first-child {
+                padding: var(--rte-indent) 0;
+            }
+
+            > .group {
+                padding: 0 var(--rte-indent) 0 0;
+
+                &:first-child {
+                    padding-left: 0;
+                }
+
+                &:last-child {
+                    padding-right: 0;
+                }
+
+                > .styledRteButton {
+                    > .styledButton {
+                        margin-right: var(--rte-indent);
+                        font-size: var(--small-font-size);
+                        font-size: var(--small-font-size);
+                        line-height: calc(2 * var(--small-font-size));
+                        height: calc(2 * var(--small-font-size));
+
+                        > .styledIcon {
+                            font-size: var(--small-font-size);
+                            line-height: calc(2 * var(--small-font-size));
+                            height: calc(2 * var(--small-font-size));
+                        }
+                    }
+                }
+
+                > .styledButton {
+                    margin-right: var(--rte-indent);
+                    font-size: var(--small-font-size);
+                }
+
+                > span.headingList {
+                    margin-right: var(--rte-indent);
+                    font-size: var(--small-font-size);
+
+                    > .headingOption {
+                        > .styledButton {
+                            font-size: var(--small-font-size);
+                            line-height: calc(2 * var(--small-font-size));
+                            height: calc(2 * var(--small-font-size));
+
+                            > span {
+                                font-size: var(--small-font-size);
+                                line-height: calc(2 * var(--small-font-size));
+                                height: calc(2 * var(--small-font-size));
+                            }
+                        }
+                    }
+                }
+
+                > .headingList {
+                    height: 32px;
+                    min-width: 40px;
+                    overflow-y: visible;
+                    overflow-x: hidden;
+                }
+            }
+
+            > .group.font {
+                > span.headingList {
+                    > .headingOption {
+                        margin-right: var(--rte-indent);
+                    }
+                }
+            }
+        }
+    }
+
+    > .editorWrapper {
+        display: block;
+        width: 100%;
+        border-radius: 3px;
+        border: 1px solid var(--borderLightest);
+        background: var(--backgroundLightest);
+        font-family: var(--font-regular);
+        color: var(--textDarkest);
+        font-weight: normal;
+        font-size: 15px;
+        resize: vertical;
+
+        > .editor {
+            display: block;
+            margin: 8px 12px 9px;
+            min-height: 60px;
+
+            ul {
+                margin-left: 25px;
+
+                > li {
+                    list-style: square;
+                }
+            }
+
+            ol {
+                margin-left: 25px;
+
+                > li {
+                    list-style: decimal;
+                }
+            }
+
+            table {
+                table-layout: fixed;
+                border-spacing: 0;
+                text-align: center;
+
+                > tbody {
+                    > tr {
+                        > td {
+                            min-width: 24px;
+                            min-height: 24px;
+                            text-align: center;
+                            padding: var(--rte-indent);
+                            border-bottom: 1px solid var(--borderLight);
+                            border-right: 1px solid var(--borderLight);
+                            border-left: 1px solid var(--borderLight);
+                            border-top: 1px solid var(--borderLight);
+                        }
+                    }
+                }
+            }
+
+            * {
+                &:focus {
+                    background: var(--secondary);
+                }
+            }
+        }
+    }
+}
+
+.tableTooltip {
+    min-width: 136px;
+    padding: 15px;
+    position: absolute;
+
+    > h2 {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+
+    > .tablePreview {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+
+        > table {
+            table-layout: fixed;
+            border-spacing: 0;
+            text-align: center;
+
+            > tbody {
+                > tr {
+                    > td {
+                        width: 24px;
+                        height: 24px;
+                        text-align: center;
+                        padding: var(--rte-indent);
+                        border-bottom: 1px solid var(--borderLight);
+                        border-right: 1px solid var(--borderLight);
+                        border-left: 1px solid var(--borderLight);
+                        border-top: 1px solid var(--borderLight);
+                    }
+                }
+            }
+        }
+
+        > input {
+            height: 32px;
+            align-self: flex-end;
+            margin-left: 15px;
+        }
+    }
+
+    > .inputs {
+        display: flex;
+        justify-content: space-between;
+    }
+}
+
+.codeTooltip {
+    min-width: 336px;
+    padding: 15px;
+    position: absolute;
+
+    > h2 {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+
+    > select {
+        width: 100%;
+        border: 1px solid var(--borderLightest);
+        margin: var(--rte-indent) 0;
+        min-height: 1rem;
+        background: var(--backgroundLightest);
+    }
+
+    > textarea {
+        border: 1px solid var(--borderLightest);
+        width: 100%;
+        min-height: 200px;
+
+        &:focus {
+            border: 1px solid var(--borderInputFocus);
+        }
+    }
+}
+
+@media (min-width: 800px) {
+    .codeTooltip {
+        min-width: 636px;
+        left: calc(100% / 2 - 318px);
+    }
+}
+
+@media (min-width: 1024px) {
+    .codeTooltip {
+        min-width: 836px;
+        left: calc(100% / 2 - 418px);
+    }
+}

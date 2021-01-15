@@ -1,0 +1,90 @@
+.styledAvatar.image {
+    display: inline-block;
+    border-radius: 100%;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-color: var(--backgroundLight);
+}
+
+.styledAvatar.letter {
+    display: inline-block;
+    border-radius: 100%;
+    text-transform: uppercase;
+    color: #fff;
+    font-family: var(--font-medium);
+    font-weight: normal;
+
+    > span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+}
+
+.styledAvatar.avatarColor1 {
+    color: var(--avatar-color-1);
+}
+
+.styledAvatar {
+    span.avatarColor1 {
+        color: var(--avatar-color-1);
+    }
+
+    span.avatarColor2 {
+        color: var(--avatar-color-2);
+    }
+
+    span.avatarColor3 {
+        color: var(--avatar-color-3);
+    }
+
+    span.avatarColor4 {
+        color: var(--avatar-color-4);
+    }
+
+    span.avatarColor5 {
+        color: var(--avatar-color-5);
+    }
+
+    span.avatarColor6 {
+        color: var(--avatar-color-6);
+    }
+
+    span.avatarColor7 {
+        color: var(--avatar-color-7);
+    }
+
+    span.avatarColor8 {
+        color: var(--avatar-color-8);
+    }
+}
+
+.styledAvatar.avatarColor2 {
+    color: var(--avatar-color-2);
+}
+
+.styledAvatar.avatarColor3 {
+    color: var(--avatar-color-3);
+}
+
+.styledAvatar.avatarColor4 {
+    color: var(--avatar-color-4);
+}
+
+.styledAvatar.avatarColor5 {
+    color: var(--avatar-color-5);
+}
+
+.styledAvatar.avatarColor6 {
+    color: var(--avatar-color-6);
+}
+
+.styledAvatar.avatarColor7 {
+    color: var(--avatar-color-7);
+}
+
+.styledAvatar.avatarColor8 {
+    color: var(--avatar-color-8);
+}

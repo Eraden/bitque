@@ -1,0 +1,81 @@
+#projectSettings {
+    > .formContainer {
+        display: flex;
+        justify-content: center;
+
+        .styledForm {
+            max-width: 1024px;
+            width: 100%;
+
+            > .formElement {
+                > .actionButton {
+                    margin-top: 30px;
+                }
+
+                > .styledField.columnsField {
+                    > .styledLabel {
+                        font-size: 14px;
+                    }
+                }
+
+                > .styledField {
+                    > .columnsSection {
+                        > .columns {
+                            display: flex;
+                            flex-direction: row;
+                            justify-content: space-around;
+
+                            > .columnPreview {
+                                width: auto;
+                                min-height: 60px;
+                                background: var(--backgroundLightest);
+                                margin: 0 5px;
+
+                                > .columnName {
+                                    display: block;
+                                    margin: 0 5px;
+                                    padding: 13px 10px 17px;
+                                    text-transform: uppercase;
+                                    color: var(--textMedium);
+                                    font-size: 12.5px;
+                                    overflow: hidden;
+                                    white-space: nowrap;
+                                    text-overflow: ellipsis;
+
+                                    > span {
+                                        cursor: pointer;
+                                        user-select: none;
+                                    }
+
+                                    > .removeColumn {
+                                        text-align: center;
+                                        display: flex;
+                                        justify-content: space-around;
+                                        padding-top: 15px;
+                                    }
+
+                                    > .issueCount {
+                                        text-transform: none;
+                                        padding-top: 15px;
+                                    }
+                                }
+
+                                > .columnName.addColumn {
+                                    color: var(--textMedium);
+                                    text-align: center;
+                                    cursor: pointer;
+
+                                    > i {
+                                        color: var(--textMedium);
+                                        text-align: center;
+                                        cursor: pointer;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

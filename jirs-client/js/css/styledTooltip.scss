@@ -1,0 +1,30 @@
+.styledTooltip {
+    z-index: calc(var(--modal) + 1);
+    position: fixed;
+    width: 300px;
+    border-radius: 3px;
+    background: #fff;
+    transform: translateZ(0);
+    box-shadow: rgba(9, 30, 66, 0.25) 0 4px 8px -2px, rgba(9, 30, 66, 0.31) 0 0 1px;
+
+    .feedbackDropdown {
+        padding: 16px 24px 24px;
+    }
+
+    .feedbackImageCont {
+        padding: 24px 56px 20px;
+    }
+
+    .feedbackImage {
+        width: 100%;
+    }
+
+    .feedbackParagraph {
+        margin-bottom: 12px;
+        font-size: 15px;
+
+        &:last-of-type {
+            margin-bottom: 22px;
+        }
+    }
+}

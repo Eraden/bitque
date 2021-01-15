@@ -1,0 +1,75 @@
+.trackingLink {
+    padding: 4px 4px 2px 0;
+    border-radius: 4px;
+    transition: background 0.1s;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        background: var(--backgroundLight);
+    }
+}
+
+.trackingWidget {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    > .watchIcon {
+        color: var(--textMedium);
+    }
+
+    > .right {
+        width: 90%;
+
+        > .barCounter {
+            height: 5px;
+            border-radius: 4px;
+            background: var(--backgroundMedium);
+
+            > .bar {
+                height: 5px;
+                border-radius: 4px;
+                background: var(--primary);
+                transition: all 0.1s;
+            }
+        }
+
+        > .values {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 3px;
+            font-size: 14.5px;
+        }
+    }
+}
+
+.timeTrackingModal {
+    padding: 20px 25px 25px;
+
+    > .modalTitle {
+        padding-bottom: 14px;
+        font-family: var(--font-medium);
+        font-weight: normal;
+        font-size: 20px;
+    }
+
+    > .trackingWidget {
+        width: 100%;
+    }
+
+    > .inputs {
+        display: flex;
+        margin: 20px -5px 30px;
+
+        > .inputContainer {
+            margin: 0 5px;
+            width: 50%;
+        }
+    }
+
+    > .actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+}

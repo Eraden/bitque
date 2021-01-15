@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+which rsass
+if [[ "$status" != "0" ]];
+then
+  cargo install rsass --features=commandline
+fi
+
 export PROJECT_ROOT=$(git rev-parse --show-toplevel)
 export CLIENT_ROOT=${PROJECT_ROOT}/jirs-client
 export HI_ROOT=${PROJECT_ROOT}/highlight/jirs-highlight

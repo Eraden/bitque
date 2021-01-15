@@ -1,3 +1,4 @@
+use jirs_data::{EpicId, IssueStatusId, ListPosition};
 use {
     crate::{WebSocketActor, WsHandler, WsResult},
     database_actor::{
@@ -148,7 +149,7 @@ impl WsHandler<UpdateIssueHandler> for WebSocketActor {
                     return Ok(None);
                 }
                 Err(e) => {
-                    error!("{}", e);
+                    error!("{:?}", e);
                     return Ok(None);
                 }
             };
@@ -187,7 +188,7 @@ impl WsHandler<CreateIssuePayload> for WebSocketActor {
                 return Ok(None);
             }
             Err(e) => {
-                error!("{}", e);
+                error!("{:?}", e);
                 return Ok(None);
             }
         };
@@ -212,7 +213,7 @@ impl WsHandler<DeleteIssue> for WebSocketActor {
                 return Ok(None);
             }
             Err(e) => {
-                error!("{}", e);
+                error!("{:?}", e);
                 return Ok(None);
             }
         };
@@ -253,5 +254,27 @@ impl WsHandler<LoadIssues> for WebSocketActor {
         }
 
         Ok(Some(WsMsg::ProjectIssuesLoaded(issues)))
+    }
+}
+
+pub struct SyncIssueListPosition(pub Vec<(IssueId, ListPosition, IssueStatusId, Option<EpicId>)>);
+
+impl WsHandler<SyncIssueListPosition> for WebSocketActor {
+    fn handle_msg(&mut self, msg: SyncIssueListPosition, ctx: &mut Self::Context) -> WsResult {
+        let _project_id = self.require_user_project()?.project_id;
+        for (issue_id, list_position, status_id, epic_id) in msg.0 {
+            match block_on(self.db.send(database_actor::issues::UpdateIssue {
+                issue_id,
+                list_position: Some(list_position),
+                issue_status_id: Some(status_id),
+                epic_id: Some(epic_id),
+                ..Default::default()
+            })) {
+                Ok(Ok(_)) => (),
+                _ => return Ok(None),
+            };
+        }
+
+        self.handle_msg(LoadIssues, ctx)
     }
 }

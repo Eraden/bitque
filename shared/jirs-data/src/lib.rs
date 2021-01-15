@@ -21,6 +21,7 @@ use derive_enum_sql::EnumSql;
 
 pub type NumberOfDeleted = usize;
 pub type IssueId = i32;
+pub type ListPosition = i32;
 pub type ProjectId = i32;
 pub type ProjectName = String;
 pub type UserId = i32;

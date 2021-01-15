@@ -1,5 +1,5 @@
 use {
-    crate::{db_create_with_conn, db_find, db_load, db_update},
+    crate::{db_create, db_find, db_load, db_update},
     diesel::prelude::*,
     jirs_data::{NameString, Project, ProjectCategory, ProjectId, TimeTracking, UserId},
 };
@@ -38,7 +38,7 @@ mod inner {
     }
 }
 
-db_create_with_conn! {
+db_create! {
     CreateProject,
     msg => conn => projects => {
         let p = inner::CreateProject {

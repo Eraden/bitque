@@ -1,3 +1,4 @@
+use crate::ListPosition;
 use {
     crate::{
         AvatarUrl, BindToken, Code, Comment, CommentId, CreateCommentPayload, CreateIssuePayload,
@@ -186,6 +187,7 @@ pub enum WsMsg {
     IssueDeleted(IssueId, NumberOfDeleted),
     IssueCreate(CreateIssuePayload),
     IssueCreated(Issue),
+    IssueSyncListPosition(Vec<(IssueId, ListPosition, IssueStatusId, Option<EpicId>)>),
 
     // issue status
     IssueStatusesLoad,

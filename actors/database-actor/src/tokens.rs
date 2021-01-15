@@ -1,5 +1,5 @@
 use {
-    crate::{db_create, db_find, db_update_with_conn},
+    crate::{db_create, db_find, db_update},
     diesel::prelude::*,
     jirs_data::{Token, UserId},
 };
@@ -18,7 +18,7 @@ db_find! {
     token => uuid::Uuid
 }
 
-db_update_with_conn! {
+db_update! {
     UseBindToken,
     msg => conn => tokens => {
         let token = FindBindToken { token: msg.token }.execute(conn)?;

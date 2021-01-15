@@ -54,6 +54,9 @@ features = ["database"]
 path = "../../shared/jirs-data"
 features = ["backend"]
 
+[dependencies.derive_db_execute]
+path = "../../derive/derive_db_execute"
+
 [dependencies.diesel]
 version = "1.4.5"
 features = ["unstable", "postgres", "numeric", "extras", "uuidv07"]

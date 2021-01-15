@@ -1,0 +1,67 @@
+.styledForm {
+    display: block;
+
+    > .formElement {
+        padding: 25px 40px 35px;
+
+        > .formHeading {
+            padding-bottom: 15px;
+            font-size: 21px;
+        }
+
+        .selectItem.withBottomMargin {
+            margin-bottom: 5px;
+        }
+
+        .selectItem {
+            > .selectItemLabel {
+                padding: 0 3px 0 6px;
+            }
+        }
+
+        .divider {
+            margin-top: 22px;
+            border-top: 1px solid var(--borderLightest);
+        }
+
+        > .actions {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 30px;
+
+            > .actionButton {
+                margin-left: 10px;
+            }
+        }
+    }
+}
+
+.selectItem {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.styledField {
+    display: block;
+    margin-top: 20px;
+
+    > .styledLabel {
+        display: block;
+        padding-bottom: 5px;
+        color: var(--textMedium);
+        font-family: var(--font-medium);
+        font-weight: normal;
+        font-size: 13px;
+    }
+
+    > .styledTip {
+        padding-top: 6px;
+        color: var(--textMedium);
+        font-size: 12.5px;
+    }
+
+    > * {
+        display: block;
+    }
+}

@@ -1,0 +1,140 @@
+.styledButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    vertical-align: middle;
+    line-height: 2;
+    white-space: nowrap;
+    border-radius: 3px;
+    transition: all 0.1s;
+    appearance: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14.5px;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+
+    &:not(.iconOnly) {
+        padding: 0 12px;
+    }
+}
+
+.styledButton.withIcon {
+    > span.text {
+        margin-left: 7px;
+    }
+}
+
+.styledButton.iconOnly {
+    padding: 0 9px;
+}
+
+.styledButton.primary {
+    color: #fff;
+    background: var(--primary);
+    font-family: var(--font-medium);
+
+    > i {
+        color: #fff;
+        background: var(--primary);
+        font-family: var(--font-medium);
+    }
+
+    &:not(:disabled) {
+        &:hover {
+            filter: brightness(115%);
+        }
+
+        &:active {
+            filter: brightness(110%);
+        }
+    }
+
+    &:not(:disabled).isActive {
+        filter: brightness(110%);
+    }
+}
+
+.styledButton.success {
+    color: #fff;
+    background: var(--success);
+
+    > i {
+        color: #fff;
+        background: var(--success);
+    }
+}
+
+.styledButton.danger {
+    color: #fff;
+    background: var(--danger);
+
+    > i {
+        color: #fff;
+        background: var(--danger);
+    }
+}
+
+.styledButton.secondary {
+    color: var(--textDark);
+    background: var(--secondary);
+    font-family: var(--font-regular);
+
+    > i {
+        color: var(--textDark);
+        background: var(--secondary);
+        font-family: var(--font-regular);
+    }
+
+    &:not(:disabled) {
+        &:hover {
+            background: var(--backgroundLight);
+        }
+
+        &:active {
+            color: var(--primary);
+            background: var(--backgroundLightPrimary);
+        }
+    }
+
+    &:not(:disabled).isActive {
+        color: var(--primary);
+        background: var(--backgroundLightPrimary);
+    }
+}
+
+.styledButton.empty {
+    background: #fff;
+    color: var(--textDark);
+    font-family: var(--font-regular);
+
+    > i {
+        background: #fff;
+        color: var(--textDark);
+        font-family: var(--font-regular);
+    }
+
+    &:not(:disabled) {
+        &:hover {
+            background: var(--backgroundLight);
+
+            > i {
+                background: var(--backgroundLight);
+            }
+        }
+
+        &:active {
+            color: var(--primary);
+            background: var(--backgroundLightPrimary);
+        }
+    }
+
+    &:not(:disabled).isActive {
+        color: var(--primary);
+        background: var(--backgroundLightPrimary);
+    }
+}

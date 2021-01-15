@@ -1,0 +1,15 @@
+:host, html, body {
+    width: 100%;
+    display: block;
+    height: 100%;
+}
+
+main {
+    width: 100%;
+    display: block;
+    min-height: 100%;
+}
+
+article.inner-layout {
+    width: 100%;
+}

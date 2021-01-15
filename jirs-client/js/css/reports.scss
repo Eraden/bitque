@@ -1,0 +1,35 @@
+#reports {
+    > .top {
+        > .graph {
+            margin-top: 15px;
+
+            > .graphHeader {
+                margin-bottom: 15px;
+            }
+        }
+
+        > .issueList {
+            display: block;
+            margin-top: 15px;
+
+            > .issueListHeader {
+                margin-bottom: 15px;
+            }
+
+            > .issue {
+                display: grid;
+                grid-template-columns: 32px 32px 240px auto 120px;
+            }
+
+            > .issue.selected {
+                color: var(--primary);
+                font-family: var(--font-bold);
+            }
+
+            > .issue.nonSelected {
+                color: var(--textLight);
+                font-family: var(--font-regular);
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 use {
     crate::{
-        db_create_with_conn, db_delete, db_load,
+        db_create, db_delete, db_load,
         users::{FindUser, LookupUser},
     },
     diesel::prelude::*,
@@ -30,7 +30,7 @@ pub enum CreateMessageReceiver {
     Lookup { name: String, email: String },
 }
 
-db_create_with_conn! {
+db_create! {
     CreateMessage,
     msg => conn => messages => {
         let user: User = match msg.receiver {

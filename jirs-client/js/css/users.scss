@@ -1,0 +1,52 @@
+#users {
+    > .usersSection {
+        padding: 25px 40px 35px;
+
+        > .usersList {
+            list-style: none;
+
+            > .user {
+                list-style: none;
+                display: flex;
+                justify-content: space-between;
+                margin-top: 20px;
+
+                > span {
+                    width: 25%;
+                }
+            }
+        }
+    }
+
+    > .invitationsSection {
+        padding: 25px 40px 35px;
+
+        > .invitationsList {
+            list-style: none;
+
+            > .invitation {
+                list-style: none;
+                display: flex;
+                justify-content: space-between;
+                margin-top: 20px;
+
+                > * {
+                    width: 25%;
+                }
+            }
+
+            > .invitation.revoked {
+                color: var(--textLight);
+            }
+        }
+    }
+
+    .invitationActions {
+        display: flex;
+        justify-content: space-between;
+
+        > .error {
+            color: var(--danger);
+        }
+    }
+}

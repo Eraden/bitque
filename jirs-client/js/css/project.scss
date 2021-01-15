@@ -1,0 +1,281 @@
+#projectPage {
+    > .breadcrumbsContainer {
+        color: var(--textMedium);
+        font-size: 15px;
+
+        > .breadcrumbsDivider {
+            position: relative;
+            top: 2px;
+            margin: 0 10px;
+            font-size: 18px;
+        }
+    }
+
+    > #projectBoardHeader {
+        margin-top: 6px;
+        display: flex;
+        justify-content: space-between;
+
+        > #boardName {
+            font-size: 24px;
+            font-family: var(--font-medium);
+            font-weight: normal;
+        }
+    }
+
+    > #projectBoardFilters {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 24px;
+
+        > .textFilterBoard {
+            margin-right: 18px;
+            width: 160px;
+        }
+
+        > #avatars {
+            display: flex;
+            flex-direction: row-reverse;
+            margin: 0 12px 0 2px;
+
+            > .avatarIsActiveBorder {
+                display: inline-flex;
+                margin-left: -2px;
+                border-radius: 50%;
+                transition: transform 0.1s;
+                cursor: pointer;
+                user-select: none;
+                background: var(--backgroundMedium);
+                border-color: var(--backgroundLight);
+
+                > .letter {
+                    width: 32px;
+                    height: 32px;
+                    font-size: 16px;
+                    font-weight: bolder;
+                }
+
+                &:hover {
+                    transform: translateY(-5px);
+                }
+
+                > .styledAvatar {
+                    box-shadow: 0 0 0 2px #fff;
+                }
+            }
+
+            > .avatarIsActiveBorder.isActive {
+                box-shadow: 0 0 0 4px var(--primary);
+            }
+        }
+
+        .styledButton {
+            margin-left: 6px;
+        }
+
+        > #clearAllFilters {
+            height: 32px;
+            line-height: 32px;
+            margin-left: 15px;
+            padding-left: 12px;
+            border-left: 1px solid var(--borderLightest);
+            color: var(--textDark);
+            font-size: 14.5px;
+            cursor: pointer;
+            user-select: none;
+
+            &:hover {
+                color: var(--textMedium);
+            }
+        }
+
+        > .filterChild {
+            width: 90%;
+            margin-bottom: 1rem;
+        }
+    }
+
+    > .rows {
+        > .row {
+            > .epicHeader {
+                margin: 18px 0 10px 0;
+                display: flex;
+                justify-content: space-between;
+
+                > .epicName {
+                }
+
+                > .epicActions {
+                    > .styledButton {
+                        > .styledIcon {
+                            color: var(--backgroundLightest);
+                        }
+                    }
+                }
+
+                &:hover {
+                    > .epicActions {
+                        > .styledButton {
+                            > .styledIcon {
+                                color: var(--textDark);
+                            }
+                        }
+                    }
+                }
+            }
+
+            > .projectBoardLists {
+                display: flex;
+                margin: 10px -5px 0;
+                position: relative;
+                flex-direction: column;
+
+                > .list {
+                    display: flex;
+                    flex-direction: column;
+                    margin: 0 5px;
+                    min-height: 400px;
+                    border-radius: 3px;
+                    background: var(--backgroundLightest);
+
+                    > .title {
+                        padding: 13px 10px 17px;
+                        text-transform: uppercase;
+                        color: var(--textMedium);
+                        font-size: 12.5px;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+
+                        > .issuesCount {
+                            text-transform: lowercase;
+                            font-size: 13px;
+                        }
+                    }
+
+                    > .issues {
+                        height: 100%;
+                        padding: 0 5px;
+
+                        > .issueLink {
+                            display: block;
+                            margin-bottom: 5px;
+                            position: relative;
+
+                            > .dragCover {
+                                display: block;
+                                position: absolute;
+                                z-index: 1;
+                                width: 100%;
+                                height: 100%;
+
+                                &:-moz-drag-over {
+                                    border: var(--borderInputFocus);
+                                }
+                            }
+
+                            > .issue {
+                                padding: 10px;
+                                border-radius: 3px;
+                                background: #fff;
+                                box-shadow: 0 1px 2px 0 rgba(9, 30, 66, 0.25);
+                                transition: background 0.1s;
+                                cursor: pointer;
+                                user-select: none;
+                                display: flex;
+                                justify-content: space-between;
+                                cursor: pointer;
+
+                                &:hover {
+                                    background: var(--backgroundLight);
+                                }
+
+                                > .title {
+                                    padding-bottom: 11px;
+                                    font-size: 15px;
+                                }
+
+                                > .bottom {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+
+                                    > .assignees {
+                                        display: flex;
+                                        flex-direction: row-reverse;
+                                        margin-left: 2px;
+
+                                        > .assigneeAvatar {
+                                            margin-left: -2px;
+                                            box-shadow: 0 0 0 2px #fff;
+                                        }
+
+                                        > .styledAvatar {
+                                            margin-left: -2px;
+                                            box-shadow: 0 0 0 2px #fff;
+                                        }
+                                    }
+                                }
+                            }
+
+                            > .issue.hidden {
+                                display: none;
+                            }
+
+                            > .issue.isBeingDragged {
+                                transform: rotate(3deg);
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                z-index: 2;
+                                width: 90px;
+                            }
+                        }
+                    }
+                }
+            }
+
+            > .rowName {
+                position: relative;
+                color: var(--textDark);
+                font-family: var(--font-regular);
+                margin: 26px -5px 0;
+            }
+        }
+    }
+}
+
+@media (min-width: 1240px) {
+    #projectPage {
+        > #projectBoardFilters {
+            flex-direction: row;
+
+            > .filterChild {
+                width: auto;
+                margin-bottom: auto;
+            }
+        }
+
+        > .rows {
+            > .row {
+                > .projectBoardLists {
+                    flex-direction: row;
+
+                    > .list {
+                        width: 25%;
+
+                        > .issues {
+                            > .issueLink {
+                                > .issue {
+                                    display: block;
+                                    padding: 10px 8px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
