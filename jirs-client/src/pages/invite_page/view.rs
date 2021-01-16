@@ -1,11 +1,12 @@
 use {
     crate::{
+        components::{
+            styled_button::StyledButton, styled_field::StyledField, styled_form::StyledForm,
+            styled_input::StyledInput,
+        },
         model::{Model, PageContent},
         pages::invite_page::InvitePage,
-        shared::{
-            outer_layout, styled_button::StyledButton, styled_field::StyledField,
-            styled_form::StyledForm, styled_input::StyledInput, ToNode,
-        },
+        shared::{outer_layout, ToNode},
         validations::is_token,
         FieldId, InvitationPageChange, Msg, PageChanged,
     },

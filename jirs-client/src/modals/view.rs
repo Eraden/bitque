@@ -1,7 +1,9 @@
 use {
     crate::{
-        model::*, shared::styled_confirm_modal::StyledConfirmModal,
-        shared::styled_modal::StyledModal, shared::ToNode, Msg,
+        components::{styled_confirm_modal::StyledConfirmModal, styled_modal::StyledModal},
+        model::*,
+        shared::ToNode,
+        Msg,
     },
     seed::{prelude::*, *},
 };
@@ -16,7 +18,7 @@ pub fn view(model: &Model) -> Node<Msg> {
                 if let Some(_issue) = model.issues_by_id.get(issue_id) {
                     let details = issues_edit::view(model, modal.as_ref());
                     StyledModal::build()
-                        .variant(crate::shared::styled_modal::Variant::Center)
+                        .variant(crate::components::styled_modal::Variant::Center)
                         .width(1040)
                         .child(details)
                         .build()

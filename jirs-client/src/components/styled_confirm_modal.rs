@@ -1,10 +1,11 @@
-use seed::EventHandler;
-use seed::{prelude::*, *};
-
-use crate::shared::styled_button::StyledButton;
-use crate::shared::styled_modal::StyledModal;
-use crate::shared::ToNode;
-use crate::Msg;
+use {
+    crate::{
+        components::{styled_button::StyledButton, styled_modal::StyledModal},
+        shared::ToNode,
+        Msg,
+    },
+    seed::{prelude::*, EventHandler, *},
+};
 
 const TITLE: &str = "Warning";
 const MESSAGE: &str = "Are you sure you want to continue with this action?";

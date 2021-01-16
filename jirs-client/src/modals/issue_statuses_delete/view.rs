@@ -1,9 +1,5 @@
 use {
-    crate::{
-        model,
-        shared::{styled_confirm_modal::StyledConfirmModal, ToNode},
-        Msg,
-    },
+    crate::{components::styled_confirm_modal::StyledConfirmModal, model, shared::ToNode, Msg},
     jirs_data::IssueStatusId,
     seed::prelude::*,
 };

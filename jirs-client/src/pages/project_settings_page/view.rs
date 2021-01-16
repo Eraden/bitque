@@ -1,10 +1,6 @@
 use {
     crate::{
-        modals::issue_statuses_delete::Model as DeleteIssueStatusModal,
-        model::{self, ModalType, Model, PageContent},
-        pages::project_settings_page::ProjectSettingsPage,
-        shared::{
-            inner_layout,
+        components::{
             styled_button::StyledButton,
             styled_checkbox::StyledCheckbox,
             styled_editor::StyledEditor,
@@ -14,8 +10,11 @@ use {
             styled_input::StyledInput,
             styled_select::StyledSelect,
             styled_textarea::StyledTextarea,
-            IntoChild, ToChild, ToNode,
         },
+        modals::issue_statuses_delete::Model as DeleteIssueStatusModal,
+        model::{self, ModalType, Model, PageContent},
+        pages::project_settings_page::ProjectSettingsPage,
+        shared::{inner_layout, IntoChild, ToChild, ToNode},
         FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange,
     },
     jirs_data::{IssueStatus, ProjectCategory, TimeTracking},

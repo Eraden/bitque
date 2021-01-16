@@ -1,7 +1,8 @@
 use {
     crate::{
+        components::{styled_button::StyledButton, styled_icon::Icon},
         model::Model,
-        shared::{inner_layout, styled_button::StyledButton, styled_icon::Icon, ToNode},
+        shared::{inner_layout, ToNode},
         Msg,
     },
     seed::{prelude::*, *},

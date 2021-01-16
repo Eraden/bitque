@@ -1,9 +1,5 @@
 use {
-    crate::{
-        model::Model,
-        shared::{styled_modal::StyledModal, ToNode},
-        Msg,
-    },
+    crate::{components::styled_modal::StyledModal, model::Model, shared::ToNode, Msg},
     seed::{prelude::*, *},
 };
 

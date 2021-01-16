@@ -1,8 +1,11 @@
-use seed::{prelude::*, *};
-
-use crate::shared::styled_icon::{Icon, StyledIcon};
-use crate::shared::ToNode;
-use crate::{FieldId, Msg};
+use {
+    crate::{
+        components::styled_icon::{Icon, StyledIcon},
+        shared::ToNode,
+        FieldId, Msg,
+    },
+    seed::{prelude::*, *},
+};
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum Variant {

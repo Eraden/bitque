@@ -1,7 +1,7 @@
 use {
     crate::{
+        components::styled_select::StyledSelectChanged,
         model::{IssueModal, ModalType},
-        shared::styled_select::StyledSelectChanged,
         ws::send_ws_msg,
         FieldId, Msg, OperationKind, ResourceKind,
     },

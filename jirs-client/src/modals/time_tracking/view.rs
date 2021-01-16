@@ -1,12 +1,14 @@
 use {
     crate::{
-        model::{ModalType, Model},
-        shared::{
+        components::{
             styled_button::StyledButton,
             styled_field::StyledField,
             styled_input::{StyledInput, StyledInputState},
             styled_modal::StyledModal,
             styled_select::{StyledSelect, StyledSelectState},
+        },
+        model::{ModalType, Model},
+        shared::{
             tracking_widget::{fibonacci_values, tracking_widget},
             ToChild, ToNode,
         },

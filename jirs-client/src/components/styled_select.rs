@@ -1,10 +1,10 @@
 use {
     crate::{
-        shared::{
+        components::{
             styled_icon::{Icon, StyledIcon},
             styled_select_child::*,
-            ToNode,
         },
+        shared::ToNode,
         FieldId, Msg,
     },
     seed::{prelude::*, *},

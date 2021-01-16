@@ -1,16 +1,15 @@
 use {
     crate::{
-        model::{self, PageContent},
-        shared::{
-            outer_layout,
+        components::{
             styled_button::StyledButton,
             styled_field::StyledField,
             styled_form::StyledForm,
             styled_icon::{Icon, StyledIcon},
             styled_input::StyledInput,
             styled_link::StyledLink,
-            ToNode,
         },
+        model::{self, PageContent},
+        shared::{outer_layout, ToNode},
         validations::{is_email, is_token},
         FieldId, Msg, SignInFieldId,
     },

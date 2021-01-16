@@ -1,13 +1,13 @@
 use {
     crate::{
-        model::Model,
-        shared::{
-            divider,
+        components::{
             styled_avatar::StyledAvatar,
             styled_button::StyledButton,
             styled_icon::{Icon, StyledIcon},
-            styled_tooltip, ToNode,
+            styled_tooltip,
         },
+        model::Model,
+        shared::{divider, ToNode},
         ws::send_ws_msg,
         Msg, Page,
     },

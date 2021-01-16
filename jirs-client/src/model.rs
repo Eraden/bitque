@@ -1,12 +1,12 @@
 use {
     crate::{
+        components::styled_select::StyledSelectState,
         pages::{
             invite_page::InvitePage, profile_page::model::ProfilePage,
             project_page::model::ProjectPage, project_settings_page::ProjectSettingsPage,
             reports_page::model::ReportsPage, sign_in_page::model::SignInPage,
             sign_up_page::model::SignUpPage, users_page::model::UsersPage,
         },
-        shared::styled_select::StyledSelectState,
         Msg,
     },
     jirs_data::*,

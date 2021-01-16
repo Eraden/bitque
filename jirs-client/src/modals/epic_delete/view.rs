@@ -1,8 +1,9 @@
 use {
     crate::{
+        components::{styled_confirm_modal::*, styled_icon::*, styled_modal::*},
         modals::epic_delete::Model,
         model,
-        shared::{styled_confirm_modal::*, styled_icon::*, styled_modal::*, ToNode},
+        shared::ToNode,
         Msg,
     },
     seed::{prelude::*, *},

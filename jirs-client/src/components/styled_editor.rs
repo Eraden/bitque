@@ -1,7 +1,6 @@
 use {
     crate::{
-        shared::{styled_textarea::StyledTextarea, ToNode},
-        FieldChange, FieldId, Msg,
+        components::styled_textarea::StyledTextarea, shared::ToNode, FieldChange, FieldId, Msg,
     },
     seed::{prelude::*, *},
 };

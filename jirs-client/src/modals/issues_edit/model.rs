@@ -1,12 +1,12 @@
 use {
     crate::{
-        modals::time_tracking::value_for_time_tracking,
-        model::{CommentForm, IssueModal},
-        shared::{
+        components::{
             styled_date_time_input::StyledDateTimeInputState, styled_editor::Mode,
             styled_editor::StyledEditorState, styled_input::StyledInputState,
             styled_select::StyledSelectState,
         },
+        modals::time_tracking::value_for_time_tracking,
+        model::{CommentForm, IssueModal},
         EditIssueModalSection, FieldId, Msg,
     },
     jirs_data::{EpicId, Issue, IssueFieldId, TimeTracking, UpdateIssuePayload},

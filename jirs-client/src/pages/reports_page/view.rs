@@ -1,8 +1,9 @@
 use {
     crate::{
+        components::styled_icon::StyledIcon,
         model::{Model, PageContent},
         pages::reports_page::model::ReportsPage,
-        shared::{inner_layout, styled_icon::StyledIcon, ToNode},
+        shared::{inner_layout, ToNode},
         Msg, PageChanged, ReportsPageChange,
     },
     chrono::Datelike,

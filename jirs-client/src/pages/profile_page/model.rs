@@ -1,6 +1,6 @@
 use {
     crate::{
-        shared::{
+        components::{
             styled_image_input::StyledImageInputState, styled_input::StyledInputState,
             styled_select::StyledSelectState,
         },

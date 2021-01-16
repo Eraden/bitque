@@ -1,15 +1,15 @@
 use {
     crate::{
+        components::{
+            styled_avatar::StyledAvatar, styled_button::StyledButton, styled_editor::StyledEditor,
+            styled_field::StyledField, styled_icon::Icon, styled_input::StyledInput,
+            styled_select::StyledSelect,
+        },
         modals::{
             epic_field, issues_edit::Model as EditIssueModal, time_tracking::time_tracking_field,
         },
         model::{ModalType, Model},
-        shared::{
-            styled_avatar::StyledAvatar, styled_button::StyledButton, styled_editor::StyledEditor,
-            styled_field::StyledField, styled_icon::Icon, styled_input::StyledInput,
-            styled_select::StyledSelect, tracking_widget::tracking_link, IntoChild, ToChild,
-            ToNode,
-        },
+        shared::{tracking_widget::tracking_link, IntoChild, ToChild, ToNode},
         EditIssueModalSection, FieldChange, FieldId, Msg,
     },
     comments::*,

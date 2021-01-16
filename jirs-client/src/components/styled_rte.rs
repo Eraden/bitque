@@ -1,11 +1,16 @@
-use seed::{prelude::*, *};
-
-use crate::shared::styled_button::StyledButton;
-use crate::shared::styled_icon::{Icon, StyledIcon};
-use crate::shared::styled_select::{StyledSelect, StyledSelectState};
-use crate::shared::styled_tooltip::StyledTooltip;
-use crate::shared::{ToChild, ToNode};
-use crate::{ButtonId, FieldId, Msg, RteField};
+use {
+    crate::{
+        components::{
+            styled_button::StyledButton,
+            styled_icon::{Icon, StyledIcon},
+            styled_select::{StyledSelect, StyledSelectState},
+            styled_tooltip::StyledTooltip,
+        },
+        shared::{ToChild, ToNode},
+        ButtonId, FieldId, Msg, RteField,
+    },
+    seed::{prelude::*, *},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub enum HeadingSize {

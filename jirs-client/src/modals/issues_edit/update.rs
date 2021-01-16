@@ -1,8 +1,8 @@
 use {
     crate::{
+        components::styled_select::StyledSelectChanged,
         modals::issues_edit::Model as EditIssueModal,
         model::{IssueModal, ModalType, Model},
-        shared::styled_select::StyledSelectChanged,
         ws::send_ws_msg,
         EditIssueModalSection, FieldChange, FieldId, Msg, OperationKind, ResourceKind,
     },

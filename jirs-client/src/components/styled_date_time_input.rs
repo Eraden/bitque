@@ -1,16 +1,16 @@
-use std::ops::RangeInclusive;
-
-use chrono::Duration;
-
 use {
+    crate::{
+        components::{
+            styled_button::StyledButton, styled_icon::Icon, styled_tooltip::StyledTooltip,
+        },
+        shared::ToNode,
+        FieldId, Msg,
+    },
     chrono::prelude::*,
+    chrono::Duration,
     seed::{prelude::*, *},
+    std::ops::RangeInclusive,
 };
-
-use crate::shared::styled_button::StyledButton;
-use crate::shared::styled_icon::Icon;
-use crate::shared::styled_tooltip::StyledTooltip;
-use crate::{shared::ToNode, FieldId, Msg};
 
 #[derive(Debug)]
 pub enum StyledDateTimeChanged {

@@ -1,16 +1,17 @@
 use {
     crate::{
+        components::{
+            styled_button::StyledButton, styled_date_time_input::StyledDateTimeInput,
+            styled_field::StyledField, styled_form::StyledForm, styled_input::StyledInput,
+            styled_modal::StyledModal, styled_select::StyledSelect,
+            styled_textarea::StyledTextarea,
+        },
         modals::{
             epic_field,
             issues_create::{Model as AddIssueModal, Type},
         },
         model::Model,
-        shared::{
-            styled_button::StyledButton, styled_date_time_input::StyledDateTimeInput,
-            styled_field::StyledField, styled_form::StyledForm, styled_input::StyledInput,
-            styled_modal::StyledModal, styled_select::StyledSelect,
-            styled_textarea::StyledTextarea, IntoChild, ToChild, ToNode,
-        },
+        shared::{IntoChild, ToChild, ToNode},
         FieldId, Msg,
     },
     jirs_data::{IssueFieldId, IssuePriority},
@@ -113,7 +114,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     StyledModal::build()
         .add_class("addIssue")
         .width(0)
-        .variant(crate::shared::styled_modal::Variant::Center)
+        .variant(crate::components::styled_modal::Variant::Center)
         .child(form)
         .build()
         .into_node()

@@ -1,12 +1,13 @@
 use {
     crate::{
+        components::{
+            styled_button::StyledButton, styled_field::StyledField, styled_form::StyledForm,
+            styled_image_input::StyledImageInput, styled_input::StyledInput,
+            styled_select::StyledSelect,
+        },
         model::{Model, PageContent},
         pages::profile_page::model::ProfilePage,
-        shared::{
-            inner_layout, styled_button::StyledButton, styled_field::StyledField,
-            styled_form::StyledForm, styled_image_input::StyledImageInput,
-            styled_input::StyledInput, styled_select::StyledSelect, ToChild, ToNode,
-        },
+        shared::{inner_layout, ToChild, ToNode},
         FieldId, Msg, PageChanged, ProfilePageChange,
     },
     jirs_data::*,

@@ -1,8 +1,8 @@
 use {
     crate::{
+        components::styled_select::StyledSelectChanged,
         model::{InvitationFormState, Model, Page, PageContent},
         pages::users_page::model::UsersPage,
-        shared::styled_select::StyledSelectChanged,
         ws::{invitation_load, send_ws_msg},
         FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged,
     },

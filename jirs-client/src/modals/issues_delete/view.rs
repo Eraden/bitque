@@ -1,7 +1,7 @@
 use {
     crate::{
-        model, model::ModalType, shared::styled_confirm_modal::StyledConfirmModal, shared::ToNode,
-        Msg,
+        components::styled_confirm_modal::StyledConfirmModal, model, model::ModalType,
+        shared::ToNode, Msg,
     },
     seed::{prelude::*, *},
 };

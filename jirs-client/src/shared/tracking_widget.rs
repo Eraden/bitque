@@ -1,11 +1,9 @@
 use {
     crate::{
+        components::styled_icon::{Icon, StyledIcon},
         modals::{issues_edit::Model as EditIssueModal, time_tracking::value_for_time_tracking},
         model::{ModalType, Model},
-        shared::{
-            styled_icon::{Icon, StyledIcon},
-            ToNode,
-        },
+        shared::ToNode,
         Msg,
     },
     jirs_data::{TimeTracking, UpdateIssuePayload},

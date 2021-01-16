@@ -1,14 +1,13 @@
 use {
     crate::{
+        components::{styled_avatar::*, styled_button::StyledButton, styled_icon::*},
         model::PageContent,
-        shared::{styled_avatar::*, styled_icon::*, ToNode},
+        shared::ToNode,
         BoardPageChange, Model, Msg, Page, PageChanged,
     },
     jirs_data::*,
     seed::{prelude::*, *},
 };
-
-use crate::shared::styled_button::StyledButton;
 
 pub fn project_board_lists(model: &Model) -> Node<Msg> {
     let project_page = match &model.page_content {

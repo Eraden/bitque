@@ -1,13 +1,10 @@
 use {
     crate::{
-        model::IssueModal,
-        shared::{
-            styled_date_time_input::StyledDateTimeInputState,
-            styled_input::StyledInputState,
-            styled_select::StyledSelectState,
-            styled_select_child::{StyledSelectChild, StyledSelectChildBuilder},
-            ToChild, ToNode,
+        components::{
+            styled_date_time_input::*, styled_input::*, styled_select::*, styled_select_child::*,
         },
+        model::IssueModal,
+        shared::{ToChild, ToNode},
         FieldId, Msg,
     },
     jirs_data::{IssueFieldId, IssuePriority},
@@ -81,17 +78,22 @@ impl<'l> ToChild<'l> for Type {
             Type::Story => 2,
             Type::Epic => 3,
         };
-        let icon = match self {
-            Type::Task => crate::shared::styled_icon::Icon::Task,
-            Type::Bug => crate::shared::styled_icon::Icon::Bug,
-            Type::Story => crate::shared::styled_icon::Icon::Story,
-            Type::Epic => crate::shared::styled_icon::Icon::Epic,
-        };
 
-        let type_icon = crate::shared::styled_icon::StyledIcon::build(icon)
-            .add_class(name)
-            .build()
-            .into_node();
+        let type_icon = {
+            use crate::components::styled_icon::*;
+            let icon = {
+                match self {
+                    Type::Task => Icon::Task,
+                    Type::Bug => Icon::Bug,
+                    Type::Story => Icon::Story,
+                    Type::Epic => Icon::Epic,
+                }
+            };
+            crate::components::styled_icon::StyledIcon::build(icon)
+                .add_class(name)
+                .build()
+                .into_node()
+        };
 
         StyledSelectChild::build()
             .add_class(name)

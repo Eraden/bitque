@@ -1,5 +1,5 @@
 use {
-    crate::{model::InvitationFormState, shared::styled_select::StyledSelectState, FieldId},
+    crate::{components::styled_select::StyledSelectState, model::InvitationFormState, FieldId},
     jirs_data::{Invitation, User, UserRole, UsersFieldId},
 };
 

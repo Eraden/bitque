@@ -1,11 +1,12 @@
 use {
     crate::{
+        components::{
+            styled_avatar::StyledAvatar, styled_button::StyledButton,
+            styled_textarea::StyledTextarea,
+        },
         modals::issues_edit::Model as EditIssueModal,
         model::{CommentForm, ModalType, Model},
-        shared::{
-            styled_avatar::StyledAvatar, styled_button::StyledButton,
-            styled_textarea::StyledTextarea, ToNode,
-        },
+        shared::ToNode,
         EditIssueModalSection, FieldChange, FieldId, Msg,
     },
     jirs_data::{Comment, CommentFieldId},

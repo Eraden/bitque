@@ -1,11 +1,8 @@
 use {
     crate::{
+        components::styled_icon::{Icon, StyledIcon},
         model::{Model, Page},
-        shared::{
-            divider,
-            styled_icon::{Icon, StyledIcon},
-            ToNode,
-        },
+        shared::{divider, ToNode},
         ws::enqueue_ws_msg,
         Msg, OperationKind, ResourceKind,
     },

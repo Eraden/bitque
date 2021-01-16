@@ -1,6 +1,6 @@
 use {
     crate::{
-        shared::styled_select::Variant,
+        components::styled_select::Variant,
         shared::{IntoChild, ToChild, ToNode},
         Msg,
     },
@@ -175,7 +175,7 @@ impl<'l> ToChild<'l> for jirs_data::User {
     type Builder = StyledSelectChildBuilder<'l>;
 
     fn to_child<'m: 'l>(&'m self) -> Self::Builder {
-        let avatar = crate::shared::styled_avatar::StyledAvatar::build()
+        let avatar = crate::components::styled_avatar::StyledAvatar::build()
             .avatar_url(self.avatar_url.as_deref().unwrap_or_default())
             .size(20)
             .name(self.name.as_str())
@@ -192,7 +192,7 @@ impl<'l> IntoChild<'l> for jirs_data::IssuePriority {
     type Builder = StyledSelectChildBuilder<'l>;
 
     fn into_child(self) -> Self::Builder {
-        let icon = crate::shared::styled_icon::StyledIcon::build(self.clone().into())
+        let icon = crate::components::styled_icon::StyledIcon::build(self.clone().into())
             .add_class(self.to_str())
             .build()
             .into_node();
@@ -223,7 +223,7 @@ impl<'l> IntoChild<'l> for jirs_data::IssueType {
     fn into_child(self) -> Self::Builder {
         let name = self.to_label();
 
-        let type_icon = crate::shared::styled_icon::StyledIcon::build(self.clone().into())
+        let type_icon = crate::components::styled_icon::StyledIcon::build(self.clone().into())
             .add_class(name)
             .build()
             .into_node();

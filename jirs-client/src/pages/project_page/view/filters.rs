@@ -1,7 +1,8 @@
 use {
     crate::{
+        components::{styled_avatar::*, styled_button::*, styled_icon::*, styled_input::*},
         model::PageContent,
-        shared::{styled_avatar::*, styled_button::*, styled_icon::*, styled_input::*, ToNode},
+        shared::ToNode,
         FieldId, Model, Msg,
     },
     seed::{prelude::*, *},

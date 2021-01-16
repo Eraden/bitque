@@ -1,8 +1,8 @@
 use {
     crate::{
+        components::styled_select::StyledSelectChanged,
         model::{ModalType, Model, Page, PageContent},
         pages::project_page::model::ProjectPage,
-        shared::styled_select::StyledSelectChanged,
         ws::{board_load, send_ws_msg},
         BoardPageChange, EditIssueModalSection, FieldId, Msg, OperationKind, PageChanged,
         ResourceKind,

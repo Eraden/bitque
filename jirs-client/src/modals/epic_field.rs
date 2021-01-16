@@ -1,8 +1,7 @@
 use {
     crate::{
+        components::{styled_field::StyledField, styled_select::StyledSelect},
         model::{IssueModal, Model},
-        shared::styled_field::StyledField,
-        shared::styled_select::StyledSelect,
         shared::{ToChild, ToNode},
         FieldId, Msg,
     },

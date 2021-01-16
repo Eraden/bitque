@@ -2,25 +2,26 @@
 
 use {
     crate::{
-        model::{ModalType, Model, Page},
-        shared::{
-            go_to_board, go_to_login,
+        components::{
             styled_date_time_input::StyledDateTimeChanged,
             styled_select::StyledSelectChanged,
             styled_tooltip,
             styled_tooltip::{Variant as StyledTooltip, Variant},
         },
+        model::{ModalType, Model, Page},
+        shared::{go_to_board, go_to_login},
         ws::{flush_queue, open_socket, read_incoming, send_ws_msg},
     },
     jirs_data::*,
     seed::{prelude::*, *},
     web_sys::File,
 };
-pub use {changes::*, fields::*, images::*};
+pub use {changes::*, components::*, fields::*, images::*};
 
 // use crate::shared::styled_rte::RteMsg;
 
 mod changes;
+mod components;
 mod fields;
 mod images;
 mod modals;

@@ -1,11 +1,11 @@
 use {
     crate::{
-        model::{InvitationFormState, Model, PageContent},
-        shared::{
-            inner_layout, styled_button::StyledButton, styled_field::StyledField,
-            styled_form::StyledForm, styled_input::StyledInput, styled_select::StyledSelect,
-            IntoChild, ToNode,
+        components::{
+            styled_button::StyledButton, styled_field::StyledField, styled_form::StyledForm,
+            styled_input::StyledInput, styled_select::StyledSelect,
         },
+        model::{InvitationFormState, Model, PageContent},
+        shared::{inner_layout, IntoChild, ToNode},
         validations::is_email,
         FieldId, Msg, PageChanged, UsersPageChange,
     },

@@ -1,8 +1,8 @@
 use {
     crate::{
+        components::styled_select::StyledSelectChanged,
         model::{Model, Page, PageContent},
         pages::profile_page::model::ProfilePage,
-        shared::styled_select::StyledSelectChanged,
         ws::{board_load, send_ws_msg},
         FieldId, Msg, OperationKind, PageChanged, ProfilePageChange, ResourceKind,
         WebSocketChanged,
