@@ -1,7 +1,7 @@
-use seed::{prelude::*, *};
-
-use crate::shared::ToNode;
-use crate::Msg;
+use {
+    crate::{shared::ToNode, Msg},
+    seed::{prelude::*, *},
+};
 
 pub struct StyledLink<'l> {
     children: Vec<Node<Msg>>,

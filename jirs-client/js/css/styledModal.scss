@@ -162,6 +162,22 @@
                             }
                         }
                     }
+
+                    > .actions {
+                        display: flex;
+                        justify-content: flex-end;
+                        margin: {
+                            bottom: 10px;
+                            top: 10px;
+                        }
+
+                        padding: {
+                            right: 40px;
+                            left: 40px;
+                        };
+                        > .styledButton {
+                        }
+                    }
                 }
             }
         }

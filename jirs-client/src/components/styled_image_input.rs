@@ -1,8 +1,8 @@
-use seed::{prelude::*, *};
-use web_sys::File;
-
-use crate::shared::ToNode;
-use crate::{FieldId, Msg};
+use {
+    crate::{shared::ToNode, FieldId, Msg},
+    seed::{prelude::*, *},
+    web_sys::File,
+};
 
 #[derive(Debug, Clone)]
 pub struct StyledImageInputState {

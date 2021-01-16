@@ -1,9 +1,11 @@
-use seed::{prelude::*, *};
-
-use jirs_data::TimeTracking;
-
-use crate::shared::{ToChild, ToNode};
-use crate::{FieldId, Msg};
+use {
+    crate::{
+        shared::{ToChild, ToNode},
+        FieldId, Msg,
+    },
+    jirs_data::TimeTracking,
+    seed::{prelude::*, *},
+};
 
 #[derive(Debug)]
 pub struct StyledCheckboxState {

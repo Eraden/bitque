@@ -1,11 +1,9 @@
-use std::borrow::Cow;
-
-use seed::{prelude::*, *};
-
-use jirs_data::{IssuePriority, IssueType};
-
-use crate::shared::ToNode;
-use crate::Msg;
+use {
+    crate::{shared::ToNode, Msg},
+    jirs_data::{IssuePriority, IssueType},
+    seed::{prelude::*, *},
+    std::borrow::Cow,
+};
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]

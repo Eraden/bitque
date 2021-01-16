@@ -10,8 +10,6 @@ use {
     seed::{prelude::*, *},
 };
 
-// pub trait ChildIter<'l> = Iterator<Item = StyledSelectChildBuilder<'l>>;
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum StyledSelectChanged {
     Text(String),

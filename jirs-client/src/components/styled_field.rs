@@ -1,7 +1,7 @@
-use seed::{prelude::*, *};
-
-use crate::shared::ToNode;
-use crate::Msg;
+use {
+    crate::{shared::ToNode, Msg},
+    seed::{prelude::*, *},
+};
 
 #[derive(Debug)]
 pub struct StyledField<'l> {

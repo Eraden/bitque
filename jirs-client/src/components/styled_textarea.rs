@@ -1,7 +1,7 @@
-use seed::{prelude::*, *};
-
-use crate::shared::ToNode;
-use crate::{FieldId, Msg};
+use {
+    crate::{shared::ToNode, FieldId, Msg},
+    seed::{prelude::*, *},
+};
 
 #[derive(Debug)]
 pub struct StyledTextarea<'l> {

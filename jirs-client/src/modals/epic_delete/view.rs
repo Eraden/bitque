@@ -1,6 +1,6 @@
 use {
     crate::{
-        components::{styled_confirm_modal::*, styled_icon::*, styled_modal::*},
+        components::{styled_button::*, styled_confirm_modal::*, styled_icon::*, styled_modal::*},
         modals::epic_delete::Model,
         model,
         shared::ToNode,
@@ -45,12 +45,25 @@ fn warning(model: &model::Model, modal: &Model) -> Node<Msg> {
             ]]
         })
         .collect();
+
+    let close = StyledButton::build()
+        .text("Close")
+        .on_click(mouse_ev("click", move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::ModalDropped
+        }))
+        .secondary()
+        .build()
+        .into_node();
+
     section![
         h3![C!["header"], "Cannot delete epic"],
         div![
             C!["warning"],
             "This epic have related issues. Please move or delete them first."
         ],
-        ol![C!["relatedList"], issues]
+        ol![C!["relatedList"], issues],
+        div![C!["actions"], close]
     ]
 }
