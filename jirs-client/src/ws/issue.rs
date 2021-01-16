@@ -1,6 +1,7 @@
 use {
     crate::{
         model::{Model, PageContent},
+        pages::project_page::ProjectPage,
         ws::send_ws_msg,
         Msg,
     },
@@ -16,7 +17,7 @@ pub fn drag_started(issue_id: EpicId, model: &mut Model) {
     project_page.issue_drag.drag(issue_id);
 }
 
-pub fn exchange_position(below_id: EpicId, model: &mut Model) {
+pub fn change_position(below_id: EpicId, model: &mut Model) {
     let project_page = match &mut model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return,
@@ -30,7 +31,7 @@ pub fn exchange_position(below_id: EpicId, model: &mut Model) {
     }
 
     let (issue_status_id, epic_id) = model
-        .issues
+        .issues()
         .iter()
         .find_map(|issue| {
             if issue.id == dragged_id {
@@ -42,7 +43,7 @@ pub fn exchange_position(below_id: EpicId, model: &mut Model) {
         .unwrap_or_default();
 
     let mut issues: Vec<Issue> = model
-        .issues
+        .issues_mut()
         .drain_filter(|issue| issue.issue_status_id == issue_status_id && issue.epic_id == epic_id)
         .collect();
     issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
@@ -66,16 +67,18 @@ pub fn exchange_position(below_id: EpicId, model: &mut Model) {
             iss.list_position = issue.list_position;
         }
         changed.push((issue.id, issue.list_position));
-        model.issues.push(issue);
+        model.issues_mut().push(issue);
     }
 
+    let visible = ProjectPage::visible_issues(
+        crate::match_page!(model, Project),
+        model.epics(),
+        model.issue_statuses(),
+        model.issues(),
+        model.user(),
+    );
     if let PageContent::Project(project_page) = &mut model.page_content {
-        project_page.rebuild_visible(
-            &model.epics,
-            &model.issue_statuses,
-            &model.issues,
-            &model.user,
-        );
+        project_page.visible_issues = visible;
         for (id, _) in changed.iter() {
             project_page.issue_drag.mark_dirty(*id);
         }
@@ -107,18 +110,16 @@ pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
         model.ws.as_ref(),
         orders,
     );
-    if let PageContent::Project(project_page) = &mut model.page_content {
-        project_page.issue_drag.clear()
-    };
+    crate::match_page_mut!(model, Project).issue_drag.clear();
 }
 
 pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
-    let project_page = match &mut model.page_content {
-        PageContent::Project(project_page) => project_page,
-        _ => return,
-    };
-
-    let dragged_id = match project_page.issue_drag.dragged_id.as_ref().cloned() {
+    let dragged_id = match crate::match_page!(model, Project)
+        .issue_drag
+        .dragged_id
+        .as_ref()
+        .cloned()
+    {
         Some(issue_id) => issue_id,
         _ => return error!("Nothing is dragged"),
     };
@@ -132,7 +133,7 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
     }
 
     let mut issues: Vec<Issue> = model
-        .issues
+        .issues_mut()
         .drain_filter(|issue| {
             if issue.id == dragged_id {
                 issue.issue_status_id = status_id;
@@ -143,6 +144,7 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
 
     issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
 
+    let mut dirty = vec![];
     for mut issue in issues {
         if issue.id == dragged_id {
             issue.issue_status_id = status_id;
@@ -150,14 +152,24 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
                 iss.issue_status_id = status_id;
             }
         }
-        project_page.issue_drag.mark_dirty(issue.id);
-        model.issues.push(issue);
+
+        dirty.push(issue.id);
+        model.issues_mut().push(issue);
+    }
+    {
+        let project_page = crate::match_page_mut!(model, Project);
+        for id in dirty {
+            project_page.issue_drag.mark_dirty(id);
+        }
     }
 
-    project_page.rebuild_visible(
-        &model.epics,
-        &model.issue_statuses,
-        &model.issues,
-        &model.user,
+    let visible = ProjectPage::visible_issues(
+        crate::match_page!(model, Project),
+        model.epics(),
+        model.issue_statuses(),
+        model.issues(),
+        model.user(),
     );
+
+    crate::match_page_mut!(model, Project).visible_issues = visible;
 }

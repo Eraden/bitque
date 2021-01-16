@@ -1,7 +1,7 @@
 use {
     crate::{
         components::{styled_button::*, styled_confirm_modal::*, styled_icon::*, styled_modal::*},
-        modals::epic_delete::Model,
+        modals::epics_delete::Model,
         model,
         shared::ToNode,
         Msg,

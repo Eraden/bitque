@@ -1,6 +1,6 @@
 use jirs_data::{
-    CommentFieldId, InviteFieldId, IssueFieldId, ProjectFieldId, SignInFieldId, SignUpFieldId,
-    UsersFieldId,
+    CommentFieldId, EpicFieldId, InviteFieldId, IssueFieldId, ProjectFieldId, SignInFieldId,
+    SignUpFieldId, UsersFieldId,
 };
 
 pub type AvatarFilterActive = bool;
@@ -92,6 +92,8 @@ pub enum FieldId {
     // issue
     AddIssueModal(IssueFieldId),
     EditIssueModal(EditIssueModalSection),
+    // epic
+    EditEpic(EpicFieldId),
     // project boards
     TextFilterBoard,
     CopyButtonLabel,
@@ -201,6 +203,12 @@ impl std::fmt::Display for FieldId {
                 UsersFieldId::UserRole => f.write_str("profile-userRole"),
                 UsersFieldId::Avatar => f.write_str("profile-avatar"),
                 UsersFieldId::CurrentProject => f.write_str("profile-currentProject"),
+            },
+            FieldId::EditEpic(sub) => match sub {
+                EpicFieldId::Name => f.write_str("epicEpic-name"),
+                EpicFieldId::StartsAt => f.write_str("epicEpic-startsAt"),
+                EpicFieldId::EndsAt => f.write_str("epicEpic-endsAt"),
+                EpicFieldId::TransformInto => f.write_str("epicEpic-transformInto"),
             },
             FieldId::Rte(..) => f.write_str("rte"),
         }

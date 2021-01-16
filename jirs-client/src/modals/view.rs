@@ -14,6 +14,10 @@ pub fn view(model: &Model) -> Node<Msg> {
         .modals
         .iter()
         .map(|modal| match modal {
+            // epic
+            ModalType::DeleteEpic(modal) => crate::modals::epics_delete::view(model, modal),
+            ModalType::EditEpic(modal) => crate::modals::epics_edit::view(model, modal),
+            // issue
             ModalType::EditIssue(issue_id, modal) => {
                 if let Some(_issue) = model.issues_by_id.get(issue_id) {
                     let details = issues_edit::view(model, modal.as_ref());
@@ -29,6 +33,7 @@ pub fn view(model: &Model) -> Node<Msg> {
             }
             ModalType::DeleteIssueConfirm(_id) => crate::modals::issues_delete::view(model),
             ModalType::AddIssue(modal) => issues_create::view(model, modal),
+            // comment
             ModalType::DeleteCommentConfirm(comment_id) => {
                 let comment_id = *comment_id;
                 StyledConfirmModal::build()
@@ -47,7 +52,6 @@ pub fn view(model: &Model) -> Node<Msg> {
             }
             #[cfg(debug_assertions)]
             ModalType::DebugModal => crate::modals::debug::view(model),
-            ModalType::DeleteEpic(modal) => crate::modals::epic_delete::view(model, modal),
         })
         .collect();
     section![id!["modals"], modals]

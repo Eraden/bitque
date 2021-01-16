@@ -38,6 +38,15 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                 let edit_button = StyledButton::build()
                     .empty()
                     .icon(Icon::EditAlt)
+                    .on_click(mouse_ev("click", move |ev| {
+                        ev.stop_propagation();
+                        ev.prevent_default();
+                        seed::Url::new()
+                            .add_path_part("edit-epic")
+                            .add_path_part(id.to_string())
+                            .go_and_push();
+                        Msg::ChangePage(Page::EditEpic(id))
+                    }))
                     .build()
                     .into_node();
                 let delete_button = StyledButton::build()
@@ -159,7 +168,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
         ev.prevent_default();
         ev.stop_propagation();
         Some(Msg::PageChanged(PageChanged::Board(
-            BoardPageChange::ExchangePosition(issue_id),
+            BoardPageChange::ChangePosition(issue_id),
         )))
     });
 

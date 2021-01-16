@@ -65,4 +65,5 @@ pub enum EpicFieldId {
     Name,
     StartsAt,
     EndsAt,
+    TransformInto,
 }

@@ -25,139 +25,114 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         _ => (),
     }
 
-    let project_page = match &mut model.page_content {
-        PageContent::Project(project_page) => project_page,
-        _ => return,
-    };
+    let mut rebuild_visible = false;
+    {
+        let project_page = crate::match_page_mut!(model, Project);
 
-    match msg {
-        Msg::UserChanged(..)
-        | Msg::ProjectChanged(Some(..))
-        | Msg::ChangePage(Page::Project)
-        | Msg::ChangePage(Page::AddIssue)
-        | Msg::ChangePage(Page::EditIssue(..)) => {
-            board_load(model, orders);
-        }
-        Msg::ResourceChanged(ResourceKind::Issue, OperationKind::SingleRemoved, ..) => {
-            orders.skip().send_msg(Msg::ModalDropped);
-            project_page.rebuild_visible(
-                &model.epics,
-                &model.issue_statuses,
-                &model.issues,
-                &model.user,
-            );
-        }
-        Msg::ResourceChanged(
-            ResourceKind::Issue
-            | ResourceKind::Project
-            | ResourceKind::IssueStatus
-            | ResourceKind::Epic,
-            ..,
-        ) => {
-            project_page.rebuild_visible(
-                &model.epics,
-                &model.issue_statuses,
-                &model.issues,
-                &model.user,
-            );
-        }
-        Msg::StyledSelectChanged(
-            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
-            StyledSelectChanged::Text(text),
-        ) => {
-            let modal = model
-                .modals
-                .iter_mut()
-                .filter_map(|modal| match modal {
-                    ModalType::EditIssue(_, modal) => Some(modal),
-                    _ => None,
-                })
-                .last();
-            if let Some(m) = modal {
-                m.top_type_state.text_filter = text;
+        match msg {
+            Msg::UserChanged(..)
+            | Msg::ProjectChanged(Some(..))
+            | Msg::ChangePage(Page::Project)
+            | Msg::ChangePage(Page::AddIssue)
+            | Msg::ChangePage(Page::EditIssue(..)) => {
+                board_load(model, orders);
             }
-        }
-        Msg::StrInputChanged(FieldId::TextFilterBoard, text) => {
-            project_page.text_filter = text;
-            project_page.rebuild_visible(
-                &model.epics,
-                &model.issue_statuses,
-                &model.issues,
-                &model.user,
-            );
-        }
-        Msg::ProjectAvatarFilterChanged(user_id, active) => {
-            if active {
-                project_page.active_avatar_filters =
-                    std::mem::replace(&mut project_page.active_avatar_filters, vec![])
-                        .into_iter()
-                        .filter(|id| *id != user_id)
-                        .collect();
-            } else {
-                project_page.active_avatar_filters.push(user_id);
+            Msg::ResourceChanged(ResourceKind::Issue, OperationKind::SingleRemoved, ..) => {
+                orders.skip().send_msg(Msg::ModalDropped);
+                rebuild_visible = true;
             }
-            project_page.rebuild_visible(
-                &model.epics,
-                &model.issue_statuses,
-                &model.issues,
-                &model.user,
-            );
+            Msg::ResourceChanged(
+                ResourceKind::Issue
+                | ResourceKind::Project
+                | ResourceKind::IssueStatus
+                | ResourceKind::Epic,
+                ..,
+            ) => {
+                rebuild_visible = true;
+            }
+            Msg::StyledSelectChanged(
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
+                StyledSelectChanged::Text(text),
+            ) => {
+                let modal = model
+                    .modals
+                    .iter_mut()
+                    .filter_map(|modal| match modal {
+                        ModalType::EditIssue(_, modal) => Some(modal),
+                        _ => None,
+                    })
+                    .last();
+                if let Some(m) = modal {
+                    m.top_type_state.text_filter = text;
+                }
+            }
+            Msg::StrInputChanged(FieldId::TextFilterBoard, text) => {
+                project_page.text_filter = text;
+                rebuild_visible = true;
+            }
+            Msg::ProjectAvatarFilterChanged(user_id, active) => {
+                if active {
+                    project_page.active_avatar_filters =
+                        std::mem::replace(&mut project_page.active_avatar_filters, vec![])
+                            .into_iter()
+                            .filter(|id| *id != user_id)
+                            .collect();
+                } else {
+                    project_page.active_avatar_filters.push(user_id);
+                }
+                rebuild_visible = true;
+            }
+            Msg::ProjectToggleOnlyMy => {
+                project_page.only_my_filter = !project_page.only_my_filter;
+                rebuild_visible = true;
+            }
+            Msg::ProjectToggleRecentlyUpdated => {
+                project_page.recently_updated_filter = !project_page.recently_updated_filter;
+                rebuild_visible = true;
+            }
+            Msg::ProjectClearFilters => {
+                project_page.active_avatar_filters = vec![];
+                project_page.recently_updated_filter = false;
+                project_page.only_my_filter = false;
+                rebuild_visible = true;
+            }
+            Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStarted(issue_id))) => {
+                crate::ws::issue::drag_started(issue_id, model)
+            }
+            Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStopped(_))) => {
+                crate::ws::issue::sync(model, orders);
+            }
+            Msg::PageChanged(PageChanged::Board(BoardPageChange::ChangePosition(
+                issue_bellow_id,
+            ))) => crate::ws::issue::change_position(issue_bellow_id, model),
+            Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragOverStatus(status))) => {
+                crate::ws::issue::change_status(status, model)
+            }
+            Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDropZone(_status))) => {
+                crate::ws::issue::sync(model, orders)
+            }
+            Msg::PageChanged(PageChanged::Board(BoardPageChange::DragLeave(_id))) => {
+                project_page.issue_drag.clear_last();
+            }
+            Msg::DeleteIssue(issue_id) => {
+                send_ws_msg(
+                    jirs_data::WsMsg::IssueDelete(issue_id),
+                    model.ws.as_ref(),
+                    orders,
+                );
+            }
+            _ => (),
         }
-        Msg::ProjectToggleOnlyMy => {
-            project_page.only_my_filter = !project_page.only_my_filter;
-            project_page.rebuild_visible(
-                &model.epics,
-                &model.issue_statuses,
-                &model.issues,
-                &model.user,
-            );
-        }
-        Msg::ProjectToggleRecentlyUpdated => {
-            project_page.recently_updated_filter = !project_page.recently_updated_filter;
-            project_page.rebuild_visible(
-                &model.epics,
-                &model.issue_statuses,
-                &model.issues,
-                &model.user,
-            );
-        }
-        Msg::ProjectClearFilters => {
-            project_page.active_avatar_filters = vec![];
-            project_page.recently_updated_filter = false;
-            project_page.only_my_filter = false;
-            project_page.rebuild_visible(
-                &model.epics,
-                &model.issue_statuses,
-                &model.issues,
-                &model.user,
-            );
-        }
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStarted(issue_id))) => {
-            crate::ws::issue::drag_started(issue_id, model)
-        }
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragStopped(_))) => {
-            crate::ws::issue::sync(model, orders);
-        }
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::ExchangePosition(
-            issue_bellow_id,
-        ))) => crate::ws::issue::exchange_position(issue_bellow_id, model),
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragOverStatus(status))) => {
-            crate::ws::issue::change_status(status, model)
-        }
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDropZone(_status))) => {
-            crate::ws::issue::sync(model, orders)
-        }
-        Msg::PageChanged(PageChanged::Board(BoardPageChange::DragLeave(_id))) => {
-            project_page.issue_drag.clear_last();
-        }
-        Msg::DeleteIssue(issue_id) => {
-            send_ws_msg(
-                jirs_data::WsMsg::IssueDelete(issue_id),
-                model.ws.as_ref(),
-                orders,
-            );
-        }
-        _ => (),
+    }
+    if rebuild_visible {
+        let visible_issues = ProjectPage::visible_issues(
+            crate::match_page!(model, Project),
+            model.epics(),
+            model.issue_statuses(),
+            model.issues(),
+            model.user(),
+        );
+        crate::match_page_mut!(model, Project).visible_issues = visible_issues;
     }
 }
 

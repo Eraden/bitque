@@ -26,9 +26,13 @@ pub trait IssueModal {
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
+    // issue
     AddIssue(Box<crate::modals::issues_create::Model>),
     EditIssue(EpicId, Box<crate::modals::issues_edit::Model>),
-    DeleteEpic(Box<crate::modals::epic_delete::Model>),
+    // epic
+    DeleteEpic(Box<crate::modals::epics_delete::Model>),
+    EditEpic(Box<crate::modals::epics_edit::Model>),
+
     DeleteIssueConfirm(EpicId),
     DeleteCommentConfirm(CommentId),
     TimeTracking(EpicId),
@@ -47,10 +51,15 @@ pub struct CommentForm {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub enum Page {
     Project,
-    EditIssue(EpicId),
+    // epic
     DeleteEpic(EpicId),
+    EditEpic(EpicId),
+    // issue
+    EditIssue(EpicId),
     AddIssue,
+    // settings
     ProjectSettings,
+    // auth
     SignIn,
     SignUp,
     Invite,
@@ -63,8 +72,9 @@ impl Page {
     pub fn to_path(self) -> String {
         match self {
             Page::Project => "/board".to_string(),
-            Page::EditIssue(id) => format!("/issues/{id}", id = id),
             Page::DeleteEpic(id) => format!("/delete-epic/{id}", id = id),
+            Page::EditEpic(id) => format!("/edit-epic/{id}", id = id),
+            Page::EditIssue(id) => format!("/issues/{id}", id = id),
             Page::AddIssue => "/add-issue".to_string(),
             Page::ProjectSettings => "/project-settings".to_string(),
             Page::SignIn => "/login".to_string(),
@@ -107,6 +117,25 @@ impl Default for InvitationFormState {
     }
 }
 
+#[macro_export]
+macro_rules! match_page {
+    ($model: ident, $ty: ident) => {
+        match &$model.page_content {
+            PageContent::$ty(page) => page,
+            _ => return,
+        }
+    };
+}
+#[macro_export]
+macro_rules! match_page_mut {
+    ($model: ident, $ty: ident) => {
+        match &mut $model.page_content {
+            PageContent::$ty(page) => page,
+            _ => return,
+        }
+    };
+}
+
 #[derive(Debug)]
 pub enum PageContent {
     SignIn(Box<SignInPage>),
@@ -145,27 +174,39 @@ pub struct Model {
     pub page: Page,
     pub page_content: PageContent,
 
-    pub project: Option<Project>,
-
     pub current_user_project: Option<UserProject>,
 
-    pub issues: Vec<Issue>,
+    // issues
+    issues: Vec<Issue>,
     pub issues_by_id: HashMap<EpicId, Issue>,
 
+    // users
     pub user: Option<User>,
     pub users: Vec<User>,
     pub users_by_id: HashMap<UserId, User>,
 
+    // comments
     pub comments: Vec<Comment>,
+    pub comments_by_id: HashMap<CommentId, Comment>,
 
+    // issue_statuses
     pub issue_statuses: Vec<IssueStatus>,
     pub issue_statuses_by_id: HashMap<IssueStatusId, IssueStatus>,
     pub issue_statuses_by_name: HashMap<String, IssueStatus>,
 
+    // messages
     pub messages: Vec<Message>,
+
+    // user_projects
     pub user_projects: Vec<UserProject>,
+
+    // projects
+    pub project: Option<Project>,
     pub projects: Vec<Project>,
+
+    // epics
     pub epics: Vec<Epic>,
+    pub epics_by_id: HashMap<EpicId, Epic>,
 
     pub show_extras: bool,
 }
@@ -194,6 +235,7 @@ impl Model {
             users: vec![],
             users_by_id: Default::default(),
             comments: vec![],
+            comments_by_id: Default::default(),
             issue_statuses: vec![],
             issue_statuses_by_id: Default::default(),
             issue_statuses_by_name: Default::default(),
@@ -203,7 +245,33 @@ impl Model {
             epics: vec![],
             issues_by_id: Default::default(),
             show_extras: false,
+            epics_by_id: Default::default(),
         }
+    }
+
+    #[inline(always)]
+    pub fn issues(&self) -> &[Issue] {
+        &self.issues
+    }
+
+    #[inline(always)]
+    pub fn issues_mut(&mut self) -> &mut Vec<Issue> {
+        &mut self.issues
+    }
+
+    #[inline(always)]
+    pub fn issue_statuses(&self) -> &[IssueStatus] {
+        &self.issue_statuses
+    }
+
+    #[inline(always)]
+    pub fn epics(&self) -> &[Epic] {
+        &self.epics
+    }
+
+    #[inline(always)]
+    pub fn user(&self) -> &Option<User> {
+        &self.user
     }
 
     pub fn current_user_role(&self) -> UserRole {
@@ -211,5 +279,18 @@ impl Model {
             .as_ref()
             .map(|up| up.role)
             .unwrap_or_default()
+    }
+
+    pub fn epic_issue_ids(&self, epic_id: EpicId) -> Vec<IssueId> {
+        self.issues()
+            .iter()
+            .filter_map(|issue| {
+                if issue.epic_id == Some(epic_id) {
+                    Some(issue.id)
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 }

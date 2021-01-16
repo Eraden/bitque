@@ -5,7 +5,7 @@ use {
         ws::send_ws_msg,
         FieldChange, FieldId, Msg, OperationKind, ResourceKind,
     },
-    jirs_data::{TimeTracking, WsMsg},
+    jirs_data::{EpicId, IssueId, TimeTracking, WsMsg},
     seed::{prelude::*, *},
 };
 
@@ -46,6 +46,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::ChangePage(Page::DeleteEpic(issue_id)) => {
             push_delete_epic_modal(*issue_id, model, orders)
         }
+        Msg::ChangePage(Page::EditEpic(issue_id)) => push_edit_epic_modal(*issue_id, model, orders),
 
         #[cfg(debug_assertions)]
         Msg::GlobalKeyDown { key, .. } if key.eq("#") => {
@@ -69,7 +70,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         issues_create::update(msg, model, orders);
         issues_edit::update(msg, model, orders);
         issue_statuses_delete::update(msg, model, orders);
-        epic_delete::update(msg, model, orders);
+        epics_edit::update(msg, model, orders);
+        epics_delete::update(msg, model, orders);
     }
 }
 
@@ -81,13 +83,7 @@ fn push_add_modal(model: &mut Model, _orders: &mut impl Orders<Msg>) {
     })));
 }
 
-fn push_delete_epic_modal(issue_id: i32, model: &mut Model, _orders: &mut impl Orders<Msg>) {
-    use crate::modals::epic_delete::Model;
-    let modal = Model::new(issue_id, model);
-    model.modals.push(ModalType::DeleteEpic(Box::new(modal)));
-}
-
-fn push_edit_modal(issue_id: i32, model: &mut Model, orders: &mut impl Orders<Msg>) {
+fn push_edit_modal(issue_id: EpicId, model: &mut Model, orders: &mut impl Orders<Msg>) {
     let time_tracking_type = model
         .project
         .as_ref()
@@ -112,4 +108,16 @@ fn push_edit_modal(issue_id: i32, model: &mut Model, orders: &mut impl Orders<Ms
         orders,
     );
     model.modals.push(modal);
+}
+
+fn push_edit_epic_modal(epic_id: EpicId, model: &mut Model, _orders: &mut impl Orders<Msg>) {
+    use crate::modals::epics_edit::Model;
+    let modal = Model::new(epic_id, model);
+    model.modals.push(ModalType::EditEpic(Box::new(modal)));
+}
+
+fn push_delete_epic_modal(issue_id: IssueId, model: &mut Model, _orders: &mut impl Orders<Msg>) {
+    use crate::modals::epics_delete::Model;
+    let modal = Model::new(issue_id, model);
+    model.modals.push(ModalType::DeleteEpic(Box::new(modal)));
 }

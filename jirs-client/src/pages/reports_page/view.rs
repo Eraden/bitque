@@ -196,7 +196,7 @@ fn issue_list(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<Msg> {
 
 fn this_month_updated<'a>(model: &'a Model, page: &ReportsPage) -> Vec<&'a Issue> {
     model
-        .issues
+        .issues()
         .iter()
         .filter(|issue| {
             issue.updated_at.date() >= page.first_day && issue.updated_at.date() <= page.last_day

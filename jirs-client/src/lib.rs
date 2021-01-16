@@ -238,9 +238,11 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     crate::modals::update(&msg, model, orders);
 
     match model.page {
-        Page::Project | Page::AddIssue | Page::EditIssue(..) | Page::DeleteEpic(..) => {
-            pages::project_page::update(msg, model, orders)
-        }
+        Page::Project
+        | Page::AddIssue
+        | Page::EditIssue(..)
+        | Page::DeleteEpic(..)
+        | Page::EditEpic(..) => pages::project_page::update(msg, model, orders),
         Page::ProjectSettings => pages::project_settings_page::update(msg, model, orders),
         Page::SignIn => pages::sign_in_page::update(msg, model, orders),
         Page::SignUp => pages::sign_up_page::update(msg, model, orders),
@@ -256,9 +258,11 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
 
 fn view(model: &model::Model) -> Node<Msg> {
     match model.page {
-        Page::Project | Page::AddIssue | Page::DeleteEpic(..) | Page::EditIssue(..) => {
-            pages::project_page::view(model)
-        }
+        Page::Project
+        | Page::AddIssue
+        | Page::EditIssue(..)
+        | Page::DeleteEpic(..)
+        | Page::EditEpic(..) => pages::project_page::view(model),
         Page::ProjectSettings => pages::project_settings_page::view(model),
         Page::SignIn => pages::sign_in_page::view(model),
         Page::SignUp => pages::sign_up_page::view(model),
@@ -280,10 +284,6 @@ fn resolve_page(url: Url) -> Option<Page> {
             Some(Ok(id)) => Page::EditIssue(id),
             _ => return None,
         },
-        "delete-epic" => match url.path().get(1).as_ref().map(|s| s.parse::<i32>()) {
-            Some(Ok(id)) => Page::DeleteEpic(id),
-            _ => return None,
-        },
         "profile" => Page::Profile,
         "add-issue" => Page::AddIssue,
         "project-settings" => Page::ProjectSettings,
@@ -292,6 +292,14 @@ fn resolve_page(url: Url) -> Option<Page> {
         "invite" => Page::Invite,
         "users" => Page::Users,
         "reports" => Page::Reports,
+        "delete-epic" => match url.path().get(1).as_ref().map(|s| s.parse::<i32>()) {
+            Some(Ok(id)) => Page::DeleteEpic(id),
+            _ => return None,
+        },
+        "edit-epic" => match url.path().get(1).as_ref().map(|s| s.parse::<i32>()) {
+            Some(Ok(id)) => Page::EditEpic(id),
+            _ => return None,
+        },
         _ => Page::Project,
     };
     Some(page)

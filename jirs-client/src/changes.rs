@@ -18,7 +18,7 @@ pub enum BoardPageChange {
     IssueDragStarted(EpicId),
     IssueDragStopped(EpicId),
     DragLeave(EpicId),
-    ExchangePosition(EpicId),
+    ChangePosition(EpicId),
     IssueDragOverStatus(IssueStatusId),
     IssueDropZone(IssueStatusId),
 }

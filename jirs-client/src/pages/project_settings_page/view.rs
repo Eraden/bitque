@@ -198,7 +198,7 @@ fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
     let width = 100f64 / (model.issue_statuses.len() + 1) as f64;
     let column_style = format!("width: calc({width}% - 10px)", width = width);
     let mut per_column_issue_count = HashMap::new();
-    for issue in model.issues.iter() {
+    for issue in model.issues().iter() {
         *per_column_issue_count
             .entry(issue.issue_status_id)
             .or_insert(0) += 1;
