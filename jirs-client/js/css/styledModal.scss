@@ -108,6 +108,62 @@
             &.debugModal {
                 padding-left: 15px;
             }
+
+            &.deleteEpic {
+                > section {
+                    > .header {
+                        background: var(--danger);
+                        color: var(--secondary);
+
+                        padding: {
+                            top: 15px;
+                            right: 40px;
+                            left: 40px;
+                            bottom: 15px;
+                        };
+                    }
+
+                    > .warning {
+                        margin: {
+                            bottom: 10px;
+                            top: 10px;
+                        }
+
+                        padding: {
+                            right: 40px;
+                            left: 40px;
+                        };
+                    }
+
+                    > .relatedList {
+                        list-style: none;
+                        padding: {
+                            right: 40px;
+                            left: 40px;
+                            bottom: 20px;
+                        };
+
+                        > li {
+                            > .relatedIssue {
+                                list-style: none;
+                                line-height: 22px;
+                                font-size: 14px;
+
+                                > a {
+                                    color: var(--textLink);
+
+                                    .styledIcon.link {
+                                        font-size: 14px;
+                                        margin: {
+                                            right: 5px;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

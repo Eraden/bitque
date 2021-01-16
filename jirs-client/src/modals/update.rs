@@ -43,6 +43,9 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::ChangePage(Page::EditIssue(issue_id)) => push_edit_modal(*issue_id, model, orders),
 
         Msg::ChangePage(Page::AddIssue) => push_add_modal(model, orders),
+        Msg::ChangePage(Page::DeleteEpic(issue_id)) => {
+            push_delete_epic_modal(*issue_id, model, orders)
+        }
 
         #[cfg(debug_assertions)]
         Msg::GlobalKeyDown { key, .. } if key.eq("#") => {
@@ -61,10 +64,13 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         _ => (),
     }
 
-    use crate::modals::{issue_statuses_delete, issues_create, issues_edit};
-    issues_create::update(msg, model, orders);
-    issues_edit::update(msg, model, orders);
-    issue_statuses_delete::update(msg, model, orders);
+    {
+        use crate::modals::*;
+        issues_create::update(msg, model, orders);
+        issues_edit::update(msg, model, orders);
+        issue_statuses_delete::update(msg, model, orders);
+        epic_delete::update(msg, model, orders);
+    }
 }
 
 fn push_add_modal(model: &mut Model, _orders: &mut impl Orders<Msg>) {
@@ -75,12 +81,18 @@ fn push_add_modal(model: &mut Model, _orders: &mut impl Orders<Msg>) {
     })));
 }
 
+fn push_delete_epic_modal(issue_id: i32, model: &mut Model, _orders: &mut impl Orders<Msg>) {
+    use crate::modals::epic_delete::Model;
+    let modal = Model::new(issue_id, model);
+    model.modals.push(ModalType::DeleteEpic(Box::new(modal)));
+}
+
 fn push_edit_modal(issue_id: i32, model: &mut Model, orders: &mut impl Orders<Msg>) {
     let time_tracking_type = model
         .project
         .as_ref()
         .map(|p| p.time_tracking)
-        .unwrap_or_else(|| TimeTracking::Untracked);
+        .unwrap_or(TimeTracking::Untracked);
     let modal = {
         let issue = match model.issues_by_id.get(&issue_id) {
             Some(issue) => issue,

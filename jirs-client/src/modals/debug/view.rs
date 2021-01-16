@@ -14,7 +14,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         .width(1200)
         .add_class("debugModal")
         .center()
-        .children(vec![code])
+        .children(vec![code].into_iter())
         .build()
         .into_node()
 }

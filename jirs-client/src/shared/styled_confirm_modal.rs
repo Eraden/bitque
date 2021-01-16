@@ -109,15 +109,9 @@ pub fn render(values: StyledConfirmModal) -> Node<Msg> {
 
     StyledModal::build()
         .width(600)
-        .children(vec![
-            div![attrs![At::Class => "title"], title],
-            message_node,
-            div![
-                attrs![At::Class => "actions"],
-                confirm_button,
-                cancel_button
-            ],
-        ])
+        .child(div![C!["title"], title])
+        .child(message_node)
+        .child(div![C!["actions"], confirm_button, cancel_button])
         .add_class("confirmModal")
         .build()
         .into_node()

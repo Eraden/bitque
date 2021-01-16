@@ -27,10 +27,11 @@ pub trait IssueModal {
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum ModalType {
     AddIssue(Box<crate::modals::issues_create::Model>),
-    EditIssue(IssueId, Box<crate::modals::issues_edit::Model>),
-    DeleteIssueConfirm(IssueId),
+    EditIssue(EpicId, Box<crate::modals::issues_edit::Model>),
+    DeleteEpic(Box<crate::modals::epic_delete::Model>),
+    DeleteIssueConfirm(EpicId),
     DeleteCommentConfirm(CommentId),
-    TimeTracking(IssueId),
+    TimeTracking(EpicId),
     DeleteIssueStatusModal(Box<crate::modals::issue_statuses_delete::Model>),
     #[cfg(debug_assertions)]
     DebugModal,
@@ -46,7 +47,8 @@ pub struct CommentForm {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub enum Page {
     Project,
-    EditIssue(IssueId),
+    EditIssue(EpicId),
+    DeleteEpic(EpicId),
     AddIssue,
     ProjectSettings,
     SignIn,
@@ -62,6 +64,7 @@ impl Page {
         match self {
             Page::Project => "/board".to_string(),
             Page::EditIssue(id) => format!("/issues/{id}", id = id),
+            Page::DeleteEpic(id) => format!("/delete-epic/{id}", id = id),
             Page::AddIssue => "/add-issue".to_string(),
             Page::ProjectSettings => "/project-settings".to_string(),
             Page::SignIn => "/login".to_string(),
@@ -147,7 +150,7 @@ pub struct Model {
     pub current_user_project: Option<UserProject>,
 
     pub issues: Vec<Issue>,
-    pub issues_by_id: HashMap<IssueId, Issue>,
+    pub issues_by_id: HashMap<EpicId, Issue>,
 
     pub user: Option<User>,
     pub users: Vec<User>,

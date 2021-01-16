@@ -18,7 +18,7 @@ pub fn view(model: &Model) -> Node<Msg> {
                     StyledModal::build()
                         .variant(crate::shared::styled_modal::Variant::Center)
                         .width(1040)
-                        .children(vec![details])
+                        .child(details)
                         .build()
                         .into_node()
                 } else {
@@ -45,6 +45,7 @@ pub fn view(model: &Model) -> Node<Msg> {
             }
             #[cfg(debug_assertions)]
             ModalType::DebugModal => crate::modals::debug::view(model),
+            ModalType::DeleteEpic(modal) => crate::modals::epic_delete::view(model, modal),
         })
         .collect();
     section![id!["modals"], modals]

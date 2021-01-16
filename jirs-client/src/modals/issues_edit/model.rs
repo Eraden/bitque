@@ -9,13 +9,13 @@ use {
         },
         EditIssueModalSection, FieldId, Msg,
     },
-    jirs_data::{Issue, IssueFieldId, IssueId, TimeTracking, UpdateIssuePayload},
+    jirs_data::{EpicId, Issue, IssueFieldId, TimeTracking, UpdateIssuePayload},
     seed::prelude::*,
 };
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct Model {
-    pub id: IssueId,
+    pub id: EpicId,
     pub link_copied: bool,
     pub payload: UpdateIssuePayload,
     pub top_type_state: StyledSelectState,

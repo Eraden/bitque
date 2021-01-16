@@ -1,6 +1,6 @@
 use seed::prelude::WebSocketMessage;
 
-use jirs_data::{IssueId, IssueStatusId, WsMsg};
+use jirs_data::{EpicId, IssueStatusId, WsMsg};
 
 use crate::shared::styled_editor::Mode as TabMode;
 use crate::FieldId;
@@ -16,10 +16,10 @@ pub enum FieldChange {
 #[derive(Clone, Debug, PartialEq)]
 pub enum BoardPageChange {
     // dragging
-    IssueDragStarted(IssueId),
-    IssueDragStopped(IssueId),
-    DragLeave(IssueId),
-    ExchangePosition(IssueId),
+    IssueDragStarted(EpicId),
+    IssueDragStopped(EpicId),
+    DragLeave(EpicId),
+    ExchangePosition(EpicId),
     IssueDragOverStatus(IssueStatusId),
     IssueDropZone(IssueStatusId),
 }

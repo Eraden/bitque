@@ -58,38 +58,48 @@ pub struct StyledModalBuilder<'l> {
 }
 
 impl<'l> StyledModalBuilder<'l> {
+    #[inline]
     pub fn variant(mut self, variant: Variant) -> Self {
         self.variant = Some(variant);
         self
     }
 
+    #[inline]
     pub fn center(self) -> Self {
         self.variant(Variant::Center)
     }
 
+    #[inline]
     pub fn width(mut self, width: usize) -> Self {
         self.width = Some(width);
         self
     }
 
-    // pub fn with_icon(mut self, with_icon: bool) -> Self {
-    //     self.with_icon = Some(with_icon);
-    //     self
-    // }
-
-    pub fn children(mut self, children: Vec<Node<Msg>>) -> Self {
-        self.children = Some(children);
+    #[inline]
+    pub fn child(mut self, child: Node<Msg>) -> Self {
+        self.children.get_or_insert(vec![]).push(child);
         self
     }
 
+    #[inline]
+    pub fn children<ChildIter>(mut self, children: ChildIter) -> Self
+    where
+        ChildIter: Iterator<Item = Node<Msg>>,
+    {
+        self.children.get_or_insert(vec![]).extend(children);
+        self
+    }
+
+    #[inline]
     pub fn add_class(mut self, name: &'l str) -> Self {
         self.class_list.push(name);
         self
     }
 
+    #[inline]
     pub fn build(self) -> StyledModal<'l> {
         StyledModal {
-            variant: self.variant.unwrap_or_else(|| Variant::Center),
+            variant: self.variant.unwrap_or(Variant::Center),
             width: self.width,
             with_icon: self.with_icon.unwrap_or_default(),
             children: self.children.unwrap_or_default(),
@@ -98,6 +108,7 @@ impl<'l> StyledModalBuilder<'l> {
     }
 }
 
+#[inline]
 pub fn render(values: StyledModal) -> Node<Msg> {
     let StyledModal {
         variant,

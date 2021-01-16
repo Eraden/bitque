@@ -1,10 +1,9 @@
-use crate::ListPosition;
 use {
     crate::{
         AvatarUrl, BindToken, Code, Comment, CommentId, CreateCommentPayload, CreateIssuePayload,
         EmailString, Epic, EpicId, HighlightedCode, Invitation, InvitationId, InvitationToken,
-        Issue, IssueFieldId, IssueId, IssueStatus, IssueStatusId, Lang, Message, MessageId,
-        NameString, NumberOfDeleted, PayloadVariant, Position, Project, TitleString,
+        Issue, IssueFieldId, IssueId, IssueStatus, IssueStatusId, Lang, ListPosition, Message,
+        MessageId, NameString, NumberOfDeleted, PayloadVariant, Position, Project, TitleString,
         UpdateCommentPayload, UpdateProjectPayload, User, UserId, UserProject, UserProjectId,
         UserRole, UsernameString,
     },
@@ -187,7 +186,7 @@ pub enum WsMsg {
     IssueDeleted(IssueId, NumberOfDeleted),
     IssueCreate(CreateIssuePayload),
     IssueCreated(Issue),
-    IssueSyncListPosition(Vec<(IssueId, ListPosition, IssueStatusId, Option<EpicId>)>),
+    IssueSyncListPosition(Vec<(IssueId, ListPosition, IssueStatusId, Option<IssueId>)>),
 
     // issue status
     IssueStatusesLoad,

@@ -8,7 +8,7 @@ use {
     seed::{prelude::Orders, *},
 };
 
-pub fn drag_started(issue_id: IssueId, model: &mut Model) {
+pub fn drag_started(issue_id: EpicId, model: &mut Model) {
     let project_page = match &mut model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return,
@@ -16,7 +16,7 @@ pub fn drag_started(issue_id: IssueId, model: &mut Model) {
     project_page.issue_drag.drag(issue_id);
 }
 
-pub fn exchange_position(below_id: IssueId, model: &mut Model) {
+pub fn exchange_position(below_id: EpicId, model: &mut Model) {
     let project_page = match &mut model.page_content {
         PageContent::Project(project_page) => project_page,
         _ => return,
@@ -88,7 +88,7 @@ pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
         _ => return,
     };
 
-    let changes: Vec<(IssueId, ListPosition, IssueStatusId, Option<EpicId>)> = dirty
+    let changes: Vec<(EpicId, ListPosition, IssueStatusId, Option<EpicId>)> = dirty
         .into_iter()
         .filter_map(|id| {
             model.issues_by_id.get(&id).map(|issue| {

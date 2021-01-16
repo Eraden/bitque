@@ -1,4 +1,3 @@
-use crate::shared::styled_button::StyledButton;
 use {
     crate::{
         model::PageContent,
@@ -8,6 +7,8 @@ use {
     jirs_data::*,
     seed::{prelude::*, *},
 };
+
+use crate::shared::styled_button::StyledButton;
 
 pub fn project_board_lists(model: &Model) -> Node<Msg> {
     let project_page = match &model.page_content {
@@ -32,8 +33,9 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                 )
             })
             .collect();
-        let epic_name = match per_epic.epic_name.as_deref() {
-            Some(name) => {
+        let epic_name = match per_epic.epic_ref.as_ref() {
+            Some((id, name)) => {
+                let id = *id;
                 let edit_button = StyledButton::build()
                     .empty()
                     .icon(Icon::EditAlt)
@@ -42,6 +44,15 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                 let delete_button = StyledButton::build()
                     .empty()
                     .icon(Icon::DeleteAlt)
+                    .on_click(mouse_ev("click", move |ev| {
+                        ev.stop_propagation();
+                        ev.prevent_default();
+                        seed::Url::new()
+                            .add_path_part("delete-epic")
+                            .add_path_part(id.to_string())
+                            .go_and_push();
+                        Msg::ChangePage(Page::DeleteEpic(id))
+                    }))
                     .build()
                     .into_node();
 

@@ -114,7 +114,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .add_class("addIssue")
         .width(0)
         .variant(crate::shared::styled_modal::Variant::Center)
-        .children(vec![form])
+        .child(form)
         .build()
         .into_node()
 }

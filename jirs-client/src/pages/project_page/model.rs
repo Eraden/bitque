@@ -4,12 +4,12 @@ use {crate::shared::drag::DragState, jirs_data::*, std::collections::HashMap};
 pub struct StatusIssueIds {
     pub status_id: IssueStatusId,
     pub status_name: IssueStatusName,
-    pub issue_ids: Vec<IssueId>,
+    pub issue_ids: Vec<EpicId>,
 }
 
 #[derive(Default, Debug)]
 pub struct EpicIssuePerStatus {
-    pub epic_name: Option<EpicName>,
+    pub epic_ref: Option<(EpicId, EpicName)>,
     pub per_status_issues: Vec<StatusIssueIds>,
 }
 
@@ -57,7 +57,7 @@ impl ProjectPage {
 
         for epic in epics {
             let mut per_epic_map = EpicIssuePerStatus {
-                epic_name: epic.map(|(_, name)| name.to_string()),
+                epic_ref: epic.map(|(id, name)| (id, name.to_string())),
                 ..Default::default()
             };
 

@@ -2,6 +2,7 @@ pub use {epic_field::*, update::*, view::*};
 
 #[cfg(debug_assertions)]
 pub mod debug;
+pub mod epic_delete;
 pub mod issue_statuses_delete;
 pub mod issues_create;
 pub mod issues_delete;

@@ -104,7 +104,7 @@ pub enum Msg {
 
     // issues
     AddIssue,
-    DeleteIssue(IssueId),
+    DeleteIssue(EpicId),
 
     // epics
     AddEpic,
@@ -237,7 +237,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     crate::modals::update(&msg, model, orders);
 
     match model.page {
-        Page::Project | Page::AddIssue | Page::EditIssue(..) => {
+        Page::Project | Page::AddIssue | Page::EditIssue(..) | Page::DeleteEpic(..) => {
             pages::project_page::update(msg, model, orders)
         }
         Page::ProjectSettings => pages::project_settings_page::update(msg, model, orders),
@@ -255,8 +255,9 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
 
 fn view(model: &model::Model) -> Node<Msg> {
     match model.page {
-        Page::Project | Page::AddIssue => pages::project_page::view(model),
-        Page::EditIssue(_id) => pages::project_page::view(model),
+        Page::Project | Page::AddIssue | Page::DeleteEpic(..) | Page::EditIssue(..) => {
+            pages::project_page::view(model)
+        }
         Page::ProjectSettings => pages::project_settings_page::view(model),
         Page::SignIn => pages::sign_in_page::view(model),
         Page::SignUp => pages::sign_up_page::view(model),
@@ -276,6 +277,10 @@ fn resolve_page(url: Url) -> Option<Page> {
         "board" => Page::Project,
         "issues" => match url.path().get(1).as_ref().map(|s| s.parse::<i32>()) {
             Some(Ok(id)) => Page::EditIssue(id),
+            _ => return None,
+        },
+        "delete-epic" => match url.path().get(1).as_ref().map(|s| s.parse::<i32>()) {
+            Some(Ok(id)) => Page::DeleteEpic(id),
             _ => return None,
         },
         "profile" => Page::Profile,

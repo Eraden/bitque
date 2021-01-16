@@ -1,4 +1,3 @@
-use jirs_data::{EpicId, IssueStatusId, ListPosition};
 use {
     crate::{WebSocketActor, WsHandler, WsResult},
     database_actor::{
@@ -6,7 +5,10 @@ use {
         issues::{LoadProjectIssues, UpdateIssue},
     },
     futures::executor::block_on,
-    jirs_data::{CreateIssuePayload, IssueAssignee, IssueFieldId, IssueId, PayloadVariant, WsMsg},
+    jirs_data::{
+        CreateIssuePayload, IssueAssignee, IssueFieldId, IssueId, IssueStatusId, ListPosition,
+        PayloadVariant, WsMsg,
+    },
     std::collections::HashMap,
 };
 
@@ -257,7 +259,7 @@ impl WsHandler<LoadIssues> for WebSocketActor {
     }
 }
 
-pub struct SyncIssueListPosition(pub Vec<(IssueId, ListPosition, IssueStatusId, Option<EpicId>)>);
+pub struct SyncIssueListPosition(pub Vec<(IssueId, ListPosition, IssueStatusId, Option<IssueId>)>);
 
 impl WsHandler<SyncIssueListPosition> for WebSocketActor {
     fn handle_msg(&mut self, msg: SyncIssueListPosition, ctx: &mut Self::Context) -> WsResult {

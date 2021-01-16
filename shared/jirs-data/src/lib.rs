@@ -1,6 +1,8 @@
 #[cfg(feature = "backend")]
 use diesel::*;
 
+#[cfg(feature = "backend")]
+use derive_enum_sql::EnumSql;
 use {
     chrono::NaiveDateTime,
     derive_enum_iter::EnumIter,
@@ -15,9 +17,6 @@ pub use {fields::*, msg::WsMsg, payloads::*};
 pub mod fields;
 pub mod msg;
 mod payloads;
-
-#[cfg(feature = "backend")]
-use derive_enum_sql::EnumSql;
 
 pub type NumberOfDeleted = usize;
 pub type IssueId = i32;
@@ -223,7 +222,7 @@ pub struct Project {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Issue {
-    pub id: IssueId,
+    pub id: EpicId,
     pub title: String,
     pub issue_type: IssueType,
     pub priority: IssuePriority,
@@ -275,7 +274,7 @@ pub struct Comment {
     pub id: CommentId,
     pub body: String,
     pub user_id: UserId,
-    pub issue_id: IssueId,
+    pub issue_id: EpicId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -320,7 +319,7 @@ pub struct Token {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct IssueAssignee {
     pub id: i32,
-    pub issue_id: IssueId,
+    pub issue_id: EpicId,
     pub user_id: UserId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,

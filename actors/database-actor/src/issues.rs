@@ -28,21 +28,21 @@ pub struct LoadProjectIssues {
 #[derive(Default, Execute)]
 #[db_exec(result = "Issue", schema = "issues")]
 pub struct UpdateIssue {
-    pub issue_id: i32,
+    pub issue_id: jirs_data::IssueId,
     pub title: Option<String>,
     pub issue_type: Option<IssueType>,
     pub priority: Option<IssuePriority>,
-    pub list_position: Option<i32>,
+    pub list_position: Option<jirs_data::ListPosition>,
     pub description: Option<String>,
     pub description_text: Option<String>,
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
-    pub project_id: Option<i32>,
-    pub user_ids: Option<Vec<i32>>,
-    pub reporter_id: Option<i32>,
-    pub issue_status_id: Option<i32>,
-    pub epic_id: Option<Option<i32>>,
+    pub project_id: Option<jirs_data::ProjectId>,
+    pub user_ids: Option<Vec<jirs_data::UserId>>,
+    pub reporter_id: Option<jirs_data::UserId>,
+    pub issue_status_id: Option<jirs_data::IssueStatusId>,
+    pub epic_id: Option<Option<jirs_data::EpicId>>,
 }
 
 impl UpdateIssue {

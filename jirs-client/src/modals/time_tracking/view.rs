@@ -12,7 +12,7 @@ use {
         },
         EditIssueModalSection, FieldId, Msg,
     },
-    jirs_data::{IssueFieldId, IssueId, TimeTracking},
+    jirs_data::{EpicId, IssueFieldId, TimeTracking},
     seed::{prelude::*, *},
 };
 
@@ -25,7 +25,7 @@ pub fn value_for_time_tracking(v: &Option<i32>, time_tracking_type: &TimeTrackin
     }
 }
 
-pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
+pub fn view(model: &Model, issue_id: EpicId) -> Node<Msg> {
     if model.issues_by_id.get(&issue_id).is_none() {
         return Node::Empty;
     }
@@ -73,12 +73,7 @@ pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
 
     StyledModal::build()
         .add_class("timeTrackingModal")
-        .children(vec![
-            modal_title,
-            tracking,
-            inputs,
-            div![C!["actions"], close],
-        ])
+        .children(vec![modal_title, tracking, inputs, div![C!["actions"], close]].into_iter())
         .width(400)
         .build()
         .into_node()
