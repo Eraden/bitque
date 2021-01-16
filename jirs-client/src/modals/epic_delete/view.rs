@@ -15,6 +15,11 @@ pub fn view(model: &model::Model, modal: &Model) -> Node<Msg> {
             .title("Delete empty epic")
             .cancel_text("Cancel")
             .confirm_text("Delete epic")
+            .on_confirm(mouse_ev("click", move |ev| {
+                ev.stop_propagation();
+                ev.prevent_default();
+                Msg::DeleteEpic
+            }))
             .build()
             .into_node()
     } else {
