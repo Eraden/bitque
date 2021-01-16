@@ -2,7 +2,6 @@ use {
     crate::{
         model::{ModalType, Model},
         shared::{
-            find_issue,
             styled_button::StyledButton,
             styled_field::StyledField,
             styled_input::{StyledInput, StyledInputState},
@@ -17,8 +16,6 @@ use {
     seed::{prelude::*, *},
 };
 
-// use crate::shared::styled_select_child::*;
-
 pub fn value_for_time_tracking(v: &Option<i32>, time_tracking_type: &TimeTracking) -> String {
     match (time_tracking_type, v.as_ref()) {
         (TimeTracking::Untracked, _) => "".to_string(),
@@ -29,10 +26,9 @@ pub fn value_for_time_tracking(v: &Option<i32>, time_tracking_type: &TimeTrackin
 }
 
 pub fn view(model: &Model, issue_id: IssueId) -> Node<Msg> {
-    let _issue = match find_issue(model, issue_id) {
-        Some(issue) => issue,
-        _ => return empty![],
-    };
+    if model.issues_by_id.get(&issue_id).is_none() {
+        return Node::Empty;
+    }
 
     let edit_issue_modal = match model.modals.get(0) {
         Some(ModalType::EditIssue(_, modal)) => modal,

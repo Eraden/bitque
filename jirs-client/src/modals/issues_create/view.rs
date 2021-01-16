@@ -1,7 +1,9 @@
 use {
     crate::{
-        modal::issues::epic_field,
-        modals::issues_create::{Model as AddIssueModal, Type},
+        modals::{
+            epic_field,
+            issues_create::{Model as AddIssueModal, Type},
+        },
         model::Model,
         shared::{
             styled_button::StyledButton, styled_date_time_input::StyledDateTimeInput,

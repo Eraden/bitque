@@ -23,7 +23,6 @@ pub use {changes::*, fields::*, images::*};
 mod changes;
 mod fields;
 mod images;
-mod modal;
 mod modals;
 mod model;
 mod pages;
@@ -235,7 +234,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         aside::update(&msg, model, orders);
         navbar_left::update(&msg, model, orders);
     }
-    crate::modal::update(&msg, model, orders);
+    crate::modals::update(&msg, model, orders);
 
     match model.page {
         Page::Project | Page::AddIssue | Page::EditIssue(..) => {

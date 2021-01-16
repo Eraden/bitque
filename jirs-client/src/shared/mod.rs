@@ -3,7 +3,6 @@ use {
         model::{Model, Page},
         resolve_page, Msg,
     },
-    jirs_data::*,
     seed::{prelude::*, *},
 };
 
@@ -63,10 +62,6 @@ pub fn go_to(url: &str, orders: &mut impl Orders<Msg>) {
     }
 }
 
-pub fn find_issue(model: &'_ Model, issue_id: IssueId) -> Option<&'_ Issue> {
-    model.issues.iter().find(|issue| issue.id == issue_id)
-}
-
 pub trait ToNode {
     fn into_node(self) -> Node<Msg>;
 }
@@ -78,7 +73,7 @@ pub fn divider() -> Node<Msg> {
 
 #[inline]
 pub fn inner_layout(model: &Model, page_name: &str, children: &[Node<Msg>]) -> Node<Msg> {
-    let modal_node = crate::modal::view(model);
+    let modal_node = crate::modals::view(model);
     article![
         modal_node,
         C!["inner-layout", "innerPage"],
@@ -91,7 +86,7 @@ pub fn inner_layout(model: &Model, page_name: &str, children: &[Node<Msg>]) -> N
 
 #[inline]
 pub fn outer_layout(model: &Model, page_name: &str, children: Vec<Node<Msg>>) -> Node<Msg> {
-    let modal = crate::modal::view(model);
+    let modal = crate::modals::view(model);
     article![
         C!["outer-layout", "outerPage"],
         id![page_name],

@@ -1,7 +1,8 @@
 use {
     crate::{
-        modal::issues::epic_field,
-        modals::{issues_edit::Model as EditIssueModal, time_tracking::time_tracking_field},
+        modals::{
+            epic_field, issues_edit::Model as EditIssueModal, time_tracking::time_tracking_field,
+        },
         model::{ModalType, Model},
         shared::{
             styled_avatar::StyledAvatar, styled_button::StyledButton, styled_editor::StyledEditor,

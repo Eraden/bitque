@@ -1,7 +1,9 @@
 use {
     crate::{
         model::{IssueModal, Model},
-        shared::{styled_field::StyledField, styled_select::StyledSelect, ToChild, ToNode},
+        shared::styled_field::StyledField,
+        shared::styled_select::StyledSelect,
+        shared::{ToChild, ToNode},
         FieldId, Msg,
     },
     jirs_data::EpicId,
