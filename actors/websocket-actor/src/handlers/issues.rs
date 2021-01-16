@@ -30,20 +30,7 @@ impl WsHandler<UpdateIssueHandler> for WebSocketActor {
 
         let mut msg = UpdateIssue {
             issue_id: id,
-            title: None,
-            issue_type: None,
-            priority: None,
-            list_position: None,
-            description: None,
-            description_text: None,
-            estimate: None,
-            time_spent: None,
-            time_remaining: None,
-            project_id: None,
-            user_ids: None,
-            reporter_id: None,
-            issue_status_id: None,
-            epic_id: None,
+            ..Default::default()
         };
         match (field_id, payload) {
             (IssueFieldId::Type, PayloadVariant::IssueType(t)) => {

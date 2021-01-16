@@ -3,9 +3,11 @@ mod utils;
 
 extern crate proc_macro;
 
-use crate::parse_attr::Attributes;
-use proc_macro::{token_stream::IntoIter, TokenStream, TokenTree};
-use std::iter::Peekable;
+use {
+    crate::parse_attr::Attributes,
+    proc_macro::{token_stream::IntoIter, TokenStream, TokenTree},
+    std::iter::Peekable,
+};
 
 fn parse_meta(mut it: Peekable<IntoIter>) -> (Peekable<IntoIter>, Option<Attributes>) {
     let mut attrs: Option<Attributes> = None;
