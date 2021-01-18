@@ -66,7 +66,7 @@ pub fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Opti
         let comment_id = comment.id;
         let delete_comment_handler = mouse_ev(Ev::Click, move |ev| {
             ev.stop_propagation();
-            Msg::ModalOpened(Box::new(ModalType::DeleteCommentConfirm(comment_id)))
+            Msg::ModalOpened(ModalType::DeleteCommentConfirm(Some(comment_id)))
         });
         let edit_button = StyledButton::build()
             .add_class("editButton")

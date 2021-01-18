@@ -24,21 +24,38 @@ pub trait IssueModal {
     fn update_states(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>);
 }
 
-#[derive(Clone, Debug, PartialOrd, PartialEq)]
+#[derive(Debug, Default)]
+pub struct Modals {
+    // issue
+    pub add_issue: Option<crate::modals::issues_create::Model>,
+    pub edit_issue: Option<crate::modals::issues_edit::Model>,
+    // epic
+    pub delete_epic: Option<crate::modals::epics_delete::Model>,
+    pub edit_epic: Option<crate::modals::epics_edit::Model>,
+
+    pub delete_issue_confirm: Option<crate::modals::issues_delete::Model>,
+    pub delete_comment_confirm: Option<crate::modals::comments_delete::Model>,
+    pub time_tracking: Option<crate::modals::time_tracking::Model>,
+    pub delete_issue_status_modal: Option<crate::modals::issue_statuses_delete::Model>,
+    #[cfg(debug_assertions)]
+    pub debug_modal: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum ModalType {
     // issue
-    AddIssue(Box<crate::modals::issues_create::Model>),
-    EditIssue(EpicId, Box<crate::modals::issues_edit::Model>),
+    AddIssue(Option<i32>),
+    EditIssue(Option<i32>),
+    DeleteIssueConfirm(Option<i32>),
     // epic
-    DeleteEpic(Box<crate::modals::epics_delete::Model>),
-    EditEpic(Box<crate::modals::epics_edit::Model>),
+    DeleteEpic(Option<i32>),
+    EditEpic(Option<i32>),
 
-    DeleteIssueConfirm(EpicId),
-    DeleteCommentConfirm(CommentId),
-    TimeTracking(EpicId),
-    DeleteIssueStatusModal(Box<crate::modals::issue_statuses_delete::Model>),
+    DeleteCommentConfirm(Option<i32>),
+    TimeTracking(Option<i32>),
+    DeleteIssueStatusModal(Option<i32>),
     #[cfg(debug_assertions)]
-    DebugModal,
+    DebugModal(Option<i32>),
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
@@ -168,7 +185,8 @@ pub struct Model {
     pub comment_form: Option<CreateCommentForm>,
 
     // modals
-    pub modals: Vec<ModalType>,
+    modals_stack: Vec<ModalType>,
+    pub modals: Modals,
 
     // pages
     pub page: Page,
@@ -226,7 +244,6 @@ impl Model {
             host_url,
             ws_url,
             page_content: PageContent::Project(Box::new(ProjectPage::default())),
-            modals: vec![],
             project: None,
             current_user_project: None,
             about_tooltip_visible: false,
@@ -246,6 +263,8 @@ impl Model {
             issues_by_id: Default::default(),
             show_extras: false,
             epics_by_id: Default::default(),
+            modals_stack: vec![],
+            modals: Default::default(),
         }
     }
 
@@ -274,6 +293,16 @@ impl Model {
         &self.user
     }
 
+    #[inline(always)]
+    pub fn user_id(&self) -> Option<UserId> {
+        self.user.as_ref().map(|u| u.id)
+    }
+
+    #[inline(always)]
+    pub fn project_id(&self) -> Option<ProjectId> {
+        self.project.as_ref().map(|p| p.id)
+    }
+
     pub fn current_user_role(&self) -> UserRole {
         self.current_user_project
             .as_ref()
@@ -292,5 +321,21 @@ impl Model {
                 }
             })
             .collect()
+    }
+
+    pub fn modals(&self) -> &Modals {
+        &self.modals
+    }
+
+    pub fn modals_mut(&mut self) -> &mut Modals {
+        &mut self.modals
+    }
+
+    pub fn modal_stack(&self) -> &[ModalType] {
+        &self.modals_stack
+    }
+
+    pub fn modal_stack_mut(&mut self) -> &mut Vec<ModalType> {
+        &mut self.modals_stack
     }
 }

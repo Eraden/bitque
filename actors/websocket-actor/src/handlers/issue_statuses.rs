@@ -1,5 +1,5 @@
 use {
-    crate::{WebSocketActor, WsHandler, WsResult},
+    crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult},
     database_actor::issue_statuses,
     futures::executor::block_on,
     jirs_data::{IssueStatusId, Position, TitleString, WsMsg},
@@ -11,21 +11,8 @@ impl WsHandler<LoadIssueStatuses> for WebSocketActor {
     fn handle_msg(&mut self, _msg: LoadIssueStatuses, _ctx: &mut Self::Context) -> WsResult {
         let project_id = self.require_user_project()?.project_id;
 
-        let msg = match block_on(
-            self.db
-                .send(issue_statuses::LoadIssueStatuses { project_id }),
-        ) {
-            Ok(Ok(v)) => Some(WsMsg::IssueStatusesLoaded(v)),
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                return Ok(None);
-            }
-            Err(e) => {
-                error!("{}", e);
-                return Ok(None);
-            }
-        };
-        Ok(msg)
+        let v = db_or_debug_and_return!(self, issue_statuses::LoadIssueStatuses { project_id });
+        Ok(Some(WsMsg::IssueStatusesLoaded(v)))
     }
 }
 
@@ -39,22 +26,15 @@ impl WsHandler<CreateIssueStatus> for WebSocketActor {
         let project_id = self.require_user_project()?.project_id;
 
         let CreateIssueStatus { position, name } = msg;
-        let msg = match block_on(self.db.send(issue_statuses::CreateIssueStatus {
-            project_id,
-            position,
-            name,
-        })) {
-            Ok(Ok(is)) => Some(WsMsg::IssueStatusCreated(is)),
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                return Ok(None);
+        let issue_status = db_or_debug_and_return!(
+            self,
+            issue_statuses::CreateIssueStatus {
+                project_id,
+                position,
+                name,
             }
-            Err(e) => {
-                error!("{}", e);
-                return Ok(None);
-            }
-        };
-        Ok(msg)
+        );
+        Ok(Some(WsMsg::IssueStatusCreated(issue_status)))
     }
 }
 
@@ -67,21 +47,14 @@ impl WsHandler<DeleteIssueStatus> for WebSocketActor {
         let project_id = self.require_user_project()?.project_id;
 
         let DeleteIssueStatus { issue_status_id } = msg;
-        let msg = match block_on(self.db.send(issue_statuses::DeleteIssueStatus {
-            issue_status_id,
-            project_id,
-        })) {
-            Ok(Ok(n)) => Some(WsMsg::IssueStatusDeleted(msg.issue_status_id, n)),
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                return Ok(None);
+        let n = db_or_debug_and_return!(
+            self,
+            issue_statuses::DeleteIssueStatus {
+                issue_status_id,
+                project_id,
             }
-            Err(e) => {
-                error!("{}", e);
-                return Ok(None);
-            }
-        };
-        Ok(msg)
+        );
+        Ok(Some(WsMsg::IssueStatusDeleted(msg.issue_status_id, n)))
     }
 }
 
@@ -100,22 +73,16 @@ impl WsHandler<UpdateIssueStatus> for WebSocketActor {
             position,
             name,
         } = msg;
-        let msg = match block_on(self.db.send(issue_statuses::UpdateIssueStatus {
-            issue_status_id,
-            position,
-            name,
-            project_id,
-        })) {
-            Ok(Ok(is)) => Some(WsMsg::IssueStatusUpdated(is)),
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                return Ok(None);
+        let issue_status = db_or_debug_and_return!(
+            self,
+            issue_statuses::UpdateIssueStatus {
+                issue_status_id,
+                position,
+                name,
+                project_id,
             }
-            Err(e) => {
-                error!("{}", e);
-                return Ok(None);
-            }
-        };
+        );
+        let msg = Some(WsMsg::IssueStatusUpdated(issue_status));
         if let Some(ws_msg) = msg.as_ref() {
             self.broadcast(ws_msg)
         }

@@ -4,14 +4,16 @@ use {
             styled_date_time_input::*, styled_input::*, styled_select::*, styled_select_child::*,
         },
         model::IssueModal,
-        shared::{ToChild, ToNode},
+        shared::{IntoChild, ToNode},
         FieldId, Msg,
     },
+    derive_enum_iter::EnumIter,
+    derive_enum_primitive::EnumPrimitive,
     jirs_data::{IssueFieldId, IssuePriority},
     seed::prelude::*,
 };
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, EnumPrimitive, EnumIter)]
 pub enum Type {
     Task,
     Bug,
@@ -19,24 +21,13 @@ pub enum Type {
     Epic,
 }
 
-impl From<u32> for Type {
-    fn from(n: u32) -> Self {
-        match n {
-            0 => Type::Task,
-            1 => Type::Bug,
-            2 => Type::Story,
-            3 => Type::Epic,
-            _ => Type::Task,
-        }
+impl Default for Type {
+    fn default() -> Self {
+        Self::Task
     }
 }
 
 impl Type {
-    pub(crate) fn ordered<'l>() -> &'l [Type] {
-        use Type::*;
-        &[Task, Bug, Story, Epic]
-    }
-
     pub(crate) fn submit_label(&self) -> &str {
         use Type::*;
         match self {
@@ -62,22 +53,17 @@ impl Type {
     }
 }
 
-impl<'l> ToChild<'l> for Type {
+impl<'l> IntoChild<'l> for Type {
     type Builder = StyledSelectChildBuilder<'l>;
 
-    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
+    fn into_child(self) -> Self::Builder {
         let name = match self {
             Type::Task => "Task",
             Type::Bug => "Bug",
             Type::Story => "Story",
             Type::Epic => "Epic",
         };
-        let value = match self {
-            Type::Task => 0,
-            Type::Bug => 1,
-            Type::Story => 2,
-            Type::Epic => 3,
-        };
+        let value: u32 = self.into();
 
         let type_icon = {
             use crate::components::styled_icon::*;

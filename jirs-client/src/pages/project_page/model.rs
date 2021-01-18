@@ -24,66 +24,6 @@ pub struct ProjectPage {
 }
 
 impl ProjectPage {
-    pub fn rebuild_visible(
-        &mut self,
-        epics: &[Epic],
-        statuses: &[IssueStatus],
-        issues: &[Issue],
-        user: &Option<User>,
-    ) {
-        let mut map = vec![];
-        let epics = vec![None]
-            .into_iter()
-            .chain(epics.iter().map(|s| Some((s.id, s.name.as_str()))));
-
-        let statuses = statuses.iter().map(|s| (s.id, s.name.as_str()));
-
-        let mut issues: Vec<&Issue> = issues.iter().collect();
-        if self.recently_updated_filter {
-            let mut m = HashMap::new();
-            let mut sorted = vec![];
-            for issue in issues.into_iter() {
-                sorted.push((issue.id, issue.updated_at));
-                m.insert(issue.id, issue);
-            }
-            sorted.sort_by(|(_, a_time), (_, b_time)| a_time.cmp(b_time));
-            issues = sorted
-                .into_iter()
-                .take(10)
-                .flat_map(|(id, _)| m.remove(&id))
-                .collect();
-            issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
-        }
-
-        for epic in epics {
-            let mut per_epic_map = EpicIssuePerStatus {
-                epic_ref: epic.map(|(id, name)| (id, name.to_string())),
-                ..Default::default()
-            };
-
-            for (current_status_id, issue_status_name) in statuses.to_owned() {
-                let mut per_status_map = StatusIssueIds {
-                    status_id: current_status_id,
-                    status_name: issue_status_name.to_string(),
-                    ..Default::default()
-                };
-                for issue in issues.iter() {
-                    if issue.epic_id == epic.map(|(id, _)| id)
-                        && issue_filter_status(issue, current_status_id)
-                        && issue_filter_with_avatars(issue, &self.active_avatar_filters)
-                        && issue_filter_with_text(issue, self.text_filter.as_str())
-                        && issue_filter_with_only_my(issue, self.only_my_filter, user)
-                    {
-                        per_status_map.issue_ids.push(issue.id);
-                    }
-                }
-                per_epic_map.per_status_issues.push(per_status_map);
-            }
-            map.push(per_epic_map);
-        }
-        self.visible_issues = map;
-    }
-
     pub fn visible_issues(
         page: &ProjectPage,
         epics: &[Epic],

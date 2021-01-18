@@ -1954,6 +1954,8 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "chrono",
+ "derive_enum_iter",
+ "derive_enum_primitive",
  "futures 0.1.30",
  "jirs-data",
  "js-sys",

@@ -9,7 +9,7 @@ use {
     uuid::Uuid,
 };
 
-#[derive(Debug, Serialize, Deserialize, Queryable)]
+#[derive(Serialize, Debug, Deserialize, Queryable)]
 pub struct Issue {
     pub id: i32,
     pub title: String,

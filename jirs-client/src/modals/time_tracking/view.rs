@@ -7,14 +7,14 @@ use {
             styled_modal::StyledModal,
             styled_select::{StyledSelect, StyledSelectState},
         },
-        model::{ModalType, Model},
+        model::Model,
         shared::{
             tracking_widget::{fibonacci_values, tracking_widget},
             ToChild, ToNode,
         },
         EditIssueModalSection, FieldId, Msg,
     },
-    jirs_data::{EpicId, IssueFieldId, TimeTracking},
+    jirs_data::{IssueFieldId, IssueId, TimeTracking},
     seed::{prelude::*, *},
 };
 
@@ -27,20 +27,22 @@ pub fn value_for_time_tracking(v: &Option<i32>, time_tracking_type: &TimeTrackin
     }
 }
 
-pub fn view(model: &Model, issue_id: EpicId) -> Node<Msg> {
+pub fn view(model: &Model, modal: &super::Model) -> Node<Msg> {
+    let issue_id: IssueId = modal.issue_id;
     if model.issues_by_id.get(&issue_id).is_none() {
         return Node::Empty;
     }
 
-    let edit_issue_modal = match model.modals.get(0) {
-        Some(ModalType::EditIssue(_, modal)) => modal,
-        _ => return empty![],
+    let edit_issue_modal = match &model.modals().edit_issue {
+        Some(modal) => modal,
+        _ => return Node::Empty,
     };
+
     let time_tracking_type = model
         .project
         .as_ref()
         .map(|p| p.time_tracking)
-        .unwrap_or_else(|| TimeTracking::Untracked);
+        .unwrap_or(TimeTracking::Untracked);
 
     let modal_title = div![C!["modalTitle"], "Time tracking"];
 

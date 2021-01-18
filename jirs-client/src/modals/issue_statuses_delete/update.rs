@@ -1,22 +1,14 @@
 use {
-    crate::{
-        modals::issue_statuses_delete::Model as DeleteIssueStatusModal,
-        model::{ModalType, Model},
-        Msg, OperationKind, ResourceKind,
-    },
+    crate::{model::Model, Msg, OperationKind, ResourceKind},
     jirs_data::WsMsg,
     seed::prelude::*,
 };
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
-    let _modal: &mut Box<DeleteIssueStatusModal> =
-        match model.modals.iter_mut().find_map(|modal| match modal {
-            ModalType::DeleteIssueStatusModal(modal) => Some(modal),
-            _ => None,
-        }) {
-            Some(m) => m,
-            _ => return,
-        };
+    let _modal = match &mut model.modals_mut().delete_issue_status_modal {
+        Some(m) => m,
+        _ => return,
+    };
 
     match msg {
         Msg::DeleteIssueStatus(issue_status_id) => {

@@ -1,5 +1,6 @@
 pub use {epic_field::*, update::*, view::*};
 
+pub mod comments_delete;
 #[cfg(debug_assertions)]
 pub mod debug;
 pub mod epics_delete;

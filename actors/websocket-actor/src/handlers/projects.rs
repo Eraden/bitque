@@ -1,5 +1,5 @@
 use {
-    crate::{WebSocketActor, WsHandler, WsResult},
+    crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult},
     database_actor as db,
     futures::executor::block_on,
     jirs_data::{UpdateProjectPayload, UserProject, WsMsg},
@@ -12,38 +12,21 @@ impl WsHandler<UpdateProjectPayload> for WebSocketActor {
             project_id,
             ..
         } = self.require_user_project()?;
-        match block_on(self.db.send(database_actor::projects::UpdateProject {
-            project_id: *project_id,
-            name: msg.name,
-            url: msg.url,
-            description: msg.description,
-            category: msg.category,
-            time_tracking: msg.time_tracking,
-        })) {
-            Ok(Ok(_)) => (),
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                return Ok(None);
+        let _ = db_or_debug_and_return!(
+            self,
+            database_actor::projects::UpdateProject {
+                project_id: *project_id,
+                name: msg.name,
+                url: msg.url,
+                description: msg.description,
+                category: msg.category,
+                time_tracking: msg.time_tracking,
             }
-            Err(e) => {
-                error!("{:?}", e);
-                return Ok(None);
-            }
-        };
-        let projects = match block_on(
-            self.db
-                .send(database_actor::projects::LoadProjects { user_id: *user_id }),
-        ) {
-            Ok(Ok(projects)) => projects,
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                return Ok(None);
-            }
-            Err(e) => {
-                error!("{:?}", e);
-                return Ok(None);
-            }
-        };
+        );
+        let projects = db_or_debug_and_return!(
+            self,
+            database_actor::projects::LoadProjects { user_id: *user_id }
+        );
         Ok(Some(WsMsg::ProjectsLoaded(projects)))
     }
 }
@@ -53,16 +36,7 @@ pub struct LoadProjects;
 impl WsHandler<LoadProjects> for WebSocketActor {
     fn handle_msg(&mut self, _msg: LoadProjects, _ctx: &mut Self::Context) -> WsResult {
         let user_id = self.require_user()?.id;
-        match block_on(self.db.send(db::projects::LoadProjects { user_id })) {
-            Ok(Ok(v)) => Ok(Some(WsMsg::ProjectsLoaded(v))),
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                Ok(None)
-            }
-            Err(e) => {
-                error!("{:?}", e);
-                Ok(None)
-            }
-        }
+        let v = db_or_debug_and_return!(self, db::projects::LoadProjects { user_id });
+        Ok(Some(WsMsg::ProjectsLoaded(v)))
     }
 }

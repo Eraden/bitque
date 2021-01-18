@@ -9,13 +9,13 @@ use {
         model::{CommentForm, IssueModal},
         EditIssueModalSection, FieldId, Msg,
     },
-    jirs_data::{EpicId, Issue, IssueFieldId, TimeTracking, UpdateIssuePayload},
+    jirs_data::{Issue, IssueFieldId, IssueId, TimeTracking, UpdateIssuePayload},
     seed::prelude::*,
 };
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct Model {
-    pub id: EpicId,
+    pub id: IssueId,
     pub link_copied: bool,
     pub payload: UpdateIssuePayload,
     pub top_type_state: StyledSelectState,

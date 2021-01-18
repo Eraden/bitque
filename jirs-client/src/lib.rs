@@ -123,7 +123,7 @@ pub enum Msg {
     AvatarUpdateFetched(String),
 
     // modals
-    ModalOpened(Box<ModalType>),
+    ModalOpened(ModalType),
     ModalDropped,
     ModalChanged(FieldChange),
 
@@ -280,11 +280,11 @@ fn resolve_page(url: Url) -> Option<Page> {
 
     let page = match url.path()[0].as_ref() {
         "board" => Page::Project,
+        "profile" => Page::Profile,
         "issues" => match url.path().get(1).as_ref().map(|s| s.parse::<i32>()) {
             Some(Ok(id)) => Page::EditIssue(id),
             _ => return None,
         },
-        "profile" => Page::Profile,
         "add-issue" => Page::AddIssue,
         "project-settings" => Page::ProjectSettings,
         "login" => Page::SignIn,

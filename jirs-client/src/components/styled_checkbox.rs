@@ -1,6 +1,6 @@
 use {
     crate::{
-        shared::{ToChild, ToNode},
+        shared::{IntoChild, ToNode},
         FieldId, Msg,
     },
     jirs_data::TimeTracking,
@@ -122,36 +122,51 @@ impl<'l> ToNode for ChildBuilder<'l> {
 }
 
 #[derive(Debug)]
-pub struct StyledCheckbox<'l> {
+pub struct StyledCheckbox<'l, Options>
+where
+    Options: Iterator<Item = ChildBuilder<'l>>,
+{
     id: FieldId,
-    options: Vec<ChildBuilder<'l>>,
+    options: Option<Options>,
     selected: u32,
     class_list: Vec<&'l str>,
 }
 
-impl<'l> ToNode for StyledCheckbox<'l> {
+impl<'l, Options> ToNode for StyledCheckbox<'l, Options>
+where
+    Options: Iterator<Item = ChildBuilder<'l>>,
+{
     fn into_node(self) -> Node<Msg> {
         render(self)
     }
 }
 
-impl<'l> StyledCheckbox<'l> {
-    pub fn build() -> StyledCheckboxBuilder<'l> {
+impl<'l, Options> StyledCheckbox<'l, Options>
+where
+    Options: Iterator<Item = ChildBuilder<'l>>,
+{
+    pub fn build() -> StyledCheckboxBuilder<'l, Options> {
         StyledCheckboxBuilder {
-            options: vec![],
+            options: None,
             selected: 0,
             class_list: vec![],
         }
     }
 }
 
-pub struct StyledCheckboxBuilder<'l> {
-    options: Vec<ChildBuilder<'l>>,
+pub struct StyledCheckboxBuilder<'l, Options>
+where
+    Options: Iterator<Item = ChildBuilder<'l>>,
+{
+    options: Option<Options>,
     selected: u32,
     class_list: Vec<&'l str>,
 }
 
-impl<'l> StyledCheckboxBuilder<'l> {
+impl<'l, Options> StyledCheckboxBuilder<'l, Options>
+where
+    Options: Iterator<Item = ChildBuilder<'l>>,
+{
     pub fn state(mut self, state: &StyledCheckboxState) -> Self {
         self.selected = state.value;
         self
@@ -162,12 +177,12 @@ impl<'l> StyledCheckboxBuilder<'l> {
         self
     }
 
-    pub fn options(mut self, options: Vec<ChildBuilder<'l>>) -> Self {
-        self.options = options;
+    pub fn options(mut self, options: Options) -> Self {
+        self.options = Some(options);
         self
     }
 
-    pub fn build(self, field_id: FieldId) -> StyledCheckbox<'l> {
+    pub fn build(self, field_id: FieldId) -> StyledCheckbox<'l, Options> {
         StyledCheckbox {
             id: field_id,
             options: self.options,
@@ -177,7 +192,10 @@ impl<'l> StyledCheckboxBuilder<'l> {
     }
 }
 
-fn render(values: StyledCheckbox) -> Node<Msg> {
+fn render<'l, Options>(values: StyledCheckbox<'l, Options>) -> Node<Msg>
+where
+    Options: Iterator<Item = ChildBuilder<'l>>,
+{
     let StyledCheckbox {
         id,
         options,
@@ -185,10 +203,12 @@ fn render(values: StyledCheckbox) -> Node<Msg> {
         class_list,
     } = values;
 
-    let opt: Vec<Node<Msg>> = options
-        .into_iter()
-        .map(|child| child.with_id(id.clone()).try_select(selected).into_node())
-        .collect();
+    let opt: Vec<Node<Msg>> = match options {
+        Some(options) => options
+            .map(|child| child.with_id(id.clone()).try_select(selected).into_node())
+            .collect(),
+        _ => vec![Node::Empty],
+    };
 
     div![
         C!["styledCheckbox"],
@@ -197,10 +217,10 @@ fn render(values: StyledCheckbox) -> Node<Msg> {
     ]
 }
 
-impl<'l> ToChild<'l> for TimeTracking {
+impl<'l> IntoChild<'l> for TimeTracking {
     type Builder = ChildBuilder<'l>;
 
-    fn to_child<'m: 'l>(&'m self) -> Self::Builder {
+    fn into_child(self) -> Self::Builder {
         Self::Builder::default()
             .label(match self {
                 TimeTracking::Untracked => "No tracking",
@@ -212,11 +232,11 @@ impl<'l> ToChild<'l> for TimeTracking {
                 TimeTracking::Fibonacci => "fibonacci",
                 TimeTracking::Hourly => "hourly",
             })
-            .value((*self).into())
             .add_class(match self {
                 TimeTracking::Untracked => "untracked",
                 TimeTracking::Fibonacci => "fibonacci",
                 TimeTracking::Hourly => "hourly",
             })
+            .value((self).into())
     }
 }

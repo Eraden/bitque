@@ -1,2 +1,0 @@
-concurrency = 2
-database_url = "postgres://build@localhost:5432/jirs"

@@ -77,6 +77,17 @@ insert into invitations (email, name, state, project_id, invited_by_id) values (
     2
 );
 insert into tokens (user_id, access_token, refresh_token) values (1, uuid_generate_v4(), uuid_generate_v4() );
+insert into epics (name, project_id, user_id) VALUES (
+    'Foo', 1, 1
+), (
+    'Bar', 1, 2
+), (
+    'Foz', 2 ,1
+), (
+    'Baz', 1, 2
+), (
+    'Hello World', 2, 2
+);
 insert into issues(
     title,
     issue_type,
@@ -86,7 +97,8 @@ insert into issues(
     description_text,
     reporter_id,
     project_id,
-    issue_status_id
+    issue_status_id,
+    epic_id
 ) values (
     'Foo',
     'task',
@@ -96,7 +108,8 @@ insert into issues(
     'foz baz',
     1,
     1,
-    1
+    1,
+    NULL
 ), (
     'Foo2',
     'bug',
@@ -106,7 +119,8 @@ insert into issues(
     'foz baz 2',
     1,
     1,
-    2
+    2,
+    NULL
 ), (
     'Foo3',
     'story',
@@ -116,7 +130,30 @@ insert into issues(
     'foz baz 3',
     2,
     1,
-    3
+    3,
+    NULL
+), (
+    'Story 1 in Epic 1',
+    'story',
+    'low',
+    3,
+    'hello world 3',
+    'foz baz 3',
+    2,
+    1,
+    3,
+    1
+), (
+    'Story 2 in Epic 1',
+    'story',
+    'low',
+    3,
+    'hello world 3',
+    'foz baz 3',
+    2,
+    1,
+    3,
+    1
 );
 insert into comments (user_id, issue_id, body) values (
     1, 1, 'Vestibulum non neque at dui maximus porttitor fermentum consectetur eros.'

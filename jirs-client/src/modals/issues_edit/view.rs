@@ -3,7 +3,7 @@ use {
         components::{
             styled_avatar::StyledAvatar, styled_button::StyledButton, styled_editor::StyledEditor,
             styled_field::StyledField, styled_icon::Icon, styled_input::StyledInput,
-            styled_select::StyledSelect,
+            styled_modal::*, styled_select::StyledSelect,
         },
         modals::{
             epic_field, issues_edit::Model as EditIssueModal, time_tracking::time_tracking_field,
@@ -20,6 +20,21 @@ use {
 mod comments;
 
 pub fn view(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
+    let issue_id = modal.id;
+    if let Some(_issue) = model.issues_by_id.get(&issue_id) {
+        let details = details(model, modal);
+        StyledModal::build()
+            .variant(crate::components::styled_modal::Variant::Center)
+            .width(1040)
+            .child(details)
+            .build()
+            .into_node()
+    } else {
+        Node::Empty
+    }
+}
+
+pub fn details(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     div![
         C!["issueDetails"],
         modal_header(model, modal),
@@ -72,12 +87,10 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let close_handler = mouse_ev(Ev::Click, |ev| {
         ev.prevent_default();
         ev.stop_propagation();
-        seed::Url::new().add_path_part("board").go_and_push();
-
         Msg::ModalDropped
     });
     let delete_confirmation_handler = mouse_ev(Ev::Click, move |_| {
-        Msg::ModalOpened(Box::new(ModalType::DeleteIssueConfirm(issue_id)))
+        Msg::ModalOpened(ModalType::DeleteIssueConfirm(Some(issue_id)))
     });
 
     let copy_button = StyledButton::build()

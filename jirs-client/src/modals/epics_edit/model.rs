@@ -1,19 +1,18 @@
-use crate::FieldId;
-use jirs_data::EpicFieldId;
 use {
     crate::{
-        components::{styled_input::*, styled_select::StyledSelectState},
-        model,
+        components::{styled_checkbox::StyledCheckboxState, styled_input::*},
+        model, FieldId, Msg,
     },
-    jirs_data::{EpicId, IssueId},
+    jirs_data::*,
+    seed::prelude::Orders,
 };
 
-#[derive(Clone, Debug, PartialOrd, PartialEq)]
+#[derive(Debug)]
 pub struct Model {
     pub epic_id: EpicId,
     pub related_issues: Vec<IssueId>,
     pub name: StyledInputState,
-    pub transform_into: StyledSelectState,
+    pub transform_into: StyledCheckboxState,
 }
 
 impl Model {
@@ -23,6 +22,7 @@ impl Model {
             .get(&epic_id)
             .map(|epic| epic.name.as_str())
             .unwrap_or_default();
+
         let related_issues = model
             .issues()
             .iter()
@@ -38,10 +38,15 @@ impl Model {
             epic_id,
             related_issues,
             name: StyledInputState::new(FieldId::EditEpic(EpicFieldId::Name), name),
-            transform_into: StyledSelectState::new(
-                FieldId::EditEpic(EpicFieldId::StartsAt),
-                vec![],
+            transform_into: StyledCheckboxState::new(
+                FieldId::EditEpic(EpicFieldId::TransformInto),
+                0,
             ),
         }
+    }
+
+    pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
+        self.name.update(msg);
+        self.transform_into.update(msg);
     }
 }

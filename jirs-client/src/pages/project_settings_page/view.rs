@@ -11,10 +11,9 @@ use {
             styled_select::StyledSelect,
             styled_textarea::StyledTextarea,
         },
-        modals::issue_statuses_delete::Model as DeleteIssueStatusModal,
         model::{self, ModalType, Model, PageContent},
         pages::project_settings_page::ProjectSettingsPage,
-        shared::{inner_layout, IntoChild, ToChild, ToNode},
+        shared::{inner_layout, IntoChild, ToNode},
         FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange,
     },
     jirs_data::{IssueStatus, ProjectCategory, TimeTracking},
@@ -51,11 +50,11 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     let category_field = category_field(page);
 
     let time_tracking = StyledCheckbox::build()
-        .options(vec![
-            TimeTracking::Untracked.to_child(),
-            TimeTracking::Fibonacci.to_child(),
-            TimeTracking::Hourly.to_child(),
-        ])
+        .options(
+            TimeTracking::default()
+                .into_iter()
+                .map(|tt| tt.into_child()),
+        )
         .state(&page.time_tracking)
         .add_class("timeTracking")
         .build(FieldId::ProjectSettings(ProjectFieldId::TimeTracking))
@@ -336,9 +335,7 @@ fn show_column_preview(
         let on_delete = mouse_ev(Ev::Click, move |ev| {
             ev.prevent_default();
             ev.stop_propagation();
-            Msg::ModalOpened(Box::new(ModalType::DeleteIssueStatusModal(Box::new(
-                DeleteIssueStatusModal::new(id),
-            ))))
+            Msg::ModalOpened(ModalType::DeleteIssueStatusModal(Some(id)))
         });
         let delete = StyledButton::build()
             .primary()

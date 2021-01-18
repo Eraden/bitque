@@ -1,58 +1,69 @@
 use {
-    crate::{
-        components::{styled_confirm_modal::StyledConfirmModal, styled_modal::StyledModal},
-        model::*,
-        shared::ToNode,
-        Msg,
-    },
+    crate::{model::*, Msg},
     seed::{prelude::*, *},
 };
 
 pub fn view(model: &Model) -> Node<Msg> {
-    use crate::modals::{issue_statuses_delete, issues_create, issues_edit};
-    let modals: Vec<Node<Msg>> = model
-        .modals
-        .iter()
-        .map(|modal| match modal {
-            // epic
-            ModalType::DeleteEpic(modal) => crate::modals::epics_delete::view(model, modal),
-            ModalType::EditEpic(modal) => crate::modals::epics_edit::view(model, modal),
-            // issue
-            ModalType::EditIssue(issue_id, modal) => {
-                if let Some(_issue) = model.issues_by_id.get(issue_id) {
-                    let details = issues_edit::view(model, modal.as_ref());
-                    StyledModal::build()
-                        .variant(crate::components::styled_modal::Variant::Center)
-                        .width(1040)
-                        .child(details)
-                        .build()
-                        .into_node()
-                } else {
-                    empty![]
+    let mut nodes = Vec::with_capacity(model.modal_stack().len());
+
+    for modal_type in model.modal_stack() {
+        match modal_type {
+            ModalType::AddIssue(_) => {
+                if let Some(modal) = &model.modals().add_issue {
+                    let node = crate::modals::issues_create::view(model, modal);
+                    nodes.push(node);
                 }
             }
-            ModalType::DeleteIssueConfirm(_id) => crate::modals::issues_delete::view(model),
-            ModalType::AddIssue(modal) => issues_create::view(model, modal),
-            // comment
-            ModalType::DeleteCommentConfirm(comment_id) => {
-                let comment_id = *comment_id;
-                StyledConfirmModal::build()
-                    .title("Are you sure you want to delete this comment?")
-                    .message("Once you delete, it's gone for good.")
-                    .confirm_text("Delete comment")
-                    .on_confirm(mouse_ev(Ev::Click, move |_| Msg::DeleteComment(comment_id)))
-                    .build()
-                    .into_node()
+            ModalType::EditIssue(_) => {
+                if let Some(modal) = &model.modals().edit_issue {
+                    let node = crate::modals::issues_edit::view(model, modal);
+                    nodes.push(node);
+                }
             }
-            ModalType::TimeTracking(issue_id) => {
-                crate::modals::time_tracking::view(model, *issue_id)
+            ModalType::DeleteEpic(_) => {
+                if let Some(modal) = &model.modals().delete_epic {
+                    let node = crate::modals::epics_delete::view(model, modal);
+                    nodes.push(node);
+                }
             }
-            ModalType::DeleteIssueStatusModal(delete_issue_modal) => {
-                issue_statuses_delete::view(model, delete_issue_modal.delete_id)
+            ModalType::EditEpic(_) => {
+                if let Some(modal) = &model.modals().edit_epic {
+                    let node = crate::modals::epics_edit::view(model, modal);
+                    nodes.push(node);
+                }
+            }
+            ModalType::DeleteIssueConfirm(_) => {
+                if let Some(_issue_id) = &model.modals().delete_issue_confirm {
+                    let node = crate::modals::issues_delete::view(model);
+                    nodes.push(node);
+                }
+            }
+            ModalType::DeleteCommentConfirm(_) => {
+                if let Some(modal) = &model.modals().delete_comment_confirm {
+                    let node = crate::modals::comments_delete::view(model, modal);
+                    nodes.push(node);
+                }
+            }
+            ModalType::TimeTracking(_) => {
+                if let Some(modal) = &model.modals().time_tracking {
+                    let node = crate::modals::time_tracking::view(model, modal);
+                    nodes.push(node);
+                }
+            }
+            ModalType::DeleteIssueStatusModal(_) => {
+                if let Some(modal) = &model.modals().delete_issue_status_modal {
+                    let node = crate::modals::issue_statuses_delete::view(model, modal.delete_id);
+                    nodes.push(node);
+                }
             }
             #[cfg(debug_assertions)]
-            ModalType::DebugModal => crate::modals::debug::view(model),
-        })
-        .collect();
-    section![id!["modals"], modals]
+            ModalType::DebugModal(_) => {
+                if let Some(true) = &model.modals().debug_modal {
+                    let node = crate::modals::debug::view(model);
+                    nodes.push(node)
+                }
+            }
+        };
+    }
+    section![id!["modals"], nodes]
 }

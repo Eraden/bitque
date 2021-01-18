@@ -109,6 +109,30 @@
                 padding-left: 15px;
             }
 
+            &.editEpic {
+                padding: 35px 40px 40px;
+
+                .header {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 15px;
+                }
+
+                .transform {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 15px;
+
+                    &.unavailable {
+                        color: var(--textLight);
+                    }
+
+                    &.available {
+                        color: var(--textDark);
+                    }
+                }
+            }
+
             &.deleteEpic {
                 > section {
                     > .header {

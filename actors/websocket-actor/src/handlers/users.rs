@@ -1,5 +1,7 @@
 use {
-    crate::{handlers::auth::Authenticate, WebSocketActor, WsHandler, WsResult},
+    crate::{
+        db_or_debug_and_return, handlers::auth::Authenticate, WebSocketActor, WsHandler, WsResult,
+    },
     database_actor::{self, users::Register as DbRegister},
     futures::executor::block_on,
     jirs_data::{UserId, UserProject, UserRole, WsMsg},
@@ -12,18 +14,8 @@ impl WsHandler<LoadProjectUsers> for WebSocketActor {
         use database_actor::users::LoadProjectUsers as Msg;
 
         let project_id = self.require_user_project()?.project_id;
-        let m = match block_on(self.db.send(Msg { project_id })) {
-            Ok(Ok(v)) => Some(WsMsg::ProjectUsersLoaded(v)),
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                return Ok(None);
-            }
-            Err(e) => {
-                error!("{}", e);
-                return Ok(None);
-            }
-        };
-        Ok(m)
+        let v = db_or_debug_and_return!(self, Msg { project_id });
+        Ok(Some(WsMsg::ProjectUsersLoaded(v)))
     }
 }
 
@@ -35,26 +27,24 @@ pub struct Register {
 impl WsHandler<Register> for WebSocketActor {
     fn handle_msg(&mut self, msg: Register, ctx: &mut Self::Context) -> WsResult {
         let Register { name, email } = msg;
-        let msg = match block_on(self.db.send(DbRegister {
-            name: name.clone(),
-            email: email.clone(),
-            project_id: None,
-            role: UserRole::Owner,
-        })) {
-            Ok(Ok(_)) => Some(WsMsg::SignUpSuccess),
-            Ok(Err(_)) => Some(WsMsg::SignUpPairTaken),
-            Err(e) => {
-                error!("{}", e);
-                return Ok(None);
-            }
-        };
+        let _ = db_or_debug_and_return!(
+            self,
+            DbRegister {
+                name: name.clone(),
+                email: email.clone(),
+                project_id: None,
+                role: UserRole::Owner,
+            },
+            Ok(Some(WsMsg::SignUpPairTaken)),
+            Ok(None)
+        );
 
         match self.handle_msg(Authenticate { name, email }, ctx) {
             Ok(_) => (),
             Err(e) => return Ok(Some(e)),
         };
 
-        Ok(msg)
+        Ok(Some(WsMsg::SignUpSuccess))
     }
 }
 
@@ -64,13 +54,8 @@ impl WsHandler<LoadInvitedUsers> for WebSocketActor {
     fn handle_msg(&mut self, _msg: LoadInvitedUsers, _ctx: &mut Self::Context) -> WsResult {
         let user_id = self.require_user()?.id;
 
-        let users = match block_on(
-            self.db
-                .send(database_actor::users::LoadInvitedUsers { user_id }),
-        ) {
-            Ok(Ok(users)) => users,
-            _ => return Ok(None),
-        };
+        let users =
+            db_or_debug_and_return!(self, database_actor::users::LoadInvitedUsers { user_id });
 
         Ok(Some(WsMsg::InvitedUsersLoaded(users)))
     }
@@ -86,21 +71,14 @@ impl WsHandler<ProfileUpdate> for WebSocketActor {
         let user_id = self.require_user()?.id;
         let ProfileUpdate { name, email } = msg;
 
-        match block_on(self.db.send(database_actor::users::ProfileUpdate {
-            user_id,
-            name,
-            email,
-        })) {
-            Ok(Ok(_users)) => (),
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                return Ok(None);
+        let _ = db_or_debug_and_return!(
+            self,
+            database_actor::users::ProfileUpdate {
+                user_id,
+                name,
+                email,
             }
-            Err(e) => {
-                error!("{}", e);
-                return Ok(None);
-            }
-        };
+        );
 
         Ok(Some(WsMsg::ProfileUpdated))
     }
@@ -120,23 +98,14 @@ impl WsHandler<RemoveInvitedUser> for WebSocketActor {
             project_id,
             ..
         } = self.require_user_project()?.clone();
-        match block_on(
-            self.db
-                .send(database_actor::user_projects::RemoveInvitedUser {
-                    invited_id,
-                    inviter_id,
-                    project_id,
-                }),
-        ) {
-            Ok(Ok(_users)) => Ok(Some(WsMsg::InvitedUserRemoveSuccess(invited_id))),
-            Ok(Err(e)) => {
-                error!("{:?}", e);
-                Ok(None)
+        let _ = db_or_debug_and_return!(
+            self,
+            database_actor::user_projects::RemoveInvitedUser {
+                invited_id,
+                inviter_id,
+                project_id,
             }
-            Err(e) => {
-                error!("{}", e);
-                Ok(None)
-            }
-        }
+        );
+        Ok(Some(WsMsg::InvitedUserRemoveSuccess(invited_id)))
     }
 }

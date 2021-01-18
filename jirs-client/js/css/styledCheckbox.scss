@@ -10,7 +10,6 @@
         white-space: nowrap;
         cursor: pointer;
         font-size: 14.5px;
-        padding: 0 12px;
 
         &:focus {
             border-color: var(--borderInputFocus);
@@ -18,6 +17,16 @@
 
         > input[type=radio] {
             display: none;
+        }
+
+        > label {
+            display: block;
+            padding: 0 12px;
+            cursor: pointer;
+            font-family: var(--font-medium);
+            line-height: 2;
+            white-space: nowrap;
+            font-size: 14.5px;
         }
     }
 

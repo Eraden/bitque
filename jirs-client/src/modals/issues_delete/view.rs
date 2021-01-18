@@ -1,24 +1,12 @@
 use {
-    crate::{
-        components::styled_confirm_modal::StyledConfirmModal, model, model::ModalType,
-        shared::ToNode, Msg,
-    },
-    seed::{prelude::*, *},
+    crate::{components::styled_confirm_modal::StyledConfirmModal, model, shared::ToNode, Msg},
+    seed::prelude::*,
 };
 
 pub fn view(model: &model::Model) -> Node<Msg> {
-    let opt_id = model
-        .modals
-        .iter()
-        .filter_map(|modal| match modal {
-            ModalType::EditIssue(issue_id, _) => Some(issue_id),
-            _ => None,
-        })
-        .find(|id| id.eq(id));
-
-    let issue_id = match opt_id {
-        Some(id) => *id,
-        _ => return empty![],
+    let issue_id = match &model.modals().delete_issue_confirm {
+        Some(modal) => modal.issue_id,
+        _ => return Node::Empty,
     };
 
     let handle_issue_delete = mouse_ev(Ev::Click, move |_| Msg::DeleteIssue(issue_id));

@@ -21,7 +21,7 @@ pub fn tracking_link(model: &Model, modal: &crate::modals::issues_edit::Model) -
     let issue_id = *id;
 
     let handler = mouse_ev(Ev::Click, move |_| {
-        Msg::ModalOpened(Box::new(ModalType::TimeTracking(issue_id)))
+        Msg::ModalOpened(ModalType::TimeTracking(Some(issue_id)))
     });
 
     div![C!["trackingLink"], handler, tracking_widget(model, modal),]

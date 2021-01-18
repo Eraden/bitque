@@ -10,7 +10,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn new(epic_id: i32, model: &mut model::Model) -> Self {
+    pub fn new(epic_id: i32, model: &model::Model) -> Self {
         let related_issues = model.epic_issue_ids(epic_id);
         Self {
             epic_id,

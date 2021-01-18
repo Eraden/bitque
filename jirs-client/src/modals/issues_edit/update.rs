@@ -1,8 +1,7 @@
 use {
     crate::{
         components::styled_select::StyledSelectChanged,
-        modals::issues_edit::Model as EditIssueModal,
-        model::{IssueModal, ModalType, Model},
+        model::{IssueModal, Model},
         ws::send_ws_msg,
         EditIssueModalSection, FieldChange, FieldId, Msg, OperationKind, ResourceKind,
     },
@@ -11,18 +10,22 @@ use {
 };
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
-    let modal: &mut EditIssueModal = match model.modals.get_mut(0) {
-        Some(ModalType::EditIssue(_issue_id, modal)) => modal,
+    let modal = match &mut model.modals.edit_issue {
+        Some(modal) => modal,
         _ => return,
     };
     modal.update_states(msg, orders);
 
     match msg {
         Msg::ResourceChanged(ResourceKind::Issue, OperationKind::SingleModified, Some(id)) => {
-            if let Some(issue) = model.issues_by_id.get(id) {
-                modal.payload = issue.clone().into();
-                modal.description_state.initial_text =
-                    issue.description_text.clone().unwrap_or_default();
+            let m = model.issues_by_id.get(id).cloned();
+            if let Some(issue) = m {
+                modal.description_state.initial_text = issue
+                    .description_text
+                    .as_deref()
+                    .unwrap_or_default()
+                    .to_string();
+                modal.payload = issue.into();
             }
         }
 

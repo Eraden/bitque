@@ -76,5 +76,11 @@ features = [
     "DragEvent",
 ]
 
+[dependencies.derive_enum_primitive]
+path = "../derive/derive_enum_primitive"
+
+[dependencies.derive_enum_iter]
+path = "../derive/derive_enum_iter"
+
 [dev-dependencies]
 wasm-bindgen-test = { version = "*" }

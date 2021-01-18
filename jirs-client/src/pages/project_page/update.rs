@@ -1,7 +1,7 @@
 use {
     crate::{
         components::styled_select::StyledSelectChanged,
-        model::{ModalType, Model, Page, PageContent},
+        model::{Model, Page, PageContent},
         pages::project_page::model::ProjectPage,
         ws::{board_load, send_ws_msg},
         BoardPageChange, EditIssueModalSection, FieldId, Msg, OperationKind, PageChanged,
@@ -54,15 +54,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Type)),
                 StyledSelectChanged::Text(text),
             ) => {
-                let modal = model
-                    .modals
-                    .iter_mut()
-                    .filter_map(|modal| match modal {
-                        ModalType::EditIssue(_, modal) => Some(modal),
-                        _ => None,
-                    })
-                    .last();
-                if let Some(m) = modal {
+                if let Some(m) = &mut model.modals_mut().edit_issue {
                     m.top_type_state.text_filter = text;
                 }
             }

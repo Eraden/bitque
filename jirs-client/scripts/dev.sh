@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 
-which rsass
-if [[ "$status" != "0" ]];
+RSASS_PATH=$(command -v rsass)
+if [[ "${RSASS_PATH}" == "" ]];
 then
   cargo install rsass --features=commandline
+fi
+
+WASM_PACK_PATH=$(command -v wasm-pack)
+if [[ "${WASM_PACK_PATH}" == "" ]];
+then
+  cargo install wasm-pack
 fi
 
 export PROJECT_ROOT=$(git rev-parse --show-toplevel)

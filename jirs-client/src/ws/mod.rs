@@ -276,8 +276,8 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         // comments
         WsMsg::IssueCommentsLoaded(mut comments) => {
-            let issue_id = match model.modals.get(0) {
-                Some(ModalType::EditIssue(issue_id, _)) => *issue_id,
+            let issue_id = match &model.modals().edit_issue {
+                Some(modal) => modal.id,
                 _ => return,
             };
             if comments.iter().any(|c| c.issue_id != issue_id) {

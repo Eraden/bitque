@@ -24,7 +24,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .values
         .get(0)
         .cloned()
-        .map(Type::from)
+        .map(Into::into)
         .unwrap_or_else(|| Type::Task);
 
     let issue_type_field = issue_type_field(modal);
@@ -127,11 +127,18 @@ fn issue_type_field(modal: &AddIssueModal) -> Node<Msg> {
         .text_filter(modal.type_state.text_filter.as_str())
         .opened(modal.type_state.opened)
         .valid(true)
-        .options(Type::ordered().iter().map(|t| t.to_child().name("type")))
-        .selected(vec![Type::from(
-            modal.type_state.values.get(0).cloned().unwrap_or_default(),
-        )
-        .to_child()
+        .options(Type::Task.into_iter().map(|t| t.into_child().name("type")))
+        .selected(vec![{
+            let v: Type = modal
+                .type_state
+                .values
+                .get(0)
+                .cloned()
+                .unwrap_or_default()
+                .into();
+            v
+        }
+        .into_child()
         .name("type")])
         .build(FieldId::AddIssueModal(IssueFieldId::Type))
         .into_node();

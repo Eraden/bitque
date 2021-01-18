@@ -1,8 +1,6 @@
 use {
     crate::{
-        components::styled_select::StyledSelectChanged,
-        model::{IssueModal, ModalType},
-        ws::send_ws_msg,
+        components::styled_select::StyledSelectChanged, model::IssueModal, ws::send_ws_msg,
         FieldId, Msg, OperationKind, ResourceKind,
     },
     jirs_data::{IssueFieldId, UserId, WsMsg},
@@ -10,12 +8,11 @@ use {
 };
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
-    let modal = model
-        .modals
-        .iter_mut()
-        .find(|modal| matches!(modal, ModalType::AddIssue(..)));
-    let modal = match modal {
-        Some(ModalType::AddIssue(modal)) => modal,
+    let user_id = model.user_id().unwrap_or_default();
+    let project_id = model.project_id().unwrap_or_default();
+
+    let modal = match &mut model.modals_mut().add_issue {
+        Some(modal) => modal,
         _ => return,
     };
 
@@ -30,8 +27,6 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             );
         }
         Msg::AddIssue => {
-            let user_id = model.user.as_ref().map(|u| u.id).unwrap_or_default();
-            let project_id = model.project.as_ref().map(|p| p.id).unwrap_or_default();
             let type_value = modal.type_state.values.get(0).cloned().unwrap_or_default();
             match type_value {
                 0 | 1 | 2 => {

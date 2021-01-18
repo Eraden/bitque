@@ -1,5 +1,5 @@
 use {
-    crate::{WebSocketActor, WsHandler, WsResult},
+    crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult},
     futures::executor::block_on,
     jirs_data::{EpicId, NameString, UserProject, WsMsg},
 };
@@ -9,8 +9,7 @@ pub struct LoadEpics;
 impl WsHandler<LoadEpics> for WebSocketActor {
     fn handle_msg(&mut self, _msg: LoadEpics, _ctx: &mut Self::Context) -> WsResult {
         let project_id = self.require_user_project()?.project_id;
-        let epics =
-            crate::query_db_or_print!(self, database_actor::epics::LoadEpics { project_id });
+        let epics = db_or_debug_and_return!(self, database_actor::epics::LoadEpics { project_id });
         Ok(Some(WsMsg::EpicsLoaded(epics)))
     }
 }
@@ -27,7 +26,7 @@ impl WsHandler<CreateEpic> for WebSocketActor {
             project_id,
             ..
         } = self.require_user_project()?;
-        let epic = crate::query_db_or_print!(
+        let epic = db_or_debug_and_return!(
             self,
             database_actor::epics::CreateEpic {
                 user_id: *user_id,
@@ -48,7 +47,7 @@ impl WsHandler<UpdateEpic> for WebSocketActor {
     fn handle_msg(&mut self, msg: UpdateEpic, _ctx: &mut Self::Context) -> WsResult {
         let UpdateEpic { epic_id, name } = msg;
         let UserProject { project_id, .. } = self.require_user_project()?;
-        let epic = crate::query_db_or_print!(
+        let epic = db_or_debug_and_return!(
             self,
             database_actor::epics::UpdateEpic {
                 project_id: *project_id,
@@ -68,7 +67,7 @@ impl WsHandler<DeleteEpic> for WebSocketActor {
     fn handle_msg(&mut self, msg: DeleteEpic, _ctx: &mut Self::Context) -> WsResult {
         let DeleteEpic { epic_id } = msg;
         let UserProject { user_id, .. } = self.require_user_project()?;
-        let n = crate::query_db_or_print!(
+        let n = db_or_debug_and_return!(
             self,
             database_actor::epics::DeleteEpic {
                 user_id: *user_id,
