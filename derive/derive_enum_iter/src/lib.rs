@@ -1,10 +1,11 @@
 extern crate proc_macro;
 
-use proc_macro::{TokenStream, TokenTree};
+use {
+    proc_macro::{token_stream::IntoIter, TokenStream, TokenTree},
+    std::iter::Peekable,
+};
 
-#[proc_macro_derive(EnumIter)]
-pub fn derive_enum_iter(item: TokenStream) -> TokenStream {
-    let mut it = item.into_iter().peekable();
+fn skip_meta(mut it: Peekable<IntoIter>) -> Peekable<IntoIter> {
     while let Some(token) = it.peek() {
         if let TokenTree::Ident(_) = token {
             break;
@@ -12,20 +13,21 @@ pub fn derive_enum_iter(item: TokenStream) -> TokenStream {
             it.next();
         }
     }
+    it
+}
+
+fn consume_ident(mut it: Peekable<IntoIter>, name: &str) -> Peekable<IntoIter> {
     if let Some(TokenTree::Ident(ident)) = it.next() {
-        if ident.to_string().as_str() != "pub" {
-            panic!("Expect to find keyword pub but was found {:?}", ident)
+        if ident.to_string().as_str() != name {
+            panic!("Expect to find keyword {} but was found {:?}", name, ident)
         }
     } else {
-        panic!("Expect to find keyword pub but nothing was found")
+        panic!("Expect to find keyword {} but nothing was found", name)
     }
-    if let Some(TokenTree::Ident(ident)) = it.next() {
-        if ident.to_string().as_str() != "enum" {
-            panic!("Expect to find keyword struct but was found {:?}", ident)
-        }
-    } else {
-        panic!("Expect to find keyword struct but nothing was found")
-    }
+    it
+}
+
+pub(in crate) fn codegen(mut it: Peekable<IntoIter>) -> Result<String, String> {
     let name = it
         .next()
         .expect("Expect to struct name but nothing was found");
@@ -38,10 +40,10 @@ pub fn derive_enum_iter(item: TokenStream) -> TokenStream {
             }
         }
     } else {
-        panic!("Enum variants group expected");
+        return Err("Enum variants group expected".to_string());
     }
     if variants.is_empty() {
-        panic!("Enum cannot be empty")
+        return Err("Enum cannot be empty".to_string());
     }
 
     let mut code = format!(
@@ -72,22 +74,24 @@ impl std::iter::Iterator for {name}Iter {{
         match idx {
             0 => code.push_str(
                 format!(
-                    "None => Some({name}::{variant}),\n",
+                    "            None => Some({name}::{variant}),\n",
                     variant = variant,
                     name = name
                 )
                 .as_str(),
             ),
-            _ if idx == variants.len() - 1 => code.push_str("_ => None,\n"),
             _ => code.push_str(
                 format!(
-                    "Some({name}::{last_variant}) => Some({name}::{variant}),\n",
+                    "            Some({name}::{last_variant}) => Some({name}::{variant}),\n",
                     last_variant = last_variant,
                     variant = variant,
                     name = name,
                 )
                 .as_str(),
             ),
+        }
+        if idx == variants.len() - 1 {
+            code.push_str("            _ => None,\n");
         }
         last_variant = variant.as_str();
     }
@@ -113,5 +117,33 @@ impl std::iter::IntoIterator for {name} {{
         )
         .as_str(),
     );
+    Ok(code)
+}
+
+#[proc_macro_derive(EnumIter)]
+pub fn derive_enum_iter(item: TokenStream) -> TokenStream {
+    let mut it = item.into_iter().peekable();
+    it = skip_meta(it);
+    it = consume_ident(it, "pub");
+    it = consume_ident(it, "enum");
+
+    let code = codegen(it).unwrap();
     code.parse().unwrap()
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use super::codegen;
+//     use proc_macro::TokenStream;
+//     use std::str::FromStr;
+//
+//     #[test]
+//     fn empty_enum() {
+//         let it = TokenStream::from_str("enum A {}")
+//             .unwrap()
+//             .into_iter()
+//             .peekable();
+//         let code = codegen(it);
+//         assert_eq!(code, Err("Enum cannot be empty".to_string()));
+//     }
+// }

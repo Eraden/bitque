@@ -1,6 +1,7 @@
 use {
     crate::{shared::ToNode, Msg},
     seed::{prelude::*, *},
+    std::str::FromStr,
 };
 
 pub struct StyledLink<'l> {
@@ -26,6 +27,11 @@ impl<'l> StyledLinkBuilder<'l> {
     pub fn add_child(mut self, child: Node<Msg>) -> Self {
         self.children.push(child);
         self
+    }
+
+    pub fn with_icon(self) -> Self {
+        self.add_child(crate::components::styled_icon::Icon::Link.into_node())
+            .add_class("withIcon")
     }
 
     pub fn add_class(mut self, name: &'l str) -> Self {
@@ -64,12 +70,28 @@ pub fn render(values: StyledLink) -> Node<Msg> {
         href,
     } = values;
 
+    let on_click = {
+        let href = href.to_string();
+        mouse_ev("click", move |ev| {
+            if href.starts_with('/') {
+                ev.prevent_default();
+                ev.stop_propagation();
+                if let Ok(url) = seed::Url::from_str(href.as_str()) {
+                    url.go_and_push();
+                }
+            }
+
+            None as Option<Msg>
+        })
+    };
+
     a![
         C!["styledLink"],
         attrs![
             At::Class => class_list.join(" "),
             At::Href => href,
         ],
+        on_click,
         children,
     ]
 }

@@ -1,6 +1,6 @@
 use {
     crate::{
-        components::styled_icon::StyledIcon,
+        components::{styled_icon::StyledIcon, styled_link::*},
         model::{Model, PageContent},
         pages::reports_page::model::ReportsPage,
         shared::{inner_layout, ToNode},
@@ -24,9 +24,14 @@ pub fn view(model: &Model) -> Node<Msg> {
         _ => return empty![],
     };
 
+    let project_name = model
+        .project
+        .as_ref()
+        .map(|p| p.name.as_str())
+        .unwrap_or_default();
     let this_month_updated = this_month_updated(model, page);
     let graph = this_month_graph(page, &this_month_updated);
-    let list = issue_list(page, this_month_updated.as_slice());
+    let list = issue_list(page, project_name, this_month_updated.as_slice());
 
     let body = section![C!["top"], h1![C!["header"], "Reports"], graph, list];
 
@@ -91,26 +96,32 @@ fn this_month_graph(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<M
             + (legend_margin_width + SVG_MARGIN_X as f64);
         let height = num_issues as f64 * piece_height;
 
-        let day = page.first_day.with_day0(day).unwrap();
+        let day = page.first_day.clone().with_day0(day).unwrap();
 
-        let on_hover: EventHandler<Msg> = mouse_ev(Ev::MouseEnter, move |_| {
-            Some(Msg::PageChanged(PageChanged::Reports(
-                ReportsPageChange::DayHovered(Some(day)),
-            )))
+        let on_hover = mouse_ev(Ev::MouseEnter, move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::PageChanged(PageChanged::Reports(ReportsPageChange::DayHovered(Some(
+                day,
+            ))))
         });
-        let on_blur: EventHandler<Msg> = mouse_ev(Ev::MouseLeave, move |_| {
-            Some(Msg::PageChanged(PageChanged::Reports(
-                ReportsPageChange::DayHovered(None),
-            )))
+
+        let on_blur = mouse_ev(Ev::MouseLeave, move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::PageChanged(PageChanged::Reports(ReportsPageChange::DayHovered(None)))
         });
+
         let selected = page.selected_day;
         let current_date = day;
-        let on_click: EventHandler<Msg> = mouse_ev(Ev::MouseLeave, move |_| {
-            Some(Msg::PageChanged(PageChanged::Reports(
-                ReportsPageChange::DaySelected(match selected {
+        let on_click = mouse_ev("click", move |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::PageChanged(PageChanged::Reports(ReportsPageChange::DaySelected(
+                match selected {
                     Some(_) => None,
                     None => Some(current_date),
-                }),
+                },
             )))
         });
 
@@ -149,44 +160,76 @@ fn this_month_graph(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<M
     ]
 }
 
-fn issue_list(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<Msg> {
-    let mut children: Vec<Node<Msg>> = vec![];
-    for issue in this_month_updated {
-        let date = issue.updated_at.date();
-        let day = date.format("%Y-%m-%d").to_string();
-        let active_class = match (page.hovered_day.as_ref(), page.selected_day.as_ref()) {
-            (Some(d), _) if *d == date => "selected",
-            (_, Some(d)) if *d == date => "selected",
-            (Some(_), _) | (_, Some(_)) => "nonSelected",
-            _ => "",
-        };
-        let Issue {
-            title,
-            issue_type,
-            priority,
-            description,
-            issue_status_id: _,
-            ..
-        } = issue;
-        let type_icon = StyledIcon::build(issue_type.clone().into())
-            .build()
-            .into_node();
-        let priority_icon = StyledIcon::build(priority.clone().into())
-            .build()
-            .into_node();
-        children.push(li![
-            C!["issue"],
-            C![active_class],
-            span![C!["priority"], priority_icon],
-            span![C!["type"], type_icon],
-            span![C!["name"], title.as_str()],
-            span![
-                C!["desc"],
-                description.as_ref().cloned().unwrap_or_default()
-            ],
-            span![C!["updatedAt"], day.as_str()],
-        ]);
+#[derive(PartialEq)]
+enum SelectionState {
+    Inactive,
+    Selected,
+    NotSelected,
+}
+
+impl SelectionState {
+    fn to_str(&self) -> &str {
+        match self {
+            SelectionState::Inactive => "",
+            SelectionState::Selected => "selected",
+            SelectionState::NotSelected => "nonSelected",
+        }
     }
+}
+
+fn issue_list(page: &ReportsPage, project_name: &str, this_month_updated: &[&Issue]) -> Node<Msg> {
+    let children: Vec<Node<Msg>> = this_month_updated
+        .iter()
+        .map(|issue| {
+            let date = issue.updated_at.date();
+
+            let selection_state = match (page.hovered_day.as_ref(), page.selected_day.as_ref()) {
+                (Some(d), _) if *d == date => SelectionState::Selected,
+                (_, Some(d)) if *d == date => SelectionState::Selected,
+                (Some(_), _) | (_, Some(_)) => SelectionState::NotSelected,
+                _ => SelectionState::Inactive,
+            };
+
+            let Issue {
+                id,
+                title,
+                issue_type,
+                priority,
+                description,
+                ..
+            } = issue;
+            let day = date.format("%Y-%m-%d").to_string();
+
+            let type_icon = StyledIcon::build(issue_type.clone().into())
+                .build()
+                .into_node();
+            let priority_icon = StyledIcon::build(priority.clone().into())
+                .build()
+                .into_node();
+            let desc = Node::from_html(
+                description
+                    .as_deref()
+                    .unwrap_or_default()
+            );
+            let link = StyledLink::build()
+                .with_icon()
+                .text(format!("{}-{}", project_name, id).as_str())
+                .href(format!("/issues/{}", id).as_str())
+                .build()
+                .into_node();
+
+            li![
+                C!["issue"],
+                C![selection_state.to_str()],
+                div![C!["number"], link],
+                div![C!["type"], type_icon],
+                IF!( selection_state != SelectionState::NotSelected => div![C!["priority"], priority_icon]),
+                IF!( selection_state != SelectionState::NotSelected => div![C!["name"], title.as_str()]),
+                IF!( selection_state != SelectionState::NotSelected => div![C!["desc"], desc]),
+                IF!( selection_state != SelectionState::NotSelected => div![C!["updatedAt"], day.as_str()]),
+            ]
+        })
+        .collect();
     div![
         C!["issueList"],
         h5![C!["issueListHeader"], "Issues this month"],

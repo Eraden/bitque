@@ -17,8 +17,57 @@
             }
 
             > .issue {
+                padding: {
+                    top: 10px;
+                    bottom: 10px;
+                }
                 display: grid;
-                grid-template-columns: 32px 32px 240px auto 120px;
+                grid-template-columns: 124px 130px calc(100% - 250px);
+                grid-template-areas: "type number name" "priority desc desc" "updatedAt desc desc";
+
+                &:hover {
+                    background-color: var(--issue-background-selected);
+                }
+
+                .number {
+                    grid-area: number;
+                    > .styledLink {
+                        line-height: 1;
+                        > .styledIcon, > span {
+                            line-height: 1;
+                        }
+                    }
+                }
+
+                .type {
+                    grid-area: type;
+                }
+
+                .priority {
+                    grid-area: priority;
+                }
+
+                .name {
+                    grid-area: name;
+                }
+
+                .desc {
+                    grid-area: desc;
+                    margin-top: 10px;
+                    font-size: 12px;
+                    color: var(--textLight);
+                    pre * {
+                        font-size: 12px;
+                        color: var(--textLight);
+                    }
+                }
+
+                .updatedAt {
+                    grid-area: updatedAt;
+                    align-self: end;
+                    color: var(--textLight);
+                    font-size: 12px;
+                }
             }
 
             > .issue.selected {

@@ -185,11 +185,27 @@ impl WebSocketActor {
 
             // epics
             WsMsg::EpicsLoad => self.handle_msg(epics::LoadEpics, ctx)?,
-            WsMsg::EpicCreate(name) => self.handle_msg(epics::CreateEpic { name }, ctx)?,
+            WsMsg::EpicCreate(name, description, description_html) => self.handle_msg(
+                epics::CreateEpic {
+                    name,
+                    description_html,
+                    description,
+                },
+                ctx,
+            )?,
             WsMsg::EpicUpdate(epic_id, name) => {
                 self.handle_msg(epics::UpdateEpic { epic_id, name }, ctx)?
             }
             WsMsg::EpicDelete(epic_id) => self.handle_msg(epics::DeleteEpic { epic_id }, ctx)?,
+            WsMsg::EpicTransform(epic_id, issue_type) => self.handle_msg(
+                epics::TransformEpic {
+                    epic_id,
+                    issue_type,
+                },
+                ctx,
+            )?,
+
+            // hi
             WsMsg::HighlightCode(lang, code) => {
                 self.handle_msg(hi::HighlightCode(lang, code), ctx)?
             }

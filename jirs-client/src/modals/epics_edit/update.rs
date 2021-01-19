@@ -1,6 +1,6 @@
 use {
     crate::{send_ws_msg, FieldId, Msg, OperationKind, ResourceKind},
-    jirs_data::{EpicFieldId, WsMsg},
+    jirs_data::{EpicFieldId, IssueType, WsMsg},
     seed::prelude::*,
 };
 
@@ -39,6 +39,16 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
                 model.ws.as_ref(),
                 orders,
             );
+        }
+        Msg::TransformEpic => {
+            let epic_id = modal.epic_id;
+            let issue_type: IssueType = modal.transform_into.value.into();
+            send_ws_msg(
+                WsMsg::EpicTransform(epic_id, issue_type),
+                model.ws.as_ref(),
+                orders,
+            );
+            orders.skip().send_msg(Msg::ModalDropped);
         }
         _ => (),
     };

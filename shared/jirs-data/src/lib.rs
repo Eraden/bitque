@@ -40,6 +40,7 @@ pub type UsernameString = String;
 pub type TitleString = String;
 pub type NameString = String;
 pub type AvatarUrl = String;
+pub type DescriptionString = String;
 
 pub type Code = String;
 pub type Lang = String;
@@ -226,9 +227,9 @@ pub struct Issue {
     pub title: String,
     pub issue_type: IssueType,
     pub priority: IssuePriority,
-    pub list_position: i32,
-    pub description: Option<String>,
-    pub description_text: Option<String>,
+    pub list_position: ListPosition,
+    pub description: Option<DescriptionString>,
+    pub description_text: Option<DescriptionString>,
     pub estimate: Option<i32>,
     pub time_spent: Option<i32>,
     pub time_remaining: Option<i32>,
@@ -256,12 +257,12 @@ pub struct IssueStatus {
 #[cfg_attr(feature = "backend", derive(Queryable))]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Invitation {
-    pub id: i32,
+    pub id: InvitationId,
     pub name: String,
     pub email: String,
     pub state: InvitationState,
-    pub project_id: i32,
-    pub invited_by_id: i32,
+    pub project_id: ProjectId,
+    pub invited_by_id: UserId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub bind_token: Uuid,
@@ -373,6 +374,8 @@ pub struct Epic {
     pub updated_at: NaiveDateTime,
     pub starts_at: Option<NaiveDateTime>,
     pub ends_at: Option<NaiveDateTime>,
+    pub description: Option<DescriptionString>,
+    pub description_html: Option<DescriptionString>,
 }
 
 pub type FontStyle = u8;

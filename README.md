@@ -51,16 +51,17 @@ https://git.sr.ht/~tsumanu/jirs
 * Fix S3 upload with upgraded version of `rusoto`
 * Remove Custom Elements
 * Replace CSS with SCSS
+* Disable RTE until properly optimized 
 
 ##### Work Progress
 
 * [X] Add Epic
-* [ ] Edit Epic
-* [ ] Delete Epic
+* [X] Edit Epic
+* [X] Delete Epic
 * [ ] Epic `starts` and `ends` date
 * [X] Grouping by Epic
-* [X] Basic Rich Text Editor
-* [X] Insert Code in Rich Text Editor
+* [ ] Basic Rich Text Editor
+* [ ] Insert Code in Rich Text Editor
 * [X] Code syntax
 * [ ] Personal settings to choose MDE (Markdown Editor) or RTE
 * [ ] Issues and filters view

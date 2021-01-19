@@ -1,11 +1,12 @@
+use crate::DescriptionString;
 use {
     crate::{
         AvatarUrl, BindToken, Code, Comment, CommentId, CreateCommentPayload, CreateIssuePayload,
         EmailString, Epic, EpicId, HighlightedCode, Invitation, InvitationId, InvitationToken,
-        Issue, IssueFieldId, IssueId, IssueStatus, IssueStatusId, Lang, ListPosition, Message,
-        MessageId, NameString, NumberOfDeleted, PayloadVariant, Position, Project, TitleString,
-        UpdateCommentPayload, UpdateProjectPayload, User, UserId, UserProject, UserProjectId,
-        UserRole, UsernameString,
+        Issue, IssueFieldId, IssueId, IssueStatus, IssueStatusId, IssueType, Lang, ListPosition,
+        Message, MessageId, NameString, NumberOfDeleted, PayloadVariant, Position, Project,
+        TitleString, UpdateCommentPayload, UpdateProjectPayload, User, UserId, UserProject,
+        UserProjectId, UserRole, UsernameString,
     },
     serde::{Deserialize, Serialize},
     uuid::Uuid,
@@ -229,12 +230,17 @@ pub enum WsMsg {
     // epics
     EpicsLoad,
     EpicsLoaded(Vec<Epic>),
-    EpicCreate(NameString),
+    EpicCreate(
+        NameString,
+        Option<DescriptionString>,
+        Option<DescriptionString>,
+    ),
     EpicCreated(Epic),
     EpicUpdate(EpicId, NameString),
     EpicUpdated(Epic),
     EpicDelete(EpicId),
     EpicDeleted(EpicId, NumberOfDeleted),
+    EpicTransform(EpicId, IssueType),
 
     // highlight
     HighlightCode(Lang, Code),

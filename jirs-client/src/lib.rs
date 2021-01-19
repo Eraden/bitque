@@ -111,6 +111,7 @@ pub enum Msg {
     AddEpic,
     DeleteEpic,
     UpdateEpic,
+    TransformEpic,
 
     // issue statuses
     DeleteIssueStatus(IssueStatusId),
@@ -172,8 +173,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                 WebSocketChanged::WebSocketMessageLoaded(v) => {
                     match bincode::deserialize(v.as_slice()) {
                         Ok(WsMsg::Ping | WsMsg::Pong) => {
-                            orders.skip();
-                            orders.perform_cmd(cmds::timeout(300, || {
+                            orders.skip().perform_cmd(cmds::timeout(300, || {
                                 Msg::WebSocketChange(WebSocketChanged::SendPing)
                             }));
                         }

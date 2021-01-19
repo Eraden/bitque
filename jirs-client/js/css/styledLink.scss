@@ -8,4 +8,19 @@
     cursor: pointer;
     user-select: none;
     font-size: 14.5px;
+
+    &.withIcon {
+        display: flex;
+
+        > .styledIcon {
+            margin-right: 10px;
+            font-size: 14.5px;
+            line-height: 2;
+        }
+
+        > span {
+            font-size: 14.5px;
+            line-height: 2;
+        }
+    }
 }

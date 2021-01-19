@@ -21,7 +21,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
     match msg {
         Msg::AddEpic => {
             send_ws_msg(
-                WsMsg::EpicCreate(modal.title_state.value.clone()),
+                WsMsg::EpicCreate(modal.title_state.value.clone(), None, None),
                 model.ws.as_ref(),
                 orders,
             );

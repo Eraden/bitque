@@ -69,7 +69,15 @@ fn transform_into_available(modal: &super::Model) -> Node<Msg> {
         .state(&modal.transform_into)
         .build(FieldId::EditEpic(EpicFieldId::TransformInto))
         .into_node();
-    let execute = StyledButton::build().text("Transform").build().into_node();
+    let execute = StyledButton::build()
+        .on_click(mouse_ev("click", |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::TransformEpic
+        }))
+        .text("Transform")
+        .build()
+        .into_node();
     div![C!["transform available"], div![types], div![execute]]
 }
 

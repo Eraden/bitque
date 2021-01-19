@@ -31,6 +31,46 @@ fn parse_meta(mut it: Peekable<IntoIter>) -> (Peekable<IntoIter>, Option<Attribu
     (it, attrs)
 }
 
+///
+///
+///
+/// Example:
+/// ```
+///     pub struct Issue {
+///         pub id: i32,
+///         pub name: String,
+///     }
+///
+///     #[derive(Execute)]
+///     #[db_exec(schema = "issues", result = "Issue", find = "issues.find(msg.id)")]
+///     pub struct FindOne {
+///         pub id: i32,
+///     }
+///
+///     #[derive(Execute)]
+///     #[db_exec(schema = "issues", result = "Issue", load = "issues")]
+///     pub struct LoadAll;
+///
+///     #[derive(Execute)]
+///     #[db_exec(schema = "issues", result = "usize", destroy = "diesel::delete(issues.find(msg.id)")]
+///     pub struct DeleteOne {
+///         pub id: i32
+///     }
+///
+///     #[derive(Execute)]
+///     #[db_exec(schema = "issues", result = "Issue", destroy = "diesel::insert_into(issues).values(name.eq(msg.name))")]
+///     pub struct CreateOne {
+///         pub name: String
+///     }
+///
+///     #[derive(Execute)]
+///     #[db_exec(schema = "issues", result = "Issue", destroy = "diesel::update(issues.find(msg.id)).set(name.eq(msg.name))")]
+///     pub struct UpdateOne {
+///         pub id: i32,
+///         pub name: String
+///     }
+/// ```
+///
 #[proc_macro_derive(Execute, attributes(db_exec))]
 pub fn derive_enum_iter(item: TokenStream) -> TokenStream {
     let mut it = item.into_iter().peekable();

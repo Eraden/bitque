@@ -4,16 +4,21 @@ use {
         model::{Model, Page, PageContent},
         pages::reports_page::model::ReportsPage,
         ws::board_load,
-        Msg, WebSocketChanged,
+        Msg, OperationKind, ResourceKind,
     },
-    jirs_data::WsMsg,
     seed::prelude::*,
 };
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
-    if let Msg::ChangePage(Page::Reports) = msg {
-        build_page_content(model);
-    }
+    match msg {
+        Msg::ChangePage(Page::Reports) => build_page_content(model),
+        Msg::ResourceChanged(ResourceKind::Auth, OperationKind::SingleLoaded, _)
+            if model.page == Page::Reports =>
+        {
+            build_page_content(model);
+        }
+        _ => {}
+    };
 
     let page = match &mut model.page_content {
         PageContent::Reports(page) => page,
@@ -25,7 +30,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
     }
     match msg {
         Msg::UserChanged(Some(..))
-        | Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)))
+        | Msg::ResourceChanged(ResourceKind::Auth, OperationKind::SingleLoaded, _)
         | Msg::ChangePage(Page::Reports) => {
             board_load(model, orders);
         }
@@ -39,6 +44,6 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
     }
 }
 
-fn build_page_content(model: &mut Model) {
+pub fn build_page_content(model: &mut Model) {
     model.page_content = PageContent::Reports(Box::new(ReportsPage::default()))
 }
