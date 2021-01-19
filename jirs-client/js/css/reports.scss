@@ -21,8 +21,9 @@
                     top: 10px;
                     bottom: 10px;
                 }
+                border-bottom: 1px solid var(--borderLight);
                 display: grid;
-                grid-template-columns: 124px 130px calc(100% - 250px);
+                grid-template-columns: 80px 130px calc(100% - 210px);
                 grid-template-areas: "type number name" "priority desc desc" "updatedAt desc desc";
 
                 &:hover {
@@ -41,6 +42,9 @@
 
                 .type {
                     grid-area: type;
+                    > .styledIcon {
+                        font-size: 22px;
+                    }
                 }
 
                 .priority {
@@ -49,6 +53,8 @@
 
                 .name {
                     grid-area: name;
+                    font-size: 14px;
+                    line-height: 1;
                 }
 
                 .desc {
@@ -56,9 +62,15 @@
                     margin-top: 10px;
                     font-size: 12px;
                     color: var(--textLight);
-                    pre * {
-                        font-size: 12px;
-                        color: var(--textLight);
+                    pre {
+                        &:first-child {
+                            margin: 0;
+                        }
+                        * {
+
+                            font-size: 12px;
+                            color: var(--textLight);
+                        }
                     }
                 }
 
@@ -66,7 +78,7 @@
                     grid-area: updatedAt;
                     align-self: end;
                     color: var(--textLight);
-                    font-size: 12px;
+                    font-size: 10px;
                 }
             }
 
