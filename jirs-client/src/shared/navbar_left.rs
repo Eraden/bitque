@@ -78,7 +78,16 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
     } else {
         vec![
             navbar_left_item("Search issues", Icon::Search, None, None),
-            navbar_left_item("Create Issue", Icon::Plus, Some("/add-issue"), None),
+            navbar_left_item(
+                "Create Issue",
+                Icon::Plus,
+                Some("/add-issue"),
+                Some(mouse_ev("click", |ev| {
+                    ev.stop_propagation();
+                    ev.prevent_default();
+                    Msg::ChangePage(Page::AddIssue)
+                })),
+            ),
         ]
     };
     let go_to_profile = mouse_ev("click", move |ev| {
