@@ -114,6 +114,22 @@ pub struct StyledInput<'l, 'm: 'l> {
 
 impl<'l, 'm: 'l> StyledInput<'l, 'm> {
     #[inline]
+    pub fn new_with_id_and_value_and_valid(id: FieldId, value: &'m str, valid: bool) -> Self {
+        Self {
+            id,
+            icon: None,
+            valid,
+            value: Some(value),
+            input_type: None,
+            input_class_list: vec![],
+            wrapper_class_list: vec![],
+            variant: Variant::Normal,
+            auto_focus: false,
+            input_handlers: vec![],
+        }
+    }
+
+    #[inline]
     pub fn build() -> StyledInputBuilder<'l, 'm> {
         StyledInputBuilder {
             icon: None,

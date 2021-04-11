@@ -39,6 +39,18 @@ pub struct StyledModal<'l> {
     class_list: Vec<&'l str>,
 }
 
+impl<'l> StyledModal<'l> {
+    pub fn centered_with_width_and_body(width: usize, children: Vec<Node<Msg>>) -> Self {
+        Self {
+            variant: Variant::Center,
+            width: Some(width),
+            with_icon: false,
+            children,
+            class_list: vec![],
+        }
+    }
+}
+
 impl<'l> ToNode for StyledModal<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)

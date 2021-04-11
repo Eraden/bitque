@@ -206,7 +206,7 @@ fn issue_list(page: &ReportsPage, project_name: &str, this_month_updated: &[&Iss
             let priority_icon = StyledIcon::build(priority.clone().into())
                 .build()
                 .into_node();
-            let desc = Node::from_html(
+            let desc = Node::from_html(None,
                 description
                     .as_deref()
                     .unwrap_or_default()

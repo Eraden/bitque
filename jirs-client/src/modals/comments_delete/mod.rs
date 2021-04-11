@@ -1,4 +1,4 @@
-pub use {view::*, model::*};
+pub use {model::*, view::*};
 
-mod view;
 mod model;
+mod view;

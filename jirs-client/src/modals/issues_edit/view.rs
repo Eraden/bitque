@@ -20,18 +20,13 @@ use {
 mod comments;
 
 pub fn view(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
-    let issue_id = modal.id;
-    if let Some(_issue) = model.issues_by_id.get(&issue_id) {
-        let details = details(model, modal);
-        StyledModal::build()
-            .variant(crate::components::styled_modal::Variant::Center)
-            .width(1040)
-            .child(details)
-            .build()
-            .into_node()
-    } else {
-        Node::Empty
-    }
+    model
+        .issues_by_id
+        .get(&modal.id)
+        .map(|_issue| {
+            StyledModal::centered_with_width_and_body(1040, vec![details(model, modal)]).into_node()
+        })
+        .unwrap_or(Node::Empty)
 }
 
 pub fn details(model: &Model, modal: &EditIssueModal) -> Node<Msg> {

@@ -169,7 +169,7 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
                 C!["viewRadio"],
                 attrs![ At::Type => "radio"; At::Name => name.as_str(); At::Checked => true],
             ],
-            Node::from_html(html.as_str()),
+            Node::from_html(None, html.as_str()),
         ),
     };
 

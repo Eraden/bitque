@@ -163,6 +163,26 @@ pub struct StyledButton<'l> {
 }
 
 impl<'l> StyledButton<'l> {
+    pub fn secondary_with_text_and_icon<I>(text: &'l str, icon: I) -> Self
+    where
+        I: ToNode,
+    {
+        Self {
+            variant: Variant::Secondary,
+            disabled: false,
+            active: false,
+            text: Some(text),
+            icon: Some(icon.into_node()),
+            on_click: None,
+            children: vec![],
+            class_list: vec![],
+            button_type: "",
+            button_id: None,
+        }
+    }
+}
+
+impl<'l> StyledButton<'l> {
     #[inline(always)]
     pub fn build() -> StyledButtonBuilder<'l> {
         StyledButtonBuilder::default()

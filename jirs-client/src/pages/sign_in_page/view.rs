@@ -24,7 +24,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let username = StyledInput::build()
         .value(page.username.as_str())
-        .valid(!page.username_touched || page.username.len() > 1)
+        .valid(is_valid_username(page.username_touched, &page.username))
         .build(FieldId::SignIn(SignInFieldId::Username))
         .into_node();
     let username_field = StyledField::build()
@@ -35,7 +35,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let email = StyledInput::build()
         .value(page.email.as_str())
-        .valid(!page.email_touched || is_email(page.email.as_str()))
+        .valid(is_valid_email(page.email_touched, page.email.as_str()))
         .build(FieldId::SignIn(SignInFieldId::Email))
         .into_node();
     let email_field = StyledField::build()
@@ -94,11 +94,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build()
         .into_node();
 
-    let token = StyledInput::build()
-        .value(page.token.as_str())
-        .valid(!page.token_touched || is_token(page.token.as_str()))
-        .build(FieldId::SignIn(SignInFieldId::Token))
-        .into_node();
+    let token = StyledInput::new_with_id_and_value_and_valid(
+        FieldId::SignIn(SignInFieldId::Token),
+        &page.token,
+        is_valid_token(page.token_touched, page.token.as_str()),
+    )
+    .into_node();
     let token_field = StyledField::build()
         .label("Single use token")
         .input(token)
@@ -125,4 +126,16 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let children = vec![sign_in_form, bind_token_form];
     outer_layout(model, "login", children)
+}
+
+fn is_valid_username(touched: bool, s: &str) -> bool {
+    !touched || (s.len() > 1 && s.len() < 20)
+}
+
+fn is_valid_email(touched: bool, s: &str) -> bool {
+    !touched || (is_email(s) && s.len() < 20)
+}
+
+fn is_valid_token(touched: bool, s: &str) -> bool {
+    !touched || is_token(s)
 }

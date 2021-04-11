@@ -1,4 +1,4 @@
-#![feature(or_patterns, type_ascription, trait_alias, drain_filter)]
+#![feature(type_ascription, trait_alias, drain_filter)]
 
 use {
     crate::{

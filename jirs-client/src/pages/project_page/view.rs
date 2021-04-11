@@ -42,12 +42,7 @@ fn header(model: &Model) -> Node<Msg> {
     if !model.show_extras {
         return Node::Empty;
     }
-    let button = StyledButton::build()
-        .secondary()
-        .text("Repository")
-        .icon(Icon::Github)
-        .build()
-        .into_node();
+    let button = StyledButton::secondary_with_text_and_icon("Repository", Icon::Github).into_node();
     div![
         id!["projectBoardHeader"],
         div![id!["boardName"], C!["headerChild"], "Kanban board"],

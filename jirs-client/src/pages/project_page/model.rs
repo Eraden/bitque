@@ -1,10 +1,11 @@
+use chrono::NaiveDateTime;
 use {crate::shared::drag::DragState, jirs_data::*, std::collections::HashMap};
 
 #[derive(Default, Debug)]
 pub struct StatusIssueIds {
     pub status_id: IssueStatusId,
     pub status_name: IssueStatusName,
-    pub issue_ids: Vec<EpicId>,
+    pub issue_ids: Vec<IssueId>,
 }
 
 #[derive(Default, Debug)]
@@ -31,57 +32,67 @@ impl ProjectPage {
         issues: &[Issue],
         user: &Option<User>,
     ) -> Vec<EpicIssuePerStatus> {
-        let mut map = vec![];
         let epics = vec![None]
             .into_iter()
             .chain(epics.iter().map(|s| Some((s.id, s.name.as_str()))));
 
         let statuses = statuses.iter().map(|s| (s.id, s.name.as_str()));
-
-        let mut issues: Vec<&Issue> = issues.iter().collect();
-        if page.recently_updated_filter {
+        let issues = issues.iter().filter(|issue| {
+            issue_filter_with_avatars(issue, &page.active_avatar_filters)
+                && issue_filter_with_text(issue, page.text_filter.as_str())
+                && issue_filter_with_only_my(issue, page.only_my_filter, user)
+        });
+        let issues = if page.recently_updated_filter {
             let mut m = HashMap::new();
-            let mut sorted = vec![];
-            for issue in issues.into_iter() {
-                sorted.push((issue.id, issue.updated_at));
-                m.insert(issue.id, issue);
-            }
+            let mut sorted: Vec<(IssueId, NaiveDateTime)> = issues
+                .map(|issue| {
+                    m.insert(issue.id, issue);
+                    (issue.id, issue.updated_at)
+                })
+                .collect();
             sorted.sort_by(|(_, a_time), (_, b_time)| a_time.cmp(b_time));
-            issues = sorted
+            let mut issues: Vec<&Issue> = sorted
                 .into_iter()
                 .take(10)
                 .flat_map(|(id, _)| m.remove(&id))
                 .collect();
             issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
-        }
+            issues
+        } else {
+            issues.collect()
+        };
 
-        for epic in epics {
-            let mut per_epic_map = EpicIssuePerStatus {
-                epic_ref: epic.map(|(id, name)| (id, name.to_string())),
-                ..Default::default()
-            };
+        let issues_per_epic_id = issues.into_iter().fold(HashMap::new(), |mut m, issue| {
+            m.entry(issue.epic_id).or_insert_with(Vec::new).push(issue);
+            m
+        });
 
-            for (current_status_id, issue_status_name) in statuses.to_owned() {
-                let mut per_status_map = StatusIssueIds {
-                    status_id: current_status_id,
-                    status_name: issue_status_name.to_string(),
+        epics
+            .map(|epic| {
+                let mut per_epic_map = EpicIssuePerStatus {
+                    epic_ref: epic.map(|(id, name)| (id, name.to_string())),
                     ..Default::default()
                 };
-                for issue in issues.iter() {
-                    if issue.epic_id == epic.map(|(id, _)| id)
-                        && issue_filter_status(issue, current_status_id)
-                        && issue_filter_with_avatars(issue, &page.active_avatar_filters)
-                        && issue_filter_with_text(issue, page.text_filter.as_str())
-                        && issue_filter_with_only_my(issue, page.only_my_filter, user)
-                    {
-                        per_status_map.issue_ids.push(issue.id);
-                    }
+
+                for (current_status_id, issue_status_name) in statuses.to_owned() {
+                    let per_status_map = StatusIssueIds {
+                        status_id: current_status_id,
+                        status_name: issue_status_name.to_string(),
+                        issue_ids: issues_per_epic_id
+                            .get(&epic.map(|(id, _)| id))
+                            .map(|v| {
+                                v.iter()
+                                    .filter(|issue| issue_filter_status(issue, current_status_id))
+                                    .map(|issue| issue.id)
+                                    .collect()
+                            })
+                            .unwrap_or_default(),
+                    };
+                    per_epic_map.per_status_issues.push(per_status_map);
                 }
-                per_epic_map.per_status_issues.push(per_status_map);
-            }
-            map.push(per_epic_map);
-        }
-        map
+                per_epic_map
+            })
+            .collect()
     }
 }
 

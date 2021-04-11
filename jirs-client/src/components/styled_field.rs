@@ -56,7 +56,7 @@ impl<'l> StyledFieldBuilder<'l> {
         StyledField {
             label: self.label.unwrap_or_default(),
             tip: self.tip,
-            input: self.input.unwrap_or_else(|| empty![]),
+            input: self.input.unwrap_or(empty![]),
             class_list: self.class_list,
         }
     }
@@ -69,10 +69,7 @@ pub fn render(values: StyledField) -> Node<Msg> {
         input,
         class_list,
     } = values;
-    let tip_node = match tip {
-        Some(s) => div![attrs![At::Class => "styledTip"], s],
-        _ => empty![],
-    };
+    let tip_node = tip.map(|s| div![C!["styledTip"], s]).unwrap_or(empty![]);
 
     div![
         attrs![At::Class => class_list.join(" "), At::Class => "styledField"],
