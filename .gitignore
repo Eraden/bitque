@@ -23,3 +23,4 @@ jirs-bat/bat
 highlight/jirs-highlight/build
 uploads
 config
+shared/jirs-config/target
