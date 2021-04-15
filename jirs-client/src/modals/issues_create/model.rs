@@ -67,25 +67,26 @@ impl<'l> IntoChild<'l> for Type {
 
         let type_icon = {
             use crate::components::styled_icon::*;
-            let icon = {
-                match self {
+            StyledIcon {
+                icon: match self {
                     Type::Task => Icon::Task,
                     Type::Bug => Icon::Bug,
                     Type::Story => Icon::Story,
                     Type::Epic => Icon::Epic,
-                }
-            };
-            crate::components::styled_icon::StyledIcon::build(icon)
-                .add_class(name)
-                .build()
-                .into_node()
+                },
+                class_list: name,
+                ..Default::default()
+            }
+            .into_node()
         };
 
-        StyledSelectChild::build()
-            .add_class(name)
-            .text(name)
-            .icon(type_icon)
-            .value(value)
+        StyledSelectChildBuilder {
+            class_list: name,
+            text: Some(name),
+            icon: Some(type_icon),
+            value,
+            ..Default::default()
+        }
     }
 }
 

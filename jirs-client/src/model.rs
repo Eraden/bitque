@@ -142,6 +142,12 @@ macro_rules! match_page {
             _ => return,
         }
     };
+    ($model: ident, $ty: ident; Empty) => {
+        match &$model.page_content {
+            PageContent::$ty(page) => page,
+            _ => return Node::Empty,
+        }
+    };
 }
 #[macro_export]
 macro_rules! match_page_mut {

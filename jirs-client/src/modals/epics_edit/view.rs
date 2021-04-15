@@ -33,30 +33,34 @@ pub fn view(_model: &model::Model, modal: &Model) -> Node<Msg> {
     } else {
         transform_into_unavailable(modal)
     };
-    let close = StyledButton::build()
-        .on_click(mouse_ev("click", |ev| {
+    let close = StyledButton {
+        on_click: Some(mouse_ev("click", |ev| {
             ev.stop_propagation();
             ev.prevent_default();
             Msg::ModalDropped
-        }))
-        .empty()
-        .icon(Icon::Close)
-        .build()
-        .into_node();
-    StyledModal::build()
-        .center()
-        .width(600)
-        .add_class("editEpic")
-        .child(div![C!["header"], h1!["Edit epic"], close])
-        .child(
-            StyledInput::build()
-                .state(&modal.name)
-                .build(FieldId::EditEpic(EpicFieldId::Name))
-                .into_node(),
-        )
-        .child(transform)
-        .build()
-        .into_node()
+        })),
+        variant: ButtonVariant::Empty,
+        icon: Some(Icon::Close.into_node()),
+        ..Default::default()
+    }
+    .into_node();
+    StyledModal {
+        width: Some(600),
+        class_list: "editEpic",
+        children: vec![
+            div![C!["header"], h1!["Edit epic"], close],
+            StyledInput {
+                value: modal.name.value.as_str(),
+                valid: modal.name.is_valid(),
+                id: Some(FieldId::EditEpic(EpicFieldId::Name)),
+                ..Default::default()
+            }
+            .into_node(),
+            transform,
+        ],
+        ..Default::default()
+    }
+    .into_node()
 }
 
 fn transform_into_available(modal: &super::Model) -> Node<Msg> {
@@ -69,15 +73,16 @@ fn transform_into_available(modal: &super::Model) -> Node<Msg> {
         .state(&modal.transform_into)
         .build(FieldId::EditEpic(EpicFieldId::TransformInto))
         .into_node();
-    let execute = StyledButton::build()
-        .on_click(mouse_ev("click", |ev| {
+    let execute = StyledButton {
+        on_click: Some(mouse_ev("click", |ev| {
             ev.stop_propagation();
             ev.prevent_default();
             Msg::TransformEpic
-        }))
-        .text("Transform")
-        .build()
-        .into_node();
+        })),
+        text: Some("Transform"),
+        ..Default::default()
+    }
+    .into_node();
     div![C!["transform available"], div![types], div![execute]]
 }
 

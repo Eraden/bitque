@@ -6,11 +6,11 @@ use {
 pub fn view(model: &Model) -> Node<Msg> {
     let text = format!("{:#?}", model);
     let code = pre![text];
-    StyledModal::build()
-        .width(1200)
-        .add_class("debugModal")
-        .center()
-        .children(vec![code].into_iter())
-        .build()
-        .into_node()
+    StyledModal {
+        width: Some(1200),
+        class_list: "debugModal",
+        children: vec![code],
+        ..Default::default()
+    }
+    .into_node()
 }

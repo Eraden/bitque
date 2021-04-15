@@ -7,13 +7,17 @@ use {
         FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged,
     },
     jirs_data::{InvitationState, UserRole, UsersFieldId, WsMsg},
-    seed::prelude::Orders,
+    seed::{log, prelude::Orders},
 };
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
+    log!(model);
+    if model.user.is_none() {
+        return;
+    }
+
     if let Msg::ChangePage(Page::Users) = msg {
         build_page_content(model);
-        // return;
     }
 
     let page = match &mut model.page_content {

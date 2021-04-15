@@ -31,50 +31,14 @@ impl StyledImageInputState {
 }
 
 pub struct StyledImageInput<'l> {
-    id: FieldId,
-    class_list: Vec<&'l str>,
-    url: Option<String>,
-}
-
-impl<'l> StyledImageInput<'l> {
-    pub fn build(field_id: FieldId) -> StyledInputInputBuilder<'l> {
-        StyledInputInputBuilder {
-            id: field_id,
-            class_list: vec![],
-            url: None,
-        }
-    }
+    pub id: FieldId,
+    pub class_list: &'l str,
+    pub url: Option<&'l str>,
 }
 
 impl<'l> ToNode for StyledImageInput<'l> {
     fn into_node(self) -> Node<Msg> {
         render(self)
-    }
-}
-
-pub struct StyledInputInputBuilder<'l> {
-    id: FieldId,
-    class_list: Vec<&'l str>,
-    url: Option<String>,
-}
-
-impl<'l> StyledInputInputBuilder<'l> {
-    pub fn add_class(mut self, name: &'l str) -> Self {
-        self.class_list.push(name);
-        self
-    }
-
-    pub fn state(mut self, state: &StyledImageInputState) -> Self {
-        self.url = state.url.as_ref().cloned();
-        self
-    }
-
-    pub fn build(self) -> StyledImageInput<'l> {
-        StyledImageInput {
-            id: self.id,
-            class_list: self.class_list,
-            url: self.url,
-        }
     }
 }
 
@@ -104,8 +68,7 @@ fn render(values: StyledImageInput) -> Node<Msg> {
     let input_id = id.to_string();
 
     div![
-        C!["styledImageInput"],
-        attrs![At::Class => class_list.join(" ")],
+        C!["styledImageInput", class_list],
         label![
             C!["label"],
             attrs![At::For => input_id],

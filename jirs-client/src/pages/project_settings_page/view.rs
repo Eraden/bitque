@@ -21,6 +21,10 @@ use {
     std::collections::HashMap,
 };
 
+use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_input::InputVariant;
+use crate::components::styled_select::SelectVariant;
+
 // use crate::shared::styled_rte::StyledRte;
 
 static TIME_TRACKING_FIBONACCI: &str = include_str!("./time_tracking_fibonacci.txt");
@@ -60,29 +64,31 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .build(FieldId::ProjectSettings(ProjectFieldId::TimeTracking))
         .into_node();
     let time_tracking_type: TimeTracking = page.time_tracking.value.into();
-    let time_tracking_field = StyledField::build()
-        .input(time_tracking)
-        .tip(match time_tracking_type {
+    let time_tracking_field = StyledField {
+        input: time_tracking,
+        tip: Some(match time_tracking_type {
             TimeTracking::Fibonacci => TIME_TRACKING_FIBONACCI,
             TimeTracking::Hourly => TIME_TRACKING_HOURLY,
             _ => "",
-        })
-        .build()
-        .into_node();
+        }),
+        ..Default::default()
+    }
+    .into_node();
 
     let columns_field = columns_section(model, page);
 
-    let save_button = StyledButton::build()
-        .add_class("actionButton")
-        .on_click(mouse_ev(Ev::Click, |ev| {
+    let save_button = StyledButton {
+        class_list: "actionButton",
+        on_click: Some(mouse_ev(Ev::Click, |ev| {
             ev.prevent_default();
             Msg::PageChanged(PageChanged::ProjectSettings(
                 ProjectPageChange::SubmitProjectSettingsForm,
             ))
-        }))
-        .text("Save changes")
-        .build()
-        .into_node();
+        })),
+        text: Some("Save changes"),
+        ..Default::default()
+    }
+    .into_node();
 
     let form = StyledForm::build()
         .heading("Project Details")
@@ -110,13 +116,15 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
 /// Build project name input with styled field wrapper
 fn name_field(page: &ProjectSettingsPage) -> Node<Msg> {
-    let name = StyledTextarea::build(FieldId::ProjectSettings(ProjectFieldId::Name))
-        .value(page.payload.name.as_deref().unwrap_or_default())
-        .height(39)
-        .max_height(39)
-        .disable_auto_resize()
-        .build()
-        .into_node();
+    let name = StyledTextarea {
+        id: Some(FieldId::ProjectSettings(ProjectFieldId::Name)),
+        value: page.payload.name.as_deref().unwrap_or_default(),
+        height: 39,
+        max_height: 39,
+        disable_auto_resize: true,
+        ..Default::default()
+    }
+    .into_node();
     StyledField::build()
         .label("Name")
         .input(name)
@@ -127,13 +135,15 @@ fn name_field(page: &ProjectSettingsPage) -> Node<Msg> {
 
 /// Build project url input with styled field wrapper
 fn url_field(page: &ProjectSettingsPage) -> Node<Msg> {
-    let url = StyledTextarea::build(FieldId::ProjectSettings(ProjectFieldId::Url))
-        .height(39)
-        .max_height(39)
-        .disable_auto_resize()
-        .value(page.payload.url.as_deref().unwrap_or_default())
-        .build()
-        .into_node();
+    let url = StyledTextarea {
+        id: Some(FieldId::ProjectSettings(ProjectFieldId::Url)),
+        height: 39,
+        max_height: 39,
+        disable_auto_resize: true,
+        value: page.payload.url.as_deref().unwrap_or_default(),
+        ..Default::default()
+    }
+    .into_node();
     StyledField::build()
         .label("Url")
         .input(url)
@@ -144,52 +154,53 @@ fn url_field(page: &ProjectSettingsPage) -> Node<Msg> {
 
 /// Build project description text area with styled field wrapper
 fn description_field(page: &ProjectSettingsPage) -> Node<Msg> {
-    let description = StyledEditor::build(FieldId::ProjectSettings(ProjectFieldId::Description))
-        .text(
-            page.payload
-                .description
-                .as_ref()
-                .cloned()
-                .unwrap_or_default(),
-        )
-        .update_on(Ev::Change)
-        .mode(page.description_mode.clone())
-        .build()
-        .into_node();
-    StyledField::build()
-        .input(description)
-        .label("Description")
-        .tip("Describe the project in as much detail as you'd like.")
-        .build()
-        .into_node()
+    let description = StyledEditor {
+        id: Some(FieldId::ProjectSettings(ProjectFieldId::Description)),
+        initial_text: page.payload.description.as_deref().unwrap_or_default(),
+        text: page.payload.description.as_deref().unwrap_or_default(),
+        html: page.payload.description.as_deref().unwrap_or_default(),
+        mode: page.description_mode.clone(),
+        update_event: Ev::Change,
+    }
+    .into_node();
+    StyledField {
+        label: "Description",
+        tip: Some("Describe the project in as much detail as you'd like."),
+        input: description,
+        ..Default::default()
+    }
+    .into_node()
 }
 
 /// Build project category dropdown with styled field wrapper
 fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
-    let category = StyledSelect::build()
-        .opened(page.project_category_state.opened)
-        .text_filter(page.project_category_state.text_filter.as_str())
-        .valid(true)
-        .normal()
-        .options(
+    let category = StyledSelect {
+        id: FieldId::ProjectSettings(ProjectFieldId::Category),
+        opened: page.project_category_state.opened,
+        text_filter: page.project_category_state.text_filter.as_str(),
+        valid: true,
+        variant: SelectVariant::Normal,
+        options: Some(
             ProjectCategory::default()
                 .into_iter()
                 .map(|c| c.into_child()),
-        )
-        .selected(vec![page
+        ),
+        selected: vec![page
             .payload
             .category
             .as_ref()
             .cloned()
             .unwrap_or_default()
-            .into_child()])
-        .build(FieldId::ProjectSettings(ProjectFieldId::Category))
-        .into_node();
-    StyledField::build()
-        .label("Project Category")
-        .input(category)
-        .build()
-        .into_node()
+            .into_child()],
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        input: category,
+        label: "Project Category",
+        ..Default::default()
+    }
+    .into_node()
 }
 
 /// Build draggable columns preview with option to remove and add new columns
@@ -216,13 +227,13 @@ fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
             add_column(page, column_style.as_str())
         ]
     ];
-    StyledField::build()
-        .add_class("columnsField")
-        .input(columns_section)
-        .label("Columns")
-        .tip("Double-click on name to change it.")
-        .build()
-        .into_node()
+    StyledField {
+        label: "Columns",
+        tip: Some("Double-click on name to change it."),
+        input: columns_section,
+        class_list: "columnsField",
+    }
+    .into_node()
 }
 
 #[inline]
@@ -246,20 +257,23 @@ fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
             )))
         });
 
-        let input = StyledInput::build()
-            .state(&page.name)
-            .primary()
-            .auto_focus()
-            .on_input_ev(blur)
-            .build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
-            .into_node();
+        let input = StyledInput {
+            value: page.name.value.as_str(),
+            valid: page.name.is_valid(),
+            auto_focus: true,
+            variant: InputVariant::Primary,
+            id: Some(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName)),
+            input_handlers: vec![blur],
+            ..Default::default()
+        }
+        .into_node();
 
         div![
             C!["columnPreview"],
             div![C!["columnName"], form![on_submit, input]]
         ]
     } else {
-        let add_column = StyledIcon::build(Icon::Plus).build().into_node();
+        let add_column = StyledIcon::from(Icon::Plus).into_node();
         div![
             C!["columnPreview"],
             attrs![At::Style => column_style],
@@ -282,13 +296,16 @@ fn column_preview(
                 ProjectPageChange::EditIssueStatusName(None),
             ))
         });
-        let input = StyledInput::build()
-            .state(&page.name)
-            .primary()
-            .auto_focus()
-            .on_input_ev(blur)
-            .build(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName))
-            .into_node();
+        let input = StyledInput {
+            value: page.name.value.as_str(),
+            valid: page.name.is_valid(),
+            variant: InputVariant::Primary,
+            auto_focus: true,
+            input_handlers: vec![blur],
+            id: Some(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName)),
+            ..Default::default()
+        }
+        .into_node();
 
         div![C!["columnPreview"], div![C!["columnName"], input]]
     } else {
@@ -337,13 +354,14 @@ fn show_column_preview(
             ev.stop_propagation();
             Msg::ModalOpened(ModalType::DeleteIssueStatusModal(Some(id)))
         });
-        let delete = StyledButton::build()
-            .primary()
-            .add_class("removeColumn")
-            .icon(Icon::Trash)
-            .on_click(on_delete)
-            .build()
-            .into_node();
+        let delete = StyledButton {
+            variant: ButtonVariant::Primary,
+            class_list: "removeColumn",
+            icon: Some(Icon::Trash.into_node()),
+            on_click: Some(on_delete),
+            ..Default::default()
+        }
+        .into_node();
         div![C!["removeColumn"], delete]
     } else {
         div![

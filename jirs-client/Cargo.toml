@@ -30,6 +30,8 @@ chrono = { version = "0.4", default-features = false, features = ["serde", "wasm
 uuid = { version = "0.8.1", features = ["serde"] }
 futures = "^0.1.26"
 
+dotenv = { version = "*" }
+
 [dependencies.wee_alloc]
 version = "*"
 features = ["static_array_backend"]

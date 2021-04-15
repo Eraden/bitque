@@ -13,6 +13,8 @@ use {
     seed::{prelude::*, *},
 };
 
+use crate::components::styled_button::ButtonVariant;
+
 pub fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
     let submit_comment_form = mouse_ev(Ev::Click, move |ev| {
         ev.stop_propagation();
@@ -26,26 +28,30 @@ pub fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
         ))
     });
 
-    let text_area = StyledTextarea::build(FieldId::EditIssueModal(EditIssueModalSection::Comment(
-        CommentFieldId::Body,
-    )))
-    .value(form.body.as_str())
-    .placeholder("Add a comment...")
-    .build()
+    let text_area = StyledTextarea {
+        id: Some(FieldId::EditIssueModal(EditIssueModalSection::Comment(
+            CommentFieldId::Body,
+        ))),
+        value: form.body.as_str(),
+        placeholder: "Add a comment...",
+        ..Default::default()
+    }
     .into_node();
 
-    let submit = StyledButton::build()
-        .primary()
-        .on_click(submit_comment_form)
-        .text("Save")
-        .build()
-        .into_node();
-    let cancel = StyledButton::build()
-        .empty()
-        .on_click(close_comment_form)
-        .text("Cancel")
-        .build()
-        .into_node();
+    let submit = StyledButton {
+        variant: ButtonVariant::Primary,
+        on_click: Some(submit_comment_form),
+        text: Some("Save"),
+        ..Default::default()
+    }
+    .into_node();
+    let cancel = StyledButton {
+        variant: ButtonVariant::Empty,
+        on_click: Some(close_comment_form),
+        text: Some("Cancel"),
+        ..Default::default()
+    }
+    .into_node();
 
     vec![text_area, div![C!["actions"], submit, cancel]]
 }
@@ -55,12 +61,13 @@ pub fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Opti
 
     let user = model.users_by_id.get(&comment.user_id)?;
 
-    let avatar = StyledAvatar::build()
-        .size(32)
-        .avatar_url(user.avatar_url.as_deref()?)
-        .add_class("userAvatar")
-        .build()
-        .into_node();
+    let avatar = StyledAvatar {
+        avatar_url: user.avatar_url.as_deref(),
+        size: 32,
+        class_list: "userAvatar",
+        ..StyledAvatar::default()
+    }
+    .into_node();
 
     let buttons = if model.user.as_ref().map(|u| u.id) == Some(comment.user_id) {
         let comment_id = comment.id;
@@ -68,26 +75,28 @@ pub fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Opti
             ev.stop_propagation();
             Msg::ModalOpened(ModalType::DeleteCommentConfirm(Some(comment_id)))
         });
-        let edit_button = StyledButton::build()
-            .add_class("editButton")
-            .on_click(mouse_ev(Ev::Click, move |_| {
+        let edit_button = StyledButton {
+            class_list: "editButton",
+            on_click: Some(mouse_ev(Ev::Click, move |_| {
                 Msg::ModalChanged(FieldChange::EditComment(
                     FieldId::EditIssueModal(EditIssueModalSection::Comment(CommentFieldId::Body)),
                     comment_id,
                 ))
-            }))
-            .text("Edit")
-            .empty()
-            .build()
-            .into_node();
+            })),
+            text: Some("Edit"),
+            variant: ButtonVariant::Empty,
+            ..Default::default()
+        }
+        .into_node();
 
-        let cancel_button = StyledButton::build()
-            .add_class("deleteButton")
-            .on_click(delete_comment_handler)
-            .text("Delete")
-            .empty()
-            .build()
-            .into_node();
+        let cancel_button = StyledButton {
+            class_list: "deleteButton",
+            on_click: Some(delete_comment_handler),
+            text: Some("Delete"),
+            variant: ButtonVariant::Empty,
+            ..Default::default()
+        }
+        .into_node();
 
         vec![edit_button, cancel_button]
     } else {

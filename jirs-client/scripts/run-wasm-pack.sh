@@ -13,13 +13,10 @@ wasm-pack --verbose build --mode ${MODE} ${BUILD_TYPE} --out-name jirs --out-dir
 
 cd ${CLIENT_ROOT}
 rm -Rf ${CLIENT_ROOT}/build/styles.css
-rsass -t Expanded ${PROJECT_ROOT}/jirs-client/js/styles.css > ${CLIENT_ROOT}/tmp/styles.css
+rsass -t Expanded ${PROJECT_ROOT}/jirs-client/js/styles.css >${CLIENT_ROOT}/tmp/styles.css
 
 cp -r ${CLIENT_ROOT}/static/* ${CLIENT_ROOT}/tmp
 
-cat ${CLIENT_ROOT}/static/index.js |
-  sed -e "s/process.env.JIRS_SERVER_BIND/'$JIRS_SERVER_BIND'/g" |
-  sed -e "s/process.env.JIRS_SERVER_PORT/'$JIRS_SERVER_PORT'/g" &>${CLIENT_ROOT}/tmp/index.js
-
+cat ${CLIENT_ROOT}/static/index.js &>${CLIENT_ROOT}/tmp/index.js
 cp ${CLIENT_ROOT}/build/*.{js,wasm} ${CLIENT_ROOT}/tmp/
 cp ${CLIENT_ROOT}/js/template.html ${CLIENT_ROOT}/tmp/index.html

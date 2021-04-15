@@ -69,18 +69,20 @@ pub fn view(model: &Model, modal: &super::Model) -> Node<Msg> {
         div![C!["inputContainer"], time_remaining_field]
     ];
 
-    let close = StyledButton::build()
-        .text("Done")
-        .on_click(mouse_ev(Ev::Click, |_| Msg::ModalDropped))
-        .build()
-        .into_node();
+    let close = StyledButton {
+        text: Some("Done"),
+        on_click: Some(mouse_ev(Ev::Click, |_| Msg::ModalDropped)),
+        ..Default::default()
+    }
+    .into_node();
 
-    StyledModal::build()
-        .add_class("timeTrackingModal")
-        .children(vec![modal_title, tracking, inputs, div![C!["actions"], close]].into_iter())
-        .width(400)
-        .build()
-        .into_node()
+    StyledModal {
+        class_list: "timeTrackingModal",
+        children: vec![modal_title, tracking, inputs, div![C!["actions"], close]],
+        width: Some(400),
+        ..Default::default()
+    }
+    .into_node()
 }
 
 #[inline]
@@ -94,27 +96,32 @@ pub fn time_tracking_field(
     let fibonacci_values = fibonacci_values();
     let input = match time_tracking_type {
         TimeTracking::Untracked => empty![],
-        TimeTracking::Fibonacci => StyledSelect::build()
-            .selected(
-                select_state
-                    .values
-                    .iter()
-                    .map(|n| (*n).to_child())
-                    .collect(),
-            )
-            .state(select_state)
-            .options(fibonacci_values.iter().map(|v| v.to_child()))
-            .build(field_id)
-            .into_node(),
-        TimeTracking::Hourly => StyledInput::build()
-            .state(input_state)
-            .valid(true)
-            .build(field_id)
-            .into_node(),
+        TimeTracking::Fibonacci => StyledSelect {
+            id: field_id,
+            selected: select_state
+                .values
+                .iter()
+                .map(|n| (*n).to_child())
+                .collect(),
+
+            text_filter: select_state.text_filter.as_str(),
+            opened: select_state.opened,
+            options: Some(fibonacci_values.iter().map(|v| v.to_child())),
+            ..Default::default()
+        }
+        .into_node(),
+        TimeTracking::Hourly => StyledInput {
+            valid: input_state.is_valid(),
+            value: input_state.value.as_str(),
+            id: Some(field_id),
+            ..Default::default()
+        }
+        .into_node(),
     };
-    StyledField::build()
-        .input(input)
-        .label(label)
-        .build()
-        .into_node()
+    StyledField {
+        input,
+        label,
+        ..Default::default()
+    }
+    .into_node()
 }

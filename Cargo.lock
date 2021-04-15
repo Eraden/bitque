@@ -1988,6 +1988,7 @@ dependencies = [
  "chrono",
  "derive_enum_iter",
  "derive_enum_primitive",
+ "dotenv",
  "futures 0.1.31",
  "jirs-data",
  "js-sys",

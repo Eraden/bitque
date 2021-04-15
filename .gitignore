@@ -24,3 +24,4 @@ highlight/jirs-highlight/build
 uploads
 config
 shared/jirs-config/target
+jirs-client/src/location.rs

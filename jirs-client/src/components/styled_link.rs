@@ -5,21 +5,21 @@ use {
 };
 
 pub struct StyledLink<'l> {
-    children: Vec<Node<Msg>>,
-    class_list: Vec<&'l str>,
-    href: &'l str,
+    pub children: Vec<Node<Msg>>,
+    pub class_list: &'l str,
+    pub href: &'l str,
 }
 
 impl<'l> StyledLink<'l> {
-    pub fn build() -> StyledLinkBuilder<'l> {
-        StyledLinkBuilder::default()
-    }
+    // pub fn build() -> StyledLinkBuilder<'l> {
+    //     StyledLinkBuilder::default()
+    // }
 }
 
 #[derive(Default)]
 pub struct StyledLinkBuilder<'l> {
     children: Vec<Node<Msg>>,
-    class_list: Vec<&'l str>,
+    class_list: &'l str,
     href: &'l str,
 }
 
@@ -29,13 +29,8 @@ impl<'l> StyledLinkBuilder<'l> {
         self
     }
 
-    pub fn with_icon(self) -> Self {
-        self.add_child(crate::components::styled_icon::Icon::Link.into_node())
-            .add_class("withIcon")
-    }
-
-    pub fn add_class(mut self, name: &'l str) -> Self {
-        self.class_list.push(name);
+    pub fn class_list(mut self, name: &'l str) -> Self {
+        self.class_list = name;
         self
     }
 
@@ -86,11 +81,8 @@ pub fn render(values: StyledLink) -> Node<Msg> {
     };
 
     a![
-        C!["styledLink"],
-        attrs![
-            At::Class => class_list.join(" "),
-            At::Href => href,
-        ],
+        C!["styledLink", class_list],
+        attrs![ At::Href => href, ],
         on_click,
         children,
     ]

@@ -8,22 +8,22 @@ use {
 };
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
-pub enum Variant {
+pub enum InputVariant {
     Normal,
     Primary,
 }
 
-impl Variant {
+impl InputVariant {
     #[inline]
     pub fn to_str<'l>(&self) -> &'l str {
         match self {
-            Variant::Normal => "normal",
-            Variant::Primary => "primary",
+            InputVariant::Normal => "normal",
+            InputVariant::Primary => "primary",
         }
     }
 }
 
-impl ToString for Variant {
+impl ToString for InputVariant {
     #[inline]
     fn to_string(&self) -> String {
         self.to_str().to_string()
@@ -96,148 +96,68 @@ impl StyledInputState {
     pub fn reset(&mut self) {
         self.value.clear();
     }
+
+    pub fn is_valid(&self) -> bool {
+        match (
+            self.touched,
+            self.value.as_str(),
+            self.min.as_ref(),
+            self.max.as_ref(),
+        ) {
+            (false, ..) => true,
+            (_, s, None, None) => !s.is_empty(),
+            (_, s, Some(min), None) => s.len() >= *min,
+            (_, s, None, Some(max)) => s.len() <= *max,
+            (_, s, Some(min), Some(max)) => s.len() >= *min && s.len() <= *max,
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct StyledInput<'l, 'm: 'l> {
-    id: FieldId,
-    icon: Option<Icon>,
-    valid: bool,
-    value: Option<&'m str>,
-    input_type: Option<&'l str>,
-    input_class_list: Vec<&'l str>,
-    wrapper_class_list: Vec<&'l str>,
-    variant: Variant,
-    auto_focus: bool,
-    input_handlers: Vec<EventHandler<Msg>>,
+    pub id: Option<FieldId>,
+    pub icon: Option<Icon>,
+    pub valid: bool,
+    pub value: &'m str,
+    pub input_type: Option<&'l str>,
+    pub input_class_list: &'l str,
+    pub wrapper_class_list: &'l str,
+    pub variant: InputVariant,
+    pub auto_focus: bool,
+    pub input_handlers: Vec<EventHandler<Msg>>,
+}
+
+impl<'l, 'm: 'l> Default for StyledInput<'l, 'm> {
+    fn default() -> Self {
+        Self {
+            id: None,
+            icon: None,
+            valid: false,
+            value: "",
+            input_type: None,
+            input_class_list: "",
+            wrapper_class_list: "",
+            variant: InputVariant::Normal,
+            auto_focus: false,
+            input_handlers: vec![],
+        }
+    }
 }
 
 impl<'l, 'm: 'l> StyledInput<'l, 'm> {
     #[inline]
     pub fn new_with_id_and_value_and_valid(id: FieldId, value: &'m str, valid: bool) -> Self {
         Self {
-            id,
+            id: Some(id),
             icon: None,
             valid,
-            value: Some(value),
+            value,
             input_type: None,
-            input_class_list: vec![],
-            wrapper_class_list: vec![],
-            variant: Variant::Normal,
+            input_class_list: "",
+            wrapper_class_list: "",
+            variant: InputVariant::Normal,
             auto_focus: false,
             input_handlers: vec![],
-        }
-    }
-
-    #[inline]
-    pub fn build() -> StyledInputBuilder<'l, 'm> {
-        StyledInputBuilder {
-            icon: None,
-            valid: None,
-            value: None,
-            input_type: None,
-            input_class_list: vec![],
-            wrapper_class_list: vec![],
-            variant: Variant::Normal,
-            auto_focus: false,
-            input_handlers: vec![],
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct StyledInputBuilder<'l, 'm: 'l> {
-    icon: Option<Icon>,
-    valid: Option<bool>,
-    value: Option<&'m str>,
-    input_type: Option<&'l str>,
-    input_class_list: Vec<&'l str>,
-    wrapper_class_list: Vec<&'l str>,
-    variant: Variant,
-    auto_focus: bool,
-    input_handlers: Vec<EventHandler<Msg>>,
-}
-
-impl<'l, 'm: 'l> StyledInputBuilder<'l, 'm> {
-    #[inline]
-    pub fn icon(mut self, icon: Icon) -> Self {
-        self.icon = Some(icon);
-        self
-    }
-
-    #[inline]
-    pub fn valid(mut self, valid: bool) -> Self {
-        self.valid = Some(valid);
-        self
-    }
-
-    #[inline]
-    pub fn value(mut self, v: &'m str) -> Self {
-        self.value = Some(v);
-        self
-    }
-
-    #[inline]
-    pub fn state(self, state: &'m StyledInputState) -> Self {
-        self.value(&state.value.as_str()).valid(
-            match (
-                state.touched,
-                state.value.as_str(),
-                state.min.as_ref(),
-                state.max.as_ref(),
-            ) {
-                (false, ..) => true,
-                (_, s, None, None) => !s.is_empty(),
-                (_, s, Some(min), None) => s.len() >= *min,
-                (_, s, None, Some(max)) => s.len() <= *max,
-                (_, s, Some(min), Some(max)) => s.len() >= *min && s.len() <= *max,
-            },
-        )
-    }
-
-    #[inline]
-    pub fn add_input_class(mut self, name: &'l str) -> Self {
-        self.input_class_list.push(name);
-        self
-    }
-
-    #[inline]
-    pub fn add_wrapper_class(mut self, name: &'l str) -> Self {
-        self.wrapper_class_list.push(name);
-        self
-    }
-
-    #[inline]
-    pub fn primary(mut self) -> Self {
-        self.variant = Variant::Primary;
-        self
-    }
-
-    #[inline]
-    pub fn auto_focus(mut self) -> Self {
-        self.auto_focus = true;
-        self
-    }
-
-    #[inline]
-    pub fn on_input_ev(mut self, handler: EventHandler<Msg>) -> Self {
-        self.input_handlers.push(handler);
-        self
-    }
-
-    #[inline]
-    pub fn build(self, id: FieldId) -> StyledInput<'l, 'm> {
-        StyledInput {
-            id,
-            icon: self.icon,
-            valid: self.valid.unwrap_or_default(),
-            value: self.value,
-            input_type: self.input_type,
-            input_class_list: self.input_class_list,
-            wrapper_class_list: self.wrapper_class_list,
-            variant: self.variant,
-            auto_focus: self.auto_focus,
-            input_handlers: self.input_handlers,
         }
     }
 }
@@ -262,9 +182,10 @@ pub fn render(values: StyledInput) -> Node<Msg> {
         auto_focus,
         input_handlers,
     } = values;
+    let id = id.expect("Input id is required");
 
     let icon_node = icon
-        .map(|icon| StyledIcon::build(icon).build().into_node())
+        .map(|icon| StyledIcon::from(icon).into_node())
         .unwrap_or(Node::Empty);
 
     let on_change = {
@@ -277,28 +198,27 @@ pub fn render(values: StyledInput) -> Node<Msg> {
     };
 
     div![
-        C!["styledInput"],
-        C![variant.to_str()],
-        if !valid { Some(C!["invalid"]) } else { None },
-        attrs!(
-            "class" => format!("{} {}", id, wrapper_class_list.join(" ")),
-        ),
+        C![
+            "styledInput",
+            format!("{}", id),
+            variant.to_str(),
+            wrapper_class_list
+        ],
+        IF![!valid => C!["invalid"]],
         icon_node,
         seed::input![
-            C!["inputElement"],
-            icon.as_ref().map(|_| C!["withIcon"]),
-            C![variant.to_str()],
+            C![
+                "inputElement",
+                variant.to_str(),
+                input_class_list,
+                icon.as_ref().map(|_| "withIcon").unwrap_or_default()
+            ],
             attrs![
                 "id" => format!("{}", id),
-                At::Class => input_class_list.join(" "),
-                "value" => value.unwrap_or_default(),
+                "value" => value,
                 "type" => input_type.unwrap_or("text"),
             ],
-            if auto_focus {
-                vec![attrs![At::AutoFocus => true]]
-            } else {
-                vec![]
-            },
+            IF![auto_focus => attrs![At::AutoFocus => true]],
             on_change,
             input_handlers,
         ],

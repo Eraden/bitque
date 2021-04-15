@@ -11,25 +11,26 @@ use {
 
 pub fn view(model: &model::Model, modal: &Model) -> Node<Msg> {
     if modal.related_issues.is_empty() {
-        StyledConfirmModal::build()
-            .title("Delete empty epic")
-            .cancel_text("Cancel")
-            .confirm_text("Delete epic")
-            .on_confirm(mouse_ev("click", move |ev| {
+        StyledConfirmModal {
+            title: "Delete empty epic",
+            confirm_text: "Delete epic",
+            cancel_text: "Cancel",
+            on_confirm: Some(mouse_ev("click", move |ev| {
                 ev.stop_propagation();
                 ev.prevent_default();
                 Msg::DeleteEpic
-            }))
-            .build()
-            .into_node()
+            })),
+            ..Default::default()
+        }
+        .into_node()
     } else {
-        StyledModal::build()
-            .add_class("deleteEpic")
-            .center()
-            .width(600)
-            .child(warning(model, modal))
-            .build()
-            .into_node()
+        StyledModal {
+            children: vec![warning(model, modal)],
+            width: Some(600),
+            class_list: "deleteEpic",
+            ..Default::default()
+        }
+        .into_node()
     }
 }
 
@@ -39,7 +40,7 @@ fn warning(model: &model::Model, modal: &Model) -> Node<Msg> {
         .iter()
         .flat_map(|id| model.issues_by_id.get(id))
         .map(|issue| {
-            let link = StyledIcon::build(Icon::Link).build().into_node();
+            let link = StyledIcon::from(Icon::Link).into_node();
             li![div![
                 C!["relatedIssue"],
                 a![
@@ -51,16 +52,17 @@ fn warning(model: &model::Model, modal: &Model) -> Node<Msg> {
         })
         .collect();
 
-    let close = StyledButton::build()
-        .text("Close")
-        .on_click(mouse_ev("click", move |ev| {
+    let close = StyledButton {
+        text: Some("Close"),
+        on_click: Some(mouse_ev("click", move |ev| {
             ev.stop_propagation();
             ev.prevent_default();
             Msg::ModalDropped
-        }))
-        .secondary()
-        .build()
-        .into_node();
+        })),
+        variant: ButtonVariant::Secondary,
+        ..Default::default()
+    }
+    .into_node();
 
     section![
         h3![C!["header"], "Cannot delete epic"],

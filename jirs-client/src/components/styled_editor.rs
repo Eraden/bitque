@@ -27,93 +27,29 @@ impl StyledEditorState {
 }
 
 #[derive(Debug, Clone)]
-pub struct StyledEditor {
-    id: FieldId,
-    initial_text: String,
-    text: String,
-    html: String,
-    mode: Mode,
-    update_event: Ev,
+pub struct StyledEditor<'l> {
+    pub id: Option<FieldId>,
+    pub initial_text: &'l str,
+    pub text: &'l str,
+    pub html: &'l str,
+    pub mode: Mode,
+    pub update_event: Ev,
 }
 
-impl StyledEditor {
-    #[inline]
-    pub fn build(id: FieldId) -> StyledEditorBuilder {
-        StyledEditorBuilder {
-            id,
-            initial_text: "".to_string(),
-            text: "".to_string(),
-            html: "".to_string(),
-            mode: Mode::View,
-            update_event: None,
+impl<'l> Default for StyledEditor<'l> {
+    fn default() -> Self {
+        Self {
+            id: None,
+            initial_text: "",
+            text: "",
+            html: "",
+            mode: Mode::Editor,
+            update_event: Ev::Cached,
         }
     }
 }
 
-#[derive(Debug)]
-pub struct StyledEditorBuilder {
-    id: FieldId,
-    initial_text: String,
-    text: String,
-    html: String,
-    mode: Mode,
-    update_event: Option<Ev>,
-}
-
-impl StyledEditorBuilder {
-    #[inline]
-    pub fn text<S>(mut self, text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.text = text.into();
-        self
-    }
-
-    #[inline]
-    pub fn initial_text<S>(mut self, text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.initial_text = text.into();
-        self
-    }
-
-    #[inline]
-    pub fn html<S>(mut self, text: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.html = text.into();
-        self
-    }
-
-    #[inline]
-    pub fn mode(mut self, mode: Mode) -> Self {
-        self.mode = mode;
-        self
-    }
-
-    #[inline]
-    pub fn build(self) -> StyledEditor {
-        StyledEditor {
-            id: self.id,
-            initial_text: self.initial_text,
-            text: self.text,
-            html: self.html,
-            mode: self.mode,
-            update_event: self.update_event.unwrap_or(Ev::KeyUp),
-        }
-    }
-
-    #[inline]
-    pub fn update_on(mut self, ev: Ev) -> Self {
-        self.update_event = Some(ev);
-        self
-    }
-}
-
-impl ToNode for StyledEditor {
+impl<'l> ToNode for StyledEditor<'l> {
     #[inline]
     fn into_node(self) -> Node<Msg> {
         render(self)
@@ -131,6 +67,7 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
         update_event,
     } = values;
 
+    let id = id.expect("Styled Editor requires ID");
     let on_editor_clicked = click_handler(id.clone(), Mode::Editor);
     let on_view_clicked = click_handler(id.clone(), Mode::View);
 
@@ -138,40 +75,31 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
     let view_id = format!("view-{}", id);
     let name = format!("styled-editor-{}", id);
 
-    let text_area = StyledTextarea::build(id)
-        .height(40)
-        .update_on(update_event)
-        // .disable_auto_resize()
-        .value(initial_text.as_str())
-        .build()
-        .into_node();
+    let text_area = StyledTextarea {
+        id: Some(id),
+        height: 40,
+        max_height: 0,
+        value: initial_text,
+        class_list: "",
+        update_event,
+        placeholder: "",
+        disable_auto_resize: false,
+    }
+    .into_node();
 
-    let (editor_radio_node, view_radio_node, parsed_node) = match mode {
-        Mode::Editor => (
-            seed::input![
-                id![editor_id.as_str()],
-                attrs![At::Type => "radio"; At::Name => name.as_str(); At::Class => "editorRadio"; At::Checked => true],
-            ],
-            seed::input![
-                id![view_id.as_str()],
-                attrs![ At::Type => "radio"; At::Name => name.as_str(); At::Class => "viewRadio";],
-            ],
-            vec![],
-        ),
-        Mode::View => (
-            seed::input![
-                id![editor_id.as_str()],
-                C!["editorRadio"],
-                attrs![At::Type => "radio"; At::Name => name.as_str();],
-            ],
-            seed::input![
-                id![view_id.as_str()],
-                C!["viewRadio"],
-                attrs![ At::Type => "radio"; At::Name => name.as_str(); At::Checked => true],
-            ],
-            Node::from_html(None, html.as_str()),
-        ),
-    };
+    let (editor_radio_node, view_radio_node) = (
+        seed::input![
+            id![editor_id.as_str()],
+            C!["editorRadio"],
+            attrs![At::Type => "radio"; At::Name => name.as_str(); At::Checked => true],
+        ],
+        seed::input![
+            id![view_id.as_str()],
+            C!["viewRadio"],
+            attrs![ At::Type => "radio"; At::Name => name.as_str();],
+            IF![mode == Mode::View => attrs![At::Checked => true]]
+        ],
+    );
 
     div![
         C!["styledEditor"],
@@ -198,7 +126,11 @@ pub fn render(values: StyledEditor) -> Node<Msg> {
         editor_radio_node,
         text_area,
         view_radio_node,
-        div![C!["view"], parsed_node],
+        div![
+            C!["view"],
+            IF![mode == Mode::Editor => empty![]],
+            IF![mode == Mode::View => raw![html]],
+        ],
     ]
 }
 

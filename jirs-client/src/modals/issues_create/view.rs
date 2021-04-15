@@ -18,6 +18,9 @@ use {
     seed::{prelude::*, *},
 };
 
+use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_select::SelectVariant;
+
 pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let issue_type = modal
         .type_state
@@ -80,55 +83,54 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     };
 
     let submit = {
-        StyledButton::build()
-            .primary()
-            .text(issue_type.submit_label())
-            .add_class("action")
-            .add_class("submit")
-            .add_class("actionButton")
-            .on_click(mouse_ev(Ev::Click, move |ev| {
+        StyledButton {
+            variant: ButtonVariant::Primary,
+            text: Some(issue_type.submit_label()),
+            class_list: "action submit actionButton",
+            on_click: Some(mouse_ev(Ev::Click, move |ev| {
                 ev.stop_propagation();
                 ev.prevent_default();
                 Some(issue_type.submit_action())
-            }))
-            .build()
-            .into_node()
+            })),
+            ..Default::default()
+        }
+        .into_node()
     };
-    let cancel = StyledButton::build()
-        .empty()
-        .add_class("action")
-        .add_class("cancel")
-        .add_class("actionButton")
-        .text("Cancel")
-        .on_click(mouse_ev(Ev::Click, |ev| {
+    let cancel = StyledButton {
+        variant: ButtonVariant::Empty,
+        class_list: "action cancel actionButton",
+        text: Some("Cancel"),
+        on_click: Some(mouse_ev(Ev::Click, |ev| {
             ev.stop_propagation();
             ev.prevent_default();
             Some(Msg::ModalDropped)
-        }))
-        .build()
-        .into_node();
+        })),
+        ..Default::default()
+    }
+    .into_node();
     let actions = div![attrs![At::Class => "actions"], submit, cancel];
 
     let form = form.add_field(actions).build().into_node();
 
-    StyledModal::build()
-        .add_class("addIssue")
-        .width(0)
-        .variant(crate::components::styled_modal::Variant::Center)
-        .child(form)
-        .build()
-        .into_node()
+    StyledModal {
+        class_list: "addIssue",
+        width: Some(0),
+        children: vec![form],
+        ..Default::default()
+    }
+    .into_node()
 }
 
 fn issue_type_field(modal: &AddIssueModal) -> Node<Msg> {
-    let select_type = StyledSelect::build()
-        .name("type")
-        .normal()
-        .text_filter(modal.type_state.text_filter.as_str())
-        .opened(modal.type_state.opened)
-        .valid(true)
-        .options(Type::Task.into_iter().map(|t| t.into_child().name("type")))
-        .selected(vec![{
+    let select_type = StyledSelect {
+        id: FieldId::AddIssueModal(IssueFieldId::Type),
+        name: "type",
+        variant: SelectVariant::Normal,
+        text_filter: modal.type_state.text_filter.as_str(),
+        opened: modal.type_state.opened,
+        valid: true,
+        options: Some(Type::Task.into_iter().map(|t| t.into_child().name("type"))),
+        selected: vec![{
             let v: Type = modal
                 .type_state
                 .values
@@ -139,43 +141,52 @@ fn issue_type_field(modal: &AddIssueModal) -> Node<Msg> {
             v
         }
         .into_child()
-        .name("type")])
-        .build(FieldId::AddIssueModal(IssueFieldId::Type))
-        .into_node();
-    StyledField::build()
-        .label("Issue Type")
-        .tip("Start typing to get a list of possible matches.")
-        .input(select_type)
-        .build()
-        .into_node()
+        .name("type")],
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        label: "Issue Type",
+        tip: Some("Start typing to get a list of possible matches."),
+        input: select_type,
+        ..Default::default()
+    }
+    .into_node()
 }
 
 #[inline]
 fn short_summary_field(modal: &AddIssueModal) -> Node<Msg> {
-    let short_summary = StyledInput::build()
-        .state(&modal.title_state)
-        .build(FieldId::AddIssueModal(IssueFieldId::Title))
-        .into_node();
-    StyledField::build()
-        .label("Short Summary")
-        .tip("Concisely summarize the issue in one or two sentences.")
-        .input(short_summary)
-        .build()
-        .into_node()
+    let short_summary = StyledInput {
+        value: modal.title_state.value.as_str(),
+        valid: modal.title_state.is_valid(),
+        id: Some(FieldId::AddIssueModal(IssueFieldId::Title)),
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        label: "Short Summary",
+        tip: Some("Concisely summarize the issue in one or two sentences."),
+        input: short_summary,
+        ..Default::default()
+    }
+    .into_node()
 }
 
 fn description_field() -> Node<Msg> {
-    let description = StyledTextarea::build(FieldId::AddIssueModal(IssueFieldId::Description))
-        .height(110)
-        .add_class("textarea")
-        .build()
-        .into_node();
-    StyledField::build()
-        .label("Description")
-        .tip("Describe the issue in as much detail as you'd like.")
-        .input(description)
-        .build()
-        .into_node()
+    let description = StyledTextarea {
+        id: Some(FieldId::AddIssueModal(IssueFieldId::Description)),
+        height: 110,
+        class_list: "textarea",
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        label: "Description",
+        tip: Some("Describe the issue in as much detail as you'd like."),
+        input: description,
+        ..Default::default()
+    }
+    .into_node()
 }
 
 fn reporter_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
@@ -183,58 +194,60 @@ fn reporter_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .reporter_id
         .or_else(|| model.user.as_ref().map(|u| u.id))
         .unwrap_or_default();
-    let reporter = StyledSelect::build()
-        .normal()
-        .text_filter(modal.reporter_state.text_filter.as_str())
-        .opened(modal.reporter_state.opened)
-        .options(model.users.iter().map(|u| u.to_child().name("reporter")))
-        .selected(
-            model
-                .users
-                .iter()
-                .filter_map(|user| {
-                    if user.id == reporter_id {
-                        Some(user.to_child().name("reporter"))
-                    } else {
-                        None
-                    }
-                })
-                .collect(),
-        )
-        .valid(true)
-        .build(FieldId::AddIssueModal(IssueFieldId::Reporter))
-        .into_node();
-    StyledField::build()
-        .input(reporter)
-        .label("Reporter")
-        .tip("")
-        .build()
-        .into_node()
+    let reporter = StyledSelect {
+        id: FieldId::AddIssueModal(IssueFieldId::Reporter),
+        variant: SelectVariant::Normal,
+        text_filter: modal.reporter_state.text_filter.as_str(),
+        opened: modal.reporter_state.opened,
+        options: Some(model.users.iter().map(|u| u.to_child().name("reporter"))),
+        selected: model
+            .users
+            .iter()
+            .filter_map(|user| {
+                if user.id == reporter_id {
+                    Some(user.to_child().name("reporter"))
+                } else {
+                    None
+                }
+            })
+            .collect(),
+
+        valid: true,
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        input: reporter,
+        label: "Reporter",
+        ..Default::default()
+    }
+    .into_node()
 }
 
 fn assignees_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
-    let assignees = StyledSelect::build()
-        .normal()
-        .multi()
-        .text_filter(modal.assignees_state.text_filter.as_str())
-        .opened(modal.assignees_state.opened)
-        .options(model.users.iter().map(|u| u.to_child().name("assignees")))
-        .selected(
-            model
-                .users
-                .iter()
-                .filter_map(|user| {
-                    if modal.user_ids.contains(&user.id) {
-                        Some(user.to_child().name("assignees"))
-                    } else {
-                        None
-                    }
-                })
-                .collect(),
-        )
-        .valid(true)
-        .build(FieldId::AddIssueModal(IssueFieldId::Assignees))
-        .into_node();
+    let assignees = StyledSelect {
+        id: FieldId::AddIssueModal(IssueFieldId::Assignees),
+        variant: SelectVariant::Normal,
+        is_multi: true,
+        text_filter: modal.assignees_state.text_filter.as_str(),
+        opened: modal.assignees_state.opened,
+        options: Some(model.users.iter().map(|u| u.to_child().name("assignees"))),
+        selected: model
+            .users
+            .iter()
+            .filter_map(|user| {
+                if modal.user_ids.contains(&user.id) {
+                    Some(user.to_child().name("assignees"))
+                } else {
+                    None
+                }
+            })
+            .collect(),
+
+        valid: true,
+        ..Default::default()
+    }
+    .into_node();
     StyledField::build()
         .input(assignees)
         .label("Assignees")
@@ -245,33 +258,40 @@ fn assignees_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
 
 fn issue_priority_field(modal: &AddIssueModal) -> Node<Msg> {
     let priorities = IssuePriority::default().into_iter();
-    let select_priority = StyledSelect::build()
-        .name("priority")
-        .normal()
-        .text_filter(modal.priority_state.text_filter.as_str())
-        .opened(modal.priority_state.opened)
-        .valid(true)
-        .options(priorities.map(|p| p.into_child().name("priority")))
-        .selected(vec![modal.priority.into_child().name("priority")])
-        .build(FieldId::AddIssueModal(IssueFieldId::Priority))
-        .into_node();
-    StyledField::build()
-        .label("Issue Type")
-        .tip("Priority in relation to other issues.")
-        .input(select_priority)
-        .build()
-        .into_node()
+    let select_priority = StyledSelect {
+        id: FieldId::AddIssueModal(IssueFieldId::Priority),
+        name: "priority",
+        variant: SelectVariant::Normal,
+        text_filter: modal.priority_state.text_filter.as_str(),
+        opened: modal.priority_state.opened,
+        valid: true,
+        options: Some(priorities.map(|p| p.into_child().name("priority"))),
+        selected: vec![modal.priority.into_child().name("priority")],
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        label: "Issue Type",
+        tip: Some("Priority in relation to other issues."),
+        input: select_priority,
+        ..Default::default()
+    }
+    .into_node()
 }
 
 fn name_field(modal: &AddIssueModal) -> Node<Msg> {
-    let name = StyledInput::build()
-        .state(&modal.title_state)
-        .build(FieldId::AddIssueModal(IssueFieldId::Title))
-        .into_node();
-    StyledField::build()
-        .label("Epic name")
-        .tip("Describe upcoming feature.")
-        .input(name)
-        .build()
-        .into_node()
+    let name = StyledInput {
+        value: modal.title_state.value.as_str(),
+        valid: modal.title_state.is_valid(),
+        id: Some(FieldId::AddIssueModal(IssueFieldId::Title)),
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        label: "Epic name",
+        tip: Some("Describe upcoming feature."),
+        input: name,
+        ..Default::default()
+    }
+    .into_node()
 }

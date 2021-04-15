@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
 RSASS_PATH=$(command -v rsass)
-if [[ "${RSASS_PATH}" == "" ]];
-then
+if [[ "${RSASS_PATH}" == "" ]]; then
   cargo install rsass --features=commandline
 fi
 
 WASM_PACK_PATH=$(command -v wasm-pack)
-if [[ "${WASM_PACK_PATH}" == "" ]];
-then
+if [[ "${WASM_PACK_PATH}" == "" ]]; then
   cargo install wasm-pack
 fi
 
@@ -23,6 +21,7 @@ cd ${CLIENT_ROOT}
 . .env
 
 cargo watch \
+  -i ./jirs-client/src/location.rs \
   -s ${CLIENT_ROOT}/scripts/run-wasm-pack.sh \
   -w ${CLIENT_ROOT}/src \
   -w ${CLIENT_ROOT}/Cargo.toml \

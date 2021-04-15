@@ -47,11 +47,13 @@ pub fn tracking_widget(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         ..
     } = modal;
 
-    let icon = StyledIcon::build(Icon::Stopwatch)
-        .add_class("watchIcon")
-        .size(32)
-        .build()
-        .into_node();
+    let icon = StyledIcon {
+        icon: Icon::Stopwatch,
+        class_list: "watchIcon",
+        size: Some(32),
+        ..Default::default()
+    }
+    .into_node();
     let bar_width = calc_bar_width(*estimate, *time_spent, *time_remaining);
 
     let spent_text = match (time_spent, time_tracking_type) {

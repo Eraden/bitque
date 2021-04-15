@@ -98,7 +98,7 @@ fn sidebar_link_item(model: &Model, name: &str, icon: Icon, page: Option<Page>) 
         None
     };
     let active_flag = page.filter(|p| *p == model.page).map(|_| C!["active"]);
-    let icon_node = StyledIcon::build(icon).build().into_node();
+    let icon_node = StyledIcon::from(icon).into_node();
     let on_click = page.map(|p| {
         mouse_ev("click", move |ev| {
             ev.stop_propagation();
@@ -111,10 +111,9 @@ fn sidebar_link_item(model: &Model, name: &str, icon: Icon, page: Option<Page>) 
     });
 
     li![
-        C!["linkItem"],
+        C!["linkItem", icon.to_str()],
         active_flag,
         allow_flag,
-        C![icon.to_str()],
         a![
             attrs![At::Href => path],
             on_click,

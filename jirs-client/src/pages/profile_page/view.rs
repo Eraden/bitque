@@ -15,53 +15,65 @@ use {
     std::collections::HashMap,
 };
 
+use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_input::InputVariant;
+use crate::components::styled_select::SelectVariant;
+
 pub fn view(model: &Model) -> Node<Msg> {
     let page = match &model.page_content {
         PageContent::Profile(profile_page) => profile_page,
         _ => return empty![],
     };
 
-    let avatar = StyledImageInput::build(FieldId::Profile(UsersFieldId::Avatar))
-        .add_class("avatar")
-        .state(&page.avatar)
-        .build()
-        .into_node();
+    let avatar = StyledImageInput {
+        id: FieldId::Profile(UsersFieldId::Avatar),
+        class_list: "avatar",
+        url: page.avatar.url.as_deref(),
+    }
+    .into_node();
 
-    let username = StyledInput::build()
-        .state(&page.name)
-        .valid(true)
-        .primary()
-        .build(FieldId::Profile(UsersFieldId::Username))
-        .into_node();
-    let username_field = StyledField::build()
-        .label("Username")
-        .input(username)
-        .build()
-        .into_node();
+    let username = StyledInput {
+        id: Some(FieldId::Profile(UsersFieldId::Username)),
+        valid: page.name.is_valid(),
+        value: page.name.value.as_str(),
+        variant: InputVariant::Primary,
+        ..Default::default()
+    }
+    .into_node();
+    let username_field = StyledField {
+        label: "Username",
+        input: username,
+        ..Default::default()
+    }
+    .into_node();
 
-    let email = StyledInput::build()
-        .state(&page.email)
-        .valid(true)
-        .primary()
-        .build(FieldId::Profile(UsersFieldId::Username))
-        .into_node();
-    let email_field = StyledField::build()
-        .label("E-Mail")
-        .input(email)
-        .build()
-        .into_node();
+    let email = StyledInput {
+        id: Some(FieldId::Profile(UsersFieldId::Email)),
+        valid: page.email.is_valid(),
+        value: page.email.value.as_str(),
+        variant: InputVariant::Primary,
+        ..Default::default()
+    }
+    .into_node();
+    let email_field = StyledField {
+        label: "E-Mail",
+        input: email,
+        ..Default::default()
+    }
+    .into_node();
 
     let current_project = build_current_project(model, page);
 
-    let submit = StyledButton::build()
-        .primary()
-        .text("Save")
-        .on_click(mouse_ev(Ev::Click, |ev| {
+    let submit = StyledButton {
+        variant: ButtonVariant::Primary,
+        text: Some("Save"),
+        on_click: Some(mouse_ev(Ev::Click, |ev| {
             ev.prevent_default();
             Msg::PageChanged(PageChanged::Profile(ProfilePageChange::SubmitForm))
-        }))
-        .build()
-        .into_node();
+        })),
+        ..Default::default()
+    }
+    .into_node();
     let submit_field = StyledField::build().input(submit).build().into_node();
 
     let content = StyledForm::build()
@@ -81,44 +93,47 @@ pub fn view(model: &Model) -> Node<Msg> {
 }
 
 fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
-    let inner =
-        if model.projects.len() <= 1 {
-            let name = model
-                .project
-                .as_ref()
-                .map(|p| p.name.as_str())
-                .unwrap_or_default();
-            span![name]
-        } else {
-            let mut project_by_id = HashMap::new();
-            for p in model.projects.iter() {
-                project_by_id.insert(p.id, p);
-            }
-            let mut joined_projects = HashMap::new();
-            for p in model.user_projects.iter() {
-                joined_projects.insert(p.project_id, p);
-            }
+    let inner = if model.projects.len() <= 1 {
+        let name = model
+            .project
+            .as_ref()
+            .map(|p| p.name.as_str())
+            .unwrap_or_default();
+        span![name]
+    } else {
+        let mut project_by_id = HashMap::new();
+        for p in model.projects.iter() {
+            project_by_id.insert(p.id, p);
+        }
+        let mut joined_projects = HashMap::new();
+        for p in model.user_projects.iter() {
+            joined_projects.insert(p.project_id, p);
+        }
 
-            StyledSelect::build()
-                .name("current_project")
-                .normal()
-                .options(model.projects.iter().filter_map(|project| {
-                    joined_projects.get(&project.id).map(|_| project.to_child())
-                }))
-                .selected(
-                    page.current_project
-                        .values
-                        .iter()
-                        .filter_map(|id| project_by_id.get(&((*id) as i32)).map(|p| p.to_child()))
-                        .collect(),
-                )
-                .state(&page.current_project)
-                .build(FieldId::Profile(UsersFieldId::CurrentProject))
-                .into_node()
-        };
-    StyledField::build()
-        .label("Current project")
-        .input(div![C!["project-name"], inner])
-        .build()
+        StyledSelect {
+            id: FieldId::Profile(UsersFieldId::CurrentProject),
+            name: "current_project",
+            valid: true,
+            opened: page.current_project.opened,
+            text_filter: page.current_project.text_filter.as_str(),
+            variant: SelectVariant::Normal,
+            options: Some(model.projects.iter().filter_map(|project| {
+                joined_projects.get(&project.id).map(|_| project.to_child())
+            })),
+            selected: page
+                .current_project
+                .values
+                .iter()
+                .filter_map(|id| project_by_id.get(&((*id) as i32)).map(|p| p.to_child()))
+                .collect(),
+            ..Default::default()
+        }
         .into_node()
+    };
+    StyledField {
+        label: "Current project",
+        input: div![C!["project-name"], inner],
+        ..Default::default()
+    }
+    .into_node()
 }

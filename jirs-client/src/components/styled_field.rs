@@ -5,10 +5,21 @@ use {
 
 #[derive(Debug)]
 pub struct StyledField<'l> {
-    label: &'l str,
-    tip: Option<&'l str>,
-    input: Node<Msg>,
-    class_list: Vec<&'l str>,
+    pub label: &'l str,
+    pub tip: Option<&'l str>,
+    pub input: Node<Msg>,
+    pub class_list: &'l str,
+}
+
+impl<'l> Default for StyledField<'l> {
+    fn default() -> Self {
+        Self {
+            label: "",
+            tip: None,
+            input: Node::Empty,
+            class_list: "",
+        }
+    }
 }
 
 impl<'l> StyledField<'l> {
@@ -28,7 +39,7 @@ pub struct StyledFieldBuilder<'l> {
     label: Option<&'l str>,
     tip: Option<&'l str>,
     input: Option<Node<Msg>>,
-    class_list: Vec<&'l str>,
+    class_list: &'l str,
 }
 
 impl<'l> StyledFieldBuilder<'l> {
@@ -47,8 +58,8 @@ impl<'l> StyledFieldBuilder<'l> {
         self
     }
 
-    pub fn add_class(mut self, name: &'l str) -> Self {
-        self.class_list.push(name);
+    pub fn class_list(mut self, name: &'l str) -> Self {
+        self.class_list = name;
         self
     }
 
@@ -72,8 +83,8 @@ pub fn render(values: StyledField) -> Node<Msg> {
     let tip_node = tip.map(|s| div![C!["styledTip"], s]).unwrap_or(empty![]);
 
     div![
-        attrs![At::Class => class_list.join(" "), At::Class => "styledField"],
-        seed::label![attrs![At::Class => "styledLabel"], label],
+        C!["styledField", class_list],
+        seed::label![C!["styledLabel"], label],
         input,
         tip_node,
     ]

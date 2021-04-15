@@ -6,7 +6,7 @@ use {
             styled_date_time_input::StyledDateTimeChanged,
             styled_select::StyledSelectChanged,
             styled_tooltip,
-            styled_tooltip::{Variant as StyledTooltip, Variant},
+            styled_tooltip::{TooltipVariant as StyledTooltip, TooltipVariant},
         },
         model::{ModalType, Model, Page},
         shared::{go_to_board, go_to_login},
@@ -24,6 +24,7 @@ mod changes;
 mod components;
 mod fields;
 mod images;
+mod location;
 mod modals;
 mod model;
 mod pages;
@@ -217,15 +218,15 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
             model.page = *page;
         }
         Msg::ToggleTooltip(variant) => match variant {
-            styled_tooltip::Variant::About => {
+            styled_tooltip::TooltipVariant::About => {
                 model.about_tooltip_visible = !model.about_tooltip_visible;
             }
-            styled_tooltip::Variant::Messages => {
+            styled_tooltip::TooltipVariant::Messages => {
                 model.messages_tooltip_visible = !model.messages_tooltip_visible;
             }
-            styled_tooltip::Variant::CodeBuilder => {}
-            Variant::TableBuilder => {}
-            Variant::DateTimeBuilder => {}
+            styled_tooltip::TooltipVariant::CodeBuilder => {}
+            TooltipVariant::TableBuilder => {}
+            TooltipVariant::DateTimeBuilder => {}
         },
         _ => (),
     }
@@ -305,16 +306,8 @@ fn resolve_page(url: Url) -> Option<Page> {
     Some(page)
 }
 
-pub static mut HOST_URL: String = String::new();
-pub static mut WS_URL: String = String::new();
-
 #[wasm_bindgen]
-pub fn render(host_url: String, ws_url: String) {
-    unsafe {
-        HOST_URL = host_url;
-        WS_URL = ws_url;
-    }
-
+pub fn render() {
     let app = seed::App::start("app", init, update, view);
 
     {
@@ -348,13 +341,10 @@ pub fn render(host_url: String, ws_url: String) {
 }
 
 fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
-    let host_url = unsafe { HOST_URL.clone() };
-    let ws_url = unsafe { WS_URL.clone() };
-    let mut model = Model::new(host_url, ws_url);
-    unsafe {
-        HOST_URL = "".to_string();
-        WS_URL = "".to_string();
-    }
+    let mut model = Model::new(
+        location::host_url().to_string(),
+        location::ws_url().to_string(),
+    );
     model.page = resolve_page(url).unwrap_or(Page::Project);
     open_socket(&mut model, orders);
 

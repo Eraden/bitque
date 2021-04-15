@@ -5,9 +5,9 @@ use {
 
 #[derive(Debug, Clone)]
 pub struct StyledForm<'l> {
-    heading: &'l str,
-    fields: Vec<Node<Msg>>,
-    on_submit: Option<EventHandler<Msg>>,
+    pub heading: &'l str,
+    pub fields: Vec<Node<Msg>>,
+    pub on_submit: Option<EventHandler<Msg>>,
 }
 
 impl<'l> StyledForm<'l> {

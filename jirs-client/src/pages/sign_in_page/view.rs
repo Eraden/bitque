@@ -16,28 +16,34 @@ use {
     seed::{prelude::*, *},
 };
 
+use crate::components::styled_button::ButtonVariant;
+
 pub fn view(model: &model::Model) -> Node<Msg> {
     let page = match &model.page_content {
         PageContent::SignIn(page) => page,
         _ => return empty![],
     };
 
-    let username = StyledInput::build()
-        .value(page.username.as_str())
-        .valid(is_valid_username(page.username_touched, &page.username))
-        .build(FieldId::SignIn(SignInFieldId::Username))
-        .into_node();
+    let username = StyledInput {
+        value: page.username.as_str(),
+        valid: is_valid_username(page.username_touched, &page.username),
+        id: Some(FieldId::SignIn(SignInFieldId::Username)),
+        ..Default::default()
+    }
+    .into_node();
     let username_field = StyledField::build()
         .label("Username")
         .input(username)
         .build()
         .into_node();
 
-    let email = StyledInput::build()
-        .value(page.email.as_str())
-        .valid(is_valid_email(page.email_touched, page.email.as_str()))
-        .build(FieldId::SignIn(SignInFieldId::Email))
-        .into_node();
+    let email = StyledInput {
+        value: page.email.as_str(),
+        valid: is_valid_email(page.email_touched, page.email.as_str()),
+        id: Some(FieldId::SignIn(SignInFieldId::Email)),
+        ..Default::default()
+    }
+    .into_node();
     let email_field = StyledField::build()
         .label("E-Mail")
         .input(email)
@@ -45,33 +51,39 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .into_node();
 
     let submit = if page.login_success {
-        StyledButton::build()
-            .success()
-            .text("✓ Please check your mail")
+        StyledButton {
+            variant: ButtonVariant::Success,
+            text: Some("✓ Please check your mail"),
+            ..Default::default()
+        }
     } else {
-        StyledButton::build()
-            .primary()
-            .text("Sign In")
-            .on_click(mouse_ev(Ev::Click, |_| Msg::SignInRequest))
+        StyledButton {
+            variant: ButtonVariant::Primary,
+            text: Some("Sign In"),
+            on_click: Some(mouse_ev(Ev::Click, |_| Msg::SignInRequest)),
+            ..Default::default()
+        }
     }
-    .build()
     .into_node();
-    let register_link = StyledLink::build()
-        .text("Register")
-        .href("/register")
-        .add_class("signUpLink")
-        .build()
-        .into_node();
-    let submit_field = StyledField::build()
-        .input(div![C!["twoRow"], submit, register_link,])
-        .build()
-        .into_node();
+    let register_link = StyledLink {
+        children: vec![span!["Register"]],
+        class_list: "signUpLink",
+        href: "/register",
+    }
+    .into_node();
+    let submit_field = StyledField {
+        input: div![C!["twoRow"], submit, register_link],
+        ..Default::default()
+    }
+    .into_node();
 
-    let help_icon = StyledIcon::build(Icon::Help)
-        .add_class("noPasswordHelp")
-        .size(22)
-        .build()
-        .into_node();
+    let help_icon = StyledIcon {
+        icon: Icon::Help,
+        class_list: "noPasswordHelp",
+        size: Some(22),
+        ..Default::default()
+    }
+    .into_node();
 
     let no_pass_section = div![
         C!["noPasswordSection"],
@@ -80,19 +92,16 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         span!["Why I don't see password?"]
     ];
 
-    let sign_in_form = StyledForm::build()
-        .heading("Sign In to your account")
-        .on_submit(ev(Ev::Submit, |ev| {
+    let sign_in_form = StyledForm {
+        heading: "Sign In to your account",
+        fields: vec![username_field, email_field, submit_field, no_pass_section],
+        on_submit: Some(ev(Ev::Submit, |ev| {
             ev.stop_propagation();
             ev.prevent_default();
             Msg::SignInRequest
-        }))
-        .add_field(username_field)
-        .add_field(email_field)
-        .add_field(submit_field)
-        .add_field(no_pass_section)
-        .build()
-        .into_node();
+        })),
+    }
+    .into_node();
 
     let token = StyledInput::new_with_id_and_value_and_valid(
         FieldId::SignIn(SignInFieldId::Token),
@@ -105,12 +114,13 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         .input(token)
         .build()
         .into_node();
-    let submit_token = StyledButton::build()
-        .primary()
-        .text("Authorize")
-        .on_click(mouse_ev(Ev::Click, |_| Msg::BindClientRequest))
-        .build()
-        .into_node();
+    let submit_token = StyledButton {
+        variant: ButtonVariant::Primary,
+        text: Some("Authorize"),
+        on_click: Some(mouse_ev(Ev::Click, |_| Msg::BindClientRequest)),
+        ..Default::default()
+    }
+    .into_node();
     let submit_token_field = StyledField::build().input(submit_token).build().into_node();
 
     let bind_token_form = StyledForm::build()

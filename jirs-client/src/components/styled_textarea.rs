@@ -5,103 +5,34 @@ use {
 
 #[derive(Debug)]
 pub struct StyledTextarea<'l> {
-    id: FieldId,
-    height: usize,
-    max_height: usize,
-    value: &'l str,
-    class_list: Vec<&'l str>,
-    update_event: Ev,
-    placeholder: Option<&'l str>,
-    disable_auto_resize: bool,
+    pub id: Option<FieldId>,
+    pub height: usize,
+    pub max_height: usize,
+    pub value: &'l str,
+    pub class_list: &'l str,
+    pub update_event: Ev,
+    pub placeholder: &'l str,
+    pub disable_auto_resize: bool,
 }
 
-impl<'l> ToNode for StyledTextarea<'l> {
-    fn into_node(self) -> Node<Msg> {
-        render(self)
-    }
-}
-
-impl<'l> StyledTextarea<'l> {
-    pub fn build(field_id: FieldId) -> StyledTextareaBuilder<'l> {
-        StyledTextareaBuilder {
-            id: field_id,
-            height: None,
-            max_height: None,
-            on_change: None,
+impl<'l> Default for StyledTextarea<'l> {
+    fn default() -> Self {
+        Self {
+            id: None,
+            height: 0,
+            max_height: 0,
             value: "",
-            class_list: vec![],
-            update_event: None,
-            placeholder: None,
+            class_list: "",
+            update_event: Ev::Cached,
+            placeholder: "",
             disable_auto_resize: false,
         }
     }
 }
 
-#[derive(Debug)]
-pub struct StyledTextareaBuilder<'l> {
-    id: FieldId,
-    height: Option<usize>,
-    max_height: Option<usize>,
-    on_change: Option<EventHandler<Msg>>,
-    value: &'l str,
-    class_list: Vec<&'l str>,
-    update_event: Option<Ev>,
-    placeholder: Option<&'l str>,
-    disable_auto_resize: bool,
-}
-
-impl<'l> StyledTextareaBuilder<'l> {
-    #[inline]
-    pub fn height(mut self, height: usize) -> Self {
-        self.height = Some(height);
-        self
-    }
-
-    #[inline]
-    pub fn max_height(mut self, height: usize) -> Self {
-        self.max_height = Some(height);
-        self
-    }
-
-    #[inline]
-    pub fn value(mut self, value: &'l str) -> Self {
-        self.value = value;
-        self
-    }
-
-    #[inline]
-    pub fn add_class(mut self, value: &'l str) -> Self {
-        self.class_list.push(value);
-        self
-    }
-
-    pub fn update_on(mut self, ev: Ev) -> Self {
-        self.update_event = Some(ev);
-        self
-    }
-
-    pub fn placeholder(mut self, placeholder: &'l str) -> Self {
-        self.placeholder = Some(placeholder);
-        self
-    }
-
-    pub fn disable_auto_resize(mut self) -> Self {
-        self.disable_auto_resize = true;
-        self
-    }
-
-    #[inline]
-    pub fn build(self) -> StyledTextarea<'l> {
-        StyledTextarea {
-            id: self.id,
-            value: self.value,
-            height: self.height.unwrap_or(110),
-            class_list: self.class_list,
-            max_height: self.max_height.unwrap_or_default(),
-            update_event: self.update_event.unwrap_or(Ev::KeyUp),
-            placeholder: self.placeholder,
-            disable_auto_resize: self.disable_auto_resize,
-        }
+impl<'l> ToNode for StyledTextarea<'l> {
+    fn into_node(self) -> Node<Msg> {
+        render(self)
     }
 }
 
@@ -124,11 +55,12 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
         height,
         max_height,
         value,
-        mut class_list,
+        class_list,
         update_event,
         placeholder,
         disable_auto_resize,
     } = values;
+    let id = id.expect("Text area requires FieldId");
     let mut style_list = vec![];
 
     let min_height = get_min_height(value, height as f64, disable_auto_resize);
@@ -141,15 +73,14 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
     }
 
     if disable_auto_resize {
-        style_list.push("resize: none".to_string());
         style_list.push(format!(
-            "height: {h}px; max-height: {h}px; min-height: {h}px",
+            "resize: none; height: {h}px; max-height: {h}px; min-height: {h}px",
             h = max_height
         ));
     }
 
     let handler_disable_auto_resize = disable_auto_resize;
-    let resize_handler = ev(Ev::KeyUp, move |event| {
+    let resize_handler = ev(Ev::Change, move |event| {
         event.stop_propagation();
         if handler_disable_auto_resize {
             return None as Option<Msg>;
@@ -167,39 +98,41 @@ pub fn render(values: StyledTextarea) -> Node<Msg> {
     });
 
     let handler_disable_auto_resize = disable_auto_resize;
-    let text_input_handler = ev(update_event, move |event| {
-        event.stop_propagation();
+    let text_input_handler = {
+        let id = id.clone();
+        ev(update_event, move |event| {
+            event.stop_propagation();
 
-        let value = event
-            .target()
-            .map(|target| seed::to_textarea(&target).value())
-            .unwrap_or_default();
+            let value = event
+                .target()
+                .map(|target| seed::to_textarea(&target).value())
+                .unwrap_or_default();
 
-        if handler_disable_auto_resize && value.contains('\n') {
-            event.prevent_default();
-        }
+            if handler_disable_auto_resize && value.contains('\n') {
+                event.prevent_default();
+            }
 
-        Some(Msg::StrInputChanged(
-            id,
-            if handler_disable_auto_resize {
-                value.trim().to_string()
-            } else {
-                value
-            },
-        ))
-    });
-
-    class_list.push("textAreaInput");
+            Some(Msg::StrInputChanged(
+                id,
+                if handler_disable_auto_resize {
+                    value.trim().to_string()
+                } else {
+                    value
+                },
+            ))
+        })
+    };
 
     div![
+        id![format!("styledTextArea-{}", id)],
         C!["styledTextArea"],
         div![C!["textAreaHeading"]],
         textarea![
+            C![class_list, "textAreaInput"],
             attrs![
-                At::Class => class_list.join(" ");
                 At::AutoFocus => "true";
                 At::Style => style_list.join(";");
-                At::Placeholder => placeholder.unwrap_or_default();
+                At::Placeholder => placeholder;
                 At::Rows => if disable_auto_resize { "5" } else { "auto" }
             ],
             value,

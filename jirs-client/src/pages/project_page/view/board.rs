@@ -9,6 +9,8 @@ use {
     seed::{prelude::*, *},
 };
 
+use crate::components::styled_button::ButtonVariant;
+
 pub fn project_board_lists(model: &Model) -> Node<Msg> {
     let project_page = match &model.page_content {
         PageContent::Project(project_page) => project_page,
@@ -35,10 +37,10 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
         let epic_name = match per_epic.epic_ref.as_ref() {
             Some((id, name)) => {
                 let id = *id;
-                let edit_button = StyledButton::build()
-                    .empty()
-                    .icon(Icon::EditAlt)
-                    .on_click(mouse_ev("click", move |ev| {
+                let edit_button = StyledButton {
+                    variant: ButtonVariant::Empty,
+                    icon: Some(Icon::EditAlt.into_node()),
+                    on_click: Some(mouse_ev("click", move |ev| {
                         ev.stop_propagation();
                         ev.prevent_default();
                         seed::Url::new()
@@ -46,13 +48,14 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                             .add_path_part(id.to_string())
                             .go_and_push();
                         Msg::ChangePage(Page::EditEpic(id))
-                    }))
-                    .build()
-                    .into_node();
-                let delete_button = StyledButton::build()
-                    .empty()
-                    .icon(Icon::DeleteAlt)
-                    .on_click(mouse_ev("click", move |ev| {
+                    })),
+                    ..Default::default()
+                }
+                .into_node();
+                let delete_button = StyledButton {
+                    variant: ButtonVariant::Empty,
+                    icon: Some(Icon::DeleteAlt.into_node()),
+                    on_click: Some(mouse_ev("click", move |ev| {
                         ev.stop_propagation();
                         ev.prevent_default();
                         seed::Url::new()
@@ -60,9 +63,10 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                             .add_path_part(id.to_string())
                             .go_and_push();
                         Msg::ChangePage(Page::DeleteEpic(id))
-                    }))
-                    .build()
-                    .into_node();
+                    })),
+                    ..Default::default()
+                }
+                .into_node();
 
                 div![
                     C!["epicHeader"],
@@ -130,26 +134,31 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
         .iter()
         .filter_map(|id| model.users_by_id.get(id))
         .map(|user| {
-            StyledAvatar::build()
-                .size(24)
-                .name(user.name.as_str())
-                .avatar_url(user.avatar_url.as_deref().unwrap_or_default())
-                .user_index(0)
-                .build()
-                .into_node()
+            StyledAvatar {
+                avatar_url: user.avatar_url.as_deref(),
+                size: 24,
+                name: &user.name,
+                ..StyledAvatar::default()
+            }
+            .into_node()
         })
         .collect();
 
-    let issue_type_icon = StyledIcon::build(issue.issue_type.clone().into())
-        .with_color(issue.issue_type.to_str())
-        .build()
-        .into_node();
+    let issue_type_icon = StyledIcon {
+        icon: issue.issue_type.into(),
+        class_list: issue.issue_type.to_str(),
+        color: Some(issue.issue_type.to_str()),
+        ..Default::default()
+    }
+    .into_node();
 
-    let priority_icon = StyledIcon::build(issue.priority.into())
-        .add_class(issue.priority.to_str())
-        .with_color(issue.priority.to_str())
-        .build()
-        .into_node();
+    let priority_icon = StyledIcon {
+        icon: issue.priority.into(),
+        class_list: issue.priority.to_str(),
+        color: Some(issue.priority.to_str()),
+        ..Default::default()
+    }
+    .into_node();
 
     let issue_id = issue.id;
     let drag_started = drag_ev(Ev::DragStart, move |ev| {

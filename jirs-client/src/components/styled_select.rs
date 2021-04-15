@@ -19,27 +19,27 @@ pub enum StyledSelectChanged {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Variant {
+pub enum SelectVariant {
     Empty,
     Normal,
 }
 
-impl Default for Variant {
+impl Default for SelectVariant {
     fn default() -> Self {
-        Variant::Empty
+        SelectVariant::Empty
     }
 }
 
-impl Variant {
+impl SelectVariant {
     pub fn to_str<'l>(&self) -> &'l str {
         match self {
-            Variant::Empty => "empty",
-            Variant::Normal => "normal",
+            SelectVariant::Empty => "empty",
+            SelectVariant::Normal => "normal",
         }
     }
 }
 
-impl std::fmt::Display for Variant {
+impl std::fmt::Display for SelectVariant {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.to_str())
     }
@@ -114,17 +114,38 @@ pub struct StyledSelect<'l, Options>
 where
     Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
 {
-    id: FieldId,
-    variant: Variant,
-    dropdown_width: Option<usize>,
-    name: Option<&'l str>,
-    valid: bool,
-    is_multi: bool,
-    options: Option<Options>,
-    selected: Vec<StyledSelectChildBuilder<'l>>,
-    text_filter: &'l str,
-    opened: bool,
-    clearable: bool,
+    pub id: FieldId,
+    pub variant: SelectVariant,
+    pub dropdown_width: Option<usize>,
+    pub name: &'l str,
+    pub valid: bool,
+    pub is_multi: bool,
+    pub options: Option<Options>,
+    pub selected: Vec<StyledSelectChildBuilder<'l>>,
+    pub text_filter: &'l str,
+    pub opened: bool,
+    pub clearable: bool,
+}
+
+impl<'l, Options> Default for StyledSelect<'l, Options>
+where
+    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+{
+    fn default() -> Self {
+        Self {
+            id: FieldId::TextFilterBoard,
+            variant: Default::default(),
+            dropdown_width: None,
+            name: "",
+            valid: true,
+            is_multi: false,
+            options: None,
+            selected: vec![],
+            text_filter: "",
+            opened: false,
+            clearable: false,
+        }
+    }
 }
 
 impl<'l, Options> ToNode for StyledSelect<'l, Options>
@@ -133,124 +154,6 @@ where
 {
     fn into_node(self) -> Node<Msg> {
         render(self)
-    }
-}
-
-impl<'l, Options> StyledSelect<'l, Options>
-where
-    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
-{
-    pub fn build() -> StyledSelectBuilder<'l, Options> {
-        StyledSelectBuilder {
-            variant: None,
-            dropdown_width: None,
-            name: None,
-            valid: None,
-            is_multi: None,
-            options: None,
-            selected: None,
-            text_filter: None,
-            opened: None,
-            clearable: false,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct StyledSelectBuilder<'l, Options>
-where
-    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
-{
-    variant: Option<Variant>,
-    dropdown_width: Option<usize>,
-    name: Option<&'l str>,
-    valid: Option<bool>,
-    is_multi: Option<bool>,
-    options: Option<Options>,
-    selected: Option<Vec<StyledSelectChildBuilder<'l>>>,
-    text_filter: Option<&'l str>,
-    opened: Option<bool>,
-    clearable: bool,
-}
-
-impl<'l, Options> StyledSelectBuilder<'l, Options>
-where
-    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
-{
-    pub fn build(self, id: FieldId) -> StyledSelect<'l, Options> {
-        StyledSelect {
-            id,
-            variant: self.variant.unwrap_or_default(),
-            dropdown_width: self.dropdown_width,
-            name: self.name,
-            valid: self.valid.unwrap_or(true),
-            is_multi: self.is_multi.unwrap_or_default(),
-            options: self.options,
-            selected: self.selected.unwrap_or_default(),
-            text_filter: self.text_filter.unwrap_or_default(),
-            opened: self.opened.unwrap_or_default(),
-            clearable: self.clearable,
-        }
-    }
-
-    pub fn state<'state: 'l>(self, state: &'state StyledSelectState) -> Self {
-        self.opened(state.opened)
-            .text_filter(state.text_filter.as_str())
-    }
-
-    pub fn dropdown_width(mut self, dropdown_width: usize) -> Self {
-        self.dropdown_width = Some(dropdown_width);
-        self
-    }
-
-    pub fn name(mut self, name: &'l str) -> Self {
-        self.name = Some(name);
-        self
-    }
-
-    pub fn text_filter(mut self, text_filter: &'l str) -> Self {
-        self.text_filter = Some(text_filter);
-        self
-    }
-
-    pub fn opened(mut self, opened: bool) -> Self {
-        self.opened = Some(opened);
-        self
-    }
-
-    pub fn valid(mut self, valid: bool) -> Self {
-        self.valid = Some(valid);
-        self
-    }
-
-    pub fn options(mut self, options: Options) -> Self {
-        self.options = Some(options);
-        self
-    }
-
-    pub fn selected(mut self, selected: Vec<StyledSelectChildBuilder<'l>>) -> Self {
-        self.selected = Some(selected);
-        self
-    }
-
-    pub fn normal(mut self) -> Self {
-        self.variant = Some(Variant::Normal);
-        self
-    }
-
-    pub fn empty(mut self) -> Self {
-        self.variant = Some(Variant::Empty);
-        self
-    }
-
-    pub fn multi(mut self) -> Self {
-        self.is_multi = Some(true);
-        self
-    }
-
-    pub fn clearable(mut self) -> Self {
-        self.clearable = true;
-        self
     }
 }
 
@@ -286,14 +189,10 @@ where
         })
     };
 
-    let dropdown_style = dropdown_width
-        .map(|n| format!("width: {}px;", n))
-        .unwrap_or_else(|| "width: 100%;".to_string());
-
-    let mut select_class = vec!["styledSelect".to_string(), format!("{}", variant)];
-    if !valid {
-        select_class.push("invalid".to_string());
-    }
+    let dropdown_style = dropdown_width.map_or_else(
+        || "width: 100%;".to_string(),
+        |n| format!("width: {}px;", n),
+    );
 
     let action_icon = if clearable && !selected.is_empty() {
         let on_click = {
@@ -304,16 +203,20 @@ where
                 Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(None))
             })
         };
-        StyledIcon::build(Icon::Close)
-            .add_class("chevronIcon")
-            .on_click(on_click)
-            .build()
-            .into_node()
-    } else if (selected.is_empty() || !is_multi) && variant != Variant::Empty {
-        StyledIcon::build(Icon::ChevronDown)
-            .add_class("chevronIcon")
-            .build()
-            .into_node()
+        StyledIcon {
+            icon: Icon::Close,
+            class_list: "chevronIcon",
+            on_click: Some(on_click),
+            ..Default::default()
+        }
+        .into_node()
+    } else if (selected.is_empty() || !is_multi) && variant != SelectVariant::Empty {
+        StyledIcon {
+            icon: Icon::ChevronDown,
+            class_list: "chevronIcon",
+            ..Default::default()
+        }
+        .into_node()
     } else {
         empty![]
     };
@@ -335,12 +238,7 @@ where
                         )
                     })
                 };
-                div![
-                    attrs![At::Class => "option"],
-                    on_change,
-                    on_handler.clone(),
-                    node
-                ]
+                div![C!["option"], on_change, on_handler.clone(), node]
             })
             .collect()
     } else {
@@ -349,9 +247,9 @@ where
 
     let text_input = if opened {
         seed::input![
+            C!["dropDownInput"],
             attrs![
-                At::Name => name.unwrap_or_default(),
-                At::Class => "dropDownInput",
+                At::Name => name,
                 At::Type => "text"
                 At::Placeholder => "Search"
                 At::AutoFocus => "true",
@@ -364,24 +262,24 @@ where
 
     let option_list = match (opened, children.is_empty()) {
         (false, _) => empty![],
-        (_, true) => seed::div![attrs![At::Class => "noOptions"], "No results"],
-        _ => seed::div![attrs![ At::Class => "options" ], children],
+        (_, true) => seed::div![C!["noOptions"], "No results"],
+        _ => seed::div![C!["options"], children],
     };
 
     let value: Vec<Node<Msg>> = if is_multi {
-        let add_icon = StyledIcon::build(Icon::Plus).build().into_node();
+        let add_icon = StyledIcon::from(Icon::Plus).into_node();
         let mut children: Vec<Node<Msg>> = selected
             .into_iter()
             .map(|m| into_multi_value(m, id.clone()))
             .collect();
 
         if !children.is_empty() {
-            children.push(div![attrs![At::Class => "addMore"], add_icon, "Add more"]);
+            children.push(div![C!["addMore"], add_icon, "Add more"]);
         } else {
-            children.push(div![attrs![At::Class => "placeholder"], "Select"]);
+            children.push(div![C!["placeholder"], "Select"]);
         }
 
-        vec![div![attrs![At::Class => "valueMulti"], children]]
+        vec![div![C!["valueMulti"], children]]
     } else {
         selected
             .into_iter()
@@ -390,13 +288,14 @@ where
     };
 
     seed::div![
-        attrs![At::Class => select_class.join(" "), At::Style => dropdown_style.as_str()],
+        C!["styledSelect", variant.to_str(), IF![!valid => "invalid"]],
+        attrs![At::Style => dropdown_style.as_str()],
         keyboard_ev(Ev::KeyUp, |ev| {
             ev.stop_propagation();
             None as Option<Msg>
         }),
         div![
-            attrs![At::Class => format!("valueContainer {}", variant)],
+            C!["valueContainer", variant.to_str()],
             on_handler,
             value,
             action_icon,
@@ -416,21 +315,25 @@ fn render_value(mut content: Node<Msg>) -> Node<Msg> {
 }
 
 fn into_multi_value(opt: StyledSelectChildBuilder, id: FieldId) -> Node<Msg> {
-    let close_icon = StyledIcon::build(Icon::Close).size(14).build().into_node();
+    let close_icon = StyledIcon {
+        icon: Icon::Close,
+        size: Some(14),
+        ..Default::default()
+    }
+    .into_node();
     let child = opt.build(DisplayType::SelectValue);
     let value = child.value();
 
     let mut opt = child.into_node();
-    opt.add_class("value");
-    opt.add_child(close_icon);
+    opt.add_class("value").add_child(close_icon);
 
     let handler = {
-        let field_id = id.clone();
+        let field_id = id;
         mouse_ev(Ev::Click, move |ev| {
             ev.stop_propagation();
             Msg::StyledSelectChanged(field_id, StyledSelectChanged::RemoveMulti(value))
         })
     };
 
-    div![attrs![At::Class => "valueMultiItem"], opt, handler]
+    div![C!["valueMultiItem"], opt, handler]
 }

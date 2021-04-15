@@ -13,76 +13,89 @@ use {
     seed::{prelude::*, *},
 };
 
-pub fn view(model: &Model) -> Node<Msg> {
-    if model.user.is_none() {
-        return empty![];
-    }
+use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_input::InputVariant;
+use crate::components::styled_select::SelectVariant;
 
+pub fn view(model: &Model) -> Node<Msg> {
     let page = match &model.page_content {
         PageContent::Users(page) => page,
         _ => return empty![],
     };
 
-    let name = StyledInput::build()
-        .valid(!page.name_touched || page.name.len() >= 3)
-        .value(page.name.as_str())
-        .build(FieldId::Users(UsersFieldId::Username))
-        .into_node();
-    let name_field = StyledField::build()
-        .input(name)
-        .label("Name")
-        .build()
-        .into_node();
+    let name = StyledInput {
+        valid: !page.name_touched || page.name.len() >= 3,
+        value: page.name.as_str(),
+        variant: InputVariant::Normal,
+        id: Some(FieldId::Users(UsersFieldId::Username)),
+        ..Default::default()
+    }
+    .into_node();
+    let name_field = StyledField {
+        label: "Name",
+        input: name,
+        ..Default::default()
+    }
+    .into_node();
 
-    let email = StyledInput::build()
-        .valid(!page.email_touched || is_email(page.email.as_str()))
-        .value(page.email.as_str())
-        .build(FieldId::Users(UsersFieldId::Email))
-        .into_node();
-    let email_field = StyledField::build()
-        .input(email)
-        .label("E-Mail")
-        .build()
-        .into_node();
+    let email = StyledInput {
+        id: Some(FieldId::Users(UsersFieldId::Email)),
+        valid: !page.email_touched || is_email(page.email.as_str()),
+        value: page.email.as_str(),
+        variant: InputVariant::Normal,
+        ..Default::default()
+    }
+    .into_node();
+    let email_field = StyledField {
+        input: email,
+        label: "E-Mail",
+        ..Default::default()
+    }
+    .into_node();
 
-    let user_role = StyledSelect::build()
-        .name("user_role")
-        .valid(true)
-        .normal()
-        .state(&page.user_role_state)
-        .selected(vec![page.user_role.into_child()])
-        .options(
+    let user_role = StyledSelect {
+        id: FieldId::Users(UsersFieldId::UserRole),
+        name: "user_role",
+        valid: true,
+        variant: SelectVariant::Normal,
+        text_filter: page.user_role_state.text_filter.as_str(),
+        opened: page.user_role_state.opened,
+        selected: vec![page.user_role.into_child()],
+        options: Some(
             UserRole::default()
                 .into_iter()
                 .map(|role| role.into_child()),
-        )
-        .build(FieldId::Users(UsersFieldId::UserRole))
-        .into_node();
+        ),
+        ..Default::default()
+    }
+    .into_node();
     let user_role_field = StyledField::build()
         .input(user_role)
         .label("Role")
         .build()
         .into_node();
 
-    let submit = StyledButton::build()
-        .add_class("submitUserInvite")
-        .active(page.form_state != InvitationFormState::Sent)
-        .primary()
-        .text("Invite user")
-        .build()
-        .into_node();
+    let submit = StyledButton {
+        text: Some("Invite user"),
+        variant: ButtonVariant::Primary,
+        class_list: "submitUserInvite",
+        active: page.form_state != InvitationFormState::Sent,
+        ..Default::default()
+    }
+    .into_node();
     let submit_supplement = match page.form_state {
-        InvitationFormState::Succeed => StyledButton::build()
-            .add_class("resetUserInvite")
-            .active(true)
-            .empty()
-            .set_type_reset()
-            .on_click(mouse_ev(Ev::Click, |_| {
+        InvitationFormState::Succeed => StyledButton {
+            variant: ButtonVariant::Empty,
+            class_list: "resetUserInvite",
+            active: true,
+            on_click: Some(mouse_ev(Ev::Click, |_| {
                 Msg::PageChanged(PageChanged::Users(UsersPageChange::ResetForm))
-            }))
-            .text("Reset")
-            .build()
-            .into_node(),
+            })),
+            text: Some("Reset"),
+            button_type: "reset",
+            ..Default::default()
+        }
+        .into_node(),
         InvitationFormState::Failed => div![C!["error"], "There was an error"],
         _ => empty![],
     };
@@ -109,13 +122,14 @@ pub fn view(model: &Model) -> Node<Msg> {
         .iter()
         .map(|user| {
             let user_id = user.id;
-            let remove = StyledButton::build()
-                .text("Remove")
-                .on_click(mouse_ev(Ev::Click, move |_| {
+            let remove = StyledButton {
+                text: Some("Remove"),
+                on_click: Some(mouse_ev(Ev::Click, move |_| {
                     Msg::InvitedUserRemove(user_id)
-                }))
-                .build()
-                .into_node();
+                })),
+                ..Default::default()
+            }
+            .into_node();
             let role = page
                 .invitations
                 .iter()
@@ -144,15 +158,21 @@ pub fn view(model: &Model) -> Node<Msg> {
         .iter()
         .map(|invitation| {
             let id = invitation.id;
-            let revoke = StyledButton::build()
-                .text("Revoke")
-                .disabled(invitation.state == InvitationState::Revoked)
-                .on_click(mouse_ev(Ev::Click, move |_| Msg::InviteRevokeRequest(id)))
-                .build()
-                .into_node();
+            let revoke = StyledButton {
+                disabled: invitation.state == InvitationState::Revoked,
+                text: Some("Revoke"),
+                on_click: Some(mouse_ev(Ev::Click, move |_| Msg::InviteRevokeRequest(id))),
+                ..Default::default()
+            }
+            .into_node();
+            // let revoke = StyledButton::build()
+            //     .text("Revoke")
+            //     .disabled(invitation.state == InvitationState::Revoked)
+            //     .on_click(mouse_ev(Ev::Click, move |_| Msg::InviteRevokeRequest(id)))
+            //     .build()
+            //     .into_node();
             li![
-                C!["invitation"],
-                attrs![At::Class => format!("{}", invitation.state)],
+                C!["invitation", format!("{}", invitation.state)],
                 span![invitation.name.as_str()],
                 span![invitation.email.as_str()],
                 span![format!("{}", invitation.state)],

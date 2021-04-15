@@ -12,6 +12,8 @@ use {
     std::collections::HashMap,
 };
 
+use crate::components::styled_icon::Icon;
+
 const SVG_MARGIN_X: u32 = 10;
 const SVG_DRAWABLE_HEIGHT: u32 = 300;
 const SVG_HEIGHT: u32 = SVG_DRAWABLE_HEIGHT + 30;
@@ -200,27 +202,26 @@ fn issue_list(page: &ReportsPage, project_name: &str, this_month_updated: &[&Iss
             } = issue;
             let day = date.format("%Y-%m-%d").to_string();
 
-            let type_icon = StyledIcon::build(issue_type.clone().into())
-                .build()
+            let type_icon = StyledIcon::from(Icon::from(issue_type.clone()))
                 .into_node();
-            let priority_icon = StyledIcon::build(priority.clone().into())
-                .build()
+            let priority_icon = StyledIcon::from(Icon::from(priority.clone()))
                 .into_node();
             let desc = Node::from_html(None,
-                description
-                    .as_deref()
-                    .unwrap_or_default()
+                                       description
+                                           .as_deref()
+                                           .unwrap_or_default(),
             );
-            let link = StyledLink::build()
-                .with_icon()
-                .text(format!("{}-{}", project_name, id).as_str())
-                .href(format!("/issues/{}", id).as_str())
-                .build()
-                .into_node();
+            let link = StyledLink {
+                children: vec![
+                    Icon::Link.into_node(),
+                    span![format!("{}-{}", project_name, id).as_str()]
+                ],
+                class_list: "withIcon",
+                href: format!("/issues/{}", id).as_str(),
+            }.into_node();
 
             li![
-                C!["issue"],
-                C![selection_state.to_str()],
+                C!["issue", selection_state.to_str()],
                 div![C!["number"], link],
                 div![C!["type"], type_icon],
                 IF!( selection_state != SelectionState::NotSelected => div![C!["priority"], priority_icon]),

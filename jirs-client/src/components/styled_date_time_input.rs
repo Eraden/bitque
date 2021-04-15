@@ -12,6 +12,9 @@ use {
     std::ops::RangeInclusive,
 };
 
+use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_tooltip::TooltipVariant;
+
 #[derive(Debug)]
 pub enum StyledDateTimeChanged {
     MonthChanged(Option<NaiveDateTime>),
@@ -175,18 +178,19 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
 
             let date = last_day_of_prev_month
                 .with_day0(timestamp.day0())
-                .unwrap_or_else(|| last_day_of_prev_month);
+                .unwrap_or(last_day_of_prev_month);
             Msg::StyledDateTimeInputChanged(
                 field_id,
                 StyledDateTimeChanged::MonthChanged(Some(date)),
             )
         });
-        StyledButton::build()
-            .on_click(on_click_left)
-            .icon(Icon::DoubleLeft)
-            .empty()
-            .build()
-            .into_node()
+        StyledButton {
+            on_click: Some(on_click_left),
+            icon: Some(Icon::DoubleLeft.into_node()),
+            variant: ButtonVariant::Empty,
+            ..Default::default()
+        }
+        .into_node()
     };
     let right_action = {
         let field_id = values.field_id.clone();
@@ -201,42 +205,46 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
                 - Duration::days(1);
             let date = first_day_of_next_month
                 .with_day0(timestamp.day0())
-                .unwrap_or_else(|| last_day_of_next_month);
+                .unwrap_or(last_day_of_next_month);
             Msg::StyledDateTimeInputChanged(
                 field_id,
                 StyledDateTimeChanged::MonthChanged(Some(date)),
             )
         });
-        StyledButton::build()
-            .on_click(on_click_right)
-            .icon(Icon::DoubleRight)
-            .empty()
-            .build()
-            .into_node()
+        StyledButton {
+            on_click: Some(on_click_right),
+            icon: Some(Icon::DoubleRight.into_node()),
+            variant: ButtonVariant::Empty,
+            ..Default::default()
+        }
+        .into_node()
     };
 
     let header_text = current.format("%B %Y").to_string();
 
-    let tooltip = StyledTooltip::build()
-        .visible(values.popup_visible)
-        .date_time_picker()
-        .add_child(h2![left_action, span![header_text], right_action])
-        .add_child(div![
-            C!["calendar"],
+    let tooltip = StyledTooltip {
+        visible: values.popup_visible,
+        class_list: "",
+        children: vec![
+            h2![left_action, span![header_text], right_action],
             div![
-                C!["weekHeader week"],
-                div![C!["day"], format!("{}", Weekday::Mon).as_str()],
-                div![C!["day"], format!("{}", Weekday::Tue).as_str()],
-                div![C!["day"], format!("{}", Weekday::Wed).as_str()],
-                div![C!["day"], format!("{}", Weekday::Thu).as_str()],
-                div![C!["day"], format!("{}", Weekday::Fri).as_str()],
-                div![C!["day"], format!("{}", Weekday::Sat).as_str()],
-                div![C!["day"], format!("{}", Weekday::Sun).as_str()],
+                C!["calendar"],
+                div![
+                    C!["weekHeader week"],
+                    div![C!["day"], format!("{}", Weekday::Mon).as_str()],
+                    div![C!["day"], format!("{}", Weekday::Tue).as_str()],
+                    div![C!["day"], format!("{}", Weekday::Wed).as_str()],
+                    div![C!["day"], format!("{}", Weekday::Thu).as_str()],
+                    div![C!["day"], format!("{}", Weekday::Fri).as_str()],
+                    div![C!["day"], format!("{}", Weekday::Sat).as_str()],
+                    div![C!["day"], format!("{}", Weekday::Sun).as_str()],
+                ],
+                weeks
             ],
-            weeks
-        ])
-        .build()
-        .into_node();
+        ],
+        variant: TooltipVariant::DateTimeBuilder,
+    }
+    .into_node();
 
     let input = {
         let field_id = values.field_id.clone();
@@ -255,12 +263,13 @@ fn render(values: StyledDateTimeInput) -> Node<Msg> {
             .date()
             .format("%d/%m/%Y")
             .to_string();
-        StyledButton::build()
-            .on_click(on_focus)
-            .text(text.as_str())
-            .empty()
-            .build()
-            .into_node()
+        StyledButton {
+            on_click: Some(on_focus),
+            text: Some(text.as_str()),
+            variant: ButtonVariant::Empty,
+            ..Default::default()
+        }
+        .into_node()
     };
 
     div![

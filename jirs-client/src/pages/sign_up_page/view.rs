@@ -8,6 +8,7 @@ use {
             styled_input::StyledInput,
             styled_link::StyledLink,
         },
+        match_page,
         model::{self, PageContent},
         shared::{outer_layout, ToNode},
         validations::is_email,
@@ -17,64 +18,75 @@ use {
     seed::{prelude::*, *},
 };
 
+use crate::components::styled_button::ButtonVariant;
+
 pub fn view(model: &model::Model) -> Node<Msg> {
-    let page = match &model.page_content {
-        PageContent::SignUp(page) => page,
-        _ => return empty![],
-    };
+    let page = match_page!(model, SignUp; Empty);
 
-    let username = StyledInput::build()
-        .value(page.username.as_str())
-        .valid(!page.username_touched || page.username.len() > 1)
-        .build(FieldId::SignUp(SignUpFieldId::Username))
-        .into_node();
-    let username_field = StyledField::build()
-        .label("Username")
-        .input(username)
-        .build()
-        .into_node();
-
-    let email = StyledInput::build()
-        .value(page.email.as_str())
-        .valid(!page.email_touched || is_email(page.email.as_str()))
-        .build(FieldId::SignUp(SignUpFieldId::Email))
-        .into_node();
-    let email_field = StyledField::build()
-        .label("E-Mail")
-        .input(email)
-        .build()
-        .into_node();
-
-    let submit = if page.sign_up_success {
-        StyledButton::build()
-            .success()
-            .text("✓ Please check your mail")
-    } else {
-        StyledButton::build()
-            .primary()
-            .text("Register")
-            .on_click(mouse_ev(Ev::Click, |_| Msg::SignUpRequest))
+    let username = StyledInput {
+        value: page.username.as_str(),
+        valid: !page.username_touched || page.username.len() > 1,
+        id: Some(FieldId::SignUp(SignUpFieldId::Username)),
+        ..Default::default()
     }
-    .build()
+    .into_node();
+    let username_field = StyledField {
+        label: "Username",
+        input: username,
+        ..Default::default()
+    }
     .into_node();
 
-    let sign_in_link = StyledLink::build()
-        .text("Sign In")
-        .href("/login")
-        .add_class("signInLink")
-        .build()
-        .into_node();
+    let email = StyledInput {
+        value: page.email.as_str(),
+        valid: !page.email_touched || is_email(page.email.as_str()),
+        id: Some(FieldId::SignUp(SignUpFieldId::Email)),
+        ..Default::default()
+    }
+    .into_node();
+    let email_field = StyledField {
+        label: "E-Mail",
+        input: email,
+        ..Default::default()
+    }
+    .into_node();
 
-    let submit_field = StyledField::build()
-        .input(div![C!["twoRow"], submit, sign_in_link,])
-        .build()
-        .into_node();
+    let submit = if page.sign_up_success {
+        StyledButton {
+            variant: ButtonVariant::Success,
+            text: Some("✓ Please check your mail"),
+            ..Default::default()
+        }
+    } else {
+        StyledButton {
+            variant: ButtonVariant::Primary,
+            text: Some("Register"),
+            on_click: Some(mouse_ev(Ev::Click, |_| Msg::SignUpRequest)),
+            ..Default::default()
+        }
+    }
+    .into_node();
 
-    let help_icon = StyledIcon::build(Icon::Help)
-        .add_class("noPasswordHelp")
-        .size(22)
-        .build()
-        .into_node();
+    let sign_in_link = StyledLink {
+        children: vec![span!["Sign In"]],
+        class_list: "signInLink",
+        href: "/login",
+    }
+    .into_node();
+
+    let submit_field = StyledField {
+        input: div![C!["twoRow"], submit, sign_in_link],
+        ..Default::default()
+    }
+    .into_node();
+
+    let help_icon = StyledIcon {
+        icon: Icon::Help,
+        class_list: "noPasswordHelp",
+        size: Some(22),
+        ..Default::default()
+    }
+    .into_node();
 
     let no_pass_section = div![
         C!["noPasswordSection"],

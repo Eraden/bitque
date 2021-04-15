@@ -14,29 +14,33 @@ pub fn project_board_filters(model: &Model) -> Node<Msg> {
         _ => return empty![],
     };
 
-    let search_input = StyledInput::build()
-        .icon(Icon::Search)
-        .valid(true)
-        .value(project_page.text_filter.as_str())
-        .build(FieldId::TextFilterBoard)
-        .into_node();
+    let search_input = StyledInput {
+        value: project_page.text_filter.as_str(),
+        valid: true,
+        id: Some(FieldId::TextFilterBoard),
+        icon: Some(Icon::Search),
+        ..Default::default()
+    }
+    .into_node();
 
-    let only_my = StyledButton::build()
-        .empty()
-        .active(project_page.only_my_filter)
-        .text("Only My Issues")
-        .add_class("filterChild")
-        .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy))
-        .build()
-        .into_node();
+    let only_my = StyledButton {
+        variant: ButtonVariant::Empty,
+        active: project_page.only_my_filter,
+        text: Some("Only My Issues"),
+        class_list: "filterChild",
+        on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy)),
+        ..Default::default()
+    }
+    .into_node();
 
-    let recently_updated = StyledButton::build()
-        .empty()
-        .text("Recently Updated")
-        .add_class("filterChild")
-        .on_click(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated))
-        .build()
-        .into_node();
+    let recently_updated = StyledButton {
+        variant: ButtonVariant::Empty,
+        text: Some("Recently Updated"),
+        class_list: "filterChild",
+        on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated)),
+        ..Default::default()
+    }
+    .into_node();
 
     let clear_all = if project_page.only_my_filter
         || project_page.recently_updated_filter
@@ -75,17 +79,18 @@ pub fn avatars_filters(model: &Model) -> Node<Msg> {
         .map(|(idx, user)| {
             let user_id = user.id;
             let active = active_avatar_filters.contains(&user_id);
-            let styled_avatar = StyledAvatar::build()
-                .avatar_url(user.avatar_url.as_deref().unwrap_or_default())
-                .on_click(mouse_ev(Ev::Click, move |_| {
+            let styled_avatar = StyledAvatar {
+                avatar_url: user.avatar_url.as_deref(),
+                name: &user.name,
+                on_click: Some(mouse_ev(Ev::Click, move |_| {
                     Msg::ProjectAvatarFilterChanged(user_id, active)
-                }))
-                .name(user.name.as_str())
-                .user_index(idx)
-                .build()
-                .into_node();
+                })),
+                user_index: idx,
+                ..StyledAvatar::default()
+            }
+            .into_node();
             div![
-                if active { Some(C!["isActive"]) } else { None },
+                IF![active => C!["isActive"]],
                 C!["avatarIsActiveBorder"],
                 styled_avatar
             ]
