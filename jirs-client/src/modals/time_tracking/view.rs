@@ -1,22 +1,17 @@
-use {
-    crate::{
-        components::{
-            styled_button::StyledButton,
-            styled_field::StyledField,
-            styled_input::{StyledInput, StyledInputState},
-            styled_modal::StyledModal,
-            styled_select::{StyledSelect, StyledSelectState},
-        },
-        model::Model,
-        shared::{
-            tracking_widget::{fibonacci_values, tracking_widget},
-            ToChild, ToNode,
-        },
-        EditIssueModalSection, FieldId, Msg,
-    },
-    jirs_data::{IssueFieldId, IssueId, TimeTracking},
-    seed::{prelude::*, *},
-};
+use jirs_data::{IssueFieldId, IssueId, TimeTracking};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_button::StyledButton;
+use crate::components::styled_field::StyledField;
+use crate::components::styled_input::{StyledInput, StyledInputState};
+use crate::components::styled_modal::StyledModal;
+use crate::components::styled_select::{StyledSelect, StyledSelectState};
+use crate::components::styled_select_child::StyledSelectChild;
+use crate::model::Model;
+use crate::shared::tracking_widget::{fibonacci_value_name, fibonacci_values, tracking_widget};
+use crate::shared::ToNode;
+use crate::{EditIssueModalSection, FieldId, Msg};
 
 pub fn value_for_time_tracking(v: &Option<i32>, time_tracking_type: &TimeTracking) -> String {
     match (time_tracking_type, v.as_ref()) {
@@ -85,7 +80,7 @@ pub fn view(model: &Model, modal: &super::Model) -> Node<Msg> {
     .into_node()
 }
 
-#[inline]
+#[inline(always)]
 pub fn time_tracking_field(
     time_tracking_type: TimeTracking,
     field_id: FieldId,
@@ -101,12 +96,18 @@ pub fn time_tracking_field(
             selected: select_state
                 .values
                 .iter()
-                .map(|n| (*n).to_child())
+                .copied()
+                .map(fibonacci_value_select_option)
                 .collect(),
 
             text_filter: select_state.text_filter.as_str(),
             opened: select_state.opened,
-            options: Some(fibonacci_values.iter().map(|v| v.to_child())),
+            options: Some(
+                fibonacci_values
+                    .iter()
+                    .copied()
+                    .map(fibonacci_value_select_option),
+            ),
             ..Default::default()
         }
         .into_node(),
@@ -124,4 +125,15 @@ pub fn time_tracking_field(
         ..Default::default()
     }
     .into_node()
+}
+
+fn fibonacci_value_select_option<'l>(value: u32) -> StyledSelectChild<'l> {
+    let name = fibonacci_value_name(value);
+
+    StyledSelectChild {
+        class_list: name,
+        text: Some(name),
+        value,
+        ..Default::default()
+    }
 }

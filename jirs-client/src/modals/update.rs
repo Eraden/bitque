@@ -1,14 +1,11 @@
-use jirs_data::{CommentId, IssueStatusId};
-use {
-    crate::{
-        model::{ModalType, Model, Page},
-        shared::go_to_board,
-        ws::send_ws_msg,
-        FieldChange, FieldId, Msg, OperationKind, ResourceKind,
-    },
-    jirs_data::{EpicId, IssueId, TimeTracking, WsMsg},
-    seed::{prelude::*, *},
-};
+use jirs_data::{CommentId, EpicId, IssueId, IssueStatusId, TimeTracking, WsMsg};
+use seed::prelude::*;
+use seed::*;
+
+use crate::model::{ModalType, Model, Page};
+use crate::shared::go_to_board;
+use crate::ws::send_ws_msg;
+use crate::{FieldChange, FieldId, Msg, OperationKind, ResourceKind};
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {

@@ -1,13 +1,10 @@
-use seed::prelude::*;
-
 pub use init_load_sets::*;
 use jirs_data::*;
+use seed::prelude::*;
 
-use crate::{
-    model::*,
-    shared::{go_to_board, write_auth_token},
-    Msg, OperationKind, ResourceKind, WebSocketChanged,
-};
+use crate::model::*;
+use crate::shared::{go_to_board, write_auth_token};
+use crate::{Msg, OperationKind, ResourceKind, WebSocketChanged};
 
 mod init_load_sets;
 
@@ -51,7 +48,8 @@ pub fn send_ws_msg(msg: WsMsg, ws: Option<&WebSocket>, orders: &mut impl Orders<
 
 pub fn open_socket(model: &mut Model, orders: &mut impl Orders<Msg>) {
     use seed::browser::web_socket::State;
-    use seed::{prelude::*, *};
+    use seed::prelude::*;
+    use seed::*;
     log!(model.ws.as_ref().map(|ws| ws.state()));
 
     match model.ws.as_ref() {

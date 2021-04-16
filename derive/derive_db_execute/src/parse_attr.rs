@@ -1,5 +1,7 @@
-use proc_macro::{token_stream::IntoIter, TokenTree};
 use std::iter::Peekable;
+
+use proc_macro::token_stream::IntoIter;
+use proc_macro::TokenTree;
 
 #[derive(Default, Debug)]
 pub struct Attributes {

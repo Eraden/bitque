@@ -1,14 +1,12 @@
-use {
-    crate::{
-        components::styled_icon::{Icon, StyledIcon},
-        model::{Model, Page},
-        shared::{divider, ToNode},
-        ws::enqueue_ws_msg,
-        Msg, OperationKind, ResourceKind,
-    },
-    jirs_data::{UserRole, WsMsg},
-    seed::{prelude::*, *},
-};
+use jirs_data::{UserRole, WsMsg};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::model::{Model, Page};
+use crate::shared::{divider, ToNode};
+use crate::ws::enqueue_ws_msg;
+use crate::{Msg, OperationKind, ResourceKind};
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     if let Msg::ResourceChanged(ResourceKind::Auth, OperationKind::SingleLoaded, _) = msg {

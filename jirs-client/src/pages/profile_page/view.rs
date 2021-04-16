@@ -1,23 +1,20 @@
-use {
-    crate::{
-        components::{
-            styled_button::StyledButton, styled_field::StyledField, styled_form::StyledForm,
-            styled_image_input::StyledImageInput, styled_input::StyledInput,
-            styled_select::StyledSelect,
-        },
-        model::{Model, PageContent},
-        pages::profile_page::model::ProfilePage,
-        shared::{inner_layout, ToChild, ToNode},
-        FieldId, Msg, PageChanged, ProfilePageChange,
-    },
-    jirs_data::*,
-    seed::{prelude::*, *},
-    std::collections::HashMap,
-};
+use std::collections::HashMap;
 
-use crate::components::styled_button::ButtonVariant;
-use crate::components::styled_input::InputVariant;
-use crate::components::styled_select::SelectVariant;
+use jirs_data::*;
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_field::StyledField;
+use crate::components::styled_form::StyledForm;
+use crate::components::styled_image_input::StyledImageInput;
+use crate::components::styled_input::{InputVariant, StyledInput};
+use crate::components::styled_select::{SelectVariant, StyledSelect};
+use crate::components::styled_select_child::StyledSelectChild;
+use crate::model::{Model, PageContent};
+use crate::pages::profile_page::model::ProfilePage;
+use crate::shared::{inner_layout, ToNode};
+use crate::{FieldId, Msg, PageChanged, ProfilePageChange};
 
 pub fn view(model: &Model) -> Node<Msg> {
     let page = match &model.page_content {
@@ -74,7 +71,11 @@ pub fn view(model: &Model) -> Node<Msg> {
         ..Default::default()
     }
     .into_node();
-    let submit_field = StyledField::build().input(submit).build().into_node();
+    let submit_field = StyledField {
+        input: submit,
+        ..Default::default()
+    }
+    .into_node();
 
     let content = StyledForm::build()
         .heading("Profile")
@@ -118,13 +119,19 @@ fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
             text_filter: page.current_project.text_filter.as_str(),
             variant: SelectVariant::Normal,
             options: Some(model.projects.iter().filter_map(|project| {
-                joined_projects.get(&project.id).map(|_| project.to_child())
+                joined_projects
+                    .get(&project.id)
+                    .map(|_| project_select_option(project))
             })),
             selected: page
                 .current_project
                 .values
                 .iter()
-                .filter_map(|id| project_by_id.get(&((*id) as i32)).map(|p| p.to_child()))
+                .filter_map(|id| {
+                    project_by_id
+                        .remove(&((*id) as i32))
+                        .map(project_select_option)
+                })
                 .collect(),
             ..Default::default()
         }
@@ -136,4 +143,12 @@ fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
         ..Default::default()
     }
     .into_node()
+}
+
+fn project_select_option<'l>(project: &'l Project) -> StyledSelectChild<'l> {
+    StyledSelectChild {
+        text: Some(project.name.as_str()),
+        value: project.id as u32,
+        ..Default::default()
+    }
 }

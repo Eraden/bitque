@@ -1,8 +1,8 @@
-use {
-    crate::{model::Model, Msg, OperationKind, ResourceKind},
-    jirs_data::WsMsg,
-    seed::prelude::*,
-};
+use jirs_data::WsMsg;
+use seed::prelude::*;
+
+use crate::model::Model;
+use crate::{Msg, OperationKind, ResourceKind};
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     let _modal = match &mut model.modals_mut().delete_issue_status_modal {

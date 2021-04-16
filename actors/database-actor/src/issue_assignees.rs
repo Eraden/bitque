@@ -1,8 +1,8 @@
-use {
-    crate::{db_create, db_delete, db_load, db_load_field},
-    diesel::{expression::dsl::not, prelude::*},
-    jirs_data::{IssueAssignee, IssueId, UserId},
-};
+use diesel::expression::dsl::not;
+use diesel::prelude::*;
+use jirs_data::{IssueAssignee, IssueId, UserId};
+
+use crate::{db_create, db_delete, db_load, db_load_field};
 
 db_create! {
     AsignMultiple,

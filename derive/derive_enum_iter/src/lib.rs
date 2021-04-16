@@ -1,9 +1,9 @@
 extern crate proc_macro;
 
-use {
-    proc_macro::{token_stream::IntoIter, TokenStream, TokenTree},
-    std::iter::Peekable,
-};
+use std::iter::Peekable;
+
+use proc_macro::token_stream::IntoIter;
+use proc_macro::{TokenStream, TokenTree};
 
 fn skip_meta(mut it: Peekable<IntoIter>) -> Peekable<IntoIter> {
     while let Some(token) = it.peek() {

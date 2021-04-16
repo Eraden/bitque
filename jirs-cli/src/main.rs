@@ -1,22 +1,18 @@
-use {
-    std::{
-        error::Error,
-        io,
-        sync::{
-            atomic::{AtomicBool, Ordering},
-            mpsc, Arc,
-        },
-        time::Duration,
-    },
-    termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen},
-    tui::{
-        backend::TermionBackend,
-        layout::{Constraint, Direction, Layout},
-        style::{Color, Style},
-        widgets::{Block, Borders, Tabs},
-        Terminal,
-    },
-};
+use std::error::Error;
+use std::io;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{mpsc, Arc};
+use std::time::Duration;
+
+use termion::event::Key;
+use termion::input::MouseTerminal;
+use termion::raw::IntoRawMode;
+use termion::screen::AlternateScreen;
+use tui::backend::TermionBackend;
+use tui::layout::{Constraint, Direction, Layout};
+use tui::style::{Color, Style};
+use tui::widgets::{Block, Borders, Tabs};
+use tui::Terminal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Config {
@@ -68,8 +64,8 @@ impl Events {
         //                     eprintln!("{}", err);
         //                     return;
         //                 }
-        //                 if !ignore_exit_key.load(Ordering::Relaxed) && key == config.exit_key {
-        //                     return;
+        //                 if !ignore_exit_key.load(Ordering::Relaxed) && key ==
+        // config.exit_key {                     return;
         //                 }
         //             }
         //         }
@@ -84,8 +80,8 @@ impl Events {
         Events {
             rx,
             ignore_exit_key,
-            // input_handle,
-            // tick_handle,
+            /* input_handle,
+             * tick_handle, */
         }
     }
 

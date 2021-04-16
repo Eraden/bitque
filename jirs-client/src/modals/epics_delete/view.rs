@@ -1,13 +1,13 @@
-use {
-    crate::{
-        components::{styled_button::*, styled_confirm_modal::*, styled_icon::*, styled_modal::*},
-        modals::epics_delete::Model,
-        model,
-        shared::ToNode,
-        Msg,
-    },
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_button::*;
+use crate::components::styled_confirm_modal::*;
+use crate::components::styled_icon::*;
+use crate::components::styled_modal::*;
+use crate::modals::epics_delete::Model;
+use crate::shared::ToNode;
+use crate::{model, Msg};
 
 pub fn view(model: &model::Model, modal: &Model) -> Node<Msg> {
     if modal.related_issues.is_empty() {

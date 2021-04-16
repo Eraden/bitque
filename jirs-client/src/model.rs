@@ -1,20 +1,21 @@
-use {
-    crate::{
-        components::styled_select::StyledSelectState,
-        pages::{
-            invite_page::InvitePage, profile_page::model::ProfilePage,
-            project_page::model::ProjectPage, project_settings_page::ProjectSettingsPage,
-            reports_page::model::ReportsPage, sign_in_page::model::SignInPage,
-            sign_up_page::model::SignUpPage, users_page::model::UsersPage,
-        },
-        Msg,
-    },
-    jirs_data::*,
-    seed::{app::Orders, browser::web_socket::WebSocket},
-    serde::{Deserialize, Serialize},
-    std::collections::hash_map::HashMap,
-    uuid::Uuid,
-};
+use std::collections::hash_map::HashMap;
+
+use jirs_data::*;
+use seed::app::Orders;
+use seed::browser::web_socket::WebSocket;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+use crate::components::styled_select::StyledSelectState;
+use crate::pages::invite_page::InvitePage;
+use crate::pages::profile_page::model::ProfilePage;
+use crate::pages::project_page::model::ProjectPage;
+use crate::pages::project_settings_page::ProjectSettingsPage;
+use crate::pages::reports_page::model::ReportsPage;
+use crate::pages::sign_in_page::model::SignInPage;
+use crate::pages::sign_up_page::model::SignUpPage;
+use crate::pages::users_page::model::UsersPage;
+use crate::Msg;
 
 pub trait IssueModal {
     fn epic_id_value(&self) -> Option<u32>;

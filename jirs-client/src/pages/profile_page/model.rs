@@ -1,13 +1,9 @@
-use {
-    crate::{
-        components::{
-            styled_image_input::StyledImageInputState, styled_input::StyledInputState,
-            styled_select::StyledSelectState,
-        },
-        FieldId,
-    },
-    jirs_data::{ProjectId, User, UsersFieldId},
-};
+use jirs_data::{ProjectId, User, UsersFieldId};
+
+use crate::components::styled_image_input::StyledImageInputState;
+use crate::components::styled_input::StyledInputState;
+use crate::components::styled_select::StyledSelectState;
+use crate::FieldId;
 
 #[derive(Debug)]
 pub struct ProfilePage {

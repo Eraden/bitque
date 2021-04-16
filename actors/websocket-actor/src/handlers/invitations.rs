@@ -1,13 +1,14 @@
-use {
-    crate::{
-        db_or_debug_and_return, mail_or_debug_and_return, server::InnerMsg, WebSocketActor,
-        WsHandler, WsMessageSender, WsResult,
-    },
-    database_actor::{invitations, messages::CreateMessageReceiver},
-    futures::executor::block_on,
-    jirs_data::{
-        EmailString, InvitationId, InvitationToken, MessageType, UserRole, UsernameString, WsMsg,
-    },
+use database_actor::invitations;
+use database_actor::messages::CreateMessageReceiver;
+use futures::executor::block_on;
+use jirs_data::{
+    EmailString, InvitationId, InvitationToken, MessageType, UserRole, UsernameString, WsMsg,
+};
+
+use crate::server::InnerMsg;
+use crate::{
+    db_or_debug_and_return, mail_or_debug_and_return, WebSocketActor, WsHandler, WsMessageSender,
+    WsResult,
 };
 
 pub struct ListInvitation;

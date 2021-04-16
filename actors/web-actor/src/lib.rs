@@ -1,14 +1,15 @@
 #[macro_use]
 extern crate log;
 
+use actix::Addr;
+use actix_web::web::Data;
+use actix_web::{HttpRequest, HttpResponse};
+use database_actor::authorize_user::AuthorizeUser;
+use database_actor::DbExecutor;
 pub use errors::*;
-use {
-    crate::middleware::authorize::token_from_headers,
-    actix::Addr,
-    actix_web::{web::Data, HttpRequest, HttpResponse},
-    database_actor::{authorize_user::AuthorizeUser, DbExecutor},
-    jirs_data::User,
-};
+use jirs_data::User;
+
+use crate::middleware::authorize::token_from_headers;
 
 pub mod avatar;
 pub mod errors;

@@ -1,7 +1,8 @@
-use {
-    crate::{shared::ToNode, Msg},
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::shared::ToNode;
+use crate::Msg;
 
 #[derive(Debug, Copy, Clone)]
 pub enum TooltipVariant {

@@ -1,13 +1,10 @@
-use {
-    crate::{
-        components::styled_select::StyledSelectChanged,
-        model::{IssueModal, Model},
-        ws::send_ws_msg,
-        EditIssueModalSection, FieldChange, FieldId, Msg, OperationKind, ResourceKind,
-    },
-    jirs_data::*,
-    seed::prelude::*,
-};
+use jirs_data::*;
+use seed::prelude::*;
+
+use crate::components::styled_select::StyledSelectChanged;
+use crate::model::{IssueModal, Model};
+use crate::ws::send_ws_msg;
+use crate::{EditIssueModalSection, FieldChange, FieldId, Msg, OperationKind, ResourceKind};
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     let modal = match &mut model.modals.edit_issue {
@@ -303,7 +300,6 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         //
         // comments
-        //
         Msg::StrInputChanged(
             FieldId::EditIssueModal(EditIssueModalSection::Comment(CommentFieldId::Body)),
             text,

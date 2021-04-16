@@ -1,16 +1,13 @@
-use {
-    crate::{
-        db_or_debug_and_return, mail_or_debug_and_return, WebSocketActor, WsHandler, WsResult,
-    },
-    actix::AsyncContext,
-    database_actor::{
-        authorize_user::AuthorizeUser,
-        tokens::{CreateBindToken, FindBindToken},
-        users::LookupUser,
-    },
-    futures::executor::block_on,
-    jirs_data::{Token, WsMsg},
-    mail_actor::welcome::Welcome,
+use actix::AsyncContext;
+use database_actor::authorize_user::AuthorizeUser;
+use database_actor::tokens::{CreateBindToken, FindBindToken};
+use database_actor::users::LookupUser;
+use futures::executor::block_on;
+use jirs_data::{Token, WsMsg};
+use mail_actor::welcome::Welcome;
+
+use crate::{
+    db_or_debug_and_return, mail_or_debug_and_return, WebSocketActor, WsHandler, WsResult,
 };
 
 pub struct Authenticate {

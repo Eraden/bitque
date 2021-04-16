@@ -1,7 +1,8 @@
-use {
-    crate::{components::styled_confirm_modal::StyledConfirmModal, model, shared::ToNode, Msg},
-    seed::prelude::*,
-};
+use seed::prelude::*;
+
+use crate::components::styled_confirm_modal::StyledConfirmModal;
+use crate::shared::ToNode;
+use crate::{model, Msg};
 
 pub fn view(model: &model::Model) -> Node<Msg> {
     let issue_id = match &model.modals().delete_issue_confirm {

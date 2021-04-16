@@ -1,9 +1,9 @@
-use {
-    crate::{
-        components::styled_textarea::StyledTextarea, shared::ToNode, FieldChange, FieldId, Msg,
-    },
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_textarea::StyledTextarea;
+use crate::shared::ToNode;
+use crate::{FieldChange, FieldId, Msg};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Hash)]
 pub enum Mode {

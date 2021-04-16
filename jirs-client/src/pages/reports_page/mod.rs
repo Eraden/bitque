@@ -1,4 +1,6 @@
-pub use {model::*, update::*, view::*};
+pub use model::*;
+pub use update::*;
+pub use view::*;
 
 pub mod model;
 pub mod update;

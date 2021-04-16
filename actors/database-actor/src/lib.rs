@@ -3,12 +3,10 @@
 #[macro_use]
 extern crate diesel;
 
+use actix::{Actor, SyncContext};
+use diesel::pg::PgConnection;
+use diesel::r2d2::{self, ConnectionManager};
 pub use errors::*;
-use {
-    actix::{Actor, SyncContext},
-    diesel::pg::PgConnection,
-    diesel::r2d2::{self, ConnectionManager},
-};
 
 pub mod authorize_user;
 pub mod comments;
@@ -72,7 +70,8 @@ pub struct Guard<'l> {
 
 impl<'l> Guard<'l> {
     pub fn new(conn: &'l DbPooledConn) -> Result<Self, crate::DatabaseError> {
-        use diesel::{connection::TransactionManager, prelude::*};
+        use diesel::connection::TransactionManager;
+        use diesel::prelude::*;
         let tm = conn.transaction_manager();
         tm.begin_transaction(conn).map_err(|e| {
             log::error!("{:?}", e);

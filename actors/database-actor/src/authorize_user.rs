@@ -1,8 +1,8 @@
-use {
-    crate::{db_find, tokens::FindAccessToken},
-    diesel::prelude::*,
-    jirs_data::User,
-};
+use diesel::prelude::*;
+use jirs_data::User;
+
+use crate::db_find;
+use crate::tokens::FindAccessToken;
 
 db_find! {
     AuthorizeUser,

@@ -1,7 +1,8 @@
-use {
-    crate::{shared::ToNode, ButtonId, Msg},
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::shared::ToNode;
+use crate::{ButtonId, Msg};
 
 #[allow(dead_code)]
 pub enum ButtonVariant {

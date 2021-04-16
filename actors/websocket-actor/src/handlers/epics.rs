@@ -1,9 +1,7 @@
-use jirs_data::IssueType;
-use {
-    crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult},
-    futures::executor::block_on,
-    jirs_data::{DescriptionString, EpicId, NameString, UserProject, WsMsg},
-};
+use futures::executor::block_on;
+use jirs_data::{DescriptionString, EpicId, IssueType, NameString, UserProject, WsMsg};
+
+use crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult};
 
 pub struct LoadEpics;
 
@@ -60,7 +58,7 @@ impl WsHandler<UpdateEpic> for WebSocketActor {
             self,
             database_actor::epics::UpdateEpic {
                 project_id: *project_id,
-                epic_id: epic_id,
+                epic_id,
                 name: name.clone(),
             }
         );
@@ -80,7 +78,7 @@ impl WsHandler<DeleteEpic> for WebSocketActor {
             self,
             database_actor::epics::DeleteEpic {
                 user_id: *user_id,
-                epic_id: epic_id,
+                epic_id,
             }
         );
         Ok(Some(WsMsg::EpicDeleted(epic_id, n)))

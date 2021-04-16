@@ -1,7 +1,8 @@
-use {
-    crate::{model::*, Msg},
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::model::*;
+use crate::Msg;
 
 pub fn view(model: &Model) -> Node<Msg> {
     let nodes = model

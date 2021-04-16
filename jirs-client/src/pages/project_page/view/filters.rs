@@ -1,12 +1,13 @@
-use {
-    crate::{
-        components::{styled_avatar::*, styled_button::*, styled_icon::*, styled_input::*},
-        model::PageContent,
-        shared::ToNode,
-        FieldId, Model, Msg,
-    },
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_avatar::*;
+use crate::components::styled_button::*;
+use crate::components::styled_icon::*;
+use crate::components::styled_input::*;
+use crate::model::PageContent;
+use crate::shared::ToNode;
+use crate::{FieldId, Model, Msg};
 
 pub fn project_board_filters(model: &Model) -> Node<Msg> {
     let project_page = match &model.page_content {

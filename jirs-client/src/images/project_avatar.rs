@@ -1,7 +1,7 @@
-use {
-    crate::Msg,
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::Msg;
 
 #[inline(always)]
 pub fn render() -> Node<Msg> {

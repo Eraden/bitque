@@ -1,9 +1,8 @@
-use {
-    crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult},
-    database_actor::messages,
-    futures::executor::block_on,
-    jirs_data::{MessageId, WsMsg},
-};
+use database_actor::messages;
+use futures::executor::block_on;
+use jirs_data::{MessageId, WsMsg};
+
+use crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult};
 
 pub struct LoadMessages;
 

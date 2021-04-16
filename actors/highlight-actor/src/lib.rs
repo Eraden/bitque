@@ -1,14 +1,11 @@
-use {
-    actix::{Actor, Handler, SyncContext},
-    jirs_data::HighlightedCode,
-    simsearch::SimSearch,
-    std::sync::Arc,
-    syntect::{
-        easy::HighlightLines,
-        highlighting::{Style, ThemeSet},
-        parsing::SyntaxSet,
-    },
-};
+use std::sync::Arc;
+
+use actix::{Actor, Handler, SyncContext};
+use jirs_data::HighlightedCode;
+use simsearch::SimSearch;
+use syntect::easy::HighlightLines;
+use syntect::highlighting::{Style, ThemeSet};
+use syntect::parsing::SyntaxSet;
 
 mod load;
 

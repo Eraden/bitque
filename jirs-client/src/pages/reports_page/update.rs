@@ -1,13 +1,10 @@
-use {
-    crate::{
-        changes::{PageChanged, ReportsPageChange},
-        model::{Model, Page, PageContent},
-        pages::reports_page::model::ReportsPage,
-        ws::board_load,
-        Msg, OperationKind, ResourceKind,
-    },
-    seed::prelude::*,
-};
+use seed::prelude::*;
+
+use crate::changes::{PageChanged, ReportsPageChange};
+use crate::model::{Model, Page, PageContent};
+use crate::pages::reports_page::model::ReportsPage;
+use crate::ws::board_load;
+use crate::{Msg, OperationKind, ResourceKind};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     match msg {

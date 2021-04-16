@@ -1,11 +1,9 @@
-use {
-    crate::{
-        db_create, db_find, db_load, db_update, projects::CreateProject, q,
-        user_projects::CreateUserProject, DbPooledConn,
-    },
-    diesel::prelude::*,
-    jirs_data::{EmailString, IssueId, ProjectId, User, UserId, UserRole, UsernameString},
-};
+use diesel::prelude::*;
+use jirs_data::{EmailString, IssueId, ProjectId, User, UserId, UserRole, UsernameString};
+
+use crate::projects::CreateProject;
+use crate::user_projects::CreateUserProject;
+use crate::{db_create, db_find, db_load, db_update, q, DbPooledConn};
 
 db_find! {
     FindUser,
@@ -156,12 +154,10 @@ db_update! {
 #[cfg(test)]
 mod tests {
     use diesel::connection::TransactionManager;
-
     use jirs_data::{Project, ProjectCategory};
 
-    use crate::build_pool;
-
     use super::*;
+    use crate::build_pool;
 
     #[test]
     fn check_collision() {

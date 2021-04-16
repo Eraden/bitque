@@ -1,7 +1,10 @@
-use {
-    crate::{components::styled_modal::StyledModal, model::Model, shared::ToNode, Msg},
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_modal::StyledModal;
+use crate::model::Model;
+use crate::shared::ToNode;
+use crate::Msg;
 
 pub fn view(model: &Model) -> Node<Msg> {
     let text = format!("{:#?}", model);

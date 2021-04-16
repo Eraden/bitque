@@ -1,11 +1,10 @@
-use {
-    crate::{
-        db_or_debug_and_return, handlers::auth::Authenticate, WebSocketActor, WsHandler, WsResult,
-    },
-    database_actor::{self, users::Register as DbRegister},
-    futures::executor::block_on,
-    jirs_data::{UserId, UserProject, UserRole, WsMsg},
-};
+use database_actor::users::Register as DbRegister;
+use database_actor::{self};
+use futures::executor::block_on;
+use jirs_data::{UserId, UserProject, UserRole, WsMsg};
+
+use crate::handlers::auth::Authenticate;
+use crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult};
 
 pub struct LoadProjectUsers;
 

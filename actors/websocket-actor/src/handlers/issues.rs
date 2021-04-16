@@ -1,16 +1,14 @@
-use {
-    crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult},
-    database_actor::{
-        issue_assignees::LoadAssignees,
-        issues::{LoadProjectIssues, UpdateIssue},
-    },
-    futures::executor::block_on,
-    jirs_data::{
-        CreateIssuePayload, IssueAssignee, IssueFieldId, IssueId, IssueStatusId, ListPosition,
-        PayloadVariant, WsMsg,
-    },
-    std::collections::HashMap,
+use std::collections::HashMap;
+
+use database_actor::issue_assignees::LoadAssignees;
+use database_actor::issues::{LoadProjectIssues, UpdateIssue};
+use futures::executor::block_on;
+use jirs_data::{
+    CreateIssuePayload, IssueAssignee, IssueFieldId, IssueId, IssueStatusId, ListPosition,
+    PayloadVariant, WsMsg,
 };
+
+use crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult};
 
 pub struct UpdateIssueHandler {
     pub id: i32,

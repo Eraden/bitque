@@ -1,14 +1,10 @@
-use {
-    crate::{
-        components::{
-            styled_checkbox::StyledCheckboxState, styled_input::StyledInputState,
-            styled_select::StyledSelectState,
-        },
-        shared::drag::DragState,
-        FieldId,
-    },
-    jirs_data::{IssueStatusId, Project, ProjectFieldId, UpdateProjectPayload},
-};
+use jirs_data::{IssueStatusId, Project, ProjectFieldId, UpdateProjectPayload};
+
+use crate::components::styled_checkbox::StyledCheckboxState;
+use crate::components::styled_input::StyledInputState;
+use crate::components::styled_select::StyledSelectState;
+use crate::shared::drag::DragState;
+use crate::FieldId;
 
 #[derive(Debug)]
 pub struct ProjectSettingsPage {

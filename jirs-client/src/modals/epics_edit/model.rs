@@ -1,11 +1,9 @@
-use {
-    crate::{
-        components::{styled_checkbox::StyledCheckboxState, styled_input::*},
-        model, FieldId, Msg,
-    },
-    jirs_data::*,
-    seed::prelude::Orders,
-};
+use jirs_data::*;
+use seed::prelude::Orders;
+
+use crate::components::styled_checkbox::StyledCheckboxState;
+use crate::components::styled_input::*;
+use crate::{model, FieldId, Msg};
 
 #[derive(Debug)]
 pub struct Model {

@@ -1,15 +1,12 @@
-use {
-    actix_service::{Service, Transform},
-    actix_web::{
-        dev::{ServiceRequest, ServiceResponse},
-        http::header::{self},
-        http::HeaderMap,
-        Error,
-    },
-    futures::future::{ok, FutureExt, LocalBoxFuture, Ready},
-    jirs_data::User,
-    std::task::{Context, Poll},
-};
+use std::task::{Context, Poll};
+
+use actix_service::{Service, Transform};
+use actix_web::dev::{ServiceRequest, ServiceResponse};
+use actix_web::http::header::{self};
+use actix_web::http::HeaderMap;
+use actix_web::Error;
+use futures::future::{ok, FutureExt, LocalBoxFuture, Ready};
+use jirs_data::User;
 
 type Db = actix_web::web::Data<database_actor::DbPool>;
 

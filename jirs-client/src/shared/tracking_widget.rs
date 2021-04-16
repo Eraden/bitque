@@ -1,18 +1,34 @@
-use {
-    crate::{
-        components::styled_icon::{Icon, StyledIcon},
-        modals::{issues_edit::Model as EditIssueModal, time_tracking::value_for_time_tracking},
-        model::{ModalType, Model},
-        shared::ToNode,
-        Msg,
-    },
-    jirs_data::{TimeTracking, UpdateIssuePayload},
-    seed::{prelude::*, *},
-};
+use jirs_data::{TimeTracking, UpdateIssuePayload};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::modals::issues_edit::Model as EditIssueModal;
+use crate::modals::time_tracking::value_for_time_tracking;
+use crate::model::{ModalType, Model};
+use crate::shared::ToNode;
+use crate::Msg;
 
 #[inline]
 pub fn fibonacci_values() -> Vec<u32> {
     vec![0, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+}
+
+#[inline]
+pub fn fibonacci_value_name<'l>(v: u32) -> &'l str {
+    match v {
+        0 => "0",
+        1 => "1",
+        2 => "2",
+        3 => "3",
+        5 => "5",
+        8 => "8",
+        13 => "13",
+        21 => "21",
+        34 => "34",
+        55 => "55",
+        _ => unreachable!(),
+    }
 }
 
 pub fn tracking_link(model: &Model, modal: &crate::modals::issues_edit::Model) -> Node<Msg> {

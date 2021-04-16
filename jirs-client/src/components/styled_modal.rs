@@ -1,11 +1,9 @@
-use {
-    crate::{
-        components::styled_icon::{Icon, StyledIcon},
-        shared::ToNode,
-        Msg,
-    },
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::shared::ToNode;
+use crate::Msg;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]

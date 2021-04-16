@@ -1,11 +1,10 @@
-use {
-    crate::{
-        components::styled_select::StyledSelectChanged, model::IssueModal, ws::send_ws_msg,
-        FieldId, Msg, OperationKind, ResourceKind,
-    },
-    jirs_data::{IssueFieldId, UserId, WsMsg},
-    seed::prelude::*,
-};
+use jirs_data::{IssueFieldId, UserId, WsMsg};
+use seed::prelude::*;
+
+use crate::components::styled_select::StyledSelectChanged;
+use crate::model::IssueModal;
+use crate::ws::send_ws_msg;
+use crate::{FieldId, Msg, OperationKind, ResourceKind};
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     let user_id = model.user_id().unwrap_or_default();

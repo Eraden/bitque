@@ -1,17 +1,15 @@
-use {
-    crate::{
-        components::{
-            styled_button::*, styled_checkbox::*, styled_icon::Icon, styled_input::*,
-            styled_modal::*,
-        },
-        modals::epics_edit::Model,
-        model,
-        shared::{IntoChild, ToNode},
-        FieldId, Msg,
-    },
-    jirs_data::{EpicFieldId, IssueType},
-    seed::{prelude::*, *},
-};
+use jirs_data::{EpicFieldId, IssueType};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_button::*;
+use crate::components::styled_checkbox::*;
+use crate::components::styled_icon::Icon;
+use crate::components::styled_input::*;
+use crate::components::styled_modal::*;
+use crate::modals::epics_edit::Model;
+use crate::shared::{IntoChild, ToNode};
+use crate::{model, FieldId, Msg};
 
 pub struct IssueTypeWrapper(IssueType);
 
@@ -23,7 +21,7 @@ impl<'l> IntoChild<'l> for IssueTypeWrapper {
             .label(self.0.to_label())
             .name(self.0.to_str())
             .value(self.0.into())
-            .add_class(self.0.to_str())
+            .class_list(self.0.to_str())
     }
 }
 
@@ -68,7 +66,7 @@ fn transform_into_available(modal: &super::Model) -> Node<Msg> {
         .options(
             IssueType::default()
                 .into_iter()
-                .map(|ty| IssueTypeWrapper(ty).into_child()),
+                .map(issue_type_select_option),
         )
         .state(&modal.transform_into)
         .build(FieldId::EditEpic(EpicFieldId::TransformInto))
@@ -84,6 +82,17 @@ fn transform_into_available(modal: &super::Model) -> Node<Msg> {
     }
     .into_node();
     div![C!["transform available"], div![types], div![execute]]
+}
+
+#[inline(always)]
+fn issue_type_select_option<'l>(ty: IssueType) -> ChildBuilder<'l> {
+    ChildBuilder {
+        name: ty.to_str(),
+        label: ty.to_label(),
+        value: ty.into(),
+        class_list: ty.to_str(),
+        ..Default::default()
+    }
 }
 
 fn transform_into_unavailable(modal: &super::Model) -> Node<Msg> {

@@ -1,17 +1,13 @@
-use {
-    crate::{
-        components::{
-            styled_date_time_input::StyledDateTimeInputState, styled_editor::Mode,
-            styled_editor::StyledEditorState, styled_input::StyledInputState,
-            styled_select::StyledSelectState,
-        },
-        modals::time_tracking::value_for_time_tracking,
-        model::{CommentForm, IssueModal},
-        EditIssueModalSection, FieldId, Msg,
-    },
-    jirs_data::{Issue, IssueFieldId, IssueId, TimeTracking, UpdateIssuePayload},
-    seed::prelude::*,
-};
+use jirs_data::{Issue, IssueFieldId, IssueId, TimeTracking, UpdateIssuePayload};
+use seed::prelude::*;
+
+use crate::components::styled_date_time_input::StyledDateTimeInputState;
+use crate::components::styled_editor::{Mode, StyledEditorState};
+use crate::components::styled_input::StyledInputState;
+use crate::components::styled_select::StyledSelectState;
+use crate::modals::time_tracking::value_for_time_tracking;
+use crate::model::{CommentForm, IssueModal};
+use crate::{EditIssueModalSection, FieldId, Msg};
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct Model {

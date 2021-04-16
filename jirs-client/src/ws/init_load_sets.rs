@@ -1,6 +1,5 @@
-use seed::app::Orders;
-
 use jirs_data::WsMsg;
+use seed::app::Orders;
 
 use crate::model::Model;
 use crate::ws::enqueue_ws_msg;

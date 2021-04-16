@@ -1,13 +1,11 @@
-use {
-    crate::{
-        model::{Model, PageContent},
-        pages::project_page::ProjectPage,
-        ws::send_ws_msg,
-        Msg,
-    },
-    jirs_data::*,
-    seed::{prelude::Orders, *},
-};
+use jirs_data::*;
+use seed::prelude::Orders;
+use seed::*;
+
+use crate::model::{Model, PageContent};
+use crate::pages::project_page::ProjectPage;
+use crate::ws::send_ws_msg;
+use crate::Msg;
 
 pub fn drag_started(issue_id: EpicId, model: &mut Model) {
     let project_page = match &mut model.page_content {

@@ -1,4 +1,5 @@
-use chrono::{prelude::*, NaiveDate};
+use chrono::prelude::*;
+use chrono::NaiveDate;
 
 #[derive(Debug)]
 pub struct ReportsPage {

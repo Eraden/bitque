@@ -1,9 +1,8 @@
-use {
-    crate::{
-        CommentId, EpicId, Issue, IssueId, IssuePriority, IssueStatusId, IssueType,
-        ProjectCategory, ProjectId, TimeTracking, UserId,
-    },
-    serde::{Deserialize, Serialize},
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    CommentId, EpicId, Issue, IssueId, IssuePriority, IssueStatusId, IssueType, ProjectCategory,
+    ProjectId, TimeTracking, UserId,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

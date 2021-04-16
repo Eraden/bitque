@@ -1,14 +1,12 @@
-use {
-    crate::{
-        components::{
-            styled_icon::{Icon, StyledIcon},
-            styled_select_child::*,
-        },
-        shared::ToNode,
-        FieldId, Msg,
-    },
-    seed::{prelude::*, *},
-};
+use std::collections::HashMap;
+
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::components::styled_select_child::*;
+use crate::shared::ToNode;
+use crate::{FieldId, Msg};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum StyledSelectChanged {
@@ -71,7 +69,7 @@ impl StyledSelectState {
         }
     }
 
-    pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
+    pub fn update(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
         let field_id = match msg {
             Msg::StyledSelectChanged(field_id, ..) => field_id,
             _ => return,
@@ -87,6 +85,7 @@ impl StyledSelectState {
                 }
             }
             Msg::StyledSelectChanged(_, StyledSelectChanged::Text(text)) => {
+                orders.skip();
                 self.text_filter = text.clone();
             }
             Msg::StyledSelectChanged(_, StyledSelectChanged::Changed(Some(v))) => {
@@ -112,7 +111,7 @@ impl StyledSelectState {
 
 pub struct StyledSelect<'l, Options>
 where
-    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+    Options: Iterator<Item = StyledSelectChild<'l>>,
 {
     pub id: FieldId,
     pub variant: SelectVariant,
@@ -121,7 +120,7 @@ where
     pub valid: bool,
     pub is_multi: bool,
     pub options: Option<Options>,
-    pub selected: Vec<StyledSelectChildBuilder<'l>>,
+    pub selected: Vec<StyledSelectChild<'l>>,
     pub text_filter: &'l str,
     pub opened: bool,
     pub clearable: bool,
@@ -129,7 +128,7 @@ where
 
 impl<'l, Options> Default for StyledSelect<'l, Options>
 where
-    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+    Options: Iterator<Item = StyledSelectChild<'l>>,
 {
     fn default() -> Self {
         Self {
@@ -150,7 +149,7 @@ where
 
 impl<'l, Options> ToNode for StyledSelect<'l, Options>
 where
-    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+    Options: Iterator<Item = StyledSelectChild<'l>>,
 {
     fn into_node(self) -> Node<Msg> {
         render(self)
@@ -159,7 +158,7 @@ where
 
 pub fn render<'l, Options>(values: StyledSelect<'l, Options>) -> Node<Msg>
 where
-    Options: Iterator<Item = StyledSelectChildBuilder<'l>>,
+    Options: Iterator<Item = StyledSelectChild<'l>>,
 {
     let StyledSelect {
         id,
@@ -221,13 +220,16 @@ where
         empty![]
     };
 
+    let skip = selected.iter().fold(HashMap::new(), |mut h, o| {
+        h.insert(o.value, true);
+        h
+    });
     let children: Vec<Node<Msg>> = if let Some(options) = options {
         options
-            .filter(|o| !selected.contains(&o) && o.match_text(text_filter))
+            .filter(|o| !skip.contains_key(&o.value) && o.match_text(text_filter))
             .map(|child| {
-                let child = child.build(DisplayType::SelectOption);
                 let value = child.value();
-                let node = child.into_node();
+                let node = child.render_option();
 
                 let on_change = {
                     let field_id = id.clone();
@@ -243,21 +245,6 @@ where
             .collect()
     } else {
         vec![]
-    };
-
-    let text_input = if opened {
-        seed::input![
-            C!["dropDownInput"],
-            attrs![
-                At::Name => name,
-                At::Type => "text"
-                At::Placeholder => "Search"
-                At::AutoFocus => "true",
-            ],
-            on_text,
-        ]
-    } else {
-        empty![]
     };
 
     let option_list = match (opened, children.is_empty()) {
@@ -281,10 +268,7 @@ where
 
         vec![div![C!["valueMulti"], children]]
     } else {
-        selected
-            .into_iter()
-            .map(|m| render_value(m.build(DisplayType::SelectValue).into_node()))
-            .collect()
+        selected.into_iter().map(|m| m.render_value()).collect()
     };
 
     seed::div![
@@ -303,29 +287,25 @@ where
         div![
             C!["dropDown"],
             attrs![At::Style => dropdown_style.as_str()],
-            text_input,
+            IF![opened => seed::input![
+                C!["dropDownInput"],
+                attrs![
+                    At::Name => name,
+                    At::Type => "text"
+                    At::Placeholder => "Search"
+                    At::AutoFocus => "true",
+                ],
+                on_text,
+            ]],
             option_list
         ]
     ]
 }
 
-fn render_value(mut content: Node<Msg>) -> Node<Msg> {
-    content.add_class("value");
-    content
-}
-
-fn into_multi_value(opt: StyledSelectChildBuilder, id: FieldId) -> Node<Msg> {
-    let close_icon = StyledIcon {
-        icon: Icon::Close,
-        size: Some(14),
-        ..Default::default()
-    }
-    .into_node();
-    let child = opt.build(DisplayType::SelectValue);
+fn into_multi_value(child: StyledSelectChild, id: FieldId) -> Node<Msg> {
     let value = child.value();
 
-    let mut opt = child.into_node();
-    opt.add_class("value").add_child(close_icon);
+    let opt = child.render_multi_value();
 
     let handler = {
         let field_id = id;

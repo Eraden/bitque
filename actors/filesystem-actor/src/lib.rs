@@ -1,9 +1,9 @@
-use {
-    actix::SyncContext,
-    actix_files::{self, Files},
-    jirs_config::fs::Configuration,
-    std::{io::Write, path::PathBuf},
-};
+use std::io::Write;
+use std::path::PathBuf;
+
+use actix::SyncContext;
+use actix_files::{self, Files};
+use jirs_config::fs::Configuration;
 
 #[derive(Debug)]
 pub enum FsError {

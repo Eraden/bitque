@@ -1,22 +1,21 @@
 #![feature(type_ascription, trait_alias, drain_filter)]
 
-use {
-    crate::{
-        components::{
-            styled_date_time_input::StyledDateTimeChanged,
-            styled_select::StyledSelectChanged,
-            styled_tooltip,
-            styled_tooltip::{TooltipVariant as StyledTooltip, TooltipVariant},
-        },
-        model::{ModalType, Model, Page},
-        shared::{go_to_board, go_to_login},
-        ws::{flush_queue, open_socket, read_incoming, send_ws_msg},
-    },
-    jirs_data::*,
-    seed::{prelude::*, *},
-    web_sys::File,
-};
-pub use {changes::*, components::*, fields::*, images::*};
+pub use changes::*;
+pub use components::*;
+pub use fields::*;
+pub use images::*;
+use jirs_data::*;
+use seed::prelude::*;
+use seed::*;
+use web_sys::File;
+
+use crate::components::styled_date_time_input::StyledDateTimeChanged;
+use crate::components::styled_select::StyledSelectChanged;
+use crate::components::styled_tooltip;
+use crate::components::styled_tooltip::{TooltipVariant as StyledTooltip, TooltipVariant};
+use crate::model::{ModalType, Model, Page};
+use crate::shared::{go_to_board, go_to_login};
+use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
 
 // use crate::shared::styled_rte::RteMsg;
 

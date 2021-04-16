@@ -1,15 +1,15 @@
-use {
-    crate::{
-        authorize_or_redirect,
-        model::{Model, Page, PageContent},
-        pages::invite_page::InvitePage,
-        shared::write_auth_token,
-        ws::send_ws_msg,
-        FieldId, InvitationPageChange, Msg, PageChanged, WebSocketChanged,
-    },
-    jirs_data::{fields::*, WsMsg},
-    seed::prelude::*,
-    std::str::FromStr,
+use std::str::FromStr;
+
+use jirs_data::fields::*;
+use jirs_data::WsMsg;
+use seed::prelude::*;
+
+use crate::model::{Model, Page, PageContent};
+use crate::pages::invite_page::InvitePage;
+use crate::shared::write_auth_token;
+use crate::ws::send_ws_msg;
+use crate::{
+    authorize_or_redirect, FieldId, InvitationPageChange, Msg, PageChanged, WebSocketChanged,
 };
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {

@@ -1,10 +1,8 @@
 #![feature(async_closure)]
 #![recursion_limit = "256"]
 
-use {
-    actix::Actor,
-    actix_web::{App, HttpServer},
-};
+use actix::Actor;
+use actix_web::{App, HttpServer};
 
 pub mod errors;
 

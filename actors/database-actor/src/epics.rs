@@ -1,9 +1,8 @@
-use {
-    crate::{db_create, db_delete, db_load, db_update},
-    derive_db_execute::Execute,
-    diesel::prelude::*,
-    jirs_data::{DescriptionString, Epic, EpicId, ProjectId},
-};
+use derive_db_execute::Execute;
+use diesel::prelude::*;
+use jirs_data::{DescriptionString, Epic, EpicId, ProjectId};
+
+use crate::{db_create, db_delete, db_load, db_update};
 
 #[derive(Execute)]
 #[db_exec(schema = "epics", result = "Epic", find = "epics.find(msg.epic_id)")]

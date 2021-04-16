@@ -1,15 +1,13 @@
-use {
-    crate::{
-        components::{styled_avatar::*, styled_button::StyledButton, styled_icon::*},
-        model::PageContent,
-        shared::ToNode,
-        BoardPageChange, Model, Msg, Page, PageChanged,
-    },
-    jirs_data::*,
-    seed::{prelude::*, *},
-};
+use jirs_data::*;
+use seed::prelude::*;
+use seed::*;
 
-use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_avatar::*;
+use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_icon::*;
+use crate::model::PageContent;
+use crate::shared::ToNode;
+use crate::{BoardPageChange, Model, Msg, Page, PageChanged};
 
 pub fn project_board_lists(model: &Model) -> Node<Msg> {
     let project_page = match &model.page_content {

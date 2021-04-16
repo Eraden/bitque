@@ -1,9 +1,8 @@
-use {
-    bincode::{deserialize_from, Result},
-    flate2::bufread::ZlibDecoder,
-    serde::de::DeserializeOwned,
-    std::io::BufRead,
-};
+use std::io::BufRead;
+
+use bincode::{deserialize_from, Result};
+use flate2::bufread::ZlibDecoder;
+use serde::de::DeserializeOwned;
 
 fn from_reader<T: DeserializeOwned, R: BufRead>(input: R) -> Result<T> {
     let mut decoder = ZlibDecoder::new(input);

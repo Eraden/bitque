@@ -1,19 +1,21 @@
 use std::io::Write;
 
+use actix::Addr;
+use actix_multipart::{Field, Multipart};
+use actix_web::http::header::ContentDisposition;
+use actix_web::web::Data;
+use actix_web::{post, web, Error, HttpResponse};
+use database_actor::authorize_user::AuthorizeUser;
+use database_actor::user_projects::CurrentUserProject;
+use database_actor::users::UpdateAvatarUrl;
+use database_actor::DbExecutor;
 #[cfg(feature = "local-storage")]
 use filesystem_actor;
-use {
-    actix::Addr,
-    actix_multipart::{Field, Multipart},
-    actix_web::{http::header::ContentDisposition, post, web, web::Data, Error, HttpResponse},
-    database_actor::{
-        authorize_user::AuthorizeUser, user_projects::CurrentUserProject, users::UpdateAvatarUrl,
-        DbExecutor,
-    },
-    futures::{executor::block_on, StreamExt, TryStreamExt},
-    jirs_data::{User, UserId, WsMsg},
-    websocket_actor::server::{InnerMsg::BroadcastToChannel, WsServer},
-};
+use futures::executor::block_on;
+use futures::{StreamExt, TryStreamExt};
+use jirs_data::{User, UserId, WsMsg};
+use websocket_actor::server::InnerMsg::BroadcastToChannel;
+use websocket_actor::server::WsServer;
 
 #[post("/")]
 pub async fn upload(

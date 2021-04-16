@@ -1,11 +1,8 @@
-use {
-    crate::{
-        db_create, db_delete, db_load,
-        users::{FindUser, LookupUser},
-    },
-    diesel::prelude::*,
-    jirs_data::{BindToken, Message, MessageId, MessageType, User, UserId},
-};
+use diesel::prelude::*;
+use jirs_data::{BindToken, Message, MessageId, MessageType, User, UserId};
+
+use crate::users::{FindUser, LookupUser};
+use crate::{db_create, db_delete, db_load};
 
 db_load! {
     LoadMessages,

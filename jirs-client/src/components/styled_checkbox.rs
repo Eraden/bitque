@@ -1,11 +1,8 @@
-use {
-    crate::{
-        shared::{IntoChild, ToNode},
-        FieldId, Msg,
-    },
-    jirs_data::TimeTracking,
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::shared::ToNode;
+use crate::{FieldId, Msg};
 
 #[derive(Debug)]
 pub struct StyledCheckboxState {
@@ -30,12 +27,12 @@ impl StyledCheckboxState {
 
 #[derive(Debug)]
 pub struct ChildBuilder<'l> {
-    field_id: Option<FieldId>,
-    name: &'l str,
-    label: &'l str,
-    value: u32,
-    selected: bool,
-    class_list: Vec<String>,
+    pub field_id: Option<FieldId>,
+    pub name: &'l str,
+    pub label: &'l str,
+    pub value: u32,
+    pub selected: bool,
+    pub class_list: &'l str,
 }
 
 impl<'l> Default for ChildBuilder<'l> {
@@ -46,7 +43,7 @@ impl<'l> Default for ChildBuilder<'l> {
             label: "",
             value: 0,
             selected: false,
-            class_list: vec![],
+            class_list: "",
         }
     }
 }
@@ -77,11 +74,8 @@ impl<'l> ChildBuilder<'l> {
         self
     }
 
-    pub fn add_class<S>(mut self, name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        self.class_list.push(name.into());
+    pub fn class_list(mut self, name: &'l str) -> Self {
+        self.class_list = name;
         self
     }
 }
@@ -94,7 +88,7 @@ impl<'l> ToNode for ChildBuilder<'l> {
             label,
             value,
             selected,
-            mut class_list,
+            class_list,
         } = self;
 
         let id = field_id.as_ref().map(|f| f.to_string()).unwrap_or_default();
@@ -103,9 +97,6 @@ impl<'l> ToNode for ChildBuilder<'l> {
             field_id_clone.map(|field_id| Msg::U32InputChanged(field_id, value))
         });
 
-        class_list.push("styledCheckboxChild".to_string());
-        class_list.push(if selected { "selected" } else { "" }.to_string());
-
         let input_attrs = if selected {
             attrs![At::Type => "radio", At::Name => name, At::Checked => selected, At::Id => format!("{}-{}", id, name)]
         } else {
@@ -113,7 +104,11 @@ impl<'l> ToNode for ChildBuilder<'l> {
         };
 
         div![
-            attrs![At::Class => class_list.join(" ")],
+            C![
+                "styledCheckboxChild",
+                class_list,
+                IF![selected => "selected"]
+            ],
             handler,
             label![attrs![At::For => format!("{}-{}", id, name)], label],
             input![input_attrs],
@@ -215,28 +210,4 @@ where
         attrs![At::Class => class_list.join(" ")],
         opt,
     ]
-}
-
-impl<'l> IntoChild<'l> for TimeTracking {
-    type Builder = ChildBuilder<'l>;
-
-    fn into_child(self) -> Self::Builder {
-        Self::Builder::default()
-            .label(match self {
-                TimeTracking::Untracked => "No tracking",
-                TimeTracking::Fibonacci => "Fibonacci (Bad mode)",
-                TimeTracking::Hourly => "Evil Mode (Hourly)",
-            })
-            .name(match self {
-                TimeTracking::Untracked => "untracked",
-                TimeTracking::Fibonacci => "fibonacci",
-                TimeTracking::Hourly => "hourly",
-            })
-            .add_class(match self {
-                TimeTracking::Untracked => "untracked",
-                TimeTracking::Fibonacci => "fibonacci",
-                TimeTracking::Hourly => "hourly",
-            })
-            .value((self).into())
-    }
 }

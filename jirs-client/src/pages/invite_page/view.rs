@@ -1,21 +1,16 @@
-use {
-    crate::{
-        components::{
-            styled_button::StyledButton, styled_field::StyledField, styled_form::StyledForm,
-            styled_input::StyledInput,
-        },
-        match_page,
-        model::{Model, PageContent},
-        pages::invite_page::InvitePage,
-        shared::{outer_layout, ToNode},
-        validations::is_token,
-        FieldId, InvitationPageChange, Msg, PageChanged,
-    },
-    jirs_data::fields::*,
-    seed::{prelude::*, *},
-};
+use jirs_data::fields::*;
+use seed::prelude::*;
+use seed::*;
 
-use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_field::StyledField;
+use crate::components::styled_form::StyledForm;
+use crate::components::styled_input::StyledInput;
+use crate::model::{Model, PageContent};
+use crate::pages::invite_page::InvitePage;
+use crate::shared::{outer_layout, ToNode};
+use crate::validations::is_token;
+use crate::{match_page, FieldId, InvitationPageChange, Msg, PageChanged};
 
 pub fn view(model: &Model) -> Node<Msg> {
     let page = match_page!(model, Invite; Empty);

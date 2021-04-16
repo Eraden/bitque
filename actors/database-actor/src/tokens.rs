@@ -1,8 +1,7 @@
-use {
-    crate::{db_create, db_find, db_update},
-    diesel::prelude::*,
-    jirs_data::{Token, UserId},
-};
+use diesel::prelude::*;
+use jirs_data::{Token, UserId};
+
+use crate::{db_create, db_find, db_update};
 
 db_find! {
     FindUserId,

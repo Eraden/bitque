@@ -1,29 +1,23 @@
-use {
-    crate::{
-        components::{
-            styled_button::StyledButton,
-            styled_checkbox::StyledCheckbox,
-            styled_editor::StyledEditor,
-            styled_field::StyledField,
-            styled_form::StyledForm,
-            styled_icon::{Icon, StyledIcon},
-            styled_input::StyledInput,
-            styled_select::StyledSelect,
-            styled_textarea::StyledTextarea,
-        },
-        model::{self, ModalType, Model, PageContent},
-        pages::project_settings_page::ProjectSettingsPage,
-        shared::{inner_layout, IntoChild, ToNode},
-        FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange,
-    },
-    jirs_data::{IssueStatus, ProjectCategory, TimeTracking},
-    seed::{prelude::*, *},
-    std::collections::HashMap,
-};
+use std::collections::HashMap;
 
-use crate::components::styled_button::ButtonVariant;
-use crate::components::styled_input::InputVariant;
-use crate::components::styled_select::SelectVariant;
+use jirs_data::{IssueStatus, ProjectCategory, TimeTracking};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_checkbox::{ChildBuilder, StyledCheckbox};
+use crate::components::styled_editor::StyledEditor;
+use crate::components::styled_field::StyledField;
+use crate::components::styled_form::StyledForm;
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::components::styled_input::{InputVariant, StyledInput};
+use crate::components::styled_select::{SelectVariant, StyledSelect};
+use crate::components::styled_select_child::StyledSelectChild;
+use crate::components::styled_textarea::StyledTextarea;
+use crate::model::{self, ModalType, Model, PageContent};
+use crate::pages::project_settings_page::ProjectSettingsPage;
+use crate::shared::{inner_layout, ToNode};
+use crate::{FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange};
 
 // use crate::shared::styled_rte::StyledRte;
 
@@ -43,8 +37,8 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     // let desc_rte = StyledField::build()
     //     .input(
-    //         StyledRte::build(FieldId::ProjectSettings(ProjectFieldId::Description))
-    //             .state(&page.description_rte)
+    //         StyledRte::build(FieldId::ProjectSettings(ProjectFieldId::
+    // Description))             .state(&page.description_rte)
     //             .build()
     //             .into_node(),
     //     )
@@ -53,27 +47,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let category_field = category_field(page);
 
-    let time_tracking = StyledCheckbox::build()
-        .options(
-            TimeTracking::default()
-                .into_iter()
-                .map(|tt| tt.into_child()),
-        )
-        .state(&page.time_tracking)
-        .add_class("timeTracking")
-        .build(FieldId::ProjectSettings(ProjectFieldId::TimeTracking))
-        .into_node();
-    let time_tracking_type: TimeTracking = page.time_tracking.value.into();
-    let time_tracking_field = StyledField {
-        input: time_tracking,
-        tip: Some(match time_tracking_type {
-            TimeTracking::Fibonacci => TIME_TRACKING_FIBONACCI,
-            TimeTracking::Hourly => TIME_TRACKING_HOURLY,
-            _ => "",
-        }),
-        ..Default::default()
-    }
-    .into_node();
+    let time_tracking_field = time_tracking_select(&page);
 
     let columns_field = columns_section(model, page);
 
@@ -114,6 +88,53 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     inner_layout(model, "projectSettings", &project_section)
 }
 
+#[inline(always)]
+fn time_tracking_select(page: &ProjectSettingsPage) -> Node<Msg> {
+    let time_tracking = StyledCheckbox::build()
+        .options(
+            TimeTracking::default()
+                .into_iter()
+                .map(time_tracking_select_option),
+        )
+        .state(&page.time_tracking)
+        .add_class("timeTracking")
+        .build(FieldId::ProjectSettings(ProjectFieldId::TimeTracking))
+        .into_node();
+    let time_tracking_type: TimeTracking = page.time_tracking.value.into();
+    StyledField {
+        input: time_tracking,
+        tip: Some(match time_tracking_type {
+            TimeTracking::Fibonacci => TIME_TRACKING_FIBONACCI,
+            TimeTracking::Hourly => TIME_TRACKING_HOURLY,
+            _ => "",
+        }),
+        ..Default::default()
+    }
+    .into_node()
+}
+
+fn time_tracking_select_option<'l>(t: TimeTracking) -> ChildBuilder<'l> {
+    ChildBuilder {
+        label: match t {
+            TimeTracking::Untracked => "No tracking",
+            TimeTracking::Fibonacci => "Fibonacci (Bad mode)",
+            TimeTracking::Hourly => "Evil Mode (Hourly)",
+        },
+        name: match t {
+            TimeTracking::Untracked => "untracked",
+            TimeTracking::Fibonacci => "fibonacci",
+            TimeTracking::Hourly => "hourly",
+        },
+        class_list: match t {
+            TimeTracking::Untracked => "untracked",
+            TimeTracking::Fibonacci => "fibonacci",
+            TimeTracking::Hourly => "hourly",
+        },
+        value: t.into(),
+        ..Default::default()
+    }
+}
+
 /// Build project name input with styled field wrapper
 fn name_field(page: &ProjectSettingsPage) -> Node<Msg> {
     let name = StyledTextarea {
@@ -125,12 +146,13 @@ fn name_field(page: &ProjectSettingsPage) -> Node<Msg> {
         ..Default::default()
     }
     .into_node();
-    StyledField::build()
-        .label("Name")
-        .input(name)
-        .tip("")
-        .build()
-        .into_node()
+    StyledField {
+        label: "Name",
+        input: name,
+        tip: Some(""),
+        ..Default::default()
+    }
+    .into_node()
 }
 
 /// Build project url input with styled field wrapper
@@ -144,12 +166,13 @@ fn url_field(page: &ProjectSettingsPage) -> Node<Msg> {
         ..Default::default()
     }
     .into_node();
-    StyledField::build()
-        .label("Url")
-        .input(url)
-        .tip("")
-        .build()
-        .into_node()
+    StyledField {
+        label: "Url",
+        input: url,
+        tip: Some(""),
+        ..Default::default()
+    }
+    .into_node()
 }
 
 /// Build project description text area with styled field wrapper
@@ -183,15 +206,11 @@ fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
         options: Some(
             ProjectCategory::default()
                 .into_iter()
-                .map(|c| c.into_child()),
+                .map(category_select_option),
         ),
-        selected: vec![page
-            .payload
-            .category
-            .as_ref()
-            .cloned()
-            .unwrap_or_default()
-            .into_child()],
+        selected: vec![category_select_option(
+            page.payload.category.as_ref().cloned().unwrap_or_default(),
+        )],
         ..Default::default()
     }
     .into_node();
@@ -201,6 +220,16 @@ fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
         ..Default::default()
     }
     .into_node()
+}
+
+#[inline(always)]
+fn category_select_option<'l>(pc: ProjectCategory) -> StyledSelectChild<'l> {
+    StyledSelectChild {
+        class_list: pc.to_str(),
+        text: Some(pc.to_str()),
+        value: pc.into(),
+        ..Default::default()
+    }
 }
 
 /// Build draggable columns preview with option to remove and add new columns

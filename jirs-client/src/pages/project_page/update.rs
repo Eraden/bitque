@@ -1,14 +1,12 @@
-use {
-    crate::{
-        components::styled_select::StyledSelectChanged,
-        model::{Model, Page, PageContent},
-        pages::project_page::model::ProjectPage,
-        ws::{board_load, send_ws_msg},
-        BoardPageChange, EditIssueModalSection, FieldId, Msg, OperationKind, PageChanged,
-        ResourceKind,
-    },
-    jirs_data::*,
-    seed::prelude::Orders,
+use jirs_data::*;
+use seed::prelude::Orders;
+
+use crate::components::styled_select::StyledSelectChanged;
+use crate::model::{Model, Page, PageContent};
+use crate::pages::project_page::model::ProjectPage;
+use crate::ws::{board_load, send_ws_msg};
+use crate::{
+    BoardPageChange, EditIssueModalSection, FieldId, Msg, OperationKind, PageChanged, ResourceKind,
 };
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {

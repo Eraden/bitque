@@ -1,7 +1,8 @@
-use {
-    crate::{components::styled_select::StyledSelectState, model::InvitationFormState, FieldId},
-    jirs_data::{Invitation, User, UserRole, UsersFieldId},
-};
+use jirs_data::{Invitation, User, UserRole, UsersFieldId};
+
+use crate::components::styled_select::StyledSelectState;
+use crate::model::InvitationFormState;
+use crate::FieldId;
 
 #[derive(Debug)]
 pub struct UsersPage {

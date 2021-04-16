@@ -1,10 +1,8 @@
-use {
-    serde::{de::DeserializeOwned, Serialize},
-    std::{
-        fs::{read_to_string, write},
-        marker::PhantomData,
-    },
-};
+use std::fs::{read_to_string, write};
+use std::marker::PhantomData;
+
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 pub struct Reader<T: DeserializeOwned + Default + Serialize> {
     __phantom: PhantomData<T>,

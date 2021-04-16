@@ -1,13 +1,12 @@
-use {
-    crate::schema::*,
-    chrono::NaiveDateTime,
-    jirs_data::{
-        EpicId, InvitationState, IssuePriority, IssueStatusId, IssueType, ProjectCategory,
-        ProjectId, TimeTracking, UserId,
-    },
-    serde::{Deserialize, Serialize},
-    uuid::Uuid,
+use chrono::NaiveDateTime;
+use jirs_data::{
+    EpicId, InvitationState, IssuePriority, IssueStatusId, IssueType, ProjectCategory, ProjectId,
+    TimeTracking, UserId,
 };
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+use crate::schema::*;
 
 #[derive(Serialize, Debug, Deserialize, Queryable)]
 pub struct Issue {

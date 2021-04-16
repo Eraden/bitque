@@ -1,19 +1,15 @@
-use {
-    crate::{
-        components::{
-            styled_button::StyledButton, styled_icon::Icon, styled_tooltip::StyledTooltip,
-        },
-        shared::ToNode,
-        FieldId, Msg,
-    },
-    chrono::prelude::*,
-    chrono::Duration,
-    seed::{prelude::*, *},
-    std::ops::RangeInclusive,
-};
+use std::ops::RangeInclusive;
 
-use crate::components::styled_button::ButtonVariant;
-use crate::components::styled_tooltip::TooltipVariant;
+use chrono::prelude::*;
+use chrono::Duration;
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_icon::Icon;
+use crate::components::styled_tooltip::{StyledTooltip, TooltipVariant};
+use crate::shared::ToNode;
+use crate::{FieldId, Msg};
 
 #[derive(Debug)]
 pub enum StyledDateTimeChanged {

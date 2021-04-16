@@ -1,16 +1,15 @@
-use {
-    crate::{
-        model::{self, Model, Page, PageContent},
-        pages::sign_in_page::model::SignInPage,
-        shared::write_auth_token,
-        ws::send_ws_msg,
-        FieldId, Msg, WebSocketChanged,
-    },
-    jirs_data::{SignInFieldId, WsMsg},
-    seed::{prelude::*, *},
-    std::str::FromStr,
-    uuid::Uuid,
-};
+use std::str::FromStr;
+
+use jirs_data::{SignInFieldId, WsMsg};
+use seed::prelude::*;
+use seed::*;
+use uuid::Uuid;
+
+use crate::model::{self, Model, Page, PageContent};
+use crate::pages::sign_in_page::model::SignInPage;
+use crate::shared::write_auth_token;
+use crate::ws::send_ws_msg;
+use crate::{FieldId, Msg, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::SignIn {

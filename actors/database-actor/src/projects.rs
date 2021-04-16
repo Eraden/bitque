@@ -1,8 +1,7 @@
-use {
-    crate::{db_create, db_find, db_load, db_update},
-    diesel::prelude::*,
-    jirs_data::{NameString, Project, ProjectCategory, ProjectId, TimeTracking, UserId},
-};
+use diesel::prelude::*;
+use jirs_data::{NameString, Project, ProjectCategory, ProjectId, TimeTracking, UserId};
+
+use crate::{db_create, db_find, db_load, db_update};
 
 db_find! {
     LoadCurrentProject,
@@ -12,11 +11,10 @@ db_find! {
 }
 
 mod inner {
-    use {
-        crate::db_create,
-        diesel::prelude::*,
-        jirs_data::{NameString, Project, ProjectCategory, TimeTracking},
-    };
+    use diesel::prelude::*;
+    use jirs_data::{NameString, Project, ProjectCategory, TimeTracking};
+
+    use crate::db_create;
 
     db_create! {
         CreateProject,

@@ -1,7 +1,8 @@
-use {
-    crate::{shared::ToNode, FieldId, Msg},
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::shared::ToNode;
+use crate::{FieldId, Msg};
 
 #[derive(Debug)]
 pub struct StyledTextarea<'l> {
@@ -43,8 +44,8 @@ const PADDING_TOP_BOTTOM: f64 = 17f64;
 const BORDER_TOP_BOTTOM: f64 = 2f64;
 const ADDITIONAL_HEIGHT: f64 = PADDING_TOP_BOTTOM + BORDER_TOP_BOTTOM;
 
-// height = `calc( (${$0.value.split("\n").length}px * ( 15 * 1.4285 )) + 17px + 2px)`
-// where:
+// height = `calc( (${$0.value.split("\n").length}px * ( 15 * 1.4285 )) + 17px +
+// 2px)` where:
 //  * 15 is font-size
 //  * 1.4285 is line-height
 //  * 17 is padding top + bottom

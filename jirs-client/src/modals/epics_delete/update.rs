@@ -1,8 +1,8 @@
-use {
-    crate::{ws::send_ws_msg, Msg, OperationKind, ResourceKind},
-    jirs_data::WsMsg,
-    seed::prelude::*,
-};
+use jirs_data::WsMsg;
+use seed::prelude::*;
+
+use crate::ws::send_ws_msg;
+use crate::{Msg, OperationKind, ResourceKind};
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     let modal = match &mut model.modals_mut().delete_epic {

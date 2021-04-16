@@ -1,7 +1,6 @@
-use {
-    crate::model,
-    jirs_data::{EpicId, IssueId},
-};
+use jirs_data::{EpicId, IssueId};
+
+use crate::model;
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct Model {

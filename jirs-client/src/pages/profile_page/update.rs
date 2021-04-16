@@ -1,15 +1,13 @@
-use {
-    crate::{
-        components::styled_select::StyledSelectChanged,
-        model::{Model, Page, PageContent},
-        pages::profile_page::model::ProfilePage,
-        ws::{board_load, send_ws_msg},
-        FieldId, Msg, OperationKind, PageChanged, ProfilePageChange, ResourceKind,
-        WebSocketChanged,
-    },
-    jirs_data::{ProjectId, User, UsersFieldId, WsMsg},
-    seed::prelude::{Method, Orders, Request},
-    web_sys::FormData,
+use jirs_data::{ProjectId, User, UsersFieldId, WsMsg};
+use seed::prelude::{Method, Orders, Request};
+use web_sys::FormData;
+
+use crate::components::styled_select::StyledSelectChanged;
+use crate::model::{Model, Page, PageContent};
+use crate::pages::profile_page::model::ProfilePage;
+use crate::ws::{board_load, send_ws_msg};
+use crate::{
+    FieldId, Msg, OperationKind, PageChanged, ProfilePageChange, ResourceKind, WebSocketChanged,
 };
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {

@@ -1,24 +1,20 @@
 #[macro_use]
 extern crate log;
 
-use {
-    crate::{
-        handlers::*,
-        server::{InnerMsg, WsServer},
-    },
-    actix::{Actor, ActorContext, Addr, AsyncContext, Handler, Recipient, StreamHandler},
-    actix_web::{
-        get,
-        web::{self, Data},
-        Error, HttpRequest, HttpResponse,
-    },
-    actix_web_actors::ws,
-    database_actor::{projects::LoadCurrentProject, user_projects::CurrentUserProject, DbExecutor},
-    futures::executor::block_on,
-    jirs_data::{Project, User, UserProject, WsMsg},
-    log::*,
-    mail_actor::MailExecutor,
-};
+use actix::{Actor, ActorContext, Addr, AsyncContext, Handler, Recipient, StreamHandler};
+use actix_web::web::{self, Data};
+use actix_web::{get, Error, HttpRequest, HttpResponse};
+use actix_web_actors::ws;
+use database_actor::projects::LoadCurrentProject;
+use database_actor::user_projects::CurrentUserProject;
+use database_actor::DbExecutor;
+use futures::executor::block_on;
+use jirs_data::{Project, User, UserProject, WsMsg};
+use log::*;
+use mail_actor::MailExecutor;
+
+use crate::handlers::*;
+use crate::server::{InnerMsg, WsServer};
 
 pub mod handlers;
 pub mod prelude;

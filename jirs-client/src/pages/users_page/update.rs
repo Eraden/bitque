@@ -1,14 +1,12 @@
-use {
-    crate::{
-        components::styled_select::StyledSelectChanged,
-        model::{InvitationFormState, Model, Page, PageContent},
-        pages::users_page::model::UsersPage,
-        ws::{invitation_load, send_ws_msg},
-        FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged,
-    },
-    jirs_data::{InvitationState, UserRole, UsersFieldId, WsMsg},
-    seed::{log, prelude::Orders},
-};
+use jirs_data::{InvitationState, UserRole, UsersFieldId, WsMsg};
+use seed::log;
+use seed::prelude::Orders;
+
+use crate::components::styled_select::StyledSelectChanged;
+use crate::model::{InvitationFormState, Model, Page, PageContent};
+use crate::pages::users_page::model::UsersPage;
+use crate::ws::{invitation_load, send_ws_msg};
+use crate::{FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     log!(model);

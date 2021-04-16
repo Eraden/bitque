@@ -1,15 +1,13 @@
-use crate::DescriptionString;
-use {
-    crate::{
-        AvatarUrl, BindToken, Code, Comment, CommentId, CreateCommentPayload, CreateIssuePayload,
-        EmailString, Epic, EpicId, HighlightedCode, Invitation, InvitationId, InvitationToken,
-        Issue, IssueFieldId, IssueId, IssueStatus, IssueStatusId, IssueType, Lang, ListPosition,
-        Message, MessageId, NameString, NumberOfDeleted, PayloadVariant, Position, Project,
-        TitleString, UpdateCommentPayload, UpdateProjectPayload, User, UserId, UserProject,
-        UserProjectId, UserRole, UsernameString,
-    },
-    serde::{Deserialize, Serialize},
-    uuid::Uuid,
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+use crate::{
+    AvatarUrl, BindToken, Code, Comment, CommentId, CreateCommentPayload, CreateIssuePayload,
+    DescriptionString, EmailString, Epic, EpicId, HighlightedCode, Invitation, InvitationId,
+    InvitationToken, Issue, IssueFieldId, IssueId, IssueStatus, IssueStatusId, IssueType, Lang,
+    ListPosition, Message, MessageId, NameString, NumberOfDeleted, PayloadVariant, Position,
+    Project, TitleString, UpdateCommentPayload, UpdateProjectPayload, User, UserId, UserProject,
+    UserProjectId, UserRole, UsernameString,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

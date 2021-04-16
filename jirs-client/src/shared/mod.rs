@@ -1,10 +1,8 @@
-use {
-    crate::{
-        model::{Model, Page},
-        resolve_page, Msg,
-    },
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::model::{Model, Page};
+use crate::{resolve_page, Msg};
 
 pub mod aside;
 pub mod drag;

@@ -1,8 +1,7 @@
-use {
-    crate::{send_ws_msg, FieldId, Msg, OperationKind, ResourceKind},
-    jirs_data::{EpicFieldId, IssueType, WsMsg},
-    seed::prelude::*,
-};
+use jirs_data::{EpicFieldId, IssueType, WsMsg};
+use seed::prelude::*;
+
+use crate::{send_ws_msg, FieldId, Msg, OperationKind, ResourceKind};
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     let modal = match &mut model.modals.edit_epic {

@@ -1,5 +1,7 @@
-use proc_macro::{token_stream::IntoIter, TokenTree};
 use std::iter::Peekable;
+
+use proc_macro::token_stream::IntoIter;
+use proc_macro::TokenTree;
 
 pub fn skip_pub(mut it: Peekable<IntoIter>) -> Peekable<IntoIter> {
     if let Some(TokenTree::Ident(ident)) = it.next() {

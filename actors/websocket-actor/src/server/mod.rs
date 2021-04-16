@@ -1,8 +1,7 @@
-use {
-    actix::{Actor, Context, Recipient},
-    jirs_data::{ProjectId, UserId, WsMsg},
-    std::collections::HashMap,
-};
+use std::collections::HashMap;
+
+use actix::{Actor, Context, Recipient};
+use jirs_data::{ProjectId, UserId, WsMsg};
 
 #[derive(actix::Message, Debug)]
 #[rtype(result = "()")]

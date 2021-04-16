@@ -1,12 +1,11 @@
-use {
-    crate::{
-        components::{styled_button::StyledButton, styled_icon::Icon},
-        model::Model,
-        shared::{inner_layout, ToNode},
-        Msg,
-    },
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_button::StyledButton;
+use crate::components::styled_icon::Icon;
+use crate::model::Model;
+use crate::shared::{inner_layout, ToNode};
+use crate::Msg;
 
 mod board;
 mod filters;

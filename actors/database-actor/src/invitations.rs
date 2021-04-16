@@ -1,16 +1,15 @@
-use {
-    crate::{
-        db_create, db_delete, db_find, db_load, db_pool, db_update,
-        tokens::CreateBindToken,
-        users::{LookupUser, Register},
-        DbExecutor, DbPooledConn, InvitationError,
-    },
-    actix::{Handler, Message},
-    diesel::prelude::*,
-    jirs_data::{
-        EmailString, Invitation, InvitationId, InvitationState, InvitationToken, ProjectId, Token,
-        User, UserId, UserRole, UsernameString,
-    },
+use actix::{Handler, Message};
+use diesel::prelude::*;
+use jirs_data::{
+    EmailString, Invitation, InvitationId, InvitationState, InvitationToken, ProjectId, Token,
+    User, UserId, UserRole, UsernameString,
+};
+
+use crate::tokens::CreateBindToken;
+use crate::users::{LookupUser, Register};
+use crate::{
+    db_create, db_delete, db_find, db_load, db_pool, db_update, DbExecutor, DbPooledConn,
+    InvitationError,
 };
 
 db_find! {

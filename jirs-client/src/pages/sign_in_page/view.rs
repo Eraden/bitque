@@ -1,22 +1,16 @@
-use {
-    crate::{
-        components::{
-            styled_button::StyledButton,
-            styled_field::StyledField,
-            styled_form::StyledForm,
-            styled_icon::{Icon, StyledIcon},
-            styled_input::StyledInput,
-            styled_link::StyledLink,
-        },
-        model::{self, PageContent},
-        shared::{outer_layout, ToNode},
-        validations::{is_email, is_token},
-        FieldId, Msg, SignInFieldId,
-    },
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
 
-use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_field::StyledField;
+use crate::components::styled_form::StyledForm;
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::components::styled_input::StyledInput;
+use crate::components::styled_link::StyledLink;
+use crate::model::{self, PageContent};
+use crate::shared::{outer_layout, ToNode};
+use crate::validations::{is_email, is_token};
+use crate::{FieldId, Msg, SignInFieldId};
 
 pub fn view(model: &model::Model) -> Node<Msg> {
     let page = match &model.page_content {
@@ -31,11 +25,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         ..Default::default()
     }
     .into_node();
-    let username_field = StyledField::build()
-        .label("Username")
-        .input(username)
-        .build()
-        .into_node();
+    let username_field = StyledField {
+        label: "Username",
+        input: username,
+        ..Default::default()
+    }
+    .into_node();
 
     let email = StyledInput {
         value: page.email.as_str(),
@@ -44,11 +39,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         ..Default::default()
     }
     .into_node();
-    let email_field = StyledField::build()
-        .label("E-Mail")
-        .input(email)
-        .build()
-        .into_node();
+    let email_field = StyledField {
+        label: "E-Mail",
+        input: email,
+        ..Default::default()
+    }
+    .into_node();
 
     let submit = if page.login_success {
         StyledButton {
@@ -109,11 +105,12 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         is_valid_token(page.token_touched, page.token.as_str()),
     )
     .into_node();
-    let token_field = StyledField::build()
-        .label("Single use token")
-        .input(token)
-        .build()
-        .into_node();
+    let token_field = StyledField {
+        label: "Single use token",
+        input: token,
+        ..Default::default()
+    }
+    .into_node();
     let submit_token = StyledButton {
         variant: ButtonVariant::Primary,
         text: Some("Authorize"),
@@ -121,7 +118,11 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         ..Default::default()
     }
     .into_node();
-    let submit_token_field = StyledField::build().input(submit_token).build().into_node();
+    let submit_token_field = StyledField {
+        input: submit_token,
+        ..Default::default()
+    }
+    .into_node();
 
     let bind_token_form = StyledForm::build()
         .on_submit(ev(Ev::Submit, |ev| {

@@ -1,9 +1,9 @@
-use {
-    crate::models::Issue,
-    derive_db_execute::Execute,
-    diesel::{expression::sql_literal::sql, prelude::*},
-    jirs_data::{IssueId, IssuePriority, IssueStatusId, IssueType, ProjectId, UserId},
-};
+use derive_db_execute::Execute;
+use diesel::expression::sql_literal::sql;
+use diesel::prelude::*;
+use jirs_data::{IssueId, IssuePriority, IssueStatusId, IssueType, ProjectId, UserId};
+
+use crate::models::Issue;
 
 #[derive(Default, Execute)]
 #[db_exec(
@@ -112,12 +112,11 @@ pub struct DeleteIssue {
 }
 
 mod inner {
-    use {
-        crate::models::Issue,
-        derive_db_execute::Execute,
-        diesel::prelude::*,
-        jirs_data::{IssuePriority, IssueStatusId, IssueType},
-    };
+    use derive_db_execute::Execute;
+    use diesel::prelude::*;
+    use jirs_data::{IssuePriority, IssueStatusId, IssueType};
+
+    use crate::models::Issue;
 
     #[derive(Default, Execute)]
     #[db_exec(

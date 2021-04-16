@@ -1,9 +1,11 @@
-use {
-    crate::{shared::ToNode, Msg},
-    jirs_data::{IssuePriority, IssueType},
-    seed::{prelude::*, *},
-    std::borrow::Cow,
-};
+use std::borrow::Cow;
+
+use jirs_data::{IssuePriority, IssueType};
+use seed::prelude::*;
+use seed::*;
+
+use crate::shared::ToNode;
+use crate::Msg;
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
@@ -242,37 +244,6 @@ impl ToNode for Icon {
     fn into_node(self) -> Node<Msg> {
         let styled: StyledIcon = self.into();
         styled.into_node()
-    }
-}
-
-pub struct StyledIconBuilder<'l> {
-    pub icon: Icon,
-    pub size: Option<i32>,
-    pub class_list: &'l str,
-    pub style_list: Vec<Cow<'l, str>>,
-    pub color: Option<Cow<'l, str>>,
-    pub on_click: Option<EventHandler<Msg>>,
-}
-
-impl<'l> StyledIconBuilder<'l> {
-    pub fn size(mut self, size: i32) -> Self {
-        self.size = Some(size);
-        self
-    }
-
-    pub fn class_list(mut self, name: &'l str) -> Self {
-        self.class_list = name;
-        self
-    }
-
-    pub fn with_color(mut self, color: &'l str) -> Self {
-        self.color = Some(Cow::Borrowed(color));
-        self
-    }
-
-    pub fn on_click(mut self, on_click: EventHandler<Msg>) -> Self {
-        self.on_click = Some(on_click);
-        self
     }
 }
 

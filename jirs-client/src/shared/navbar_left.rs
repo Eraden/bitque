@@ -1,22 +1,16 @@
-use {
-    crate::{
-        components::{
-            styled_avatar::StyledAvatar,
-            styled_button::StyledButton,
-            styled_icon::{Icon, StyledIcon},
-            styled_tooltip,
-        },
-        model::Model,
-        shared::{divider, ToNode},
-        ws::send_ws_msg,
-        Msg, Page,
-    },
-    jirs_data::{InvitationToken, Message, MessageType, WsMsg},
-    seed::{prelude::*, *},
-};
+use jirs_data::{InvitationToken, Message, MessageType, WsMsg};
+use seed::prelude::*;
+use seed::*;
 
-use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_avatar::StyledAvatar;
+use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::components::styled_tooltip;
 use crate::components::styled_tooltip::{StyledTooltip, TooltipVariant};
+use crate::model::Model;
+use crate::shared::{divider, ToNode};
+use crate::ws::send_ws_msg;
+use crate::{Msg, Page};
 
 trait IntoNavItemIcon {
     fn into_nav_item_icon(self) -> Node<Msg>;

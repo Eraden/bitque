@@ -1,7 +1,5 @@
-use {
-    actix,
-    rusoto_s3::{PutObjectRequest, S3Client, S3},
-};
+use actix;
+use rusoto_s3::{PutObjectRequest, S3Client, S3};
 
 #[derive(Debug)]
 pub enum AmazonError {

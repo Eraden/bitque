@@ -1,11 +1,9 @@
-use {
-    crate::{
-        components::styled_icon::{Icon, StyledIcon},
-        shared::ToNode,
-        FieldId, Msg,
-    },
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::shared::ToNode;
+use crate::{FieldId, Msg};
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum InputVariant {

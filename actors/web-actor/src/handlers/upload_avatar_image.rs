@@ -1,11 +1,11 @@
-use {
-    actix::Addr,
-    actix_multipart::Field,
-    actix_web::{http::header::ContentDisposition, web::Data, Error},
-    futures::StreamExt,
-    jirs_data::UserId,
-    tokio::sync::broadcast::{Receiver, Sender},
-};
+use actix::Addr;
+use actix_multipart::Field;
+use actix_web::http::header::ContentDisposition;
+use actix_web::web::Data;
+use actix_web::Error;
+use futures::StreamExt;
+use jirs_data::UserId;
+use tokio::sync::broadcast::{Receiver, Sender};
 
 #[cfg(all(feature = "local-storage", feature = "aws-s3"))]
 pub(crate) async fn handle_image(

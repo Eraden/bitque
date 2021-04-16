@@ -1,8 +1,7 @@
-use {
-    crate::MailExecutor,
-    actix::{Handler, Message},
-    uuid::Uuid,
-};
+use actix::{Handler, Message};
+use uuid::Uuid;
+
+use crate::MailExecutor;
 
 #[derive(Debug)]
 pub struct Invite {

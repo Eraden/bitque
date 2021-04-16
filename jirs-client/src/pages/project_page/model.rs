@@ -1,5 +1,9 @@
+use std::collections::HashMap;
+
 use chrono::NaiveDateTime;
-use {crate::shared::drag::DragState, jirs_data::*, std::collections::HashMap};
+use jirs_data::*;
+
+use crate::shared::drag::DragState;
 
 #[derive(Default, Debug)]
 pub struct StatusIssueIds {

@@ -1,19 +1,14 @@
-use {
-    crate::{
-        components::{
-            styled_avatar::StyledAvatar, styled_button::StyledButton,
-            styled_textarea::StyledTextarea,
-        },
-        modals::issues_edit::Model as EditIssueModal,
-        model::{CommentForm, ModalType, Model},
-        shared::ToNode,
-        EditIssueModalSection, FieldChange, FieldId, Msg,
-    },
-    jirs_data::{Comment, CommentFieldId},
-    seed::{prelude::*, *},
-};
+use jirs_data::{Comment, CommentFieldId};
+use seed::prelude::*;
+use seed::*;
 
-use crate::components::styled_button::ButtonVariant;
+use crate::components::styled_avatar::StyledAvatar;
+use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_textarea::StyledTextarea;
+use crate::modals::issues_edit::Model as EditIssueModal;
+use crate::model::{CommentForm, ModalType, Model};
+use crate::shared::ToNode;
+use crate::{EditIssueModalSection, FieldChange, FieldId, Msg};
 
 pub fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
     let submit_comment_form = mouse_ev(Ev::Click, move |ev| {

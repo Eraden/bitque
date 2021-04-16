@@ -3,11 +3,12 @@ mod utils;
 
 extern crate proc_macro;
 
-use {
-    crate::parse_attr::Attributes,
-    proc_macro::{token_stream::IntoIter, TokenStream, TokenTree},
-    std::iter::Peekable,
-};
+use std::iter::Peekable;
+
+use proc_macro::token_stream::IntoIter;
+use proc_macro::{TokenStream, TokenTree};
+
+use crate::parse_attr::Attributes;
 
 fn parse_meta(mut it: Peekable<IntoIter>) -> (Peekable<IntoIter>, Option<Attributes>) {
     let mut attrs: Option<Attributes> = None;
@@ -70,7 +71,6 @@ fn parse_meta(mut it: Peekable<IntoIter>) -> (Peekable<IntoIter>, Option<Attribu
 ///         pub name: String
 ///     }
 /// ```
-///
 #[proc_macro_derive(Execute, attributes(db_exec))]
 pub fn derive_enum_iter(item: TokenStream) -> TokenStream {
     let mut it = item.into_iter().peekable();

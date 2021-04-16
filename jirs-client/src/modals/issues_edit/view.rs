@@ -1,26 +1,27 @@
-use {
-    crate::{
-        components::{
-            styled_avatar::StyledAvatar, styled_button::StyledButton, styled_editor::StyledEditor,
-            styled_field::StyledField, styled_icon::Icon, styled_input::StyledInput,
-            styled_modal::*, styled_select::StyledSelect,
-        },
-        modals::{
-            epic_field, issues_edit::Model as EditIssueModal, time_tracking::time_tracking_field,
-        },
-        model::{ModalType, Model},
-        shared::{tracking_widget::tracking_link, IntoChild, ToChild, ToNode},
-        EditIssueModalSection, FieldChange, FieldId, Msg,
-    },
-    comments::*,
-    jirs_data::{CommentFieldId, IssueFieldId, IssuePriority, IssueType, TimeTracking},
-    seed::{prelude::*, *},
+use comments::*;
+use jirs_data::{
+    CommentFieldId, IssueFieldId, IssuePriority, IssueStatus, IssueType, TimeTracking,
+    UpdateIssuePayload, User,
 };
+use seed::prelude::*;
+use seed::*;
 
-use crate::components::styled_button::ButtonVariant;
-use crate::components::styled_icon::StyledIcon;
-use crate::components::styled_select::SelectVariant;
-use crate::components::styled_select_child::StyledSelectChildBuilder;
+use crate::components::styled_avatar::StyledAvatar;
+use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_editor::StyledEditor;
+use crate::components::styled_field::StyledField;
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::components::styled_input::StyledInput;
+use crate::components::styled_modal::*;
+use crate::components::styled_select::{SelectVariant, StyledSelect, StyledSelectState};
+use crate::components::styled_select_child::StyledSelectChild;
+use crate::modals::epic_field;
+use crate::modals::issues_edit::Model as EditIssueModal;
+use crate::modals::time_tracking::time_tracking_field;
+use crate::model::{ModalType, Model};
+use crate::shared::tracking_widget::tracking_link;
+use crate::shared::ToNode;
+use crate::{EditIssueModalSection, FieldChange, FieldId, Msg};
 
 mod comments;
 
@@ -149,27 +150,9 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             options: Some(
                 IssueType::default()
                     .into_iter()
-                    .map(|t| t.into_child().name("type")),
+                    .map(|t| type_select_option(t, &text)),
             ),
-            selected: vec![{
-                let name = payload.issue_type.to_label();
-
-                let type_icon = StyledIcon {
-                    icon: payload.issue_type.clone().into(),
-                    class_list: name,
-                    ..Default::default()
-                }
-                .into_node();
-
-                StyledSelectChildBuilder {
-                    class_list: name,
-                    text: Some(&text),
-                    icon: Some(type_icon),
-                    value: payload.issue_type.into(),
-                    name: Some("type"),
-                    ..Default::default()
-                }
-            }],
+            selected: vec![type_select_option(payload.issue_type, &text)],
             ..Default::default()
         }
         .into_node()
@@ -185,6 +168,26 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             close_button
         ],
     ]
+}
+
+#[inline(always)]
+fn type_select_option<'l>(t: IssueType, text: &'l str) -> StyledSelectChild<'l> {
+    let name = t.to_label();
+    StyledSelectChild {
+        class_list: name,
+        text: Some(text),
+        icon: Some(
+            StyledIcon {
+                icon: t.clone().into(),
+                class_list: name,
+                ..Default::default()
+            }
+            .into_node(),
+        ),
+        value: t.into(),
+        name: Some("type"),
+        ..Default::default()
+    }
 }
 
 fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
@@ -220,7 +223,11 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         }
         .into_node()
     };
-    let description_field = StyledField::build().input(description).build().into_node();
+    let description_field = StyledField {
+        input: description,
+        ..Default::default()
+    }
+    .into_node();
 
     let user_avatar = StyledAvatar {
         avatar_url: model.user.as_ref().and_then(|u| u.avatar_url.as_deref()),
@@ -283,110 +290,13 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         ..
     } = modal;
 
-    let status = StyledSelect {
-        id: FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::IssueStatusId)),
-        name: "status",
-        opened: status_state.opened,
-        variant: SelectVariant::Normal,
-        text_filter: status_state.text_filter.as_str(),
-        options: Some(
-            model
-                .issue_statuses
-                .iter()
-                .map(|opt| opt.to_child().name("status")),
-        ),
-        selected: model
-            .issue_statuses
-            .iter()
-            .filter(|is| is.id == payload.issue_status_id)
-            .map(|is| is.to_child().name("status"))
-            .collect(),
+    let status_field = status_select(model, payload, status_state);
 
-        valid: true,
-        ..Default::default()
-    }
-    .into_node();
-    let status_field = StyledField::build()
-        .input(status)
-        .label("Status")
-        .build()
-        .into_node();
+    let assignees_field = assignees_select(model, payload, assignees_state);
 
-    let assignees = StyledSelect {
-        id: FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
-        name: "assignees",
-        variant: SelectVariant::Empty,
-        is_multi: true,
-        opened: assignees_state.opened,
-        text_filter: assignees_state.text_filter.as_str(),
-        options: Some(
-            model
-                .users
-                .iter()
-                .map(|user| user.to_child().name("assignees")),
-        ),
-        selected: model
-            .users
-            .iter()
-            .filter(|user| payload.user_ids.contains(&user.id))
-            .map(|user| user.to_child().name("assignees"))
-            .collect(),
-        ..Default::default()
-    }
-    .into_node();
-    let assignees_field = StyledField::build()
-        .input(assignees)
-        .label("Assignees")
-        .build()
-        .into_node();
+    let reporter_field = reporters_select(model, payload, reporter_state);
 
-    let reporter = StyledSelect {
-        id: FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Reporter)),
-        name: "reporter",
-        opened: reporter_state.opened,
-        variant: SelectVariant::Empty,
-        text_filter: reporter_state.text_filter.as_str(),
-        options: Some(
-            model
-                .users
-                .iter()
-                .map(|user| user.to_child().name("reporter")),
-        ),
-        selected: model
-            .users
-            .iter()
-            .filter(|user| payload.reporter_id == user.id)
-            .map(|user| user.to_child().name("reporter"))
-            .collect(),
-        ..Default::default()
-    }
-    .into_node();
-    let reporter_field = StyledField::build()
-        .input(reporter)
-        .label("Reporter")
-        .build()
-        .into_node();
-
-    let priority = StyledSelect {
-        id: FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Priority)),
-        name: "priority",
-        variant: SelectVariant::Empty,
-        opened: priority_state.opened,
-        text_filter: priority_state.text_filter.as_str(),
-        options: Some(
-            IssuePriority::default()
-                .into_iter()
-                .map(|p| p.into_child().name("priority")),
-        ),
-        selected: vec![payload.priority.into_child().name("priority")],
-        ..Default::default()
-    }
-    .into_node();
-    let priority_field = StyledField::build()
-        .input(priority)
-        .label("Priority")
-        .build()
-        .into_node();
+    let priority_field = priorities_select(payload, priority_state);
 
     let time_tracking_type = model
         .project
@@ -404,12 +314,13 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         );
 
         let tracking = tracking_link(model, modal);
-        let tracking_field = StyledField::build()
-            .label("TIME TRACKING")
-            .tip("")
-            .input(tracking)
-            .build()
-            .into_node();
+        let tracking_field = StyledField {
+            label: "TIME TRACKING",
+            tip: Some(""),
+            input: tracking,
+            ..Default::default()
+        }
+        .into_node();
         (estimate_field, tracking_field)
     } else {
         (Node::Empty, Node::Empty)
@@ -432,4 +343,193 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         tracking_field,
         epic_field,
     ]
+}
+
+#[inline(always)]
+fn priorities_select(
+    payload: &UpdateIssuePayload,
+    priority_state: &StyledSelectState,
+) -> Node<Msg> {
+    let priority = StyledSelect {
+        id: FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Priority)),
+        name: "priority",
+        variant: SelectVariant::Empty,
+        opened: priority_state.opened,
+        text_filter: priority_state.text_filter.as_str(),
+        options: Some(
+            IssuePriority::default()
+                .into_iter()
+                .map(priority_select_option),
+        ),
+        selected: vec![priority_select_option(payload.priority)],
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        label: "Priority",
+        input: priority,
+        ..Default::default()
+    }
+    .into_node()
+}
+
+#[inline(always)]
+fn priority_select_option<'l>(ip: IssuePriority) -> StyledSelectChild<'l> {
+    StyledSelectChild {
+        icon: Some(
+            StyledIcon {
+                icon: ip.clone().into(),
+                class_list: ip.to_str(),
+                ..Default::default()
+            }
+            .into_node(),
+        ),
+        text: Some(ip.to_str()),
+        class_list: ip.to_str(),
+        value: ip.into(),
+        name: Some("priority"),
+        ..Default::default()
+    }
+}
+
+#[inline(always)]
+fn status_select(
+    model: &Model,
+    payload: &UpdateIssuePayload,
+    status_state: &StyledSelectState,
+) -> Node<Msg> {
+    let status = StyledSelect {
+        id: FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::IssueStatusId)),
+        name: "status",
+        opened: status_state.opened,
+        variant: SelectVariant::Normal,
+        text_filter: status_state.text_filter.as_str(),
+        options: Some(model.issue_statuses.iter().map(issue_status_select_option)),
+        selected: model
+            .issue_statuses
+            .iter()
+            .filter(|is| is.id == payload.issue_status_id)
+            .map(issue_status_select_option)
+            .collect(),
+
+        valid: true,
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        label: "Status",
+        input: status,
+        ..Default::default()
+    }
+    .into_node()
+}
+
+#[inline(always)]
+fn issue_status_select_option<'l>(is: &'l IssueStatus) -> StyledSelectChild<'l> {
+    StyledSelectChild {
+        value: is.id as u32,
+        class_list: is.name.as_str(),
+        text: Some(is.name.as_str()),
+        name: Some("status"),
+        ..Default::default()
+    }
+}
+
+#[inline(always)]
+fn reporters_select(
+    model: &Model,
+    payload: &UpdateIssuePayload,
+    reporter_state: &StyledSelectState,
+) -> Node<Msg> {
+    let reporter = StyledSelect {
+        id: FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Reporter)),
+        name: "reporter",
+        opened: reporter_state.opened,
+        variant: SelectVariant::Empty,
+        text_filter: reporter_state.text_filter.as_str(),
+        options: Some(model.users.iter().map(reporter_select_option)),
+        selected: model
+            .users
+            .iter()
+            .filter(|user| payload.reporter_id == user.id)
+            .map(reporter_select_option)
+            .collect(),
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        label: "Reporter",
+        input: reporter,
+        ..Default::default()
+    }
+    .into_node()
+}
+
+#[inline(always)]
+fn reporter_select_option<'l>(user: &'l User) -> StyledSelectChild<'l> {
+    StyledSelectChild {
+        value: user.id as u32,
+        icon: Some(
+            StyledAvatar {
+                size: 20,
+                name: &user.name,
+                avatar_url: user.avatar_url.as_deref(),
+                ..StyledAvatar::default()
+            }
+            .into_node(),
+        ),
+        text: Some(user.name.as_str()),
+        name: Some("reporter"),
+        ..Default::default()
+    }
+}
+
+#[inline(always)]
+fn assignees_select(
+    model: &Model,
+    payload: &UpdateIssuePayload,
+    assignees_state: &StyledSelectState,
+) -> Node<Msg> {
+    let assignees = StyledSelect {
+        id: FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
+        name: "assignees",
+        variant: SelectVariant::Empty,
+        is_multi: true,
+        opened: assignees_state.opened,
+        text_filter: assignees_state.text_filter.as_str(),
+        options: Some(model.users.iter().map(assignee_select_option)),
+        selected: model
+            .users
+            .iter()
+            .filter(|user| payload.user_ids.contains(&user.id))
+            .map(assignee_select_option)
+            .collect(),
+        ..Default::default()
+    }
+    .into_node();
+    StyledField {
+        input: assignees,
+        label: "Assignees",
+        ..Default::default()
+    }
+    .into_node()
+}
+
+#[inline(always)]
+fn assignee_select_option<'l>(user: &'l User) -> StyledSelectChild<'l> {
+    StyledSelectChild {
+        value: user.id as u32,
+        icon: Some(
+            StyledAvatar {
+                size: 20,
+                name: &user.name,
+                avatar_url: user.avatar_url.as_deref(),
+                ..StyledAvatar::default()
+            }
+            .into_node(),
+        ),
+        text: Some(user.name.as_str()),
+        name: Some("assignees"),
+        ..Default::default()
+    }
 }

@@ -1,8 +1,8 @@
-use {
-    crate::{components::styled_editor::Mode as TabMode, FieldId},
-    jirs_data::{EpicId, IssueStatusId, WsMsg},
-    seed::prelude::WebSocketMessage,
-};
+use jirs_data::{EpicId, IssueStatusId, WsMsg};
+use seed::prelude::WebSocketMessage;
+
+use crate::components::styled_editor::Mode as TabMode;
+use crate::FieldId;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum FieldChange {

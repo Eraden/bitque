@@ -1,15 +1,12 @@
-use {
-    crate::{
-        components::{styled_field::StyledField, styled_select::StyledSelect},
-        model::{IssueModal, Model},
-        shared::{ToChild, ToNode},
-        FieldId, Msg,
-    },
-    jirs_data::EpicId,
-    seed::prelude::Node,
-};
+use jirs_data::{Epic, EpicId};
+use seed::prelude::Node;
 
-use crate::components::styled_select::SelectVariant;
+use crate::components::styled_field::StyledField;
+use crate::components::styled_select::{SelectVariant, StyledSelect};
+use crate::components::styled_select_child::StyledSelectChild;
+use crate::model::{IssueModal, Model};
+use crate::shared::ToNode;
+use crate::{FieldId, Msg};
 
 pub fn epic_field<Modal>(model: &Model, modal: &Modal, field_id: FieldId) -> Option<Node<Msg>>
 where
@@ -18,16 +15,15 @@ where
     if model.epics.is_empty() {
         return None;
     }
-    let selected = modal
-        .epic_id_value()
-        .and_then(|id| model.epics.iter().find(|epic| epic.id == id as EpicId))
-        .map(|epic| vec![epic.to_child()])
-        .unwrap_or_default();
     let input = StyledSelect {
         id: field_id,
         name: "epic",
-        selected,
-        options: Some(model.epics.iter().map(|epic| epic.to_child())),
+        selected: vec![modal
+            .epic_id_value()
+            .and_then(|id| model.epics.iter().find(|epic| epic.id == id as EpicId))
+            .map(epic_select_option)
+            .unwrap_or_default()],
+        options: Some(model.epics.iter().map(epic_select_option)),
         variant: SelectVariant::Normal,
         clearable: true,
         text_filter: modal.epic_state().text_filter.as_str(),
@@ -45,4 +41,12 @@ where
         }
         .into_node(),
     )
+}
+
+fn epic_select_option<'l>(epic: &'l Epic) -> StyledSelectChild<'l> {
+    StyledSelectChild {
+        value: epic.id as u32,
+        text: Some(epic.name.as_str()),
+        ..Default::default()
+    }
 }

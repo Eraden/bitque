@@ -1,18 +1,16 @@
-use {
-    crate::{
-        components::{styled_icon::StyledIcon, styled_link::*},
-        model::{Model, PageContent},
-        pages::reports_page::model::ReportsPage,
-        shared::{inner_layout, ToNode},
-        Msg, PageChanged, ReportsPageChange,
-    },
-    chrono::Datelike,
-    jirs_data::Issue,
-    seed::{prelude::*, *},
-    std::collections::HashMap,
-};
+use std::collections::HashMap;
 
-use crate::components::styled_icon::Icon;
+use chrono::Datelike;
+use jirs_data::Issue;
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::components::styled_link::*;
+use crate::model::{Model, PageContent};
+use crate::pages::reports_page::model::ReportsPage;
+use crate::shared::{inner_layout, ToNode};
+use crate::{Msg, PageChanged, ReportsPageChange};
 
 const SVG_MARGIN_X: u32 = 10;
 const SVG_DRAWABLE_HEIGHT: u32 = 300;
@@ -59,7 +57,8 @@ fn this_month_graph(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<M
     // shapes, groups and texts
     let mut svg_parts: Vec<Node<Msg>> = vec![];
 
-    // each piece is part of column drawable view where number of parts depends on number of issues which have largest amount of issues
+    // each piece is part of column drawable view where number of parts depends on
+    // number of issues which have largest amount of issues
     let piece_height = SVG_DRAWABLE_HEIGHT as f64 / dominant as f64;
     // width reduces by legend divided by number of days
     let piece_width = (SVG_WIDTH as f64

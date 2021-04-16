@@ -1,13 +1,10 @@
-use {
-    crate::{
-        model::{self, Model, Page, PageContent},
-        pages::sign_up_page::model::SignUpPage,
-        ws::send_ws_msg,
-        FieldId, Msg, WebSocketChanged,
-    },
-    jirs_data::{SignUpFieldId, WsMsg},
-    seed::prelude::*,
-};
+use jirs_data::{SignUpFieldId, WsMsg};
+use seed::prelude::*;
+
+use crate::model::{self, Model, Page, PageContent};
+use crate::pages::sign_up_page::model::SignUpPage;
+use crate::ws::send_ws_msg;
+use crate::{FieldId, Msg, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::SignUp {
