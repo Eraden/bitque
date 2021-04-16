@@ -21,8 +21,8 @@ pub enum StyledDateTimeChanged {
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct StyledDateTimeInputState {
     field_id: FieldId,
-    timestamp: Option<chrono::NaiveDateTime>,
-    popup_visible: bool,
+    pub timestamp: Option<chrono::NaiveDateTime>,
+    pub popup_visible: bool,
 }
 
 impl StyledDateTimeInputState {
@@ -70,44 +70,14 @@ impl StyledDateTimeInputState {
 }
 
 pub struct StyledDateTimeInput {
-    field_id: FieldId,
-    timestamp: Option<chrono::NaiveDateTime>,
-    popup_visible: bool,
-}
-
-impl StyledDateTimeInput {
-    pub fn build() -> StyledDateTimeInputBuilder {
-        StyledDateTimeInputBuilder {
-            timestamp: None,
-            popup_visible: false,
-        }
-    }
+    pub field_id: FieldId,
+    pub timestamp: Option<chrono::NaiveDateTime>,
+    pub popup_visible: bool,
 }
 
 impl ToNode for StyledDateTimeInput {
     fn into_node(self) -> Node<Msg> {
         render(self)
-    }
-}
-
-pub struct StyledDateTimeInputBuilder {
-    timestamp: Option<chrono::NaiveDateTime>,
-    popup_visible: bool,
-}
-
-impl StyledDateTimeInputBuilder {
-    pub fn state(mut self, state: &StyledDateTimeInputState) -> Self {
-        self.timestamp = state.timestamp;
-        self.popup_visible = state.popup_visible;
-        self
-    }
-
-    pub fn build(self, field_id: FieldId) -> StyledDateTimeInput {
-        StyledDateTimeInput {
-            field_id,
-            timestamp: self.timestamp,
-            popup_visible: self.popup_visible,
-        }
     }
 }
 

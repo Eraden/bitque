@@ -82,18 +82,15 @@ pub fn view(model: &Model) -> Node<Msg> {
     }
     .into_node();
 
-    let form = StyledForm::build()
-        .heading("Invite new user")
-        .add_field(name_field)
-        .add_field(email_field)
-        .add_field(user_role_field)
-        .add_field(submit_field)
-        .on_submit(ev(Ev::Submit, |ev| {
+    let form = StyledForm {
+        heading: "Invite new user",
+        on_submit: Some(ev(Ev::Submit, |ev| {
             ev.prevent_default();
             Msg::InviteRequest
-        }))
-        .build()
-        .into_node();
+        })),
+        fields: vec![name_field, email_field, user_role_field, submit_field],
+    }
+    .into_node();
 
     let users: Vec<Node<Msg>> = page
         .invited_users

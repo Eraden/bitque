@@ -77,19 +77,21 @@ pub fn view(model: &Model) -> Node<Msg> {
     }
     .into_node();
 
-    let content = StyledForm::build()
-        .heading("Profile")
-        .on_submit(ev(Ev::Submit, |ev| {
+    let content = StyledForm {
+        heading: "Profile",
+        on_submit: Some(ev(Ev::Submit, |ev| {
             ev.prevent_default();
             Msg::PageChanged(PageChanged::Profile(ProfilePageChange::SubmitForm))
-        }))
-        .add_field(avatar)
-        .add_field(username_field)
-        .add_field(email_field)
-        .add_field(current_project)
-        .add_field(submit_field)
-        .build()
-        .into_node();
+        })),
+        fields: vec![
+            avatar,
+            username_field,
+            email_field,
+            current_project,
+            submit_field,
+        ],
+    }
+    .into_node();
     inner_layout(model, "profile", &[content])
 }
 

@@ -69,7 +69,7 @@ impl StyledSelectState {
         }
     }
 
-    pub fn update(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
+    pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
         let field_id = match msg {
             Msg::StyledSelectChanged(field_id, ..) => field_id,
             _ => return,
@@ -85,7 +85,6 @@ impl StyledSelectState {
                 }
             }
             Msg::StyledSelectChanged(_, StyledSelectChanged::Text(text)) => {
-                orders.skip();
                 self.text_filter = text.clone();
             }
             Msg::StyledSelectChanged(_, StyledSelectChanged::Changed(Some(v))) => {

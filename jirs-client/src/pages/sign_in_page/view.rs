@@ -124,16 +124,16 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     }
     .into_node();
 
-    let bind_token_form = StyledForm::build()
-        .on_submit(ev(Ev::Submit, |ev| {
+    let bind_token_form = StyledForm {
+        on_submit: Some(ev(Ev::Submit, |ev| {
             ev.stop_propagation();
             ev.prevent_default();
             Msg::BindClientRequest
-        }))
-        .add_field(token_field)
-        .add_field(submit_token_field)
-        .build()
-        .into_node();
+        })),
+        fields: vec![token_field, submit_token_field],
+        ..Default::default()
+    }
+    .into_node();
 
     let children = vec![sign_in_form, bind_token_form];
     outer_layout(model, "login", children)

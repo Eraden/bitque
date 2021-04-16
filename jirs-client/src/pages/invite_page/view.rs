@@ -22,17 +22,15 @@ pub fn view(model: &Model) -> Node<Msg> {
         _ => empty![],
     };
 
-    let form = StyledForm::build()
-        .heading("Welcome in JIRS")
-        .on_submit(ev(Ev::Submit, move |ev| {
+    let form = StyledForm {
+        heading: "Welcome in JIRS",
+        on_submit: Some(ev(Ev::Submit, move |ev| {
             ev.prevent_default();
             Msg::PageChanged(PageChanged::Invitation(InvitationPageChange::SubmitForm))
-        }))
-        .add_field(token_field)
-        .add_field(submit_field)
-        .add_field(error)
-        .build()
-        .into_node();
+        })),
+        fields: vec![token_field, submit_field, error],
+    }
+    .into_node();
 
     outer_layout(model, "invite", vec![form])
 }

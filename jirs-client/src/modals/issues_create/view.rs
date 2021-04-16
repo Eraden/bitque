@@ -29,36 +29,43 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         .unwrap_or_else(|| Type::Task);
 
     let issue_type_field = issue_type_field(modal);
-    let form = StyledForm::build()
-        .heading(issue_type.form_label())
-        .add_field(issue_type_field)
-        .add_field(crate::shared::divider());
+    let mut form = StyledForm {
+        heading: issue_type.form_label(),
+        fields: vec![issue_type_field, crate::shared::divider()],
+        ..Default::default()
+    };
 
-    let form = match issue_type {
+    match issue_type {
         Type::Epic => {
             let name_field = name_field(modal);
 
             let starts = StyledField {
-                input: StyledDateTimeInput::build()
-                    .state(&modal.epic_starts_at_state)
-                    .build(FieldId::AddIssueModal(IssueFieldId::EpicStartsAt))
-                    .into_node(),
+                input: StyledDateTimeInput {
+                    field_id: FieldId::AddIssueModal(IssueFieldId::EpicStartsAt),
+                    popup_visible: modal.epic_starts_at_state.popup_visible,
+                    timestamp: modal.epic_starts_at_state.timestamp.clone(),
+                }
+                .into_node(),
                 label: "Starts at",
                 ..Default::default()
             }
             .into_node();
 
             let end = StyledField {
-                input: StyledDateTimeInput::build()
-                    .state(&modal.epic_ends_at_state)
-                    .build(FieldId::AddIssueModal(IssueFieldId::EpicEndsAt))
-                    .into_node(),
+                input: StyledDateTimeInput {
+                    field_id: FieldId::AddIssueModal(IssueFieldId::EpicEndsAt),
+                    popup_visible: modal.epic_ends_at_state.popup_visible,
+                    timestamp: modal.epic_ends_at_state.timestamp.clone(),
+                }
+                .into_node(),
                 label: "Ends at",
                 ..Default::default()
             }
             .into_node();
 
-            form.add_field(name_field).add_field(starts).add_field(end)
+            form.fields.push(name_field);
+            form.fields.push(starts);
+            form.fields.push(end)
         }
         Type::Task | Type::Story | Type::Bug => {
             let short_summary_field = short_summary_field(modal);
@@ -69,12 +76,14 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
             let epic_field =
                 epic_field(model, modal, FieldId::AddIssueModal(IssueFieldId::EpicName));
 
-            form.add_field(short_summary_field)
-                .add_field(description_field)
-                .add_field(reporter_field)
-                .add_field(assignees_field)
-                .add_field(issue_priority_field)
-                .try_field(epic_field)
+            form.fields.push(short_summary_field);
+            form.fields.push(description_field);
+            form.fields.push(reporter_field);
+            form.fields.push(assignees_field);
+            form.fields.push(issue_priority_field);
+            if let Some(field) = epic_field {
+                form.fields.push(field);
+            }
         }
     };
 
@@ -106,12 +115,12 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     .into_node();
     let actions = div![attrs![At::Class => "actions"], submit, cancel];
 
-    let form = form.add_field(actions).build().into_node();
+    form.fields.push(actions);
 
     StyledModal {
         class_list: "addIssue",
         width: Some(0),
-        children: vec![form],
+        children: vec![form.into_node()],
         ..Default::default()
     }
     .into_node()

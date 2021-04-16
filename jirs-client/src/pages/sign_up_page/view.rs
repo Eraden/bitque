@@ -94,20 +94,22 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         div![C!["error"], p![page.error.as_str()]]
     };
 
-    let sign_up_form = StyledForm::build()
-        .heading("Sign In to your account")
-        .on_submit(ev(Ev::Submit, |ev| {
+    let sign_up_form = StyledForm {
+        heading: "Sign In to your account",
+        on_submit: Some(ev(Ev::Submit, |ev| {
             ev.stop_propagation();
             ev.prevent_default();
             Msg::SignUpRequest
-        }))
-        .add_field(username_field)
-        .add_field(email_field)
-        .add_field(submit_field)
-        .add_field(no_pass_section)
-        .add_field(error_row)
-        .build()
-        .into_node();
+        })),
+        fields: vec![
+            username_field,
+            email_field,
+            submit_field,
+            no_pass_section,
+            error_row,
+        ],
+    }
+    .into_node();
     let children = vec![sign_up_form];
     outer_layout(model, "register", children)
 }

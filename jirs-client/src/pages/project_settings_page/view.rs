@@ -5,7 +5,7 @@ use seed::prelude::*;
 use seed::*;
 
 use crate::components::styled_button::{ButtonVariant, StyledButton};
-use crate::components::styled_checkbox::{ChildBuilder, StyledCheckbox};
+use crate::components::styled_checkbox::{ChildBuilder, StyledCheckbox, StyledCheckboxState};
 use crate::components::styled_editor::StyledEditor;
 use crate::components::styled_field::StyledField;
 use crate::components::styled_form::StyledForm;
@@ -64,24 +64,26 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     }
     .into_node();
 
-    let form = StyledForm::build()
-        .heading("Project Details")
-        .on_submit(ev(Ev::Submit, |ev| {
+    let form = StyledForm {
+        heading: "Project Details",
+        fields: vec![
+            name_field,
+            url_field,
+            description_field,
+            category_field,
+            time_tracking_field,
+            save_button,
+            columns_field,
+        ],
+        on_submit: Some(ev(Ev::Submit, |ev| {
             ev.prevent_default();
+            ev.stop_propagation();
             Msg::PageChanged(PageChanged::ProjectSettings(
                 ProjectPageChange::SubmitProjectSettingsForm,
             ))
-        }))
-        .add_field(name_field)
-        .add_field(url_field)
-        // .add_field(desc_rte)
-        .add_field(description_field)
-        .add_field(category_field)
-        .add_field(time_tracking_field)
-        .add_field(save_button)
-        .add_field(columns_field)
-        .build()
-        .into_node();
+        })),
+    }
+    .into_node();
 
     let project_section = [div![C!["formContainer"], form]];
 
@@ -90,16 +92,15 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
 #[inline(always)]
 fn time_tracking_select(page: &ProjectSettingsPage) -> Node<Msg> {
-    let time_tracking = StyledCheckbox::build()
-        .options(
+    let time_tracking = StyledCheckbox {
+        options: Some(
             TimeTracking::default()
                 .into_iter()
-                .map(time_tracking_select_option),
-        )
-        .state(&page.time_tracking)
-        .add_class("timeTracking")
-        .build(FieldId::ProjectSettings(ProjectFieldId::TimeTracking))
-        .into_node();
+                .map(|tt| time_tracking_checkbox_option(tt, &page.time_tracking)),
+        ),
+        class_list: "timeTracking",
+    }
+    .into_node();
     let time_tracking_type: TimeTracking = page.time_tracking.value.into();
     StyledField {
         input: time_tracking,
@@ -113,8 +114,14 @@ fn time_tracking_select(page: &ProjectSettingsPage) -> Node<Msg> {
     .into_node()
 }
 
-fn time_tracking_select_option<'l>(t: TimeTracking) -> ChildBuilder<'l> {
+fn time_tracking_checkbox_option<'l>(
+    t: TimeTracking,
+    state: &StyledCheckboxState,
+) -> ChildBuilder<'l> {
+    let value: u32 = t.into();
     ChildBuilder {
+        field_id: state.field_id.clone(),
+        selected: state.value == value,
         label: match t {
             TimeTracking::Untracked => "No tracking",
             TimeTracking::Fibonacci => "Fibonacci (Bad mode)",
@@ -130,8 +137,7 @@ fn time_tracking_select_option<'l>(t: TimeTracking) -> ChildBuilder<'l> {
             TimeTracking::Fibonacci => "fibonacci",
             TimeTracking::Hourly => "hourly",
         },
-        value: t.into(),
-        ..Default::default()
+        value,
     }
 }
 
@@ -236,12 +242,10 @@ fn category_select_option<'l>(pc: ProjectCategory) -> StyledSelectChild<'l> {
 fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
     let width = 100f64 / (model.issue_statuses.len() + 1) as f64;
     let column_style = format!("width: calc({width}% - 10px)", width = width);
-    let mut per_column_issue_count = HashMap::new();
-    for issue in model.issues().iter() {
-        *per_column_issue_count
-            .entry(issue.issue_status_id)
-            .or_insert(0) += 1;
-    }
+    let per_column_issue_count = model.issues().iter().fold(HashMap::new(), |mut h, issue| {
+        *h.entry(issue.issue_status_id).or_insert(0) += 1;
+        h
+    });
     let columns: Vec<Node<Msg>> = model
         .issue_statuses
         .iter()
@@ -281,6 +285,7 @@ fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
         });
         let on_submit = ev(Ev::Submit, move |ev| {
             ev.prevent_default();
+            ev.stop_propagation();
             Some(Msg::PageChanged(PageChanged::ProjectSettings(
                 ProjectPageChange::SubmitIssueStatusForm,
             )))
