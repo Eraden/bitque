@@ -44,22 +44,24 @@ pub struct StyledTooltip<'l> {
     pub variant: TooltipVariant,
 }
 
-impl<'l> ToNode for StyledTooltip<'l> {
-    fn into_node(self) -> Node<Msg> {
-        render(self)
+impl<'l> StyledTooltip<'l> {
+    pub fn render(self) -> Node<Msg> {
+        let StyledTooltip {
+            visible,
+            class_list,
+            children,
+            variant,
+        } = self;
+        if visible {
+            div![C!["styledTooltip", class_list, variant.to_str()], children]
+        } else {
+            empty!()
+        }
     }
 }
 
-pub fn render(values: StyledTooltip) -> Node<Msg> {
-    let StyledTooltip {
-        visible,
-        class_list,
-        children,
-        variant,
-    } = values;
-    if visible {
-        div![C!["styledTooltip", class_list, variant.to_str()], children]
-    } else {
-        empty!()
+impl<'l> ToNode for StyledTooltip<'l> {
+    fn into_node(self) -> Node<Msg> {
+        self.render()
     }
 }

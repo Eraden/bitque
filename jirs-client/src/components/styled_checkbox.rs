@@ -48,8 +48,8 @@ impl<'l> Default for ChildBuilder<'l> {
     }
 }
 
-impl<'l> ToNode for ChildBuilder<'l> {
-    fn into_node(self) -> Node<Msg> {
+impl<'l> ChildBuilder<'l> {
+    pub fn render(self) -> Node<Msg> {
         let ChildBuilder {
             field_id,
             name,
@@ -60,10 +60,10 @@ impl<'l> ToNode for ChildBuilder<'l> {
         } = self;
 
         let id = field_id.to_string();
-        let field_id_clone = field_id.clone();
-        let handler: EventHandler<Msg> = mouse_ev(Ev::Click, move |_| {
-            Msg::U32InputChanged(field_id_clone, value)
-        });
+        let handler: EventHandler<Msg> = {
+            let id = field_id.clone();
+            mouse_ev(Ev::Click, move |_| Msg::U32InputChanged(id, value))
+        };
 
         div![
             C![
@@ -81,7 +81,7 @@ impl<'l> ToNode for ChildBuilder<'l> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct StyledCheckbox<'l, Options>
 where
     Options: Iterator<Item = ChildBuilder<'l>>,
@@ -90,15 +90,23 @@ where
     pub class_list: &'l str,
 }
 
-impl<'l, Options> Default for StyledCheckbox<'l, Options>
+impl<'l, Options> StyledCheckbox<'l, Options>
 where
     Options: Iterator<Item = ChildBuilder<'l>>,
 {
-    fn default() -> Self {
-        Self {
-            options: None,
-            class_list: "",
-        }
+    pub fn render(self) -> Node<Msg> {
+        let StyledCheckbox {
+            options,
+            class_list,
+        } = self;
+
+        div![
+            C!["styledCheckbox", class_list],
+            options.map_or_else(
+                || vec![Node::Empty],
+                |v| v.map(ChildBuilder::render).collect(),
+            )
+        ]
     }
 }
 
@@ -107,23 +115,6 @@ where
     Options: Iterator<Item = ChildBuilder<'l>>,
 {
     fn into_node(self) -> Node<Msg> {
-        render(self)
+        self.render()
     }
-}
-
-fn render<'l, Options>(values: StyledCheckbox<'l, Options>) -> Node<Msg>
-where
-    Options: Iterator<Item = ChildBuilder<'l>>,
-{
-    let StyledCheckbox {
-        options,
-        class_list,
-    } = values;
-
-    let opt: Vec<Node<Msg>> = match options {
-        Some(options) => options.map(|child| child.into_node()).collect(),
-        _ => vec![Node::Empty],
-    };
-
-    div![C!["styledCheckbox", class_list], opt,]
 }
