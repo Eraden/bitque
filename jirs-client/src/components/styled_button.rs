@@ -81,59 +81,57 @@ impl<'l> Default for StyledButton<'l> {
     }
 }
 
-impl<'l> ToNode for StyledButton<'l> {
+impl<'l> StyledButton<'l> {
     #[inline(always)]
-    fn into_node(self) -> Node<Msg> {
-        render(self)
+    pub fn render(self) -> Node<Msg> {
+        let StyledButton {
+            text,
+            variant,
+            disabled,
+            active,
+            icon,
+            on_click,
+            children,
+            class_list,
+            button_type,
+            button_id,
+        } = self;
+
+        let handler = match on_click {
+            Some(h) if !disabled => vec![h],
+            _ => vec![],
+        };
+
+        let children_len = children.len();
+        let content = if children.is_empty() && text.is_none() {
+            Node::Empty
+        } else {
+            span![C!["text"], text.unwrap_or_default(), children]
+        };
+
+        let button_id = button_id.map(|id| id.to_str()).unwrap_or_default();
+
+        seed::button![
+            C![
+                "styledButton",
+                class_list,
+                variant.to_str(),
+                IF![children_len > 0 && text.is_none() => "iconOnly"],
+                IF![active => "isActive"],
+                IF![icon.is_some() => "withIcon"],
+            ],
+            attrs![At::Id => button_id, At::Type => button_type],
+            IF![disabled => attrs![At::Disabled => true]],
+            handler,
+            icon.unwrap_or(Node::Empty),
+            content,
+        ]
     }
 }
 
-#[inline(always)]
-pub fn render(values: StyledButton) -> Node<Msg> {
-    let StyledButton {
-        text,
-        variant,
-        disabled,
-        active,
-        icon,
-        on_click,
-        children,
-        class_list,
-        button_type,
-        button_id,
-    } = values;
-    let class_list = format!(
-        "{} {} {} {} {}",
-        class_list,
-        variant,
-        if children.is_empty() && text.is_none() {
-            "iconOnly"
-        } else {
-            ""
-        },
-        if active { "isActive" } else { "" },
-        if icon.is_some() { "withIcon" } else { "" }
-    );
-    let handler = match on_click {
-        Some(h) if !disabled => vec![h],
-        _ => vec![],
-    };
-
-    let icon_node = icon.unwrap_or(Node::Empty);
-    let content = if children.is_empty() && text.is_none() {
-        Node::Empty
-    } else {
-        span![C!["text"], text.unwrap_or_default(), children]
-    };
-
-    let button_id = button_id.map(|id| id.to_str()).unwrap_or_default();
-
-    seed::button![
-        C!["styledButton", class_list],
-        attrs![At::Id => button_id, At::Type => button_type],
-        IF![disabled => attrs![At::Disabled => true]],
-        handler,
-        icon_node,
-        content,
-    ]
+impl<'l> ToNode for StyledButton<'l> {
+    #[inline(always)]
+    fn into_node(self) -> Node<Msg> {
+        self.render()
+    }
 }
