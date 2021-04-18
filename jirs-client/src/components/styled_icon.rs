@@ -271,53 +271,55 @@ impl<'l> Default for StyledIcon<'l> {
 
 impl<'l> ToNode for StyledIcon<'l> {
     fn into_node(self) -> Node<Msg> {
-        render(self)
+        self.render()
     }
 }
 
-pub fn render(values: StyledIcon) -> Node<Msg> {
-    let StyledIcon {
-        icon,
-        size,
-        color,
-        class_list,
-        style_list,
-        on_click,
-    } = values;
+impl<'l> StyledIcon<'l> {
+    pub fn render(self) -> Node<Msg> {
+        let StyledIcon {
+            icon,
+            size,
+            color,
+            class_list,
+            style_list,
+            on_click,
+        } = self;
 
-    let styles: Vec<Attrs> = vec![
-        size.map(|s| {
-            let font_size = format!("font-size: {}", s);
-            attrs![At::Style => font_size]
-        }),
-        icon.to_color().map(|s| {
-            let color = format!("color: {}", s);
-            attrs![At::Style => color]
-        }),
-        color.map(|s| attrs![At::Style => format!("color: var(--{})", s)]),
-    ]
-    .into_iter()
-    .flatten()
-    .collect();
+        let styles: Vec<Attrs> = vec![
+            size.map(|s| {
+                let font_size = format!("font-size: {}", s);
+                attrs![At::Style => font_size]
+            }),
+            icon.to_color().map(|s| {
+                let color = format!("color: {}", s);
+                attrs![At::Style => color]
+            }),
+            color.map(|s| attrs![At::Style => format!("color: var(--{})", s)]),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
 
-    let style_list = style_list.into_iter().fold("".to_string(), |mut mem, s| {
-        match s {
-            Cow::Borrowed(s) => {
-                mem.push_str(s);
+        let style_list = style_list.into_iter().fold("".to_string(), |mut mem, s| {
+            match s {
+                Cow::Borrowed(s) => {
+                    mem.push_str(s);
+                }
+                Cow::Owned(owned) => {
+                    mem.push_str(owned.as_str());
+                }
             }
-            Cow::Owned(owned) => {
-                mem.push_str(owned.as_str());
-            }
-        }
-        mem.push(';');
-        mem
-    });
+            mem.push(';');
+            mem
+        });
 
-    i![
-        C!["styledIcon", class_list, icon.to_str()],
-        styles,
-        attrs![ At::Style => style_list ],
-        on_click,
-        ""
-    ]
+        i![
+            C!["styledIcon", class_list, icon.to_str()],
+            styles,
+            attrs![ At::Style => style_list ],
+            on_click,
+            ""
+        ]
+    }
 }

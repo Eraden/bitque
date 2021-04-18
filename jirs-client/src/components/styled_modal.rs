@@ -63,60 +63,55 @@ impl<'l> StyledModal<'l> {
 
 impl<'l> ToNode for StyledModal<'l> {
     fn into_node(self) -> Node<Msg> {
-        render(self)
+        self.render()
     }
 }
 
-#[inline]
-pub fn render(values: StyledModal) -> Node<Msg> {
-    let StyledModal {
-        variant,
-        width,
-        with_icon,
-        children,
-        class_list,
-    } = values;
+impl<'l> StyledModal<'l> {
+    #[inline]
+    pub fn render(self) -> Node<Msg> {
+        let StyledModal {
+            variant,
+            width,
+            with_icon,
+            children,
+            class_list,
+        } = self;
 
-    let icon = if with_icon {
-        StyledIcon {
-            icon: Icon::Close,
-            class_list: variant.to_icon_class_name(),
-            ..Default::default()
-        }
-        .into_node()
-    } else {
-        empty![]
-    };
+        let close_handler = mouse_ev(Ev::Click, |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            Msg::ModalDropped
+        });
+        let body_handler = mouse_ev(Ev::Click, |ev| {
+            ev.stop_propagation();
+            ev.prevent_default();
+            None as Option<Msg>
+        });
 
-    let close_handler = mouse_ev(Ev::Click, |ev| {
-        ev.stop_propagation();
-        ev.prevent_default();
-        Msg::ModalDropped
-    });
-    let body_handler = mouse_ev(Ev::Click, |ev| {
-        ev.stop_propagation();
-        ev.prevent_default();
-        None as Option<Msg>
-    });
-
-    let clickable_class = format!("clickableOverlay {}", variant.to_class_name());
-    let styled_modal_style = match width {
-        Some(0) => "".to_string(),
-        Some(n) => format!("max-width: {width}px", width = n),
-        _ => format!("max-width: {width}px", width = 130),
-    };
-    div![
-        C!["modal"],
+        let styled_modal_style = match width {
+            Some(0) => "".to_string(),
+            Some(n) => format!("max-width: {width}px", width = n),
+            _ => format!("max-width: {width}px", width = 130),
+        };
         div![
-            C![clickable_class],
-            close_handler,
+            C!["modal"],
             div![
-                C![class_list, "styledModal", variant.to_class_name()],
-                attrs![At::Style => styled_modal_style],
-                body_handler,
-                icon,
-                children
+                C!["clickableOverlay", variant.to_class_name()],
+                close_handler,
+                div![
+                    C![class_list, "styledModal", variant.to_class_name()],
+                    attrs![At::Style => styled_modal_style],
+                    body_handler,
+                    IF![with_icon => StyledIcon {
+                        icon: Icon::Close,
+                        class_list: variant.to_icon_class_name(),
+                        ..Default::default()
+                    }
+                    .render()],
+                    children
+                ]
             ]
         ]
-    ]
+    }
 }

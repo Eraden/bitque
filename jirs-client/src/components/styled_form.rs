@@ -11,27 +11,29 @@ pub struct StyledForm<'l> {
     pub on_submit: Option<EventHandler<Msg>>,
 }
 
-impl<'l> ToNode for StyledForm<'l> {
+impl<'l> StyledForm<'l> {
     #[inline]
-    fn into_node(self) -> Node<Msg> {
-        render(self)
+    pub fn render(self) -> Node<Msg> {
+        let StyledForm {
+            heading,
+            fields,
+            on_submit,
+        } = self;
+        let handlers = match on_submit {
+            Some(handler) => vec![handler],
+            _ => vec![],
+        };
+        seed::form![
+            handlers,
+            C!["styledForm"],
+            div![C!["formElement"], div![C!["formHeading"], heading], fields],
+        ]
     }
 }
 
-#[inline]
-pub fn render(values: StyledForm) -> Node<Msg> {
-    let StyledForm {
-        heading,
-        fields,
-        on_submit,
-    } = values;
-    let handlers = match on_submit {
-        Some(handler) => vec![handler],
-        _ => vec![],
-    };
-    seed::form![
-        handlers,
-        C!["styledForm"],
-        div![C!["formElement"], div![C!["formHeading"], heading], fields],
-    ]
+impl<'l> ToNode for StyledForm<'l> {
+    #[inline]
+    fn into_node(self) -> Node<Msg> {
+        self.render()
+    }
 }

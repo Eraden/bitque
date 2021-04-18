@@ -39,46 +39,48 @@ pub struct StyledImageInput<'l> {
 
 impl<'l> ToNode for StyledImageInput<'l> {
     fn into_node(self) -> Node<Msg> {
-        render(self)
+        self.render()
     }
 }
 
-fn render(values: StyledImageInput) -> Node<Msg> {
-    let StyledImageInput {
-        id,
-        class_list,
-        url,
-    } = values;
+impl<'l> StyledImageInput<'l> {
+    pub fn render(self) -> Node<Msg> {
+        let StyledImageInput {
+            id,
+            class_list,
+            url,
+        } = self;
 
-    let field_id = id.clone();
-    let on_change = ev(Ev::Change, move |ev| {
-        let target = ev.target().unwrap();
-        let input = seed::to_input(&target);
-        let v = input
-            .files()
-            .map(|list| {
-                let mut v = vec![];
-                for i in 0..list.length() {
-                    v.push(list.get(i).unwrap());
-                }
-                v
-            })
-            .unwrap_or_default();
-        Msg::FileInputChanged(field_id, v)
-    });
-    let input_id = id.to_string();
+        let field_id = id.clone();
+        let on_change = ev(Ev::Change, move |ev| {
+            let target = ev.target().unwrap();
+            let input = seed::to_input(&target);
+            let v = input
+                .files()
+                .map(|list| {
+                    let mut v = vec![];
+                    for i in 0..list.length() {
+                        v.push(list.get(i).unwrap());
+                    }
+                    v
+                })
+                .unwrap_or_default();
+            Msg::FileInputChanged(field_id, v)
+        });
+        let input_id = id.to_string();
 
-    div![
-        C!["styledImageInput", class_list],
-        label![
-            C!["label"],
-            attrs![At::For => input_id],
-            img![C!["mask"], attrs![At::Src => url.unwrap_or_default()], " "]
-        ],
-        input![
-            C!["input"],
-            attrs![At::Type => "file", At::Id => input_id],
-            on_change
+        div![
+            C!["styledImageInput", class_list],
+            label![
+                C!["label"],
+                attrs![At::For => input_id],
+                img![C!["mask"], attrs![At::Src => url.unwrap_or_default()], " "]
+            ],
+            input![
+                C!["input"],
+                attrs![At::Type => "file", At::Id => input_id],
+                on_change
+            ]
         ]
-    ]
+    }
 }

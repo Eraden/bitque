@@ -14,36 +14,38 @@ pub struct StyledLink<'l> {
 
 impl<'l> ToNode for StyledLink<'l> {
     fn into_node(self) -> Node<Msg> {
-        render(self)
+        self.render()
     }
 }
 
-pub fn render(values: StyledLink) -> Node<Msg> {
-    let StyledLink {
-        children,
-        class_list,
-        href,
-    } = values;
+impl<'l> StyledLink<'l> {
+    pub fn render(self) -> Node<Msg> {
+        let StyledLink {
+            children,
+            class_list,
+            href,
+        } = self;
 
-    let on_click = {
-        let href = href.to_string();
-        mouse_ev("click", move |ev| {
-            if href.starts_with('/') {
-                ev.prevent_default();
-                ev.stop_propagation();
-                if let Ok(url) = seed::Url::from_str(href.as_str()) {
-                    url.go_and_push();
+        let on_click = {
+            let href = href.to_string();
+            mouse_ev("click", move |ev| {
+                if href.starts_with('/') {
+                    ev.prevent_default();
+                    ev.stop_propagation();
+                    if let Ok(url) = seed::Url::from_str(href.as_str()) {
+                        url.go_and_push();
+                    }
                 }
-            }
 
-            None as Option<Msg>
-        })
-    };
+                None as Option<Msg>
+            })
+        };
 
-    a![
-        C!["styledLink", class_list],
-        attrs![ At::Href => href, ],
-        on_click,
-        children,
-    ]
+        a![
+            C!["styledLink", class_list],
+            attrs![ At::Href => href, ],
+            on_click,
+            children,
+        ]
+    }
 }

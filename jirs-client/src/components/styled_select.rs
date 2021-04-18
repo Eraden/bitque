@@ -246,30 +246,6 @@ where
         vec![]
     };
 
-    let option_list = match (opened, children.is_empty()) {
-        (false, _) => empty![],
-        (_, true) => seed::div![C!["noOptions"], "No results"],
-        _ => seed::div![C!["options"], children],
-    };
-
-    let value: Vec<Node<Msg>> = if is_multi {
-        let add_icon = StyledIcon::from(Icon::Plus).into_node();
-        let mut children: Vec<Node<Msg>> = selected
-            .into_iter()
-            .map(|m| into_multi_value(m, id.clone()))
-            .collect();
-
-        if !children.is_empty() {
-            children.push(div![C!["addMore"], add_icon, "Add more"]);
-        } else {
-            children.push(div![C!["placeholder"], "Select"]);
-        }
-
-        vec![div![C!["valueMulti"], children]]
-    } else {
-        selected.into_iter().map(|m| m.render_value()).collect()
-    };
-
     seed::div![
         C!["styledSelect", variant.to_str(), IF![!valid => "invalid"]],
         attrs![At::Style => dropdown_style.as_str()],
@@ -280,7 +256,21 @@ where
         div![
             C!["valueContainer", variant.to_str()],
             on_handler,
-            value,
+            match is_multi {
+                true => vec![div![
+                    C!["valueMulti"],
+                    selected
+                        .into_iter()
+                        .map(|m| into_multi_value(m, id.clone()))
+                        .collect::<Vec<Node<Msg>>>(),
+                    IF![children.is_empty() => div![C!["placeholder"], "Select"]],
+                    IF![!children.is_empty() => div![C!["addMore"], StyledIcon::from(Icon::Plus).render(), "Add more"]],
+                ]],
+                false => selected
+                    .into_iter()
+                    .map(|m| m.render_value())
+                    .collect::<Vec<Node<Msg>>>(),
+            },
             action_icon,
         ],
         div![
@@ -296,7 +286,11 @@ where
                 ],
                 on_text,
             ]],
-            option_list
+            match (opened, children.is_empty()) {
+                (false, _) => empty![],
+                (_, true) => seed::div![C!["noOptions"], "No results"],
+                _ => seed::div![C!["options"], children],
+            }
         ]
     ]
 }

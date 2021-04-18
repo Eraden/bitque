@@ -81,13 +81,25 @@ impl<'l> ChildBuilder<'l> {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct StyledCheckbox<'l, Options>
 where
     Options: Iterator<Item = ChildBuilder<'l>>,
 {
     pub options: Option<Options>,
     pub class_list: &'l str,
+}
+
+impl<'l, Options> Default for StyledCheckbox<'l, Options>
+where
+    Options: Iterator<Item = ChildBuilder<'l>>,
+{
+    fn default() -> Self {
+        Self {
+            options: None,
+            class_list: "",
+        }
+    }
 }
 
 impl<'l, Options> StyledCheckbox<'l, Options>

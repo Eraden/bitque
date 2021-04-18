@@ -163,62 +163,64 @@ impl<'l, 'm: 'l> StyledInput<'l, 'm> {
 impl<'l, 'm: 'l> ToNode for StyledInput<'l, 'm> {
     #[inline]
     fn into_node(self) -> Node<Msg> {
-        render(self)
+        self.render()
     }
 }
 
-pub fn render(values: StyledInput) -> Node<Msg> {
-    let StyledInput {
-        id,
-        icon,
-        valid,
-        value,
-        input_type,
-        input_class_list,
-        wrapper_class_list,
-        variant,
-        auto_focus,
-        input_handlers,
-    } = values;
-    let id = id.expect("Input id is required");
-
-    let icon_node = icon
-        .map(|icon| StyledIcon::from(icon).into_node())
-        .unwrap_or(Node::Empty);
-
-    let on_change = {
-        let field_id = id.clone();
-        ev(Ev::Change, move |event| {
-            event.stop_propagation();
-            let target = event.target().unwrap();
-            Msg::StrInputChanged(field_id, seed::to_input(&target).value())
-        })
-    };
-
-    div![
-        C![
-            "styledInput",
-            format!("{}", id),
-            variant.to_str(),
-            wrapper_class_list
-        ],
-        IF![!valid => C!["invalid"]],
-        icon_node,
-        seed::input![
-            C![
-                "inputElement",
-                variant.to_str(),
-                input_class_list,
-                icon.as_ref().map(|_| "withIcon").unwrap_or_default()
-            ],
-            attrs![
-                "id" => format!("{}", id),
-                "value" => value,
-                "type" => input_type.unwrap_or("text"),
-            ],
-            IF![auto_focus => attrs![At::AutoFocus => true]],
-            on_change,
+impl<'l, 'm: 'l> StyledInput<'l, 'm> {
+    pub fn render(self) -> Node<Msg> {
+        let StyledInput {
+            id,
+            icon,
+            valid,
+            value,
+            input_type,
+            input_class_list,
+            wrapper_class_list,
+            variant,
+            auto_focus,
             input_handlers,
-        ],
-    ]
+        } = self;
+        let id = id.expect("Input id is required");
+
+        let icon_node = icon
+            .map(|icon| StyledIcon::from(icon).render())
+            .unwrap_or(Node::Empty);
+
+        let on_change = {
+            let field_id = id.clone();
+            ev(Ev::Change, move |event| {
+                event.stop_propagation();
+                let target = event.target().unwrap();
+                Msg::StrInputChanged(field_id, seed::to_input(&target).value())
+            })
+        };
+
+        div![
+            C![
+                "styledInput",
+                format!("{}", id),
+                variant.to_str(),
+                wrapper_class_list
+            ],
+            IF![!valid => C!["invalid"]],
+            icon_node,
+            seed::input![
+                C![
+                    "inputElement",
+                    variant.to_str(),
+                    input_class_list,
+                    icon.as_ref().map(|_| "withIcon").unwrap_or_default()
+                ],
+                attrs![
+                    "id" => format!("{}", id),
+                    "value" => value,
+                    "type" => input_type.unwrap_or("text"),
+                ],
+                IF![auto_focus => attrs![At::AutoFocus => true]],
+                on_change,
+                input_handlers,
+            ],
+        ]
+    }
 }

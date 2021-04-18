@@ -23,25 +23,27 @@ impl<'l> Default for StyledField<'l> {
     }
 }
 
-impl<'l> ToNode for StyledField<'l> {
-    fn into_node(self) -> Node<Msg> {
-        render(self)
+impl<'l> StyledField<'l> {
+    pub fn render(self) -> Node<Msg> {
+        let StyledField {
+            label,
+            tip,
+            input,
+            class_list,
+        } = self;
+        let tip_node = tip.map_or_else(|| empty![], |s| div![C!["styledTip"], s]);
+
+        div![
+            C!["styledField", class_list],
+            seed::label![C!["styledLabel"], label],
+            input,
+            tip_node,
+        ]
     }
 }
 
-pub fn render(values: StyledField) -> Node<Msg> {
-    let StyledField {
-        label,
-        tip,
-        input,
-        class_list,
-    } = values;
-    let tip_node = tip.map(|s| div![C!["styledTip"], s]).unwrap_or(empty![]);
-
-    div![
-        C!["styledField", class_list],
-        seed::label![C!["styledLabel"], label],
-        input,
-        tip_node,
-    ]
+impl<'l> ToNode for StyledField<'l> {
+    fn into_node(self) -> Node<Msg> {
+        self.render()
+    }
 }
