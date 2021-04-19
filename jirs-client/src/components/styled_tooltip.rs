@@ -4,6 +4,7 @@ use seed::*;
 use crate::Msg;
 
 #[derive(Debug, Copy, Clone)]
+#[repr(C)]
 pub enum TooltipVariant {
     About,
     Messages,
@@ -19,7 +20,7 @@ impl Default for TooltipVariant {
 }
 
 impl TooltipVariant {
-    pub fn to_str(&self) -> &'static str {
+    pub fn to_str(self) -> &'static str {
         match self {
             TooltipVariant::About => "about",
             TooltipVariant::Messages => "messages",

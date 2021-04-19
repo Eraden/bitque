@@ -68,7 +68,7 @@ impl<'l> StyledTextarea<'l> {
         }
 
         let handler_disable_auto_resize = disable_auto_resize;
-        let resize_handler = ev(Ev::Change, move |event| {
+        let resize_handler = ev(Ev::KeyUp, move |event| {
             event.stop_propagation();
             if handler_disable_auto_resize {
                 return None as Option<Msg>;

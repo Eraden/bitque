@@ -75,29 +75,26 @@ impl<'l> StyledSelectOption<'l> {
             variant,
         } = self;
 
-        let icon_node = match icon {
-            Some(icon) => icon,
-            _ => empty![],
-        };
-
-        let label_node = match text {
-            Some(text) => div![
-                C![
-                    variant.to_str(),
-                    name.as_deref()
-                        .map(|s| format!("{}Label", s))
-                        .unwrap_or_default(),
-                    match display_type {
-                        DisplayType::SelectOption => "optionLabel",
-                        DisplayType::SelectValue | DisplayType::SelectMultiValue =>
-                            "selectItemLabel",
-                    },
-                    class_list
-                ],
-                text
-            ],
-            _ => empty![],
-        };
+        let label_node = text.map_or_else(
+            || Node::Empty,
+            |text| {
+                div![
+                    C![
+                        variant.to_str(),
+                        name.as_deref()
+                            .map(|s| format!("{}Label", s))
+                            .unwrap_or_default(),
+                        match display_type {
+                            DisplayType::SelectOption => "optionLabel",
+                            DisplayType::SelectValue | DisplayType::SelectMultiValue =>
+                                "selectItemLabel",
+                        },
+                        class_list
+                    ],
+                    text
+                ]
+            },
+        );
 
         div![
             C![
@@ -109,7 +106,7 @@ impl<'l> StyledSelectOption<'l> {
                 },
                 class_list
             ],
-            icon_node,
+            icon,
             label_node,
             IF![display_type == DisplayType::SelectMultiValue => close_icon()]
         ]

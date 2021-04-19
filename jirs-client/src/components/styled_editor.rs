@@ -5,6 +5,7 @@ use crate::components::styled_textarea::StyledTextarea;
 use crate::{FieldChange, FieldId, Msg};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Hash)]
+#[repr(C)]
 pub enum Mode {
     Editor,
     View,
@@ -17,6 +18,7 @@ pub struct StyledEditorState {
 }
 
 impl StyledEditorState {
+    #[inline(always)]
     pub fn new<S: Into<String>>(mode: Mode, text: S) -> Self {
         Self {
             mode,
@@ -36,6 +38,7 @@ pub struct StyledEditor<'l> {
 }
 
 impl<'l> Default for StyledEditor<'l> {
+    #[inline(always)]
     fn default() -> Self {
         Self {
             id: None,
@@ -49,7 +52,7 @@ impl<'l> Default for StyledEditor<'l> {
 }
 
 impl<'l> StyledEditor<'l> {
-    #[inline]
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let StyledEditor {
             id,
@@ -71,22 +74,16 @@ impl<'l> StyledEditor<'l> {
         let text_area = StyledTextarea {
             id: Some(id),
             height: 40,
-            max_height: 0,
             value: initial_text,
-            class_list: "",
             update_event,
-            placeholder: "",
-            disable_auto_resize: false,
+            ..Default::default()
         }
         .render();
 
         div![
             C!["styledEditor"],
             label![
-                C![
-                    "navbar viewTab activeTab",
-                    IF![mode == Mode::View => "activeTab"]
-                ],
+                C!["navbar viewTab", IF![mode == Mode::View => "activeTab"]],
                 attrs![At::For => view_id.as_str()],
                 "View",
                 on_view_clicked
@@ -118,7 +115,7 @@ impl<'l> StyledEditor<'l> {
     }
 }
 
-#[inline]
+#[inline(always)]
 fn click_handler(field_id: FieldId, new_mode: Mode) -> EventHandler<Msg> {
     mouse_ev(Ev::Click, move |ev| {
         ev.stop_propagation();

@@ -16,6 +16,7 @@ pub enum StyledSelectChanged {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+#[repr(C)]
 pub enum SelectVariant {
     Empty,
     Normal,
@@ -28,17 +29,11 @@ impl Default for SelectVariant {
 }
 
 impl SelectVariant {
-    pub fn to_str<'l>(&self) -> &'l str {
+    pub fn to_str<'l>(self) -> &'l str {
         match self {
             SelectVariant::Empty => "empty",
             SelectVariant::Normal => "normal",
         }
-    }
-}
-
-impl std::fmt::Display for SelectVariant {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.to_str())
     }
 }
 
@@ -68,7 +63,7 @@ impl StyledSelectState {
         }
     }
 
-    pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
+    pub fn update(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
         let field_id = match msg {
             Msg::StyledSelectChanged(field_id, ..) => field_id,
             _ => return,
@@ -84,6 +79,7 @@ impl StyledSelectState {
                 }
             }
             Msg::StyledSelectChanged(_, StyledSelectChanged::Text(text)) => {
+                orders.skip();
                 self.text_filter = text.clone();
             }
             Msg::StyledSelectChanged(_, StyledSelectChanged::Changed(Some(v))) => {

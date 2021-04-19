@@ -65,14 +65,14 @@ impl actix::Handler<InnerMsg> for WsServer {
                     room.remove(&user_id);
                     self.sessions.remove(&user_id);
                 } else {
-                    let v = self.sessions.entry(user_id).or_insert_with(Vec::new);
-                    let mut old = vec![];
-                    std::mem::swap(&mut old, v);
-                    for r in old {
-                        if r != recipient {
-                            v.push(r);
-                        }
-                    }
+                    let v = self
+                        .sessions
+                        .remove(&user_id)
+                        .unwrap_or_default()
+                        .into_iter()
+                        .filter(|r| r != &recipient)
+                        .collect::<Vec<Recipient<InnerMsg>>>();
+                    self.sessions.insert(user_id, v);
                 }
             }
             InnerMsg::SendToUser(user_id, msg) => {

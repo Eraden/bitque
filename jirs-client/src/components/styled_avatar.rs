@@ -14,6 +14,7 @@ pub struct StyledAvatar<'l> {
 }
 
 impl<'l> StyledAvatar<'l> {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let StyledAvatar {
             avatar_url,
@@ -63,6 +64,7 @@ impl<'l> StyledAvatar<'l> {
 }
 
 impl<'l> Default for StyledAvatar<'l> {
+    #[inline(always)]
     fn default() -> Self {
         Self {
             avatar_url: None,

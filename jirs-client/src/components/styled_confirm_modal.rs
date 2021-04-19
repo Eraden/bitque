@@ -20,6 +20,7 @@ pub struct StyledConfirmModal<'l> {
 }
 
 impl<'l> StyledConfirmModal<'l> {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let StyledConfirmModal {
             title,
@@ -67,6 +68,7 @@ impl<'l> StyledConfirmModal<'l> {
 }
 
 impl<'l> Default for StyledConfirmModal<'l> {
+    #[inline(always)]
     fn default() -> Self {
         Self {
             title: TITLE,

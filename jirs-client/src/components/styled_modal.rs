@@ -6,20 +6,23 @@ use crate::Msg;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[repr(C)]
 pub enum ModalVariant {
     Center,
     Aside,
 }
 
 impl ModalVariant {
-    pub fn to_class_name(&self) -> &str {
+    #[inline(always)]
+    pub fn to_class_name(self) -> &'static str {
         match self {
             ModalVariant::Center => "center",
             ModalVariant::Aside => "aside",
         }
     }
 
-    pub fn to_icon_class_name(&self) -> &str {
+    #[inline(always)]
+    pub fn to_icon_class_name(self) -> &'static str {
         match self {
             ModalVariant::Center => "modalVariantCenter",
             ModalVariant::Aside => "modalVariantAside",
@@ -37,6 +40,7 @@ pub struct StyledModal<'l> {
 }
 
 impl<'l> Default for StyledModal<'l> {
+    #[inline(always)]
     fn default() -> Self {
         Self {
             variant: ModalVariant::Center,
@@ -49,6 +53,7 @@ impl<'l> Default for StyledModal<'l> {
 }
 
 impl<'l> StyledModal<'l> {
+    #[inline(always)]
     pub fn centered_with_width_and_body(width: usize, children: Vec<Node<Msg>>) -> Self {
         Self {
             variant: ModalVariant::Center,
@@ -61,7 +66,7 @@ impl<'l> StyledModal<'l> {
 }
 
 impl<'l> StyledModal<'l> {
-    #[inline]
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let StyledModal {
             variant,

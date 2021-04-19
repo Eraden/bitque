@@ -97,7 +97,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Assignees)),
             StyledSelectChanged::RemoveMulti(value),
         ) => {
-            let old = std::mem::replace(&mut modal.payload.user_ids, vec![]);
+            let old = std::mem::take(&mut modal.payload.user_ids);
             let dropped = *value as i32;
             for id in old.into_iter() {
                 if id != dropped {

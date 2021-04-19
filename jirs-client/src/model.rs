@@ -87,6 +87,7 @@ pub enum Page {
 }
 
 impl Page {
+    #[inline(always)]
     pub fn to_path(self) -> String {
         match self {
             Page::Project => "/board".to_string(),
@@ -122,6 +123,7 @@ pub struct UpdateProjectForm {
 }
 
 #[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
+#[repr(C)]
 pub enum InvitationFormState {
     Initial = 1,
     Sent = 2,

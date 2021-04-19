@@ -24,6 +24,7 @@ pub enum BoardPageChange {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[repr(C)]
 pub enum UsersPageChange {
     ResetForm,
 }
@@ -45,11 +46,13 @@ pub enum ProjectPageChange {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[repr(C)]
 pub enum ProfilePageChange {
     SubmitForm,
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[repr(C)]
 pub enum InvitationPageChange {
     SubmitForm,
 }

@@ -24,19 +24,12 @@ impl<'l> Default for StyledField<'l> {
 
 impl<'l> StyledField<'l> {
     pub fn render(self) -> Node<Msg> {
-        let StyledField {
-            label,
-            tip,
-            input,
-            class_list,
-        } = self;
-        let tip_node = tip.map_or_else(|| empty![], |s| div![C!["styledTip"], s]);
-
         div![
-            C!["styledField", class_list],
-            seed::label![C!["styledLabel"], label],
-            input,
-            tip_node,
+            C!["styledField", self.class_list],
+            seed::label![C!["styledLabel"], self.label],
+            self.input,
+            self.tip
+                .map_or_else(|| empty![], |s| div![C!["styledTip"], s]),
         ]
     }
 }

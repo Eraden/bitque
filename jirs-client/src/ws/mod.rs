@@ -78,7 +78,7 @@ pub fn open_socket(model: &mut Model, orders: &mut impl Orders<Msg>) {
             error!("Failed to open WebSocket");
             None as Option<Msg>
         })
-        .protocols(&["jirs"])
+        // .protocols(&["jirs"])
         .build_and_open()
         .ok();
 }

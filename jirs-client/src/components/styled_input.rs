@@ -5,6 +5,7 @@ use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::{FieldId, Msg};
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
+#[repr(C)]
 pub enum InputVariant {
     Normal,
     Primary,
@@ -20,13 +21,6 @@ impl InputVariant {
     }
 }
 
-impl ToString for InputVariant {
-    #[inline]
-    fn to_string(&self) -> String {
-        self.to_str().to_string()
-    }
-}
-
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct StyledInputState {
     id: FieldId,
@@ -37,7 +31,7 @@ pub struct StyledInputState {
 }
 
 impl StyledInputState {
-    #[inline]
+    #[inline(always)]
     pub fn new<S>(id: FieldId, value: S) -> Self
     where
         S: Into<String>,
@@ -51,34 +45,34 @@ impl StyledInputState {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn with_min(mut self, min: Option<usize>) -> Self {
         self.min = min;
         self
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn with_max(mut self, max: Option<usize>) -> Self {
         self.max = max;
         self
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn to_i32(&self) -> Option<i32> {
         self.value.parse::<i32>().ok()
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn to_f64(&self) -> Option<f64> {
         self.value.parse::<f64>().ok()
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn represent_f64_as_i32(&self) -> Option<i32> {
         self.to_f64().map(|f| (f * 10.0f64) as i32)
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn update(&mut self, msg: &Msg) {
         match msg {
             Msg::StrInputChanged(field_id, s) if field_id == &self.id => {
@@ -89,11 +83,12 @@ impl StyledInputState {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn reset(&mut self) {
         self.value.clear();
     }
 
+    #[inline(always)]
     pub fn is_valid(&self) -> bool {
         match (
             self.touched,
@@ -142,7 +137,7 @@ impl<'l, 'm: 'l> Default for StyledInput<'l, 'm> {
 }
 
 impl<'l, 'm: 'l> StyledInput<'l, 'm> {
-    #[inline]
+    #[inline(always)]
     pub fn new_with_id_and_value_and_valid(id: FieldId, value: &'m str, valid: bool) -> Self {
         Self {
             id: Some(id),
@@ -160,6 +155,7 @@ impl<'l, 'm: 'l> StyledInput<'l, 'm> {
 }
 
 impl<'l, 'm: 'l> StyledInput<'l, 'm> {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let StyledInput {
             id,

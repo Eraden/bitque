@@ -17,6 +17,7 @@ pub enum RteField {
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[repr(C)]
 pub enum ButtonId {
     JustifyAll,
     JustifyCenter,
@@ -48,6 +49,7 @@ pub enum ButtonId {
 }
 
 impl ButtonId {
+    #[inline(always)]
     pub fn to_str<'l>(&self) -> &'l str {
         match self {
             ButtonId::JustifyAll => "justifyAll",

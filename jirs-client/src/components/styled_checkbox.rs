@@ -10,10 +10,12 @@ pub struct StyledCheckboxState {
 }
 
 impl StyledCheckboxState {
+    #[inline(always)]
     pub fn new(field_id: FieldId, value: u32) -> Self {
         Self { field_id, value }
     }
 
+    #[inline(always)]
     pub fn update(&mut self, msg: &Msg) {
         if let Msg::U32InputChanged(field_id, value) = msg {
             if field_id != &self.field_id {
@@ -35,6 +37,7 @@ pub struct ChildBuilder<'l> {
 }
 
 impl<'l> Default for ChildBuilder<'l> {
+    #[inline(always)]
     fn default() -> Self {
         Self {
             field_id: FieldId::TextFilterBoard,
@@ -48,6 +51,7 @@ impl<'l> Default for ChildBuilder<'l> {
 }
 
 impl<'l> ChildBuilder<'l> {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let ChildBuilder {
             field_id,
@@ -60,7 +64,7 @@ impl<'l> ChildBuilder<'l> {
 
         let id = field_id.to_string();
         let handler: EventHandler<Msg> = {
-            let id = field_id.clone();
+            let id = field_id;
             mouse_ev(Ev::Click, move |_| Msg::U32InputChanged(id, value))
         };
 
@@ -93,6 +97,7 @@ impl<'l, Options> Default for StyledCheckbox<'l, Options>
 where
     Options: Iterator<Item = ChildBuilder<'l>>,
 {
+    #[inline(always)]
     fn default() -> Self {
         Self {
             options: None,
@@ -105,6 +110,7 @@ impl<'l, Options> StyledCheckbox<'l, Options>
 where
     Options: Iterator<Item = ChildBuilder<'l>>,
 {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let StyledCheckbox {
             options,

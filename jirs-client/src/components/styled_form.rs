@@ -11,21 +11,16 @@ pub struct StyledForm<'l> {
 }
 
 impl<'l> StyledForm<'l> {
-    #[inline]
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
-        let StyledForm {
-            heading,
-            fields,
-            on_submit,
-        } = self;
-        let handlers = match on_submit {
-            Some(handler) => vec![handler],
-            _ => vec![],
-        };
         seed::form![
-            handlers,
+            self.on_submit,
             C!["styledForm"],
-            div![C!["formElement"], div![C!["formHeading"], heading], fields],
+            div![
+                C!["formElement"],
+                div![C!["formHeading"], self.heading],
+                self.fields
+            ],
         ]
     }
 }

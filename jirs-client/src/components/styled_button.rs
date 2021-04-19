@@ -4,6 +4,7 @@ use seed::*;
 use crate::{ButtonId, Msg};
 
 #[allow(dead_code)]
+#[repr(C)]
 pub enum ButtonVariant {
     Primary,
     Success,
@@ -13,6 +14,7 @@ pub enum ButtonVariant {
 }
 
 impl ButtonVariant {
+    #[inline(always)]
     fn to_str(&self) -> &'static str {
         match self {
             ButtonVariant::Primary => "primary",
@@ -44,6 +46,7 @@ pub struct StyledButton<'l> {
 }
 
 impl<'l> StyledButton<'l> {
+    #[inline(always)]
     pub fn secondary_with_text_and_icon(text: &'l str, icon: Node<Msg>) -> Self {
         Self {
             variant: ButtonVariant::Secondary,
@@ -61,6 +64,7 @@ impl<'l> StyledButton<'l> {
 }
 
 impl<'l> Default for StyledButton<'l> {
+    #[inline(always)]
     fn default() -> Self {
         Self {
             variant: ButtonVariant::Primary,
@@ -71,7 +75,7 @@ impl<'l> Default for StyledButton<'l> {
             on_click: None,
             children: vec![],
             class_list: "",
-            button_type: "",
+            button_type: "submit",
             button_id: None,
         }
     }

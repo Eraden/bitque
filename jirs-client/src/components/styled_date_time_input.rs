@@ -25,6 +25,7 @@ pub struct StyledDateTimeInputState {
 }
 
 impl StyledDateTimeInputState {
+    #[inline(always)]
     pub fn new(field_id: FieldId, timestamp: Option<NaiveDateTime>) -> Self {
         Self {
             field_id,
@@ -33,11 +34,13 @@ impl StyledDateTimeInputState {
         }
     }
 
+    #[inline(always)]
     pub fn reset(&mut self) {
         self.timestamp = None;
         self.popup_visible = false;
     }
 
+    #[inline(always)]
     pub fn update(&mut self, msg: &Msg, _orders: &mut impl Orders<Msg>) {
         match msg {
             Msg::StyledDateTimeInputChanged(
@@ -68,6 +71,22 @@ impl StyledDateTimeInputState {
     }
 }
 
+struct DateRange(NaiveDateTime, NaiveDateTime);
+
+impl Iterator for DateRange {
+    type Item = NaiveDateTime;
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.0 <= self.1 {
+            let next = self.0 + Duration::days(1);
+            Some(std::mem::replace(&mut self.0, next))
+        } else {
+            None
+        }
+    }
+}
+
 pub struct StyledDateTimeInput {
     pub field_id: FieldId,
     pub timestamp: Option<chrono::NaiveDateTime>,
@@ -75,6 +94,7 @@ pub struct StyledDateTimeInput {
 }
 
 impl StyledDateTimeInput {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let timestamp = self
             .timestamp
@@ -82,21 +102,16 @@ impl StyledDateTimeInput {
         let start = timestamp.with_day0(0).unwrap();
         let end = (start + Duration::days(32)).with_day0(0).unwrap();
 
-        let calendar_start = StyledDateTimeInput::calendar_start(start.clone());
-        let calendar_end = StyledDateTimeInput::calendar_end(end.clone());
+        let calendar_start = StyledDateTimeInput::calendar_start(start);
+        let calendar_end = StyledDateTimeInput::calendar_end(end);
         let current_month_range = start..=end;
-        let mut current = calendar_start;
+        let current = calendar_start;
         let mut weeks = vec![];
-        let range = calendar_start..=calendar_end;
         let mut current_week = vec![];
-        loop {
-            if !range.contains(&current) {
-                break;
-            }
 
+        for current in DateRange(calendar_start, calendar_end) {
             if current.weekday() == Weekday::Mon && !current_week.is_empty() {
-                weeks.push(div![C!["week"], current_week]);
-                current_week = vec![];
+                weeks.push(div![C!["week"], std::mem::take(&mut current_week)]);
             }
 
             current_week.push(
@@ -108,9 +123,8 @@ impl StyledDateTimeInput {
                 }
                 .render(),
             );
-
-            current += Duration::days(1);
         }
+
         if !current_week.is_empty() {
             weeks.push(div![C!["week"], current_week]);
         }
@@ -263,6 +277,7 @@ pub struct DayCell<'l> {
 }
 
 impl<'l> DayCell<'l> {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let on_click = {
             let field_id = self.field_id.clone();
@@ -292,6 +307,7 @@ impl<'l> DayCell<'l> {
         ]
     }
 
+    #[inline(always)]
     fn is_selected(&self) -> bool {
         *self.timestamp == *self.current
     }

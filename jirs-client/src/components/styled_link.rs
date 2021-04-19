@@ -12,6 +12,7 @@ pub struct StyledLink<'l> {
 }
 
 impl<'l> StyledLink<'l> {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let StyledLink {
             children,

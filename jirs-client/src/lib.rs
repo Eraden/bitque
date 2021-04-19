@@ -35,6 +35,7 @@ mod ws;
 // static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[derive(Debug)]
+#[repr(C)]
 pub enum ResourceKind {
     Issue,
     IssueStatus,
@@ -48,6 +49,7 @@ pub enum ResourceKind {
 }
 
 #[derive(Debug)]
+#[repr(C)]
 pub enum OperationKind {
     ListLoaded,
     SingleLoaded,
