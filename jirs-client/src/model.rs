@@ -308,8 +308,18 @@ impl Model {
     }
 
     #[inline(always)]
+    pub fn user_name(&self) -> Option<&str> {
+        self.user.as_ref().map(|u| u.name())
+    }
+
+    #[inline(always)]
     pub fn project_id(&self) -> Option<ProjectId> {
         self.project.as_ref().map(|p| p.id)
+    }
+
+    #[inline(always)]
+    pub fn project_name(&self) -> Option<&str> {
+        self.project.as_ref().map(|u| u.name())
     }
 
     pub fn current_user_role(&self) -> UserRole {

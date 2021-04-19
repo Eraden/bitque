@@ -221,6 +221,12 @@ pub struct Project {
     pub time_tracking: TimeTracking,
 }
 
+impl Project {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Issue {
     pub id: EpicId,
@@ -289,6 +295,12 @@ pub struct User {
     pub avatar_url: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+}
+
+impl User {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 #[cfg_attr(feature = "backend", derive(Queryable))]

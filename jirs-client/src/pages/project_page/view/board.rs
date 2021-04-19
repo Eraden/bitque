@@ -6,13 +6,12 @@ use crate::components::styled_avatar::*;
 use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_icon::*;
 use crate::model::PageContent;
-use crate::{BoardPageChange, Model, Msg, Page, PageChanged};
+use crate::{match_page, BoardPageChange, Model, Msg, Page, PageChanged};
 
+#[inline(always)]
 pub fn project_board_lists(model: &Model) -> Node<Msg> {
-    let project_page = match &model.page_content {
-        PageContent::Project(project_page) => project_page,
-        _ => return empty![],
-    };
+    let project_page = match_page!(model, Project; Empty);
+
     let rows = project_page.visible_issues.iter().map(|per_epic| {
         let columns: Vec<Node<Msg>> = per_epic
             .per_status_issues
@@ -78,6 +77,7 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
     div![C!["rows"], rows]
 }
 
+#[inline(always)]
 fn project_issue_list(
     model: &Model,
     status_id: IssueStatusId,
@@ -86,7 +86,7 @@ fn project_issue_list(
 ) -> Node<Msg> {
     let issues: Vec<Node<Msg>> = issues
         .iter()
-        .map(|issue| project_issue(model, issue))
+        .map(|issue| ProjectIssue { model, issue }.render())
         .collect();
     let drop_handler = {
         let send_status = status_id;
@@ -121,100 +121,107 @@ fn project_issue_list(
     ]
 }
 
-fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
-    let is_dragging = match &model.page_content {
-        PageContent::Project(project_page) => project_page.issue_drag.is_dragging(),
-        _ => false,
-    };
-    let avatars: Vec<Node<Msg>> = issue
-        .user_ids
-        .iter()
-        .filter_map(|id| model.users_by_id.get(id))
-        .map(|user| {
-            StyledAvatar {
-                avatar_url: user.avatar_url.as_deref(),
-                size: 24,
-                name: &user.name,
-                ..StyledAvatar::default()
-            }
-            .render()
-        })
-        .collect();
+pub struct ProjectIssue<'l> {
+    pub model: &'l Model,
+    pub issue: &'l Issue,
+}
 
-    let issue_type_icon = StyledIcon {
-        icon: issue.issue_type.into(),
-        class_list: issue.issue_type.to_str(),
-        color: Some(issue.issue_type.to_str()),
-        ..Default::default()
-    }
-    .render();
+impl<'l> ProjectIssue<'l> {
+    #[inline(always)]
+    pub fn render(self) -> Node<Msg> {
+        let is_dragging = match &self.model.page_content {
+            PageContent::Project(project_page) => project_page.issue_drag.is_dragging(),
+            _ => false,
+        };
+        let avatars: Vec<Node<Msg>> = self
+            .issue
+            .user_ids
+            .iter()
+            .filter_map(|id| self.model.users_by_id.get(id))
+            .map(|user| {
+                StyledAvatar {
+                    avatar_url: user.avatar_url.as_deref(),
+                    size: 24,
+                    name: &user.name,
+                    ..StyledAvatar::default()
+                }
+                .render()
+            })
+            .collect();
 
-    let priority_icon = StyledIcon {
-        icon: issue.priority.into(),
-        class_list: issue.priority.to_str(),
-        color: Some(issue.priority.to_str()),
-        ..Default::default()
-    }
-    .render();
+        let issue_type_icon = StyledIcon {
+            icon: self.issue.issue_type.into(),
+            class_list: self.issue.issue_type.to_str(),
+            color: Some(self.issue.issue_type.to_str()),
+            ..Default::default()
+        }
+        .render();
 
-    let issue_id = issue.id;
-    let drag_started = drag_ev(Ev::DragStart, move |ev| {
-        ev.stop_propagation();
-        Some(Msg::PageChanged(PageChanged::Board(
-            BoardPageChange::IssueDragStarted(issue_id),
-        )))
-    });
-    let drag_stopped = drag_ev(Ev::DragEnd, move |ev| {
-        ev.stop_propagation();
-        Some(Msg::PageChanged(PageChanged::Board(
-            BoardPageChange::IssueDragStopped(issue_id),
-        )))
-    });
-    let drag_over_handler = drag_ev(Ev::DragEnter, move |ev| {
-        ev.prevent_default();
-        ev.stop_propagation();
-        Some(Msg::PageChanged(PageChanged::Board(
-            BoardPageChange::ChangePosition(issue_id),
-        )))
-    });
+        let priority_icon = StyledIcon {
+            icon: self.issue.priority.into(),
+            class_list: self.issue.priority.to_str(),
+            color: Some(self.issue.priority.to_str()),
+            ..Default::default()
+        }
+        .render();
 
-    let drag_out = drag_ev(Ev::DragLeave, move |_| {
-        Some(Msg::PageChanged(PageChanged::Board(
-            BoardPageChange::DragLeave(issue_id),
-        )))
-    });
-    let on_click = mouse_ev("click", move |ev| {
-        ev.prevent_default();
-        ev.stop_propagation();
-        seed::Url::new()
-            .add_path_part("issues")
-            .add_path_part(format!("{}", issue_id))
-            .go_and_push();
-        Msg::ChangePage(Page::EditIssue(issue_id))
-    });
+        let issue_id = self.issue.id;
+        let drag_started = drag_ev(Ev::DragStart, move |ev| {
+            ev.stop_propagation();
+            Some(Msg::PageChanged(PageChanged::Board(
+                BoardPageChange::IssueDragStarted(issue_id),
+            )))
+        });
+        let drag_stopped = drag_ev(Ev::DragEnd, move |ev| {
+            ev.stop_propagation();
+            Some(Msg::PageChanged(PageChanged::Board(
+                BoardPageChange::IssueDragStopped(issue_id),
+            )))
+        });
+        let drag_over_handler = drag_ev(Ev::DragEnter, move |ev| {
+            ev.prevent_default();
+            ev.stop_propagation();
+            Some(Msg::PageChanged(PageChanged::Board(
+                BoardPageChange::ChangePosition(issue_id),
+            )))
+        });
 
-    let href = format!("/issues/{id}", id = issue_id);
+        let drag_out = drag_ev(Ev::DragLeave, move |_| {
+            Some(Msg::PageChanged(PageChanged::Board(
+                BoardPageChange::DragLeave(issue_id),
+            )))
+        });
+        let on_click = mouse_ev("click", move |ev| {
+            ev.prevent_default();
+            ev.stop_propagation();
+            seed::Url::new()
+                .add_path_part("issues")
+                .add_path_part(format!("{}", issue_id))
+                .go_and_push();
+            Msg::ChangePage(Page::EditIssue(issue_id))
+        });
 
-    a![
-        drag_started,
-        on_click,
-        C!["issueLink"],
-        attrs![At::Href => href],
-        IF![is_dragging => div![C!["dragCover"], drag_over_handler]],
-        div![
-            C!["issue"],
-            attrs![At::Draggable => true],
-            drag_stopped,
-            drag_out,
-            p![C!["title"], issue.title.as_str()],
+        a![
+            drag_started,
+            on_click,
+            C!["issueLink"],
+            attrs![At::Href => format!("/issues/{id}", id = issue_id)],
+            IF![is_dragging => div![C!["dragCover"], drag_over_handler]],
             div![
-                C!["bottom"],
+                C!["issue"],
+                attrs![At::Draggable => true],
+                drag_stopped,
+                drag_out,
+                p![C!["title"], self.issue.title.as_str()],
                 div![
-                    div![C!["issueTypeIcon"], issue_type_icon],
-                    div![C!["issuePriorityIcon"], priority_icon]
-                ],
-                div![C!["assignees"], avatars,],
+                    C!["bottom"],
+                    div![
+                        div![C!["issueTypeIcon"], issue_type_icon],
+                        div![C!["issuePriorityIcon"], priority_icon]
+                    ],
+                    div![C!["assignees"], avatars,],
+                ]
             ]
         ]
-    ]
+    }
 }

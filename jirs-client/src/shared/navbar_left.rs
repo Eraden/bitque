@@ -43,52 +43,48 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     send_ws_msg(m, model.ws.as_ref(), orders);
 }
 
+#[inline(always)]
 pub fn render(model: &Model) -> Vec<Node<Msg>> {
     let logo_svg = img![
         attrs![At::Src => "/logo2.svg"; At::Style => "background: rgba(244,244,244,.8); border-radius: 24px;"]
     ];
 
-    let user_icon = match model.user.as_ref() {
-        Some(user) => {
-            let avatar = StyledAvatar {
-                avatar_url: user.avatar_url.as_deref(),
-                size: 27,
-                name: &user.name,
-                ..StyledAvatar::default()
+    let user_icon = model.user.as_ref().map_or_else(
+        || {
+            StyledIcon {
+                icon: Icon::User,
+                size: Some(21),
+                ..Default::default()
             }
-            .render();
-            i![C!["styledIcon"], avatar]
-        }
-        _ => StyledIcon {
-            icon: Icon::User,
-            size: Some(21),
-            ..Default::default()
-        }
-        .render(),
-    };
-
-    let messages = if model.messages.is_empty() {
-        empty![]
-    } else {
-        navbar_left_item(
-            "Messages",
-            Icon::Message,
-            None,
-            Some(mouse_ev(Ev::Click, |ev| {
-                ev.prevent_default();
-                Msg::ToggleTooltip(styled_tooltip::TooltipVariant::Messages)
-            })),
-        )
-    };
+            .render()
+        },
+        |user| {
+            i![
+                C!["styledIcon"],
+                StyledAvatar {
+                    avatar_url: user.avatar_url.as_deref(),
+                    size: 27,
+                    name: &user.name,
+                    ..StyledAvatar::default()
+                }
+                .render()
+            ]
+        },
+    );
 
     let issue_nav = if model.issue_statuses.is_empty() {
         vec![]
     } else {
         vec![
-            navbar_left_item("Search issues", Icon::Search, None, None),
+            navbar_left_item(
+                "Search issues",
+                StyledIcon::from(Icon::Search).render(),
+                None,
+                None,
+            ),
             navbar_left_item(
                 "Create Issue",
-                Icon::Plus,
+                StyledIcon::from(Icon::Plus).render(),
                 Some("/add-issue"),
                 Some(mouse_ev("click", |ev| {
                     ev.stop_propagation();
@@ -119,10 +115,18 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
             div![
                 C!["bottom"],
                 navbar_left_item("Profile", user_icon, Some("/profile"), Some(go_to_profile)),
-                messages,
+                IF![!model.messages.is_empty() => navbar_left_item(
+                    "Messages",
+                    StyledIcon::from(Icon::Message).render(),
+                    None,
+                    Some(mouse_ev(Ev::Click, |ev| {
+                        ev.prevent_default();
+                        Msg::ToggleTooltip(styled_tooltip::TooltipVariant::Messages)
+                    })),
+                )],
                 IF![model.show_extras => about_tooltip(
                     model,
-                    navbar_left_item("About", Icon::Help, None, None)
+                    navbar_left_item("About", StyledIcon::from(Icon::Help).render(), None, None)
                 )],
             ],
         ],
@@ -130,15 +134,12 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
 }
 
 #[inline]
-fn navbar_left_item<I>(
+fn navbar_left_item(
     text: &str,
-    icon: I,
+    icon: Node<Msg>,
     href: Option<&str>,
     on_click: Option<EventHandler<Msg>>,
-) -> Node<Msg>
-where
-    I: IntoNavItemIcon,
-{
+) -> Node<Msg> {
     let styled_icon = icon.into_nav_item_icon();
 
     a![
