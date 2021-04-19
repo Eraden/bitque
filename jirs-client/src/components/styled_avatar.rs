@@ -1,7 +1,6 @@
 use seed::prelude::*;
 use seed::*;
 
-use crate::shared::ToNode;
 use crate::Msg;
 
 #[derive(Debug)]
@@ -73,12 +72,5 @@ impl<'l> Default for StyledAvatar<'l> {
             class_list: "",
             user_index: 0,
         }
-    }
-}
-
-impl<'l> ToNode for StyledAvatar<'l> {
-    #[inline(always)]
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }

@@ -6,7 +6,6 @@ use crate::components::styled_avatar::*;
 use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_icon::*;
 use crate::model::PageContent;
-use crate::shared::ToNode;
 use crate::{BoardPageChange, Model, Msg, Page, PageChanged};
 
 pub fn project_board_lists(model: &Model) -> Node<Msg> {
@@ -37,7 +36,7 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                 let id = *id;
                 let edit_button = StyledButton {
                     variant: ButtonVariant::Empty,
-                    icon: Some(Icon::EditAlt.into_node()),
+                    icon: Some(StyledIcon::from(Icon::EditAlt).render()),
                     on_click: Some(mouse_ev("click", move |ev| {
                         ev.stop_propagation();
                         ev.prevent_default();
@@ -49,10 +48,10 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                     })),
                     ..Default::default()
                 }
-                .into_node();
+                .render();
                 let delete_button = StyledButton {
                     variant: ButtonVariant::Empty,
-                    icon: Some(Icon::DeleteAlt.into_node()),
+                    icon: Some(StyledIcon::from(Icon::DeleteAlt).render()),
                     on_click: Some(mouse_ev("click", move |ev| {
                         ev.stop_propagation();
                         ev.prevent_default();
@@ -64,7 +63,7 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                     })),
                     ..Default::default()
                 }
-                .into_node();
+                .render();
 
                 div![
                     C!["epicHeader"],
@@ -138,7 +137,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
                 name: &user.name,
                 ..StyledAvatar::default()
             }
-            .into_node()
+            .render()
         })
         .collect();
 
@@ -148,7 +147,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
         color: Some(issue.issue_type.to_str()),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let priority_icon = StyledIcon {
         icon: issue.priority.into(),
@@ -156,7 +155,7 @@ fn project_issue(model: &Model, issue: &Issue) -> Node<Msg> {
         color: Some(issue.priority.to_str()),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let issue_id = issue.id;
     let drag_started = drag_ev(Ev::DragStart, move |ev| {

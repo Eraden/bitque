@@ -9,7 +9,7 @@ use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_input::StyledInput;
 use crate::components::styled_link::StyledLink;
 use crate::model::{self, PageContent};
-use crate::shared::{outer_layout, ToNode};
+use crate::shared::outer_layout;
 use crate::validations::is_email;
 use crate::{match_page, FieldId, Msg};
 
@@ -22,13 +22,13 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         id: Some(FieldId::SignUp(SignUpFieldId::Username)),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let username_field = StyledField {
         label: "Username",
         input: username,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let email = StyledInput {
         value: page.email.as_str(),
@@ -36,13 +36,13 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         id: Some(FieldId::SignUp(SignUpFieldId::Email)),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let email_field = StyledField {
         label: "E-Mail",
         input: email,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let submit = if page.sign_up_success {
         StyledButton {
@@ -58,20 +58,20 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             ..Default::default()
         }
     }
-    .into_node();
+    .render();
 
     let sign_in_link = StyledLink {
         children: vec![span!["Sign In"]],
         class_list: "signInLink",
         href: "/login",
     }
-    .into_node();
+    .render();
 
     let submit_field = StyledField {
         input: div![C!["twoRow"], submit, sign_in_link],
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let help_icon = StyledIcon {
         icon: Icon::Help,
@@ -79,7 +79,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         size: Some(22),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let no_pass_section = div![
         C!["noPasswordSection"],
@@ -109,7 +109,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             error_row,
         ],
     }
-    .into_node();
+    .render();
     let children = vec![sign_up_form];
     outer_layout(model, "register", children)
 }

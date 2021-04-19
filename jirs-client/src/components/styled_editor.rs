@@ -2,7 +2,6 @@ use seed::prelude::*;
 use seed::*;
 
 use crate::components::styled_textarea::StyledTextarea;
-use crate::shared::ToNode;
 use crate::{FieldChange, FieldId, Msg};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Hash)]
@@ -79,7 +78,7 @@ impl<'l> StyledEditor<'l> {
             placeholder: "",
             disable_auto_resize: false,
         }
-        .into_node();
+        .render();
 
         div![
             C!["styledEditor"],
@@ -116,13 +115,6 @@ impl<'l> StyledEditor<'l> {
                 IF![mode == Mode::View => raw![html]],
             ],
         ]
-    }
-}
-
-impl<'l> ToNode for StyledEditor<'l> {
-    #[inline]
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }
 

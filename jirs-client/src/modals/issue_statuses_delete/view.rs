@@ -2,7 +2,6 @@ use jirs_data::IssueStatusId;
 use seed::prelude::*;
 
 use crate::components::styled_confirm_modal::StyledConfirmModal;
-use crate::shared::ToNode;
 use crate::{model, Msg};
 
 pub fn view(_model: &model::Model, issue_status_id: IssueStatusId) -> Node<Msg> {
@@ -15,5 +14,5 @@ pub fn view(_model: &model::Model, issue_status_id: IssueStatusId) -> Node<Msg> 
             Msg::DeleteIssueStatus(issue_status_id)
         })),
     }
-    .into_node()
+    .render()
 }

@@ -8,7 +8,7 @@ use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_tooltip;
 use crate::components::styled_tooltip::{StyledTooltip, TooltipVariant};
 use crate::model::Model;
-use crate::shared::{divider, ToNode};
+use crate::shared::divider;
 use crate::ws::send_ws_msg;
 use crate::{Msg, Page};
 
@@ -29,7 +29,7 @@ impl IntoNavItemIcon for Icon {
             size: Some(21),
             ..Default::default()
         }
-        .into_node()
+        .render()
     }
 }
 
@@ -56,7 +56,7 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
                 name: &user.name,
                 ..StyledAvatar::default()
             }
-            .into_node();
+            .render();
             i![C!["styledIcon"], avatar]
         }
         _ => StyledIcon {
@@ -64,7 +64,7 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
             size: Some(21),
             ..Default::default()
         }
-        .into_node(),
+        .render(),
     };
 
     let messages = if model.messages.is_empty() {
@@ -177,7 +177,7 @@ fn messages_tooltip_popup(model: &Model) -> Node<Msg> {
         children: vec![body],
         variant: TooltipVariant::Messages,
     }
-    .into_node()
+    .render()
 }
 
 fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
@@ -194,7 +194,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
     let hyperlink = if hyper_link.is_empty() && !hyper_link.starts_with('#') {
         empty![]
     } else {
-        let link_icon = StyledIcon::from(Icon::Link).into_node();
+        let link_icon = StyledIcon::from(Icon::Link).render();
         div![
             C!["hyperlink"],
             a![
@@ -209,7 +209,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
     let message_description = parse_description(model, description.as_str());
     let close_button = StyledButton {
         variant: ButtonVariant::Empty,
-        icon: Some(Icon::Close.into_node()),
+        icon: Some(StyledIcon::from(Icon::Close).render()),
         on_click: Some(mouse_ev(Ev::Click, move |ev| {
             ev.stop_propagation();
             ev.prevent_default();
@@ -217,7 +217,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
         })),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let top = div![
         C!["top"],
         div![C!["summary"], summary],
@@ -231,7 +231,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
                 variant: ButtonVariant::Primary,
                 active: true,
                 text: Some("Accept"),
-                icon: Some(Icon::Check.into_node()),
+                icon: Some(StyledIcon::from(Icon::Check).render()),
                 on_click: Some(mouse_ev(Ev::Click, move |ev| {
                     ev.stop_propagation();
                     ev.prevent_default();
@@ -239,12 +239,12 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
                 })),
                 ..Default::default()
             }
-            .into_node();
+            .render();
             let reject = StyledButton {
                 variant: ButtonVariant::Danger,
                 active: true,
                 text: Some("Dismiss"),
-                icon: Some(Icon::Close.into_node()),
+                icon: Some(StyledIcon::from(Icon::Close).render()),
                 on_click: Some(mouse_ev(Ev::Click, move |ev| {
                     ev.stop_propagation();
                     ev.prevent_default();
@@ -252,7 +252,7 @@ fn message_ui(model: &Model, message: &Message) -> Option<Node<Msg>> {
                 })),
                 ..Default::default()
             }
-            .into_node();
+            .render();
             div![
                 C!["message"],
                 attrs![At::Class => format!("{}", message_type)],
@@ -283,14 +283,14 @@ fn about_tooltip_popup(model: &Model) -> Node<Msg> {
         text: Some("Visit Website"),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let github_repo = StyledButton {
         variant: ButtonVariant::Secondary,
         text: Some("Github Repo"),
-        icon: Some(Icon::Github.into_node()),
+        icon: Some(StyledIcon::from(Icon::Github).render()),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let on_click = mouse_ev(Ev::Click, |_| {
         Msg::ToggleTooltip(styled_tooltip::TooltipVariant::About)
@@ -339,7 +339,7 @@ fn about_tooltip_popup(model: &Model) -> Node<Msg> {
         children: vec![body],
         variant: TooltipVariant::About,
     }
-    .into_node()
+    .render()
 }
 
 fn parse_description(model: &Model, desc: &str) -> Node<Msg> {
@@ -360,7 +360,7 @@ fn parse_description(model: &Model, desc: &str) -> Node<Msg> {
                     user_index: index,
                     ..StyledAvatar::default()
                 }
-                .into_node();
+                .render();
                 span![C!["mention"], avatar, user.name.as_str()]
             })
             .unwrap_or_else(|| span![word]);

@@ -6,7 +6,6 @@ use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::modals::issues_edit::Model as EditIssueModal;
 use crate::modals::time_tracking::value_for_time_tracking;
 use crate::model::{ModalType, Model};
-use crate::shared::ToNode;
 use crate::Msg;
 
 #[inline]
@@ -69,7 +68,7 @@ pub fn tracking_widget(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         size: Some(32),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let bar_width = calc_bar_width(*estimate, *time_spent, *time_remaining);
 
     let spent_text = match (time_spent, time_tracking_type) {

@@ -1,7 +1,6 @@
 use seed::prelude::*;
 use seed::*;
 
-use crate::shared::ToNode;
 use crate::Msg;
 
 #[derive(Debug, Copy, Clone)]
@@ -57,11 +56,5 @@ impl<'l> StyledTooltip<'l> {
         } else {
             empty!()
         }
-    }
-}
-
-impl<'l> ToNode for StyledTooltip<'l> {
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }

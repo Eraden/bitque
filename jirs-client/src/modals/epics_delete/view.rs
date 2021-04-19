@@ -6,7 +6,6 @@ use crate::components::styled_confirm_modal::*;
 use crate::components::styled_icon::*;
 use crate::components::styled_modal::*;
 use crate::modals::epics_delete::Model;
-use crate::shared::ToNode;
 use crate::{model, Msg};
 
 pub fn view(model: &model::Model, modal: &Model) -> Node<Msg> {
@@ -22,7 +21,7 @@ pub fn view(model: &model::Model, modal: &Model) -> Node<Msg> {
             })),
             ..Default::default()
         }
-        .into_node()
+        .render()
     } else {
         StyledModal {
             children: vec![warning(model, modal)],
@@ -30,7 +29,7 @@ pub fn view(model: &model::Model, modal: &Model) -> Node<Msg> {
             class_list: "deleteEpic",
             ..Default::default()
         }
-        .into_node()
+        .render()
     }
 }
 
@@ -40,7 +39,7 @@ fn warning(model: &model::Model, modal: &Model) -> Node<Msg> {
         .iter()
         .flat_map(|id| model.issues_by_id.get(id))
         .map(|issue| {
-            let link = StyledIcon::from(Icon::Link).into_node();
+            let link = StyledIcon::from(Icon::Link).render();
             li![div![
                 C!["relatedIssue"],
                 a![
@@ -62,7 +61,7 @@ fn warning(model: &model::Model, modal: &Model) -> Node<Msg> {
         variant: ButtonVariant::Secondary,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     section![
         h3![C!["header"], "Cannot delete epic"],

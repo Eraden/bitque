@@ -12,11 +12,11 @@ use crate::components::styled_form::StyledForm;
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_input::{InputVariant, StyledInput};
 use crate::components::styled_select::{SelectVariant, StyledSelect};
-use crate::components::styled_select_child::StyledSelectChild;
+use crate::components::styled_select_child::StyledSelectOption;
 use crate::components::styled_textarea::StyledTextarea;
 use crate::model::{self, ModalType, Model, PageContent};
 use crate::pages::project_settings_page::ProjectSettingsPage;
-use crate::shared::{inner_layout, ToNode};
+use crate::shared::inner_layout;
 use crate::{FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange};
 
 // use crate::shared::styled_rte::StyledRte;
@@ -40,10 +40,10 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     //         StyledRte::build(FieldId::ProjectSettings(ProjectFieldId::
     // Description))             .state(&page.description_rte)
     //             .build()
-    //             .into_node(),
+    //             .render(),
     //     )
     //     .build()
-    //     .into_node();
+    //     .render();
 
     let category_field = category_field(page);
 
@@ -62,7 +62,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         text: Some("Save changes"),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let form = StyledForm {
         heading: "Project Details",
@@ -83,7 +83,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             ))
         })),
     }
-    .into_node();
+    .render();
 
     let project_section = [div![C!["formContainer"], form]];
 
@@ -100,7 +100,7 @@ fn time_tracking_select(page: &ProjectSettingsPage) -> Node<Msg> {
         ),
         class_list: "timeTracking",
     }
-    .into_node();
+    .render();
     let time_tracking_type: TimeTracking = page.time_tracking.value.into();
     StyledField {
         input: time_tracking,
@@ -111,7 +111,7 @@ fn time_tracking_select(page: &ProjectSettingsPage) -> Node<Msg> {
         }),
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 fn time_tracking_checkbox_option<'l>(
@@ -151,14 +151,14 @@ fn name_field(page: &ProjectSettingsPage) -> Node<Msg> {
         disable_auto_resize: true,
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledField {
         label: "Name",
         input: name,
         tip: Some(""),
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 /// Build project url input with styled field wrapper
@@ -171,14 +171,14 @@ fn url_field(page: &ProjectSettingsPage) -> Node<Msg> {
         value: page.payload.url.as_deref().unwrap_or_default(),
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledField {
         label: "Url",
         input: url,
         tip: Some(""),
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 /// Build project description text area with styled field wrapper
@@ -191,14 +191,14 @@ fn description_field(page: &ProjectSettingsPage) -> Node<Msg> {
         mode: page.description_mode.clone(),
         update_event: Ev::Change,
     }
-    .into_node();
+    .render();
     StyledField {
         label: "Description",
         tip: Some("Describe the project in as much detail as you'd like."),
         input: description,
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 /// Build project category dropdown with styled field wrapper
@@ -219,18 +219,18 @@ fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
         )],
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledField {
         input: category,
         label: "Project Category",
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 #[inline(always)]
-fn category_select_option<'l>(pc: ProjectCategory) -> StyledSelectChild<'l> {
-    StyledSelectChild {
+fn category_select_option<'l>(pc: ProjectCategory) -> StyledSelectOption<'l> {
+    StyledSelectOption {
         class_list: pc.to_str(),
         text: Some(pc.to_str()),
         value: pc.into(),
@@ -266,7 +266,7 @@ fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
         input: columns_section,
         class_list: "columnsField",
     }
-    .into_node()
+    .render()
 }
 
 #[inline]
@@ -300,14 +300,14 @@ fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
             input_handlers: vec![blur],
             ..Default::default()
         }
-        .into_node();
+        .render();
 
         div![
             C!["columnPreview"],
             div![C!["columnName"], form![on_submit, input]]
         ]
     } else {
-        let add_column = StyledIcon::from(Icon::Plus).into_node();
+        let add_column = StyledIcon::from(Icon::Plus).render();
         div![
             C!["columnPreview"],
             attrs![At::Style => column_style],
@@ -339,7 +339,7 @@ fn column_preview(
             id: Some(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName)),
             ..Default::default()
         }
-        .into_node();
+        .render();
 
         div![C!["columnPreview"], div![C!["columnName"], input]]
     } else {
@@ -391,11 +391,11 @@ fn show_column_preview(
         let delete = StyledButton {
             variant: ButtonVariant::Primary,
             class_list: "removeColumn",
-            icon: Some(Icon::Trash.into_node()),
+            icon: Some(StyledIcon::from(Icon::Trash).render()),
             on_click: Some(on_delete),
             ..Default::default()
         }
-        .into_node();
+        .render();
         div![C!["removeColumn"], delete]
     } else {
         div![

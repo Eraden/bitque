@@ -7,10 +7,10 @@ use crate::components::styled_field::StyledField;
 use crate::components::styled_form::StyledForm;
 use crate::components::styled_input::{InputVariant, StyledInput};
 use crate::components::styled_select::{SelectVariant, StyledSelect};
-use crate::components::styled_select_child::StyledSelectChild;
+use crate::components::styled_select_child::StyledSelectOption;
 use crate::model::{InvitationFormState, Model, PageContent};
 use crate::pages::users_page::UsersPage;
-use crate::shared::{inner_layout, ToNode};
+use crate::shared::inner_layout;
 use crate::validations::is_email;
 use crate::{FieldId, Msg, PageChanged, UsersPageChange};
 
@@ -27,13 +27,13 @@ pub fn view(model: &Model) -> Node<Msg> {
         id: Some(FieldId::Users(UsersFieldId::Username)),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let name_field = StyledField {
         label: "Name",
         input: name,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let email = StyledInput {
         id: Some(FieldId::Users(UsersFieldId::Email)),
@@ -42,13 +42,13 @@ pub fn view(model: &Model) -> Node<Msg> {
         variant: InputVariant::Normal,
         ..Default::default()
     }
-    .into_node();
+    .render();
     let email_field = StyledField {
         input: email,
         label: "E-Mail",
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let user_role_field = user_role_select(page);
 
@@ -59,7 +59,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         active: page.form_state != InvitationFormState::Sent,
         ..Default::default()
     }
-    .into_node();
+    .render();
     let submit_supplement = match page.form_state {
         InvitationFormState::Succeed => StyledButton {
             variant: ButtonVariant::Empty,
@@ -72,7 +72,7 @@ pub fn view(model: &Model) -> Node<Msg> {
             button_type: "reset",
             ..Default::default()
         }
-        .into_node(),
+        .render(),
         InvitationFormState::Failed => div![C!["error"], "There was an error"],
         _ => empty![],
     };
@@ -80,7 +80,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         input: div![C!["invitationActions"], submit, submit_supplement],
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let form = StyledForm {
         heading: "Invite new user",
@@ -90,7 +90,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         })),
         fields: vec![name_field, email_field, user_role_field, submit_field],
     }
-    .into_node();
+    .render();
 
     let users: Vec<Node<Msg>> = page
         .invited_users
@@ -104,7 +104,7 @@ pub fn view(model: &Model) -> Node<Msg> {
                 })),
                 ..Default::default()
             }
-            .into_node();
+            .render();
             let role = page
                 .invitations
                 .iter()
@@ -139,13 +139,13 @@ pub fn view(model: &Model) -> Node<Msg> {
                 on_click: Some(mouse_ev(Ev::Click, move |_| Msg::InviteRevokeRequest(id))),
                 ..Default::default()
             }
-            .into_node();
+            .render();
             // let revoke = StyledButton::build()
             //     .text("Revoke")
             //     .disabled(invitation.state == InvitationState::Revoked)
             //     .on_click(mouse_ev(Ev::Click, move |_| Msg::InviteRevokeRequest(id)))
             //     .build()
-            //     .into_node();
+            //     .render();
             li![
                 C!["invitation", invitation.state.to_str()],
                 span![invitation.name.as_str()],
@@ -178,19 +178,19 @@ fn user_role_select(page: &UsersPage) -> Node<Msg> {
         options: Some(UserRole::default().into_iter().map(user_role_select_option)),
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledField {
         input: user_role,
         label: "Role",
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
-fn user_role_select_option<'l>(ur: UserRole) -> StyledSelectChild<'l> {
+fn user_role_select_option<'l>(ur: UserRole) -> StyledSelectOption<'l> {
     let name = ur.to_str();
 
-    StyledSelectChild {
+    StyledSelectOption {
         text: Some(name),
         value: ur.into(),
         class_list: name,

@@ -1,7 +1,6 @@
 use seed::prelude::*;
 use seed::*;
 
-use crate::shared::ToNode;
 use crate::{ButtonId, Msg};
 
 #[allow(dead_code)]
@@ -45,16 +44,13 @@ pub struct StyledButton<'l> {
 }
 
 impl<'l> StyledButton<'l> {
-    pub fn secondary_with_text_and_icon<I>(text: &'l str, icon: I) -> Self
-    where
-        I: ToNode,
-    {
+    pub fn secondary_with_text_and_icon(text: &'l str, icon: Node<Msg>) -> Self {
         Self {
             variant: ButtonVariant::Secondary,
             disabled: false,
             active: false,
             text: Some(text),
-            icon: Some(icon.into_node()),
+            icon: Some(icon),
             on_click: None,
             children: vec![],
             class_list: "",
@@ -126,12 +122,5 @@ impl<'l> StyledButton<'l> {
             icon.unwrap_or(Node::Empty),
             content,
         ]
-    }
-}
-
-impl<'l> ToNode for StyledButton<'l> {
-    #[inline(always)]
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }

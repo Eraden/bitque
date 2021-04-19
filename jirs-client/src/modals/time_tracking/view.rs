@@ -7,10 +7,9 @@ use crate::components::styled_field::StyledField;
 use crate::components::styled_input::{StyledInput, StyledInputState};
 use crate::components::styled_modal::StyledModal;
 use crate::components::styled_select::{StyledSelect, StyledSelectState};
-use crate::components::styled_select_child::StyledSelectChild;
+use crate::components::styled_select_child::StyledSelectOption;
 use crate::model::Model;
 use crate::shared::tracking_widget::{fibonacci_value_name, fibonacci_values, tracking_widget};
-use crate::shared::ToNode;
 use crate::{EditIssueModalSection, FieldId, Msg};
 
 pub fn value_for_time_tracking(v: &Option<i32>, time_tracking_type: &TimeTracking) -> String {
@@ -69,7 +68,7 @@ pub fn view(model: &Model, modal: &super::Model) -> Node<Msg> {
         on_click: Some(mouse_ev(Ev::Click, |_| Msg::ModalDropped)),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     StyledModal {
         class_list: "timeTrackingModal",
@@ -77,7 +76,7 @@ pub fn view(model: &Model, modal: &super::Model) -> Node<Msg> {
         width: Some(400),
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 #[inline(always)]
@@ -110,27 +109,27 @@ pub fn time_tracking_field(
             ),
             ..Default::default()
         }
-        .into_node(),
+        .render(),
         TimeTracking::Hourly => StyledInput {
             valid: input_state.is_valid(),
             value: input_state.value.as_str(),
             id: Some(field_id),
             ..Default::default()
         }
-        .into_node(),
+        .render(),
     };
     StyledField {
         input,
         label,
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
-fn fibonacci_value_select_option<'l>(value: u32) -> StyledSelectChild<'l> {
+fn fibonacci_value_select_option<'l>(value: u32) -> StyledSelectOption<'l> {
     let name = fibonacci_value_name(value);
 
-    StyledSelectChild {
+    StyledSelectOption {
         class_list: name,
         text: Some(name),
         value,

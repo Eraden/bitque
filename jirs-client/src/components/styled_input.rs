@@ -2,7 +2,6 @@ use seed::prelude::*;
 use seed::*;
 
 use crate::components::styled_icon::{Icon, StyledIcon};
-use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
@@ -157,13 +156,6 @@ impl<'l, 'm: 'l> StyledInput<'l, 'm> {
             auto_focus: false,
             input_handlers: vec![],
         }
-    }
-}
-
-impl<'l, 'm: 'l> ToNode for StyledInput<'l, 'm> {
-    #[inline]
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }
 

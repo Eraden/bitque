@@ -3,7 +3,6 @@ use seed::*;
 
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_select::SelectVariant;
-use crate::shared::ToNode;
 use crate::Msg;
 
 #[derive(Copy, Clone, PartialEq)]
@@ -14,7 +13,7 @@ pub enum DisplayType {
     SelectMultiValue,
 }
 
-pub struct StyledSelectChild<'l> {
+pub struct StyledSelectOption<'l> {
     pub name: Option<&'l str>,
     pub icon: Option<Node<Msg>>,
     pub text: Option<&'l str>,
@@ -23,7 +22,7 @@ pub struct StyledSelectChild<'l> {
     pub variant: SelectVariant,
 }
 
-impl<'l> Default for StyledSelectChild<'l> {
+impl<'l> Default for StyledSelectOption<'l> {
     fn default() -> Self {
         Self {
             name: None,
@@ -36,25 +35,25 @@ impl<'l> Default for StyledSelectChild<'l> {
     }
 }
 
-impl<'l> StyledSelectChild<'l> {
-    #[inline]
+impl<'l> StyledSelectOption<'l> {
+    #[inline(always)]
     pub fn value(&self) -> u32 {
         self.value
     }
 
     #[inline(always)]
     pub fn render_value(self) -> Node<Msg> {
-        render(DisplayType::SelectValue, self)
+        self.render(DisplayType::SelectValue)
     }
 
     #[inline(always)]
     pub fn render_multi_value(self) -> Node<Msg> {
-        render(DisplayType::SelectMultiValue, self)
+        self.render(DisplayType::SelectMultiValue)
     }
 
     #[inline(always)]
     pub fn render_option(self) -> Node<Msg> {
-        render(DisplayType::SelectOption, self)
+        self.render(DisplayType::SelectOption)
     }
 
     #[inline(always)]
@@ -64,56 +63,57 @@ impl<'l> StyledSelectChild<'l> {
             .map(|t| t.to_lowercase().contains(text.to_lowercase().as_str()))
             .unwrap_or(true)
     }
-}
 
-#[inline(always)]
-pub fn render(display_type: DisplayType, values: StyledSelectChild) -> Node<Msg> {
-    let StyledSelectChild {
-        name,
-        icon,
-        text,
-        value: _,
-        class_list,
-        variant,
-    } = values;
+    #[inline(always)]
+    pub fn render(self, display_type: DisplayType) -> Node<Msg> {
+        let StyledSelectOption {
+            name,
+            icon,
+            text,
+            value: _,
+            class_list,
+            variant,
+        } = self;
 
-    let icon_node = match icon {
-        Some(icon) => icon,
-        _ => empty![],
-    };
+        let icon_node = match icon {
+            Some(icon) => icon,
+            _ => empty![],
+        };
 
-    let label_node = match text {
-        Some(text) => div![
+        let label_node = match text {
+            Some(text) => div![
+                C![
+                    variant.to_str(),
+                    name.as_deref()
+                        .map(|s| format!("{}Label", s))
+                        .unwrap_or_default(),
+                    match display_type {
+                        DisplayType::SelectOption => "optionLabel",
+                        DisplayType::SelectValue | DisplayType::SelectMultiValue =>
+                            "selectItemLabel",
+                    },
+                    class_list
+                ],
+                text
+            ],
+            _ => empty![],
+        };
+
+        div![
             C![
                 variant.to_str(),
-                name.as_deref()
-                    .map(|s| format!("{}Label", s))
-                    .unwrap_or_default(),
+                name.as_deref().unwrap_or_default(),
                 match display_type {
-                    DisplayType::SelectOption => "optionLabel",
-                    DisplayType::SelectValue | DisplayType::SelectMultiValue => "selectItemLabel",
+                    DisplayType::SelectOption => "optionItem",
+                    DisplayType::SelectValue | DisplayType::SelectMultiValue => "selectItem value",
                 },
                 class_list
             ],
-            text
-        ],
-        _ => empty![],
-    };
-
-    div![
-        C![
-            variant.to_str(),
-            name.as_deref().unwrap_or_default(),
-            match display_type {
-                DisplayType::SelectOption => "optionItem",
-                DisplayType::SelectValue | DisplayType::SelectMultiValue => "selectItem value",
-            },
-            class_list
-        ],
-        icon_node,
-        label_node,
-        IF![display_type == DisplayType::SelectMultiValue => close_icon()]
-    ]
+            icon_node,
+            label_node,
+            IF![display_type == DisplayType::SelectMultiValue => close_icon()]
+        ]
+    }
 }
 
 #[inline(always)]
@@ -123,5 +123,5 @@ fn close_icon() -> Node<Msg> {
         size: Some(14),
         ..Default::default()
     }
-    .into_node()
+    .render()
 }

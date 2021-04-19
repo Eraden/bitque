@@ -3,9 +3,8 @@ use seed::prelude::Node;
 
 use crate::components::styled_field::StyledField;
 use crate::components::styled_select::{SelectVariant, StyledSelect};
-use crate::components::styled_select_child::StyledSelectChild;
+use crate::components::styled_select_child::StyledSelectOption;
 use crate::model::{IssueModal, Model};
-use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
 pub fn epic_field<Modal>(model: &Model, modal: &Modal, field_id: FieldId) -> Option<Node<Msg>>
@@ -31,7 +30,7 @@ where
         valid: true,
         ..Default::default()
     }
-    .into_node();
+    .render();
     Some(
         StyledField {
             label: "Epic",
@@ -39,12 +38,12 @@ where
             input,
             ..Default::default()
         }
-        .into_node(),
+        .render(),
     )
 }
 
-fn epic_select_option<'l>(epic: &'l Epic) -> StyledSelectChild<'l> {
-    StyledSelectChild {
+fn epic_select_option<'l>(epic: &'l Epic) -> StyledSelectOption<'l> {
+    StyledSelectOption {
         value: epic.id as u32,
         text: Some(epic.name.as_str()),
         ..Default::default()

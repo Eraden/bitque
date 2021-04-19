@@ -4,7 +4,7 @@ use seed::*;
 
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::model::{Model, Page};
-use crate::shared::{divider, ToNode};
+use crate::shared::divider;
 use crate::ws::enqueue_ws_msg;
 use crate::{Msg, OperationKind, ResourceKind};
 
@@ -96,7 +96,7 @@ fn sidebar_link_item(model: &Model, name: &str, icon: Icon, page: Option<Page>) 
         None
     };
     let active_flag = page.filter(|p| *p == model.page).map(|_| C!["active"]);
-    let icon_node = StyledIcon::from(icon).into_node();
+    let icon_node = StyledIcon::from(icon).render();
     let on_click = page.map(|p| {
         mouse_ev("click", move |ev| {
             ev.stop_propagation();

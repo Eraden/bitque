@@ -8,7 +8,7 @@ use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_input::StyledInput;
 use crate::components::styled_link::StyledLink;
 use crate::model::{self, PageContent};
-use crate::shared::{outer_layout, ToNode};
+use crate::shared::outer_layout;
 use crate::validations::{is_email, is_token};
 use crate::{FieldId, Msg, SignInFieldId};
 
@@ -24,13 +24,13 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         id: Some(FieldId::SignIn(SignInFieldId::Username)),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let username_field = StyledField {
         label: "Username",
         input: username,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let email = StyledInput {
         value: page.email.as_str(),
@@ -38,13 +38,13 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         id: Some(FieldId::SignIn(SignInFieldId::Email)),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let email_field = StyledField {
         label: "E-Mail",
         input: email,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let submit = if page.login_success {
         StyledButton {
@@ -60,18 +60,18 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             ..Default::default()
         }
     }
-    .into_node();
+    .render();
     let register_link = StyledLink {
         children: vec![span!["Register"]],
         class_list: "signUpLink",
         href: "/register",
     }
-    .into_node();
+    .render();
     let submit_field = StyledField {
         input: div![C!["twoRow"], submit, register_link],
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let help_icon = StyledIcon {
         icon: Icon::Help,
@@ -79,7 +79,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         size: Some(22),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let no_pass_section = div![
         C!["noPasswordSection"],
@@ -97,32 +97,32 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             Msg::SignInRequest
         })),
     }
-    .into_node();
+    .render();
 
     let token = StyledInput::new_with_id_and_value_and_valid(
         FieldId::SignIn(SignInFieldId::Token),
         &page.token,
         is_valid_token(page.token_touched, page.token.as_str()),
     )
-    .into_node();
+    .render();
     let token_field = StyledField {
         label: "Single use token",
         input: token,
         ..Default::default()
     }
-    .into_node();
+    .render();
     let submit_token = StyledButton {
         variant: ButtonVariant::Primary,
         text: Some("Authorize"),
         on_click: Some(mouse_ev(Ev::Click, |_| Msg::BindClientRequest)),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let submit_token_field = StyledField {
         input: submit_token,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let bind_token_form = StyledForm {
         on_submit: Some(ev(Ev::Submit, |ev| {
@@ -133,7 +133,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         fields: vec![token_field, submit_token_field],
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let children = vec![sign_in_form, bind_token_form];
     outer_layout(model, "login", children)

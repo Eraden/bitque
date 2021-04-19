@@ -1,7 +1,6 @@
 use seed::prelude::*;
 
 use crate::components::styled_confirm_modal::StyledConfirmModal;
-use crate::shared::ToNode;
 use crate::{model, Msg};
 
 pub fn view(model: &model::Model) -> Node<Msg> {
@@ -17,5 +16,5 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         cancel_text: "Cancel",
         on_confirm: Some(mouse_ev(Ev::Click, move |_| Msg::DeleteIssue(issue_id))),
     }
-    .into_node()
+    .render()
 }

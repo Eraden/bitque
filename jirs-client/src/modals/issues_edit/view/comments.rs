@@ -7,9 +7,9 @@ use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_textarea::StyledTextarea;
 use crate::modals::issues_edit::Model as EditIssueModal;
 use crate::model::{CommentForm, ModalType, Model};
-use crate::shared::ToNode;
 use crate::{EditIssueModalSection, FieldChange, FieldId, Msg};
 
+#[inline(always)]
 pub fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
     let submit_comment_form = mouse_ev(Ev::Click, move |ev| {
         ev.stop_propagation();
@@ -31,7 +31,7 @@ pub fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
         placeholder: "Add a comment...",
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let submit = StyledButton {
         variant: ButtonVariant::Primary,
@@ -39,18 +39,19 @@ pub fn build_comment_form(form: &CommentForm) -> Vec<Node<Msg>> {
         text: Some("Save"),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let cancel = StyledButton {
         variant: ButtonVariant::Empty,
         on_click: Some(close_comment_form),
         text: Some("Cancel"),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     vec![text_area, div![C!["actions"], submit, cancel]]
 }
 
+#[inline(always)]
 pub fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Option<Node<Msg>> {
     let show_form = modal.comment_form.creating && modal.comment_form.id == Some(comment.id);
 
@@ -62,7 +63,7 @@ pub fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Opti
         class_list: "userAvatar",
         ..StyledAvatar::default()
     }
-    .into_node();
+    .render();
 
     let buttons = if model.user.as_ref().map(|u| u.id) == Some(comment.user_id) {
         let comment_id = comment.id;
@@ -82,7 +83,7 @@ pub fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Opti
             variant: ButtonVariant::Empty,
             ..Default::default()
         }
-        .into_node();
+        .render();
 
         let cancel_button = StyledButton {
             class_list: "deleteButton",
@@ -91,7 +92,7 @@ pub fn comment(model: &Model, modal: &EditIssueModal, comment: &Comment) -> Opti
             variant: ButtonVariant::Empty,
             ..Default::default()
         }
-        .into_node();
+        .render();
 
         vec![edit_button, cancel_button]
     } else {

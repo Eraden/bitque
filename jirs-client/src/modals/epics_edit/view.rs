@@ -4,11 +4,10 @@ use seed::*;
 
 use crate::components::styled_button::*;
 use crate::components::styled_checkbox::*;
-use crate::components::styled_icon::Icon;
+use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_input::*;
 use crate::components::styled_modal::*;
 use crate::modals::epics_edit::Model;
-use crate::shared::ToNode;
 use crate::{model, FieldId, Msg};
 
 pub fn view(_model: &model::Model, modal: &Model) -> Node<Msg> {
@@ -24,10 +23,10 @@ pub fn view(_model: &model::Model, modal: &Model) -> Node<Msg> {
             Msg::ModalDropped
         })),
         variant: ButtonVariant::Empty,
-        icon: Some(Icon::Close.into_node()),
+        icon: Some(StyledIcon::from(Icon::Close).render()),
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledModal {
         width: Some(600),
         class_list: "editEpic",
@@ -39,12 +38,12 @@ pub fn view(_model: &model::Model, modal: &Model) -> Node<Msg> {
                 id: Some(FieldId::EditEpic(EpicFieldId::Name)),
                 ..Default::default()
             }
-            .into_node(),
+            .render(),
             transform,
         ],
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 fn transform_into_available(modal: &super::Model) -> Node<Msg> {
@@ -56,7 +55,7 @@ fn transform_into_available(modal: &super::Model) -> Node<Msg> {
         ),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let execute = StyledButton {
         on_click: Some(mouse_ev("click", |ev| {
             ev.stop_propagation();
@@ -66,7 +65,7 @@ fn transform_into_available(modal: &super::Model) -> Node<Msg> {
         text: Some("Transform"),
         ..Default::default()
     }
-    .into_node();
+    .render();
     div![C!["transform available"], div![types], div![execute]]
 }
 

@@ -2,9 +2,9 @@ use seed::prelude::*;
 use seed::*;
 
 use crate::components::styled_button::StyledButton;
-use crate::components::styled_icon::Icon;
+use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::model::Model;
-use crate::shared::{inner_layout, ToNode};
+use crate::shared::inner_layout;
 use crate::Msg;
 
 mod board;
@@ -41,7 +41,11 @@ fn header(model: &Model) -> Node<Msg> {
     if !model.show_extras {
         return Node::Empty;
     }
-    let button = StyledButton::secondary_with_text_and_icon("Repository", Icon::Github).into_node();
+    let button = StyledButton::secondary_with_text_and_icon(
+        "Repository",
+        StyledIcon::from(Icon::Github).render(),
+    )
+    .render();
     div![
         id!["projectBoardHeader"],
         div![id!["boardName"], C!["headerChild"], "Kanban board"],

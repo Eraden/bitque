@@ -14,13 +14,12 @@ use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_input::StyledInput;
 use crate::components::styled_modal::*;
 use crate::components::styled_select::{SelectVariant, StyledSelect, StyledSelectState};
-use crate::components::styled_select_child::StyledSelectChild;
+use crate::components::styled_select_child::StyledSelectOption;
 use crate::modals::epic_field;
 use crate::modals::issues_edit::Model as EditIssueModal;
 use crate::modals::time_tracking::time_tracking_field;
 use crate::model::{ModalType, Model};
 use crate::shared::tracking_widget::tracking_link;
-use crate::shared::ToNode;
 use crate::{EditIssueModalSection, FieldChange, FieldId, Msg};
 
 mod comments;
@@ -30,7 +29,7 @@ pub fn view(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         .issues_by_id
         .get(&modal.id)
         .map(|_issue| {
-            StyledModal::centered_with_width_and_body(1040, vec![details(model, modal)]).into_node()
+            StyledModal::centered_with_width_and_body(1040, vec![details(model, modal)]).render()
         })
         .unwrap_or(Node::Empty)
 }
@@ -96,7 +95,7 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
 
     let copy_button = StyledButton {
         variant: ButtonVariant::Empty,
-        icon: Some(Icon::Link.into_node()),
+        icon: Some(StyledIcon::from(Icon::Link).render()),
         on_click: Some(click_handler),
         children: vec![span![if *link_copied {
             "Link Copied"
@@ -105,7 +104,7 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         }]],
         ..Default::default()
     }
-    .into_node();
+    .render();
     let delete_button = StyledButton {
         variant: ButtonVariant::Empty,
         icon: Some(
@@ -114,12 +113,12 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
                 size: Some(19),
                 ..Default::default()
             }
-            .into_node(),
+            .render(),
         ),
         on_click: Some(delete_confirmation_handler),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let close_button = StyledButton {
         variant: ButtonVariant::Empty,
         icon: Some(
@@ -128,12 +127,12 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
                 size: Some(24),
                 ..Default::default()
             }
-            .into_node(),
+            .render(),
         ),
         on_click: Some(close_handler),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let issue_type_select = {
         let id = modal.id;
@@ -155,7 +154,7 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             selected: vec![type_select_option(payload.issue_type, &text)],
             ..Default::default()
         }
-        .into_node()
+        .render()
     };
 
     div![
@@ -171,18 +170,18 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
 }
 
 #[inline(always)]
-fn type_select_option<'l>(t: IssueType, text: &'l str) -> StyledSelectChild<'l> {
+fn type_select_option<'l>(t: IssueType, text: &'l str) -> StyledSelectOption<'l> {
     let name = t.to_label();
-    StyledSelectChild {
+    StyledSelectOption {
         class_list: name,
         text: Some(text),
         icon: Some(
             StyledIcon {
-                icon: t.clone().into(),
+                icon: t.into(),
                 class_list: name,
                 ..Default::default()
             }
-            .into_node(),
+            .render(),
         ),
         value: t.into(),
         name: Some("type"),
@@ -208,7 +207,7 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         ))),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let description = {
         StyledEditor {
@@ -221,13 +220,13 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             mode: description_state.mode.clone(),
             update_event: Ev::Change,
         }
-        .into_node()
+        .render()
     };
     let description_field = StyledField {
         input: description,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let user_avatar = StyledAvatar {
         avatar_url: model.user.as_ref().and_then(|u| u.avatar_url.as_deref()),
@@ -235,7 +234,7 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         class_list: "userAvatar",
         ..StyledAvatar::default()
     }
-    .into_node();
+    .render();
 
     let create_comment = if comment_form.creating && comment_form.id.is_none() {
         build_comment_form(comment_form)
@@ -320,7 +319,7 @@ fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             input: tracking,
             ..Default::default()
         }
-        .into_node();
+        .render();
         (estimate_field, tracking_field)
     } else {
         (Node::Empty, Node::Empty)
@@ -364,25 +363,25 @@ fn priorities_select(
         selected: vec![priority_select_option(payload.priority)],
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledField {
         label: "Priority",
         input: priority,
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 #[inline(always)]
-fn priority_select_option<'l>(ip: IssuePriority) -> StyledSelectChild<'l> {
-    StyledSelectChild {
+fn priority_select_option<'l>(ip: IssuePriority) -> StyledSelectOption<'l> {
+    StyledSelectOption {
         icon: Some(
             StyledIcon {
                 icon: ip.clone().into(),
                 class_list: ip.to_str(),
                 ..Default::default()
             }
-            .into_node(),
+            .render(),
         ),
         text: Some(ip.to_str()),
         class_list: ip.to_str(),
@@ -415,18 +414,18 @@ fn status_select(
         valid: true,
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledField {
         label: "Status",
         input: status,
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 #[inline(always)]
-fn issue_status_select_option<'l>(is: &'l IssueStatus) -> StyledSelectChild<'l> {
-    StyledSelectChild {
+fn issue_status_select_option<'l>(is: &'l IssueStatus) -> StyledSelectOption<'l> {
+    StyledSelectOption {
         value: is.id as u32,
         class_list: is.name.as_str(),
         text: Some(is.name.as_str()),
@@ -456,18 +455,18 @@ fn reporters_select(
             .collect(),
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledField {
         label: "Reporter",
         input: reporter,
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 #[inline(always)]
-fn reporter_select_option<'l>(user: &'l User) -> StyledSelectChild<'l> {
-    StyledSelectChild {
+fn reporter_select_option<'l>(user: &'l User) -> StyledSelectOption<'l> {
+    StyledSelectOption {
         value: user.id as u32,
         icon: Some(
             StyledAvatar {
@@ -476,7 +475,7 @@ fn reporter_select_option<'l>(user: &'l User) -> StyledSelectChild<'l> {
                 avatar_url: user.avatar_url.as_deref(),
                 ..StyledAvatar::default()
             }
-            .into_node(),
+            .render(),
         ),
         text: Some(user.name.as_str()),
         name: Some("reporter"),
@@ -506,18 +505,18 @@ fn assignees_select(
             .collect(),
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledField {
         input: assignees,
         label: "Assignees",
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 #[inline(always)]
-fn assignee_select_option<'l>(user: &'l User) -> StyledSelectChild<'l> {
-    StyledSelectChild {
+fn assignee_select_option<'l>(user: &'l User) -> StyledSelectOption<'l> {
+    StyledSelectOption {
         value: user.id as u32,
         icon: Some(
             StyledAvatar {
@@ -526,7 +525,7 @@ fn assignee_select_option<'l>(user: &'l User) -> StyledSelectChild<'l> {
                 avatar_url: user.avatar_url.as_deref(),
                 ..StyledAvatar::default()
             }
-            .into_node(),
+            .render(),
         ),
         text: Some(user.name.as_str()),
         name: Some("assignees"),

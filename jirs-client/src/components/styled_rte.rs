@@ -1,16 +1,12 @@
-use {
-    crate::{
-        components::{
-            styled_button::StyledButton,
-            styled_icon::{Icon, StyledIcon},
-            styled_select::{StyledSelect, StyledSelectState},
-            styled_tooltip::StyledTooltip,
-        },
-        shared::{ToChild, ToNode},
-        ButtonId, FieldId, Msg, RteField,
-    },
-    seed::{prelude::*, *},
-};
+use seed::prelude::*;
+use seed::*;
+
+use crate::components::styled_button::StyledButton;
+use crate::components::styled_icon::{Icon, StyledIcon};
+use crate::components::styled_select::{StyledSelect, StyledSelectState};
+use crate::components::styled_tooltip::StyledTooltip;
+use crate::shared::ToChild;
+use crate::{ButtonId, FieldId, Msg, RteField};
 
 #[derive(Debug, Clone, Copy)]
 pub enum HeadingSize {
@@ -437,12 +433,6 @@ impl<'component> StyledRte<'component> {
     }
 }
 
-impl<'component> ToNode for StyledRte<'component> {
-    fn into_node(self) -> Node<Msg> {
-        render(self)
-    }
-}
-
 pub struct StyledRteBuilder<'outer> {
     field_id: FieldId,
     value: String,
@@ -639,14 +629,14 @@ pub fn render(values: StyledRte) -> Node<Msg> {
             C!["bar"],
             first_row(click_handler.clone()),
             second_row(&values, click_handler, change_handler),
-            // brush_button,
-            // color_bucket_button,
-            // color_picker_button,
-            // link_broken_button,
-            // pin_button,
-            // save_button,
-            // text_height_button,
-            // text_width_button,
+            /* brush_button,
+             * color_bucket_button,
+             * color_picker_button,
+             * link_broken_button,
+             * pin_button,
+             * save_button,
+             * text_height_button,
+             * text_width_button, */
         ],
         div![
             C!["editorWrapper"],
@@ -852,7 +842,7 @@ fn second_row(
                     }))
                     .empty()
                     .build()
-                    .into_node();
+                    .render();
                 span![C!["headingOption"], button]
             })
             .collect();
@@ -880,8 +870,8 @@ fn second_row(
             C!["group font"],
             // font_button,
             heading_button,
-            // small_cap_button,
-            // all_caps_button
+            /* small_cap_button,
+             * all_caps_button */
         ]
     };
 
@@ -1000,7 +990,7 @@ fn table_tooltip(
         .icon(Icon::Close)
         .on_click(click_handler.clone())
         .build()
-        .into_node();
+        .render();
 
     let on_submit = click_handler;
 
@@ -1036,7 +1026,7 @@ fn table_tooltip(
             ]
     })
     .build()
-    .into_node()
+    .render()
 }
 
 fn code_tooltip(values: &StyledRte, click_handler: EventHandler<Msg>) -> Node<Msg> {
@@ -1070,7 +1060,7 @@ fn code_tooltip(values: &StyledRte, click_handler: EventHandler<Msg>) -> Node<Ms
         .build(FieldId::Rte(RteField::CodeLang(Box::new(
             values.field_id.clone(),
         ))))
-        .into_node();
+        .render();
 
     let close_tooltip = StyledButton::build()
         .empty()
@@ -1078,7 +1068,7 @@ fn code_tooltip(values: &StyledRte, click_handler: EventHandler<Msg>) -> Node<Ms
         .button_id(ButtonId::RteInsertCode)
         .on_click(click_handler.clone())
         .build()
-        .into_node();
+        .render();
 
     let input = {
         let field_id = values.field_id.clone();
@@ -1098,7 +1088,7 @@ fn code_tooltip(values: &StyledRte, click_handler: EventHandler<Msg>) -> Node<Ms
             .on_click(click_handler)
             .text("Insert")
             .build()
-            .into_node();
+            .render();
         div![insert]
     };
 
@@ -1110,7 +1100,7 @@ fn code_tooltip(values: &StyledRte, click_handler: EventHandler<Msg>) -> Node<Ms
         .add_child(input)
         .add_child(actions)
         .build()
-        .into_node()
+        .render()
 }
 
 fn styled_rte_button(
@@ -1125,6 +1115,6 @@ fn styled_rte_button(
         .on_click(handler)
         .empty()
         .build()
-        .into_node();
+        .render();
     span![C!["styledRteButton"], attrs![At::Title => title], button]
 }

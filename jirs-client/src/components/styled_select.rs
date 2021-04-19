@@ -5,7 +5,6 @@ use seed::*;
 
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_select_child::*;
-use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -110,7 +109,7 @@ impl StyledSelectState {
 
 pub struct StyledSelect<'l, Options>
 where
-    Options: Iterator<Item = StyledSelectChild<'l>>,
+    Options: Iterator<Item = StyledSelectOption<'l>>,
 {
     pub id: FieldId,
     pub variant: SelectVariant,
@@ -119,7 +118,7 @@ where
     pub valid: bool,
     pub is_multi: bool,
     pub options: Option<Options>,
-    pub selected: Vec<StyledSelectChild<'l>>,
+    pub selected: Vec<StyledSelectOption<'l>>,
     pub text_filter: &'l str,
     pub opened: bool,
     pub clearable: bool,
@@ -127,7 +126,7 @@ where
 
 impl<'l, Options> Default for StyledSelect<'l, Options>
 where
-    Options: Iterator<Item = StyledSelectChild<'l>>,
+    Options: Iterator<Item = StyledSelectOption<'l>>,
 {
     fn default() -> Self {
         Self {
@@ -146,167 +145,160 @@ where
     }
 }
 
-impl<'l, Options> ToNode for StyledSelect<'l, Options>
+impl<'l, Options> StyledSelect<'l, Options>
 where
-    Options: Iterator<Item = StyledSelectChild<'l>>,
+    Options: Iterator<Item = StyledSelectOption<'l>>,
 {
-    fn into_node(self) -> Node<Msg> {
-        render(self)
-    }
-}
+    pub fn render(self) -> Node<Msg> {
+        let StyledSelect {
+            id,
+            variant,
+            dropdown_width,
+            name,
+            valid,
+            is_multi,
+            options,
+            selected,
+            text_filter,
+            opened,
+            clearable,
+        } = self;
 
-pub fn render<'l, Options>(values: StyledSelect<'l, Options>) -> Node<Msg>
-where
-    Options: Iterator<Item = StyledSelectChild<'l>>,
-{
-    let StyledSelect {
-        id,
-        variant,
-        dropdown_width,
-        name,
-        valid,
-        is_multi,
-        options,
-        selected,
-        text_filter,
-        opened,
-        clearable,
-    } = values;
-
-    let on_text = {
-        let field_id = id.clone();
-        input_ev(Ev::KeyUp, move |value| {
-            Msg::StyledSelectChanged(field_id, StyledSelectChanged::Text(value))
-        })
-    };
-
-    let on_handler = {
-        let field_id = id.clone();
-        mouse_ev(Ev::Click, move |_| {
-            Msg::StyledSelectChanged(field_id, StyledSelectChanged::DropDownVisibility(!opened))
-        })
-    };
-
-    let dropdown_style = dropdown_width.map_or_else(
-        || "width: 100%;".to_string(),
-        |n| format!("width: {}px;", n),
-    );
-
-    let action_icon = if clearable && !selected.is_empty() {
-        let on_click = {
+        let on_text = {
             let field_id = id.clone();
-            mouse_ev(Ev::Click, move |ev| {
-                ev.stop_propagation();
-                ev.prevent_default();
-                Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(None))
+            input_ev(Ev::KeyUp, move |value| {
+                Msg::StyledSelectChanged(field_id, StyledSelectChanged::Text(value))
             })
         };
-        StyledIcon {
-            icon: Icon::Close,
-            class_list: "chevronIcon",
-            on_click: Some(on_click),
-            ..Default::default()
-        }
-        .into_node()
-    } else if (selected.is_empty() || !is_multi) && variant != SelectVariant::Empty {
-        StyledIcon {
-            icon: Icon::ChevronDown,
-            class_list: "chevronIcon",
-            ..Default::default()
-        }
-        .into_node()
-    } else {
-        empty![]
-    };
 
-    let skip = selected.iter().fold(HashMap::new(), |mut h, o| {
-        h.insert(o.value, true);
-        h
-    });
-    let children: Vec<Node<Msg>> = if let Some(options) = options {
-        options
-            .filter(|o| !skip.contains_key(&o.value) && o.match_text(text_filter))
-            .map(|child| {
-                let value = child.value();
-                let node = child.render_option();
-
-                let on_change = {
-                    let field_id = id.clone();
-                    mouse_ev(Ev::Click, move |_| {
-                        Msg::StyledSelectChanged(
-                            field_id,
-                            StyledSelectChanged::Changed(Some(value)),
-                        )
-                    })
-                };
-                div![C!["option"], on_change, on_handler.clone(), node]
+        let on_handler = {
+            let field_id = id.clone();
+            mouse_ev(Ev::Click, move |_| {
+                Msg::StyledSelectChanged(field_id, StyledSelectChanged::DropDownVisibility(!opened))
             })
-            .collect()
-    } else {
-        vec![]
-    };
+        };
 
-    seed::div![
-        C!["styledSelect", variant.to_str(), IF![!valid => "invalid"]],
-        attrs![At::Style => dropdown_style.as_str()],
-        keyboard_ev(Ev::KeyUp, |ev| {
-            ev.stop_propagation();
-            None as Option<Msg>
-        }),
-        div![
-            C!["valueContainer", variant.to_str()],
-            on_handler,
-            match is_multi {
-                true => vec![div![
-                    C!["valueMulti"],
-                    selected
-                        .into_iter()
-                        .map(|m| into_multi_value(m, id.clone()))
-                        .collect::<Vec<Node<Msg>>>(),
-                    IF![children.is_empty() => div![C!["placeholder"], "Select"]],
-                    IF![!children.is_empty() => div![C!["addMore"], StyledIcon::from(Icon::Plus).render(), "Add more"]],
-                ]],
-                false => selected
-                    .into_iter()
-                    .map(|m| m.render_value())
-                    .collect::<Vec<Node<Msg>>>(),
-            },
-            action_icon,
-        ],
-        div![
-            C!["dropDown"],
-            attrs![At::Style => dropdown_style.as_str()],
-            IF![opened => seed::input![
-                C!["dropDownInput"],
-                attrs![
-                    At::Name => name,
-                    At::Type => "text"
-                    At::Placeholder => "Search"
-                    At::AutoFocus => "true",
-                ],
-                on_text,
-            ]],
-            match (opened, children.is_empty()) {
-                (false, _) => empty![],
-                (_, true) => seed::div![C!["noOptions"], "No results"],
-                _ => seed::div![C!["options"], children],
+        let dropdown_style = dropdown_width.map_or_else(
+            || "width: 100%;".to_string(),
+            |n| format!("width: {}px;", n),
+        );
+
+        let action_icon = if clearable && !selected.is_empty() {
+            let on_click = {
+                let field_id = id.clone();
+                mouse_ev(Ev::Click, move |ev| {
+                    ev.stop_propagation();
+                    ev.prevent_default();
+                    Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(None))
+                })
+            };
+            StyledIcon {
+                icon: Icon::Close,
+                class_list: "chevronIcon",
+                on_click: Some(on_click),
+                ..Default::default()
             }
+            .render()
+        } else if (selected.is_empty() || !is_multi) && variant != SelectVariant::Empty {
+            StyledIcon {
+                icon: Icon::ChevronDown,
+                class_list: "chevronIcon",
+                ..Default::default()
+            }
+            .render()
+        } else {
+            empty![]
+        };
+
+        let skip = selected.iter().fold(HashMap::new(), |mut h, o| {
+            h.insert(o.value, true);
+            h
+        });
+        let children: Vec<Node<Msg>> = if let Some(options) = options {
+            options
+                .filter(|o| !skip.contains_key(&o.value) && o.match_text(text_filter))
+                .map(|child| {
+                    let value = child.value();
+                    let node = child.render_option();
+
+                    let on_change = {
+                        let field_id = id.clone();
+                        mouse_ev(Ev::Click, move |_| {
+                            Msg::StyledSelectChanged(
+                                field_id,
+                                StyledSelectChanged::Changed(Some(value)),
+                            )
+                        })
+                    };
+                    div![C!["option"], on_change, on_handler.clone(), node]
+                })
+                .collect()
+        } else {
+            vec![]
+        };
+
+        seed::div![
+            C!["styledSelect", variant.to_str(), IF![!valid => "invalid"]],
+            attrs![At::Style => dropdown_style.as_str()],
+            keyboard_ev(Ev::KeyUp, |ev| {
+                ev.stop_propagation();
+                None as Option<Msg>
+            }),
+            div![
+                C!["valueContainer", variant.to_str()],
+                on_handler,
+                match is_multi {
+                    true => vec![div![
+                        C!["valueMulti"],
+                        selected
+                            .into_iter()
+                            .map(|m| Self::multi_value(m, id.clone()))
+                            .collect::<Vec<Node<Msg>>>(),
+                        IF![children.is_empty() => div![C!["placeholder"], "Select"]],
+                        IF![!children.is_empty() => div![C!["addMore"], StyledIcon::from(Icon::Plus).render(), "Add more"]],
+                    ]],
+                    false => selected
+                        .into_iter()
+                        .map(|m| m.render_value())
+                        .collect::<Vec<Node<Msg>>>(),
+                },
+                action_icon,
+            ],
+            div![
+                C!["dropDown"],
+                attrs![At::Style => dropdown_style.as_str()],
+                IF![opened => seed::input![
+                    C!["dropDownInput"],
+                    attrs![
+                        At::Name => name,
+                        At::Type => "text"
+                        At::Placeholder => "Search"
+                        At::AutoFocus => "true",
+                    ],
+                    on_text,
+                ]],
+                match (opened, children.is_empty()) {
+                    (false, _) => empty![],
+                    (_, true) => seed::div![C!["noOptions"], "No results"],
+                    _ => seed::div![C!["options"], children],
+                }
+            ]
         ]
-    ]
-}
+    }
 
-fn into_multi_value(child: StyledSelectChild, id: FieldId) -> Node<Msg> {
-    let value = child.value();
+    fn multi_value(child: StyledSelectOption, id: FieldId) -> Node<Msg> {
+        let value = child.value();
 
-    let opt = child.render_multi_value();
+        let opt = child.render_multi_value();
 
-    let handler = {
-        let field_id = id;
-        mouse_ev(Ev::Click, move |ev| {
-            ev.stop_propagation();
-            Msg::StyledSelectChanged(field_id, StyledSelectChanged::RemoveMulti(value))
-        })
-    };
+        let handler = {
+            let field_id = id;
+            mouse_ev(Ev::Click, move |ev| {
+                ev.stop_propagation();
+                Msg::StyledSelectChanged(field_id, StyledSelectChanged::RemoveMulti(value))
+            })
+        };
 
-    div![C!["valueMultiItem"], opt, handler]
+        div![C!["valueMultiItem"], opt, handler]
+    }
 }

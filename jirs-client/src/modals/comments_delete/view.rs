@@ -1,7 +1,6 @@
 use jirs_data::CommentId;
 use seed::prelude::*;
 
-use crate::shared::ToNode;
 use crate::styled_confirm_modal::StyledConfirmModal;
 use crate::{model, Msg};
 
@@ -14,5 +13,5 @@ pub fn view(_model: &model::Model, modal: &super::Model) -> Node<Msg> {
         on_confirm: Some(mouse_ev(Ev::Click, move |_| Msg::DeleteComment(comment_id))),
         ..Default::default()
     }
-    .into_node()
+    .render()
 }

@@ -8,7 +8,7 @@ use crate::components::styled_form::StyledForm;
 use crate::components::styled_input::StyledInput;
 use crate::model::{Model, PageContent};
 use crate::pages::invite_page::InvitePage;
-use crate::shared::{outer_layout, ToNode};
+use crate::shared::outer_layout;
 use crate::validations::is_token;
 use crate::{match_page, FieldId, InvitationPageChange, Msg, PageChanged};
 
@@ -30,7 +30,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         })),
         fields: vec![token_field, submit_field, error],
     }
-    .into_node();
+    .render();
 
     outer_layout(model, "invite", vec![form])
 }
@@ -41,12 +41,12 @@ fn submit(_page: &InvitePage) -> Node<Msg> {
         variant: ButtonVariant::Primary,
         ..Default::default()
     }
-    .into_node();
+    .render();
     StyledField {
         input: submit,
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
 fn token_field(page: &InvitePage) -> Node<Msg> {
@@ -56,12 +56,12 @@ fn token_field(page: &InvitePage) -> Node<Msg> {
         value: page.token.as_str(),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     StyledField {
         input,
         label: "Your invite token",
         ..Default::default()
     }
-    .into_node()
+    .render()
 }

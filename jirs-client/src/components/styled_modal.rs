@@ -2,7 +2,6 @@ use seed::prelude::*;
 use seed::*;
 
 use crate::components::styled_icon::{Icon, StyledIcon};
-use crate::shared::ToNode;
 use crate::Msg;
 
 #[allow(dead_code)]
@@ -58,12 +57,6 @@ impl<'l> StyledModal<'l> {
             children,
             class_list: "",
         }
-    }
-}
-
-impl<'l> ToNode for StyledModal<'l> {
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }
 

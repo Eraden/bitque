@@ -3,7 +3,6 @@ use seed::{EventHandler, *};
 
 use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_modal::StyledModal;
-use crate::shared::ToNode;
 use crate::Msg;
 
 const TITLE: &str = "Warning";
@@ -63,7 +62,7 @@ impl<'l> StyledConfirmModal<'l> {
             class_list: "confirmModal",
             ..Default::default()
         }
-        .into_node()
+        .render()
     }
 }
 
@@ -76,11 +75,5 @@ impl<'l> Default for StyledConfirmModal<'l> {
             cancel_text: CANCEL_TEXT,
             on_confirm: None,
         }
-    }
-}
-
-impl<'l> ToNode for StyledConfirmModal<'l> {
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }

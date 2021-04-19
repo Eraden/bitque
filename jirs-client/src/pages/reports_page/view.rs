@@ -9,7 +9,7 @@ use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_link::*;
 use crate::model::{Model, PageContent};
 use crate::pages::reports_page::model::ReportsPage;
-use crate::shared::{inner_layout, ToNode};
+use crate::shared::inner_layout;
 use crate::{Msg, PageChanged, ReportsPageChange};
 
 const SVG_MARGIN_X: u32 = 10;
@@ -202,9 +202,9 @@ fn issue_list(page: &ReportsPage, project_name: &str, this_month_updated: &[&Iss
             let day = date.format("%Y-%m-%d").to_string();
 
             let type_icon = StyledIcon::from(Icon::from(issue_type.clone()))
-                .into_node();
+                .render();
             let priority_icon = StyledIcon::from(Icon::from(priority.clone()))
-                .into_node();
+                .render();
             let desc = Node::from_html(None,
                                        description
                                            .as_deref()
@@ -212,12 +212,12 @@ fn issue_list(page: &ReportsPage, project_name: &str, this_month_updated: &[&Iss
             );
             let link = StyledLink {
                 children: vec![
-                    Icon::Link.into_node(),
+                    StyledIcon::from(Icon::Link).render(),
                     span![format!("{}-{}", project_name, id).as_str()]
                 ],
                 class_list: "withIcon",
                 href: format!("/issues/{}", id).as_str(),
-            }.into_node();
+            }.render();
 
             li![
                 C!["issue", selection_state.to_str()],

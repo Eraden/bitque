@@ -1,10 +1,7 @@
-use std::borrow::Cow;
-
 use jirs_data::{IssuePriority, IssueType};
 use seed::prelude::*;
 use seed::*;
 
-use crate::shared::ToNode;
 use crate::Msg;
 
 #[allow(dead_code)]
@@ -102,14 +99,16 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub fn to_color(&self) -> Option<String> {
+    #[inline(always)]
+    pub fn to_color(self) -> Option<String> {
         match self {
             Icon::Bug | Icon::Task | Icon::Story | Icon::Epic => Some(format!("var(--{})", self)),
             _ => None,
         }
     }
 
-    pub fn to_str<'l>(&self) -> &'l str {
+    #[inline(always)]
+    pub fn to_str<'l>(self) -> &'l str {
         match self {
             Icon::Bug => "bug",
             Icon::Stopwatch => "stopwatch",
@@ -209,6 +208,7 @@ impl std::fmt::Display for Icon {
 }
 
 impl From<IssueType> for Icon {
+    #[inline(always)]
     fn from(t: IssueType) -> Self {
         use IssueType::*;
         match t {
@@ -220,6 +220,7 @@ impl From<IssueType> for Icon {
 }
 
 impl From<IssuePriority> for Icon {
+    #[inline(always)]
     fn from(t: IssuePriority) -> Self {
         match t {
             IssuePriority::Highest => Icon::ArrowUp,
@@ -232,6 +233,7 @@ impl From<IssuePriority> for Icon {
 }
 
 impl<'l> From<Icon> for StyledIcon<'l> {
+    #[inline(always)]
     fn from(icon: Icon) -> StyledIcon<'l> {
         StyledIcon {
             icon,
@@ -240,42 +242,31 @@ impl<'l> From<Icon> for StyledIcon<'l> {
     }
 }
 
-impl ToNode for Icon {
-    fn into_node(self) -> Node<Msg> {
-        let styled: StyledIcon = self.into();
-        styled.into_node()
-    }
-}
-
 pub struct StyledIcon<'l> {
     pub icon: Icon,
     pub size: Option<i32>,
     pub class_list: &'l str,
-    pub style_list: Vec<Cow<'l, str>>,
+    pub style_list: &'l str,
     pub color: Option<&'l str>,
     pub on_click: Option<EventHandler<Msg>>,
 }
 
 impl<'l> Default for StyledIcon<'l> {
+    #[inline(always)]
     fn default() -> Self {
         Self {
             icon: Icon::Stopwatch,
             size: None,
             class_list: "",
-            style_list: vec![],
+            style_list: "",
             color: None,
             on_click: None,
         }
     }
 }
 
-impl<'l> ToNode for StyledIcon<'l> {
-    fn into_node(self) -> Node<Msg> {
-        self.render()
-    }
-}
-
 impl<'l> StyledIcon<'l> {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let StyledIcon {
             icon,
@@ -300,19 +291,6 @@ impl<'l> StyledIcon<'l> {
         .into_iter()
         .flatten()
         .collect();
-
-        let style_list = style_list.into_iter().fold("".to_string(), |mut mem, s| {
-            match s {
-                Cow::Borrowed(s) => {
-                    mem.push_str(s);
-                }
-                Cow::Owned(owned) => {
-                    mem.push_str(owned.as_str());
-                }
-            }
-            mem.push(';');
-            mem
-        });
 
         i![
             C!["styledIcon", class_list, icon.to_str()],

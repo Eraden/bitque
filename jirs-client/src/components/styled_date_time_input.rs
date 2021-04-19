@@ -6,9 +6,8 @@ use seed::prelude::*;
 use seed::*;
 
 use crate::components::styled_button::{ButtonVariant, StyledButton};
-use crate::components::styled_icon::Icon;
+use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_tooltip::{StyledTooltip, TooltipVariant};
-use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
 #[derive(Debug)]
@@ -134,11 +133,11 @@ impl StyledDateTimeInput {
             });
             StyledButton {
                 on_click: Some(on_click_left),
-                icon: Some(Icon::DoubleLeft.into_node()),
+                icon: Some(StyledIcon::from(Icon::DoubleLeft).render()),
                 variant: ButtonVariant::Empty,
                 ..Default::default()
             }
-            .into_node()
+            .render()
         };
         let right_action = {
             let field_id = self.field_id.clone();
@@ -161,7 +160,7 @@ impl StyledDateTimeInput {
             });
             StyledButton {
                 on_click: Some(on_click_right),
-                icon: Some(Icon::DoubleRight.into_node()),
+                icon: Some(StyledIcon::from(Icon::DoubleRight).render()),
                 variant: ButtonVariant::Empty,
                 ..Default::default()
             }
@@ -253,12 +252,6 @@ impl StyledDateTimeInput {
             Weekday::Sat => end + Duration::days(1),
             Weekday::Sun => end,
         }
-    }
-}
-
-impl ToNode for StyledDateTimeInput {
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }
 

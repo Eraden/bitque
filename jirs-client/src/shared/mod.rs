@@ -42,10 +42,6 @@ pub fn go_to(url: &str, orders: &mut impl Orders<Msg>) {
     }
 }
 
-pub trait ToNode {
-    fn into_node(self) -> Node<Msg>;
-}
-
 #[inline]
 pub fn divider() -> Node<Msg> {
     div![C!["divider"], ""]

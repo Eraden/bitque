@@ -6,7 +6,6 @@ use crate::components::styled_button::*;
 use crate::components::styled_icon::*;
 use crate::components::styled_input::*;
 use crate::model::PageContent;
-use crate::shared::ToNode;
 use crate::{FieldId, Model, Msg};
 
 pub fn project_board_filters(model: &Model) -> Node<Msg> {
@@ -22,7 +21,7 @@ pub fn project_board_filters(model: &Model) -> Node<Msg> {
         icon: Some(Icon::Search),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let only_my = StyledButton {
         variant: ButtonVariant::Empty,
@@ -32,7 +31,7 @@ pub fn project_board_filters(model: &Model) -> Node<Msg> {
         on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy)),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let recently_updated = StyledButton {
         variant: ButtonVariant::Empty,
@@ -41,7 +40,7 @@ pub fn project_board_filters(model: &Model) -> Node<Msg> {
         on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated)),
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let clear_all = if project_page.only_my_filter
         || project_page.recently_updated_filter
@@ -89,7 +88,7 @@ pub fn avatars_filters(model: &Model) -> Node<Msg> {
                 user_index: idx,
                 ..StyledAvatar::default()
             }
-            .into_node();
+            .render();
             div![
                 IF![active => C!["isActive"]],
                 C!["avatarIsActiveBorder"],

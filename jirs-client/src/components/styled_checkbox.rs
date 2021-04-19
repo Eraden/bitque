@@ -1,7 +1,6 @@
 use seed::prelude::*;
 use seed::*;
 
-use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
 #[derive(Debug)]
@@ -119,14 +118,5 @@ where
                 |v| v.map(ChildBuilder::render).collect(),
             )
         ]
-    }
-}
-
-impl<'l, Options> ToNode for StyledCheckbox<'l, Options>
-where
-    Options: Iterator<Item = ChildBuilder<'l>>,
-{
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }

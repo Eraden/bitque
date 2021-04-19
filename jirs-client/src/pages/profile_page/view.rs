@@ -10,10 +10,10 @@ use crate::components::styled_form::StyledForm;
 use crate::components::styled_image_input::StyledImageInput;
 use crate::components::styled_input::{InputVariant, StyledInput};
 use crate::components::styled_select::{SelectVariant, StyledSelect};
-use crate::components::styled_select_child::StyledSelectChild;
+use crate::components::styled_select_child::StyledSelectOption;
 use crate::model::{Model, PageContent};
 use crate::pages::profile_page::model::ProfilePage;
-use crate::shared::{inner_layout, ToNode};
+use crate::shared::inner_layout;
 use crate::{FieldId, Msg, PageChanged, ProfilePageChange};
 
 pub fn view(model: &Model) -> Node<Msg> {
@@ -27,7 +27,7 @@ pub fn view(model: &Model) -> Node<Msg> {
         class_list: "avatar",
         url: page.avatar.url.as_deref(),
     }
-    .into_node();
+    .render();
 
     let username = StyledInput {
         id: Some(FieldId::Profile(UsersFieldId::Username)),
@@ -36,13 +36,13 @@ pub fn view(model: &Model) -> Node<Msg> {
         variant: InputVariant::Primary,
         ..Default::default()
     }
-    .into_node();
+    .render();
     let username_field = StyledField {
         label: "Username",
         input: username,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let email = StyledInput {
         id: Some(FieldId::Profile(UsersFieldId::Email)),
@@ -51,13 +51,13 @@ pub fn view(model: &Model) -> Node<Msg> {
         variant: InputVariant::Primary,
         ..Default::default()
     }
-    .into_node();
+    .render();
     let email_field = StyledField {
         label: "E-Mail",
         input: email,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let current_project = build_current_project(model, page);
 
@@ -70,12 +70,12 @@ pub fn view(model: &Model) -> Node<Msg> {
         })),
         ..Default::default()
     }
-    .into_node();
+    .render();
     let submit_field = StyledField {
         input: submit,
         ..Default::default()
     }
-    .into_node();
+    .render();
 
     let content = StyledForm {
         heading: "Profile",
@@ -91,7 +91,7 @@ pub fn view(model: &Model) -> Node<Msg> {
             submit_field,
         ],
     }
-    .into_node();
+    .render();
     inner_layout(model, "profile", &[content])
 }
 
@@ -137,18 +137,18 @@ fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
                 .collect(),
             ..Default::default()
         }
-        .into_node()
+        .render()
     };
     StyledField {
         label: "Current project",
         input: div![C!["project-name"], inner],
         ..Default::default()
     }
-    .into_node()
+    .render()
 }
 
-fn project_select_option<'l>(project: &'l Project) -> StyledSelectChild<'l> {
-    StyledSelectChild {
+fn project_select_option<'l>(project: &'l Project) -> StyledSelectOption<'l> {
+    StyledSelectOption {
         text: Some(project.name.as_str()),
         value: project.id as u32,
         ..Default::default()

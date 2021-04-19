@@ -2,7 +2,6 @@ use seed::prelude::*;
 use seed::*;
 use web_sys::File;
 
-use crate::shared::ToNode;
 use crate::{FieldId, Msg};
 
 #[derive(Debug, Clone)]
@@ -37,13 +36,8 @@ pub struct StyledImageInput<'l> {
     pub url: Option<&'l str>,
 }
 
-impl<'l> ToNode for StyledImageInput<'l> {
-    fn into_node(self) -> Node<Msg> {
-        self.render()
-    }
-}
-
 impl<'l> StyledImageInput<'l> {
+    #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let StyledImageInput {
             id,

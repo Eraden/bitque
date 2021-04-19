@@ -3,19 +3,12 @@ use std::str::FromStr;
 use seed::prelude::*;
 use seed::*;
 
-use crate::shared::ToNode;
 use crate::Msg;
 
 pub struct StyledLink<'l> {
     pub children: Vec<Node<Msg>>,
     pub class_list: &'l str,
     pub href: &'l str,
-}
-
-impl<'l> ToNode for StyledLink<'l> {
-    fn into_node(self) -> Node<Msg> {
-        self.render()
-    }
 }
 
 impl<'l> StyledLink<'l> {
@@ -43,7 +36,7 @@ impl<'l> StyledLink<'l> {
 
         a![
             C!["styledLink", class_list],
-            attrs![ At::Href => href, ],
+            attrs![ At::Href => href ],
             on_click,
             children,
         ]

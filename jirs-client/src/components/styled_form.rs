@@ -1,7 +1,6 @@
 use seed::prelude::*;
 use seed::*;
 
-use crate::shared::ToNode;
 use crate::Msg;
 
 #[derive(Debug, Clone, Default)]
@@ -28,12 +27,5 @@ impl<'l> StyledForm<'l> {
             C!["styledForm"],
             div![C!["formElement"], div![C!["formHeading"], heading], fields],
         ]
-    }
-}
-
-impl<'l> ToNode for StyledForm<'l> {
-    #[inline]
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }

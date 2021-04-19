@@ -1,7 +1,6 @@
 use seed::prelude::*;
 use seed::*;
 
-use crate::shared::ToNode;
 use crate::Msg;
 
 #[derive(Debug)]
@@ -39,11 +38,5 @@ impl<'l> StyledField<'l> {
             input,
             tip_node,
         ]
-    }
-}
-
-impl<'l> ToNode for StyledField<'l> {
-    fn into_node(self) -> Node<Msg> {
-        self.render()
     }
 }
