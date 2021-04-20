@@ -92,6 +92,7 @@ fn project_issue_list(
         let send_status = status_id;
         drag_ev(Ev::Drop, move |ev| {
             ev.prevent_default();
+            ev.stop_propagation();
             Some(Msg::PageChanged(PageChanged::Board(
                 BoardPageChange::IssueDropZone(send_status),
             )))
@@ -102,6 +103,7 @@ fn project_issue_list(
         let send_status = status_id;
         drag_ev(Ev::DragOver, move |ev| {
             ev.prevent_default();
+            ev.stop_propagation();
             Some(Msg::PageChanged(PageChanged::Board(
                 BoardPageChange::IssueDragOverStatus(send_status),
             )))
