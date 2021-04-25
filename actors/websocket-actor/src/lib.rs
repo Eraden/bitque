@@ -149,6 +149,11 @@ impl WebSocketActor {
                 self.handle_msg(RemoveInvitedUser { user_id }, ctx)?
             }
 
+            // user settings
+            WsMsg::UserSettingSetEditorMode(mode) => {
+                self.handle_msg(user_settings::SetTextEditorMode { mode }, ctx)?
+            }
+
             // comments
             WsMsg::IssueCommentsLoad(issue_id) => {
                 self.handle_msg(LoadIssueComments { issue_id }, ctx)?
@@ -189,8 +194,14 @@ impl WebSocketActor {
                 },
                 ctx,
             )?,
-            WsMsg::EpicUpdate(epic_id, name) => {
-                self.handle_msg(epics::UpdateEpic { epic_id, name }, ctx)?
+            WsMsg::EpicUpdateName(epic_id, name) => {
+                self.handle_msg(epics::UpdateEpicName { epic_id, name }, ctx)?
+            }
+            WsMsg::EpicUpdateStartsAt(epic_id, starts_at) => {
+                self.handle_msg(epics::UpdateEpicStartsAt { epic_id, starts_at }, ctx)?
+            }
+            WsMsg::EpicUpdateEndsAt(epic_id, ends_at) => {
+                self.handle_msg(epics::UpdateEpicEndsAt { epic_id, ends_at }, ctx)?
             }
             WsMsg::EpicDelete(epic_id) => self.handle_msg(epics::DeleteEpic { epic_id }, ctx)?,
             WsMsg::EpicTransform(epic_id, issue_type) => self.handle_msg(

@@ -1,6 +1,7 @@
 use jirs_data::{EpicFieldId, IssueType, WsMsg};
 use seed::prelude::*;
 
+use crate::components::styled_date_time_input::StyledDateTimeChanged;
 use crate::{send_ws_msg, FieldId, Msg, OperationKind, ResourceKind};
 
 pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
@@ -34,7 +35,29 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         Msg::StrInputChanged(FieldId::EditEpic(EpicFieldId::Name), s) => {
             let epic_id = modal.epic_id;
             send_ws_msg(
-                WsMsg::EpicUpdate(epic_id, s.to_string()),
+                WsMsg::EpicUpdateName(epic_id, s.to_string()),
+                model.ws.as_ref(),
+                orders,
+            );
+        }
+        Msg::StyledDateTimeInputChanged(
+            FieldId::EditEpic(EpicFieldId::StartsAt),
+            StyledDateTimeChanged::DayChanged(Some(date)),
+        ) => {
+            let epic_id = modal.epic_id;
+            send_ws_msg(
+                WsMsg::EpicUpdateStartsAt(epic_id, Some(*date)),
+                model.ws.as_ref(),
+                orders,
+            );
+        }
+        Msg::StyledDateTimeInputChanged(
+            FieldId::EditEpic(EpicFieldId::EndsAt),
+            StyledDateTimeChanged::DayChanged(Some(date)),
+        ) => {
+            let epic_id = modal.epic_id;
+            send_ws_msg(
+                WsMsg::EpicUpdateEndsAt(epic_id, Some(*date)),
                 model.ws.as_ref(),
                 orders,
             );

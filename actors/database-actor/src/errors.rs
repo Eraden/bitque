@@ -20,6 +20,7 @@ pub enum ResourceKind {
     Project,
     Token,
     UserProject,
+    UserSetting,
     User,
     Comment,
 }

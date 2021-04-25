@@ -14,7 +14,7 @@ pub struct StatusIssueIds {
 
 #[derive(Default, Debug)]
 pub struct EpicIssuePerStatus {
-    pub epic_ref: Option<(EpicId, EpicName)>,
+    pub epic_ref: Option<(EpicId, EpicName, Option<StartsAt>, Option<EndsAt>)>,
     pub per_status_issues: Vec<StatusIssueIds>,
 }
 
@@ -36,9 +36,11 @@ impl ProjectPage {
         issues: &[Issue],
         user: &Option<User>,
     ) -> Vec<EpicIssuePerStatus> {
-        let epics = vec![None]
-            .into_iter()
-            .chain(epics.iter().map(|s| Some((s.id, s.name.as_str()))));
+        let epics = vec![None].into_iter().chain(
+            epics
+                .iter()
+                .map(|epic| Some((epic.id, epic.name.as_str(), epic.starts_at, epic.ends_at))),
+        );
 
         let statuses = statuses.iter().map(|s| (s.id, s.name.as_str()));
         let issues = issues.iter().filter(|issue| {
@@ -74,7 +76,9 @@ impl ProjectPage {
         epics
             .map(|epic| {
                 let mut per_epic_map = EpicIssuePerStatus {
-                    epic_ref: epic.map(|(id, name)| (id, name.to_string())),
+                    epic_ref: epic.map(|(id, name, starts_at, ends_at)| {
+                        (id, name.to_string(), starts_at, ends_at)
+                    }),
                     ..Default::default()
                 };
 
@@ -83,7 +87,7 @@ impl ProjectPage {
                         status_id: current_status_id,
                         status_name: issue_status_name.to_string(),
                         issue_ids: issues_per_epic_id
-                            .get(&epic.map(|(id, _)| id))
+                            .get(&epic.map(|(id, ..)| id))
                             .map(|v| {
                                 v.iter()
                                     .filter(|issue| issue_filter_status(issue, current_status_id))

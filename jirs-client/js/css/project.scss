@@ -106,6 +106,26 @@
                 > .epicName {
                 }
 
+                > .timeRange {
+                    display: flex;
+                    justify-content: space-between;
+
+                    > * {
+                        margin-left: 2px;
+                        margin-right: 2px;
+                    }
+
+                    > .endsAt {
+                        &.error {
+                            color: var(--danger);
+                        }
+
+                        &.warning {
+                            color: var(--warning);
+                        }
+                    }
+                }
+
                 > .epicActions {
                     > .styledButton {
                         > .styledIcon {

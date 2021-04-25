@@ -48,11 +48,17 @@
 }
 
 .styledInput.invalid {
+  input {
     border: 1px solid var(--danger);
     box-shadow: none;
 
     &:focus {
-        border: 1px solid var(--danger);
-        box-shadow: none;
+      border: 1px solid var(--danger);
+      box-shadow: none;
     }
+  }
+
+  .error {
+    color: var(--danger);
+  }
 }

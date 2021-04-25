@@ -1,6 +1,6 @@
 use derive_db_execute::Execute;
 use diesel::prelude::*;
-use jirs_data::{DescriptionString, Epic, EpicId, ProjectId};
+use jirs_data::{DescriptionString, EndsAt, Epic, EpicId, ProjectId, StartsAt};
 
 use crate::{db_create, db_delete, db_load, db_update};
 
@@ -35,7 +35,7 @@ db_create! {
 }
 
 db_update! {
-    UpdateEpic,
+    UpdateEpicName,
     msg => epics => diesel::update(
         epics
             .filter(project_id.eq(msg.project_id))
@@ -45,6 +45,32 @@ db_update! {
     epic_id => i32,
     project_id => i32,
     name => String
+}
+
+db_update! {
+    UpdateEpicStartsAt,
+    msg => epics => diesel::update(
+        epics
+            .filter(project_id.eq(msg.project_id))
+            .find(msg.epic_id),
+    ).set(starts_at.eq(msg.starts_at)),
+    Epic,
+    epic_id => i32,
+    project_id => i32,
+    starts_at => Option<StartsAt>
+}
+
+db_update! {
+    UpdateEpicEndsAt,
+    msg => epics => diesel::update(
+        epics
+            .filter(project_id.eq(msg.project_id))
+            .find(msg.epic_id),
+    ).set(ends_at.eq(msg.ends_at)),
+    Epic,
+    epic_id => i32,
+    project_id => i32,
+    ends_at => Option<EndsAt>
 }
 
 db_delete! {

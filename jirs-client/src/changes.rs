@@ -1,7 +1,7 @@
 use jirs_data::{EpicId, IssueStatusId, WsMsg};
 use seed::prelude::WebSocketMessage;
 
-use crate::components::styled_editor::Mode as TabMode;
+use crate::components::styled_md_editor::MdEditorMode as TabMode;
 use crate::FieldId;
 
 #[derive(Clone, Debug, PartialEq)]

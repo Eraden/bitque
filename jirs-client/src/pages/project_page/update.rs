@@ -63,7 +63,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             Msg::ProjectAvatarFilterChanged(user_id, active) => {
                 if active {
                     project_page.active_avatar_filters =
-                        std::mem::replace(&mut project_page.active_avatar_filters, vec![])
+                        std::mem::take(&mut project_page.active_avatar_filters)
                             .into_iter()
                             .filter(|id| *id != user_id)
                             .collect();

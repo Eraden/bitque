@@ -50,7 +50,7 @@ pub fn open_socket(model: &mut Model, orders: &mut impl Orders<Msg>) {
     use seed::browser::web_socket::State;
     use seed::prelude::*;
     use seed::*;
-    log!(model.ws.as_ref().map(|ws| ws.state()));
+    log::warn!("{:?}", model.ws.as_ref().map(|ws| ws.state()));
 
     match model.ws.as_ref() {
         Some(ws) if ws.state() != State::Closed => {
@@ -70,7 +70,7 @@ pub fn open_socket(model: &mut Model, orders: &mut impl Orders<Msg>) {
             )))
         })
         .on_open(|| {
-            log!("open_socket opened");
+            log::info!("open_socket opened");
             Some(Msg::WebSocketChange(WebSocketChanged::WebSocketOpened))
         })
         .on_close(|_| Some(Msg::WebSocketChange(WebSocketChanged::WebSocketClosed)))
@@ -91,16 +91,24 @@ pub async fn read_incoming(msg: WebSocketMessage) -> Msg {
 pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         // auth
-        WsMsg::AuthorizeLoaded(Ok(user)) => {
+        WsMsg::AuthorizeLoaded(Ok((user, setting))) => {
             model.user = Some(user);
+            model.user_settings = Some(setting);
+
             if is_non_logged_area() {
                 go_to_board(orders);
             }
+
             orders
                 .skip()
                 .send_msg(Msg::UserChanged(model.user.as_ref().cloned()))
                 .send_msg(Msg::ResourceChanged(
                     ResourceKind::User,
+                    OperationKind::SingleLoaded,
+                    model.user.as_ref().map(|u| u.id),
+                ))
+                .send_msg(Msg::ResourceChanged(
+                    ResourceKind::UserSetting,
                     OperationKind::SingleLoaded,
                     model.user.as_ref().map(|u| u.id),
                 ))
@@ -111,9 +119,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 ));
         }
         WsMsg::AuthorizeExpired => {
-            use seed::*;
-
-            log!("Received token expired");
+            log::warn!("Received token expired");
             if let Ok(msg) = write_auth_token(None) {
                 orders.skip().send_msg(msg).send_msg(Msg::ResourceChanged(
                     ResourceKind::Auth,
@@ -156,6 +162,15 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 ResourceKind::UserProject,
                 OperationKind::SingleModified,
                 model.current_user_project.as_ref().map(|up| up.id),
+            ));
+        }
+        // user settings
+        WsMsg::UserSettingUpdated(setting) => {
+            model.user_settings = Some(setting);
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::UserSetting,
+                OperationKind::SingleModified,
+                model.user_settings.as_ref().map(|up| up.id),
             ));
         }
 

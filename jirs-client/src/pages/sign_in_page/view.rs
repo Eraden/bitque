@@ -7,21 +7,18 @@ use crate::components::styled_form::StyledForm;
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_input::StyledInput;
 use crate::components::styled_link::StyledLink;
-use crate::model::{self, PageContent};
 use crate::shared::outer_layout;
-use crate::validations::{is_email, is_token};
-use crate::{FieldId, Msg, SignInFieldId};
+use crate::shared::validate::Validator;
+use crate::{match_page, model, FieldId, Msg, SignInFieldId};
 
 pub fn view(model: &model::Model) -> Node<Msg> {
-    let page = match &model.page_content {
-        PageContent::SignIn(page) => page,
-        _ => return empty![],
-    };
+    let page = match_page!(model, SignIn; Empty);
 
     let username = StyledInput {
         value: page.username.as_str(),
-        valid: is_valid_username(page.username_touched, &page.username),
+        valid: page.username_v.is_valid(),
         id: Some(FieldId::SignIn(SignInFieldId::Username)),
+        err_msg: page.username_v.message(),
         ..Default::default()
     }
     .render();
@@ -34,8 +31,9 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let email = StyledInput {
         value: page.email.as_str(),
-        valid: is_valid_email(page.email_touched, page.email.as_str()),
+        valid: page.email_v.is_valid(),
         id: Some(FieldId::SignIn(SignInFieldId::Email)),
+        err_msg: page.email_v.message(),
         ..Default::default()
     }
     .render();
@@ -99,11 +97,13 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     }
     .render();
 
-    let token = StyledInput::new_with_id_and_value_and_valid(
-        FieldId::SignIn(SignInFieldId::Token),
-        &page.token,
-        is_valid_token(page.token_touched, page.token.as_str()),
-    )
+    let token = StyledInput {
+        id: Some(FieldId::SignIn(SignInFieldId::Token)),
+        valid: page.token_v.is_valid(),
+        value: page.token.as_str(),
+        err_msg: page.token_v.message(),
+        ..Default::default()
+    }
     .render();
     let token_field = StyledField {
         label: "Single use token",
@@ -137,16 +137,4 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let children = vec![sign_in_form, bind_token_form];
     outer_layout(model, "login", children)
-}
-
-fn is_valid_username(touched: bool, s: &str) -> bool {
-    !touched || (s.len() > 1 && s.len() < 20)
-}
-
-fn is_valid_email(touched: bool, s: &str) -> bool {
-    !touched || (is_email(s) && s.len() < 20)
-}
-
-fn is_valid_token(touched: bool, s: &str) -> bool {
-    !touched || is_token(s)
 }

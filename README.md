@@ -58,12 +58,12 @@ https://git.sr.ht/~tsumanu/jirs
 * [X] Add Epic
 * [X] Edit Epic
 * [X] Delete Epic
-* [ ] Epic `starts` and `ends` date
+* [X] Epic `starts` and `ends` date
 * [X] Grouping by Epic
-* [ ] Basic Rich Text Editor
+* [X] Basic Rich Text Editor
 * [ ] Insert Code in Rich Text Editor
 * [X] Code syntax
-* [ ] Personal settings to choose MDE (Markdown Editor) or RTE
+* [X] Personal settings to choose MDE (Markdown Editor) or RTE
 * [ ] Issues and filters view
 * [ ] Issues and filters working filters
 

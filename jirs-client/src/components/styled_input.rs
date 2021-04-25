@@ -117,6 +117,7 @@ pub struct StyledInput<'l, 'm: 'l> {
     pub variant: InputVariant,
     pub auto_focus: bool,
     pub input_handlers: Vec<EventHandler<Msg>>,
+    pub err_msg: &'static str,
 }
 
 impl<'l, 'm: 'l> Default for StyledInput<'l, 'm> {
@@ -132,24 +133,7 @@ impl<'l, 'm: 'l> Default for StyledInput<'l, 'm> {
             variant: InputVariant::Normal,
             auto_focus: false,
             input_handlers: vec![],
-        }
-    }
-}
-
-impl<'l, 'm: 'l> StyledInput<'l, 'm> {
-    #[inline(always)]
-    pub fn new_with_id_and_value_and_valid(id: FieldId, value: &'m str, valid: bool) -> Self {
-        Self {
-            id: Some(id),
-            icon: None,
-            valid,
-            value,
-            input_type: None,
-            input_class_list: "",
-            wrapper_class_list: "",
-            variant: InputVariant::Normal,
-            auto_focus: false,
-            input_handlers: vec![],
+            err_msg: "",
         }
     }
 }
@@ -168,6 +152,7 @@ impl<'l, 'm: 'l> StyledInput<'l, 'm> {
             variant,
             auto_focus,
             input_handlers,
+            err_msg,
         } = self;
         let id = id.expect("Input id is required");
 
@@ -209,6 +194,7 @@ impl<'l, 'm: 'l> StyledInput<'l, 'm> {
                 on_change,
                 input_handlers,
             ],
+            IF![!valid => div![C!["error"], err_msg]]
         ]
     }
 }

@@ -8,8 +8,7 @@ use crate::components::styled_select::StyledSelectChanged;
 use crate::model::{Model, Page, PageContent};
 use crate::pages::project_settings_page::ProjectSettingsPage;
 use crate::ws::{board_load, send_ws_msg};
-use crate::FieldChange::TabChanged;
-use crate::{FieldId, Msg, PageChanged, ProjectPageChange, WebSocketChanged};
+use crate::{match_page_mut, FieldId, Msg, PageChanged, ProjectPageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::ProjectSettings {
@@ -19,6 +18,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::ProjectChanged(Some(_)) => {
             build_page_content(model);
+            send_ws_msg(WsMsg::IssueStatusesLoad, model.ws.as_ref(), orders);
         }
         Msg::WebSocketChange(ref change) => match change {
             WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
@@ -43,18 +43,28 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         _ => (),
     }
 
-    if model.user.is_none() || model.project.is_none() {
+    if model.user.is_none() {
         return;
     }
 
-    let page = match &mut model.page_content {
-        PageContent::ProjectSettings(page) => page,
-        _ => return error!("bad content type"),
-    };
+    if model.project.is_none() {
+        board_load(model, orders);
+        return;
+    }
+
+    if matches!(model.page, Page::ProjectSettings)
+        && !matches!(model.page_content, PageContent::ProjectSettings(..))
+    {
+        build_page_content(model);
+        send_ws_msg(WsMsg::IssueStatusesLoad, model.ws.as_ref(), orders);
+    }
+
+    let page = match_page_mut!(model, ProjectSettings);
+
     page.project_category_state.update(&msg, orders);
     page.time_tracking.update(&msg);
     page.name.update(&msg);
-    // page.description_rte.update(&msg, orders);
+    page.description.update(&msg, orders);
 
     match msg {
         Msg::StrInputChanged(FieldId::ProjectSettings(ProjectFieldId::Name), text) => {
@@ -72,12 +82,6 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         ) => {
             let category = value.into();
             page.payload.category = Some(category);
-        }
-        Msg::ModalChanged(TabChanged(
-            FieldId::ProjectSettings(ProjectFieldId::Description),
-            mode,
-        )) => {
-            page.description_mode = mode;
         }
         Msg::PageChanged(PageChanged::ProjectSettings(
             ProjectPageChange::SubmitProjectSettingsForm,
@@ -234,9 +238,13 @@ fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
 }
 
 fn build_page_content(model: &mut Model) {
-    let project = match &model.project {
-        Some(project) => project,
-        _ => return,
-    };
-    model.page_content = PageContent::ProjectSettings(Box::new(ProjectSettingsPage::new(project)));
+    if let Some(project) = &model.project {
+        let mode = model
+            .user_settings
+            .as_ref()
+            .map(|us| us.text_editor_mode)
+            .unwrap_or_default();
+        model.page_content =
+            PageContent::ProjectSettings(Box::new(ProjectSettingsPage::new(mode, project)));
+    }
 }

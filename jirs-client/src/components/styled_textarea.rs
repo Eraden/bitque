@@ -23,7 +23,7 @@ impl<'l> Default for StyledTextarea<'l> {
             max_height: 0,
             value: "",
             class_list: "",
-            update_event: Ev::Cached,
+            update_event: Ev::Change,
             placeholder: "",
             disable_auto_resize: false,
         }
@@ -67,24 +67,25 @@ impl<'l> StyledTextarea<'l> {
             ));
         }
 
-        let handler_disable_auto_resize = disable_auto_resize;
-        let resize_handler = ev(Ev::KeyUp, move |event| {
-            event.stop_propagation();
-            if handler_disable_auto_resize {
-                return None as Option<Msg>;
-            }
-
-            let target = event.target().unwrap();
-            let textarea = seed::to_textarea(&target);
-            let value = textarea.value();
-            let min_height =
-                get_min_height(value.as_str(), height as f64, handler_disable_auto_resize);
-
-            textarea
-                .style()
-                .set_css_text(format!("height: {min_height}px", min_height = min_height).as_str());
-            None as Option<Msg>
-        });
+        // let handler_disable_auto_resize = disable_auto_resize;
+        // let resize_handler = ev(Ev::KeyUp, move |event| {
+        //     event.stop_propagation();
+        //     if handler_disable_auto_resize {
+        //         return None as Option<Msg>;
+        //     }
+        //
+        //     let target = event.target().unwrap();
+        //     let textarea = seed::to_textarea(&target);
+        //     let value = textarea.value();
+        //     let min_height =
+        //         get_min_height(value.as_str(), height as f64,
+        // handler_disable_auto_resize);
+        //
+        //     textarea
+        //         .style()
+        //         .set_css_text(format!("height: {min_height}px", min_height =
+        // min_height).as_str());     None as Option<Msg>
+        // });
 
         let handler_disable_auto_resize = disable_auto_resize;
         let text_input_handler = {
@@ -122,10 +123,11 @@ impl<'l> StyledTextarea<'l> {
                     At::AutoFocus => "true";
                     At::Style => style_list.join(";");
                     At::Placeholder => placeholder;
-                    At::Rows => if disable_auto_resize { "5" } else { "auto" }
+                    At::Rows => if disable_auto_resize { "5" } else { "auto" },
+                    At::Data => height
                 ],
                 value,
-                resize_handler,
+                // resize_handler,
                 text_input_handler,
             ]
         ]
@@ -138,6 +140,18 @@ const LETTER_HEIGHT: f64 = FONT_SIZE * LINE_HEIGHT;
 const PADDING_TOP_BOTTOM: f64 = 17f64;
 const BORDER_TOP_BOTTOM: f64 = 2f64;
 const ADDITIONAL_HEIGHT: f64 = PADDING_TOP_BOTTOM + BORDER_TOP_BOTTOM;
+
+pub fn handle_resize(target: &web_sys::Element) -> Option<Msg> {
+    let height: usize = target.get_attribute("data")?.parse().ok()?;
+    let textarea = seed::to_textarea(target);
+    let value = textarea.value();
+    let min_height = get_min_height(value.as_str(), height as f64, false);
+
+    textarea
+        .style()
+        .set_css_text(format!("height: {min_height}px", min_height = min_height).as_str());
+    None
+}
 
 fn get_min_height(value: &str, min_height: f64, disable_auto_resize: bool) -> f64 {
     if disable_auto_resize {

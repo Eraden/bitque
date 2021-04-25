@@ -20,4 +20,5 @@ pub mod issues;
 pub mod messages;
 pub mod projects;
 pub mod user_projects;
+pub mod user_settings;
 pub mod users;

@@ -96,6 +96,9 @@ pub enum Icon {
     TextWidth,
     Underline,
     Undo,
+
+    MdEditor,
+    RteEditor,
 }
 
 impl Icon {
@@ -197,6 +200,10 @@ impl Icon {
 
             Icon::DoubleLeft => "double-left",
             Icon::DoubleRight => "double-right",
+
+            // editor
+            Icon::MdEditor => "icofont-brand-compaq",
+            Icon::RteEditor => "icofont-compass-alt-4",
         }
     }
 }

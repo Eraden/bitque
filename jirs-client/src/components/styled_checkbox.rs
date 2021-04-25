@@ -34,6 +34,7 @@ pub struct ChildBuilder<'l> {
     pub value: u32,
     pub selected: bool,
     pub class_list: &'l str,
+    pub icon: Node<Msg>,
 }
 
 impl<'l> Default for ChildBuilder<'l> {
@@ -46,6 +47,7 @@ impl<'l> Default for ChildBuilder<'l> {
             value: 0,
             selected: false,
             class_list: "",
+            icon: Node::Empty,
         }
     }
 }
@@ -53,32 +55,32 @@ impl<'l> Default for ChildBuilder<'l> {
 impl<'l> ChildBuilder<'l> {
     #[inline(always)]
     pub fn render(self) -> Node<Msg> {
-        let ChildBuilder {
-            field_id,
-            name,
-            label,
-            value,
-            selected,
-            class_list,
-        } = self;
-
-        let id = field_id.to_string();
+        let id = self.field_id.to_string();
         let handler: EventHandler<Msg> = {
-            let id = field_id;
-            mouse_ev(Ev::Click, move |_| Msg::U32InputChanged(id, value))
+            let id = self.field_id;
+            let value = self.value;
+            mouse_ev(Ev::Click, move |ev| {
+                ev.stop_propagation();
+                ev.prevent_default();
+                Msg::U32InputChanged(id, value)
+            })
         };
 
         div![
             C![
                 "styledCheckboxChild",
-                class_list,
-                IF![selected => "selected"]
+                self.class_list,
+                IF![self.selected => "selected"]
             ],
             handler,
-            label![attrs![At::For => format!("{}-{}", id, name)], label],
+            self.icon,
+            label![
+                attrs![At::For => format!("{}-{}", id, self.name)],
+                self.label
+            ],
             input![
-                attrs![At::Type => "radio", At::Name => name, At::Id => format!("{}-{}", id, name)],
-                IF![selected => attrs!(At::Checked => selected)]
+                attrs![At::Type => "radio", At::Name => self.name, At::Id => format!("{}-{}", id, self.name)],
+                IF![self.selected => attrs!(At::Checked => self.selected)]
             ],
         ]
     }

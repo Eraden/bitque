@@ -1,0 +1,11 @@
+#profile {
+    > .formContainer {
+        display: flex;
+        justify-content: center;
+
+        .styledForm {
+            max-width: 1024px;
+            width: 100%;
+        }
+    }
+}

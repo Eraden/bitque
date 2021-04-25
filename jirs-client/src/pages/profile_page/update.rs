@@ -7,7 +7,8 @@ use crate::model::{Model, Page, PageContent};
 use crate::pages::profile_page::model::ProfilePage;
 use crate::ws::{board_load, send_ws_msg};
 use crate::{
-    FieldId, Msg, OperationKind, PageChanged, ProfilePageChange, ResourceKind, WebSocketChanged,
+    match_page_mut, FieldId, Msg, OperationKind, PageChanged, ProfilePageChange, ResourceKind,
+    WebSocketChanged,
 };
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
@@ -20,17 +21,23 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         _ => (),
     }
 
-    let profile_page = match &mut model.page_content {
-        PageContent::Profile(profile_page) => profile_page,
-        _ => return,
-    };
+    let profile_page = match_page_mut!(model, Profile);
 
     profile_page.name.update(&msg);
     profile_page.email.update(&msg);
     profile_page.avatar.update(&msg);
+    profile_page.text_editor_mode.update(&msg);
     profile_page.current_project.update(&msg, orders);
 
     match msg {
+        Msg::ResourceChanged(ResourceKind::UserSetting, OperationKind::SingleModified, _) => {
+            profile_page.text_editor_mode.value = model
+                .user_settings
+                .as_ref()
+                .map(|us| us.text_editor_mode)
+                .unwrap_or_default()
+                .into();
+        }
         Msg::FileInputChanged(FieldId::Profile(UsersFieldId::Avatar), ..) => {
             let file = match profile_page.avatar.file.as_ref() {
                 Some(f) => f,
@@ -59,6 +66,13 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::ProjectChanged(Some(project)) => {
             profile_page.current_project.values = vec![project.id as u32];
+        }
+        Msg::U32InputChanged(FieldId::Profile(UsersFieldId::TextEditorMode), v) => {
+            send_ws_msg(
+                WsMsg::UserSettingSetEditorMode(v.into()),
+                model.ws.as_ref(),
+                orders,
+            );
         }
         Msg::PageChanged(PageChanged::Profile(ProfilePageChange::SubmitForm)) => {
             send_ws_msg(
@@ -95,13 +109,20 @@ fn build_page_content(model: &mut Model) {
         Some(ref user) => user,
         _ => return,
     };
+    let text_editor_mode = model
+        .user_settings
+        .as_ref()
+        .map(|us| us.text_editor_mode)
+        .unwrap_or_default();
+    let project_ids = model
+        .project
+        .as_ref()
+        .map(|p| vec![p.id])
+        .unwrap_or_default();
     model.page_content = PageContent::Profile(Box::new(ProfilePage::new(
         user,
-        model
-            .project
-            .as_ref()
-            .map(|p| vec![p.id])
-            .unwrap_or_default(),
+        text_editor_mode,
+        project_ids,
     )));
 }
 

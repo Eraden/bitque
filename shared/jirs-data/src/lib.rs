@@ -24,6 +24,7 @@ pub type ListPosition = i32;
 pub type ProjectId = i32;
 pub type ProjectName = String;
 pub type UserId = i32;
+pub type UserSettingId = i32;
 pub type UserProjectId = i32;
 pub type CommentId = i32;
 pub type TokenId = i32;
@@ -47,6 +48,9 @@ pub type Lang = String;
 
 pub type BindToken = Uuid;
 pub type InvitationToken = Uuid;
+
+pub type StartsAt = NaiveDateTime;
+pub type EndsAt = NaiveDateTime;
 
 #[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression, EnumSql))]
 #[cfg_attr(feature = "backend", sql_type = "IssueTypeType")]
@@ -384,8 +388,8 @@ pub struct Epic {
     pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-    pub starts_at: Option<NaiveDateTime>,
-    pub ends_at: Option<NaiveDateTime>,
+    pub starts_at: Option<StartsAt>,
+    pub ends_at: Option<EndsAt>,
     pub description: Option<DescriptionString>,
     pub description_html: Option<DescriptionString>,
 }
@@ -421,4 +425,30 @@ pub struct Style {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct HighlightedCode {
     pub parts: Vec<(Style, String)>,
+}
+
+#[cfg_attr(feature = "backend", derive(FromSqlRow, AsExpression, EnumSql))]
+#[cfg_attr(feature = "backend", sql_type = "TextEditorModeType")]
+#[derive(
+    Clone, Copy, Deserialize, Serialize, Debug, PartialOrd, PartialEq, Hash, EnumIter, EnumPrimitive,
+)]
+#[repr(C)]
+pub enum TextEditorMode {
+    MdOnly,
+    RteOnly,
+    Mixed,
+}
+
+impl Default for TextEditorMode {
+    fn default() -> Self {
+        TextEditorMode::MdOnly
+    }
+}
+
+#[cfg_attr(feature = "backend", derive(Queryable))]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct UserSetting {
+    pub id: UserSettingId,
+    pub user_id: UserId,
+    pub text_editor_mode: TextEditorMode,
 }

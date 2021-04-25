@@ -17,11 +17,10 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::ResourceChanged(ResourceKind::Issue, OperationKind::SingleModified, Some(id)) => {
             let m = model.issues_by_id.get(id).cloned();
             if let Some(issue) = m {
-                modal.description_state.initial_text = issue
-                    .description_text
-                    .as_deref()
-                    .unwrap_or_default()
-                    .to_string();
+                modal.description_state.set_content(
+                    issue.description_text.as_deref().unwrap_or_default(),
+                    issue.description.as_deref().unwrap_or_default(),
+                );
                 modal.payload = issue.into();
             }
         }
@@ -282,12 +281,6 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 orders,
             );
         }
-        Msg::ModalChanged(FieldChange::TabChanged(
-            FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Description)),
-            mode,
-        )) => {
-            modal.description_state.mode = mode.clone();
-        }
         Msg::ModalChanged(FieldChange::ToggleCommentForm(
             FieldId::EditIssueModal(EditIssueModalSection::Comment(CommentFieldId::Body)),
             flag,
@@ -344,16 +337,6 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::DeleteComment(comment_id) => {
             send_ws_msg(WsMsg::CommentDelete(*comment_id), model.ws.as_ref(), orders);
             orders.skip().send_msg(Msg::ModalDropped);
-        }
-
-        // global
-        Msg::GlobalKeyDown { key, .. } if key.as_str() == "m" && !modal.comment_form.creating => {
-            orders
-                .skip()
-                .send_msg(Msg::ModalChanged(FieldChange::ToggleCommentForm(
-                    FieldId::EditIssueModal(EditIssueModalSection::Comment(CommentFieldId::Body)),
-                    true,
-                )));
         }
 
         _ => (),

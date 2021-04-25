@@ -42,7 +42,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
                 input: StyledDateTimeInput {
                     field_id: FieldId::AddIssueModal(IssueFieldId::EpicStartsAt),
                     popup_visible: modal.epic_starts_at_state.popup_visible,
-                    timestamp: modal.epic_starts_at_state.timestamp.clone(),
+                    timestamp: modal.epic_starts_at_state.timestamp,
                 }
                 .render(),
                 label: "Starts at",
@@ -54,7 +54,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
                 input: StyledDateTimeInput {
                     field_id: FieldId::AddIssueModal(IssueFieldId::EpicEndsAt),
                     popup_visible: modal.epic_ends_at_state.popup_visible,
-                    timestamp: modal.epic_ends_at_state.timestamp.clone(),
+                    timestamp: modal.epic_ends_at_state.timestamp,
                 }
                 .render(),
                 label: "Ends at",

@@ -1,11 +1,17 @@
 use jirs_data::{CommentId, EpicId, IssueId, IssueStatusId, TimeTracking, WsMsg};
 use seed::prelude::*;
-use seed::*;
 
 use crate::model::{ModalType, Model, Page};
 use crate::shared::go_to_board;
 use crate::ws::send_ws_msg;
 use crate::{FieldChange, FieldId, Msg, OperationKind, ResourceKind};
+
+#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+pub enum DebugMsg {
+    Console,
+    Modal,
+}
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
@@ -39,15 +45,12 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::ChangePage(Page::EditEpic(id)) => push_edit_epic_modal(*id, model, orders),
 
         #[cfg(debug_assertions)]
-        Msg::GlobalKeyDown { key, .. } if key.eq("#") => push_debug_modal(model),
+        Msg::Debug(DebugMsg::Modal) => push_debug_modal(model),
 
         #[cfg(debug_assertions)]
-        Msg::GlobalKeyDown { key, .. } if key.eq(">") => {
+        Msg::Debug(DebugMsg::Console) => {
             orders.skip();
-            log!(model);
-        }
-        Msg::GlobalKeyDown { .. } => {
-            orders.skip();
+            log::debug!("{:?}", model);
         }
 
         _ => (),
@@ -182,7 +185,12 @@ fn push_edit_issue_modal(issue_id: EpicId, model: &mut Model, orders: &mut impl 
             Some(issue) => issue,
             _ => return,
         };
-        crate::modals::issues_edit::Model::new(issue, time_tracking_type)
+        let user_mode = model
+            .user_settings
+            .as_ref()
+            .map(|u| u.text_editor_mode)
+            .unwrap_or_default();
+        crate::modals::issues_edit::Model::new(user_mode, issue, time_tracking_type)
     };
     send_ws_msg(
         WsMsg::IssueCommentsLoad(issue_id),

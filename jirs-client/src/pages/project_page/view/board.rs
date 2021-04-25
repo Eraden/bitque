@@ -12,6 +12,7 @@ use crate::{match_page, BoardPageChange, Model, Msg, Page, PageChanged};
 pub fn project_board_lists(model: &Model) -> Node<Msg> {
     let project_page = match_page!(model, Project; Empty);
 
+    let now = chrono::Utc::now().naive_utc();
     let rows = project_page.visible_issues.iter().map(|per_epic| {
         let columns: Vec<Node<Msg>> = per_epic
             .per_status_issues
@@ -31,7 +32,7 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
             })
             .collect();
         let epic_name = match per_epic.epic_ref.as_ref() {
-            Some((id, name)) => {
+            Some((id, name, starts_at, ends_at)) => {
                 let id = *id;
                 let edit_button = StyledButton {
                     variant: ButtonVariant::Empty,
@@ -64,9 +65,25 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                 }
                 .render();
 
+                let range = match (starts_at, ends_at) {
+                    (Some(s), Some(e)) => div![
+                        C!["timeRange"],
+                        div![C!["startsAt"], format!("{}", s.format("%e %B %Y"))],
+                        div![C!["separator"], "-"],
+                        div![
+                            IF![now.date() > e.date() => C!["error"]],
+                            IF![now.date() == e.date() => C!["warning"]],
+                            C!["endsAt"],
+                            format!("{}", e.format("%e %B %Y"))
+                        ]
+                    ],
+                    _ => Node::Empty,
+                };
+
                 div![
                     C!["epicHeader"],
                     div![C!["epicName"], name],
+                    range,
                     div![C!["epicActions"], edit_button, delete_button],
                 ]
             }

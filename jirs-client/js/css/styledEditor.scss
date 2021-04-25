@@ -1,85 +1,113 @@
 .styledEditor {
-    display: flex;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    max-width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  max-width: 100%;
 
-    > input[type="radio"] {
-        display: none;
+  > input[type="radio"] {
+    display: none;
+  }
+
+  > .navbar {
+    border: 1px solid var(--borderLight);
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    font-family: var(--font-medium);
+    font-weight: normal;
+    text-align: center;
+    height: 32px;
+    vertical-align: middle;
+    line-height: 2;
+    white-space: nowrap;
+    transition: all 0.1s;
+    appearance: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14.5px;
+    border-color: var(--borderInputFocus);
+
+    &:not(:hover) {
+      border-color: var(--backgroundLightest);
+      background-color: var(--borderLight);
     }
 
-    > .navbar {
-        border: 1px solid var(--borderLight);
-        border-top-left-radius: 5px;
-        border-top-right-radius: 5px;
-        font-family: var(--font-medium);
-        font-weight: normal;
-        text-align: center;
-        height: 32px;
-        vertical-align: middle;
-        line-height: 2;
-        white-space: nowrap;
-        transition: all 0.1s;
-        appearance: none;
-        cursor: pointer;
-        user-select: none;
-        font-size: 14.5px;
-        border-color: var(--borderInputFocus);
+    &:hover {
+      background: #fff;
+      border: 1px solid var(--borderInputFocus);
+      box-shadow: 0 0 0 1px var(--borderInputFocus);
+    }
+  }
 
-        &:not(:hover) {
-            border-color: var(--backgroundLightest);
-            background-color: var(--borderLight);
+  > .navbar.activeTab {
+    background-color: var(--backgroundLightest);
+    border-color: var(--borderLight);
+  }
+
+  > .navbar.editorTab {
+    min-width: 50%;
+  }
+
+  > .navbar.viewTab {
+    min-width: 50%;
+  }
+
+  > .styledTextArea {
+    grid-area: view;
+    display: none;
+  }
+
+  > .view {
+    min-width: 100%;
+    display: none;
+    min-height: 40px;
+    padding-top: 15px;
+  }
+
+  > input.editorRadio {
+    &:checked {
+      ~ {
+        .styledTextArea {
+          display: block;
         }
+      }
+    }
+  }
 
-        &:hover {
-            background: #fff;
-            border: 1px solid var(--borderInputFocus);
-            box-shadow: 0 0 0 1px var(--borderInputFocus);
+  > input.viewRadio {
+    &:checked {
+      ~ {
+        .view {
+          display: block;
         }
+      }
     }
+  }
+}
 
-    > .navbar.activeTab {
-        background-color: var(--backgroundLightest);
-        border-color: var(--borderLight);
-    }
+.styledCheckbox.textEditorModeSwitcher {
+  justify-content: end;
+  margin-top: 5px;
+  margin-bottom: 5px;
 
-    > .navbar.editorTab {
-        min-width: 50%;
-    }
+  & > .styledCheckboxChild {
+    &.mdonly, &.rteonly {
+      display: flex;
+      margin-left: 5px;
+      border: none;
+      color: var(--textDark);
 
-    > .navbar.viewTab {
-        min-width: 50%;
-    }
+      &.selected {
+        color: var(--borderInputFocus);
 
-    > .styledTextArea {
-        grid-area: view;
-        display: none;
-    }
-
-    > .view {
-        min-width: 100%;
-        display: none;
-        min-height: 40px;
-        padding-top: 15px;
-    }
-
-    > input.editorRadio {
-        &:checked {
-            ~ {
-                .styledTextArea {
-                    display: block;
-                }
-            }
+        .styledIcon {
+          color: var(--borderInputFocus);
         }
-    }
+      }
 
-    > input.viewRadio {
-        &:checked {
-            ~ {
-                .view {
-                    display: block;
-                }
-            }
-        }
+      .styledIcon {
+        font-size: 24px;
+        color: var(--textDark);
+      }
     }
+  }
 }

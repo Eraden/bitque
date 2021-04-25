@@ -6,7 +6,7 @@ use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_field::StyledField;
 use crate::components::styled_form::StyledForm;
 use crate::components::styled_input::StyledInput;
-use crate::model::{Model, PageContent};
+use crate::model::Model;
 use crate::pages::invite_page::InvitePage;
 use crate::shared::outer_layout;
 use crate::validations::is_token;

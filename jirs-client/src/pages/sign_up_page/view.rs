@@ -8,10 +8,9 @@ use crate::components::styled_form::StyledForm;
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_input::StyledInput;
 use crate::components::styled_link::StyledLink;
-use crate::model::{self, PageContent};
 use crate::shared::outer_layout;
 use crate::validations::is_email;
-use crate::{match_page, FieldId, Msg};
+use crate::{match_page, model, FieldId, Msg};
 
 pub fn view(model: &model::Model) -> Node<Msg> {
     let page = match_page!(model, SignUp; Empty);

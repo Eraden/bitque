@@ -23,6 +23,7 @@ pub mod projects;
 pub mod schema;
 pub mod tokens;
 pub mod user_projects;
+pub mod user_settings;
 pub mod users;
 
 pub type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;

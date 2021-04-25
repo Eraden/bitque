@@ -6,7 +6,7 @@ use seed::*;
 
 use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_checkbox::{ChildBuilder, StyledCheckbox, StyledCheckboxState};
-use crate::components::styled_editor::StyledEditor;
+use crate::components::styled_editor::render_styled_editor;
 use crate::components::styled_field::StyledField;
 use crate::components::styled_form::StyledForm;
 use crate::components::styled_icon::{Icon, StyledIcon};
@@ -18,8 +18,6 @@ use crate::model::{self, ModalType, Model, PageContent};
 use crate::pages::project_settings_page::ProjectSettingsPage;
 use crate::shared::inner_layout;
 use crate::{FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange};
-
-// use crate::shared::styled_rte::StyledRte;
 
 static TIME_TRACKING_FIBONACCI: &str = include_str!("./time_tracking_fibonacci.txt");
 static TIME_TRACKING_HOURLY: &str = include_str!("./time_tracking_hourly.txt");
@@ -33,17 +31,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let url_field = url_field(page);
 
-    let description_field = description_field(page);
-
-    // let desc_rte = StyledField::build()
-    //     .input(
-    //         StyledRte::build(FieldId::ProjectSettings(ProjectFieldId::
-    // Description))             .state(&page.description_rte)
-    //             .build()
-    //             .render(),
-    //     )
-    //     .build()
-    //     .render();
+    let description_field = render_styled_editor(&page.description);
 
     let category_field = category_field(page);
 
@@ -114,6 +102,7 @@ fn time_tracking_select(page: &ProjectSettingsPage) -> Node<Msg> {
     .render()
 }
 
+#[inline(always)]
 fn time_tracking_checkbox_option<'l>(
     t: TimeTracking,
     state: &StyledCheckboxState,
@@ -138,10 +127,12 @@ fn time_tracking_checkbox_option<'l>(
             TimeTracking::Hourly => "hourly",
         },
         value,
+        ..Default::default()
     }
 }
 
 /// Build project name input with styled field wrapper
+#[inline(always)]
 fn name_field(page: &ProjectSettingsPage) -> Node<Msg> {
     let name = StyledTextarea {
         id: Some(FieldId::ProjectSettings(ProjectFieldId::Name)),
@@ -162,6 +153,7 @@ fn name_field(page: &ProjectSettingsPage) -> Node<Msg> {
 }
 
 /// Build project url input with styled field wrapper
+#[inline(always)]
 fn url_field(page: &ProjectSettingsPage) -> Node<Msg> {
     let url = StyledTextarea {
         id: Some(FieldId::ProjectSettings(ProjectFieldId::Url)),
@@ -181,27 +173,8 @@ fn url_field(page: &ProjectSettingsPage) -> Node<Msg> {
     .render()
 }
 
-/// Build project description text area with styled field wrapper
-fn description_field(page: &ProjectSettingsPage) -> Node<Msg> {
-    let description = StyledEditor {
-        id: Some(FieldId::ProjectSettings(ProjectFieldId::Description)),
-        initial_text: page.payload.description.as_deref().unwrap_or_default(),
-        text: page.payload.description.as_deref().unwrap_or_default(),
-        html: page.payload.description.as_deref().unwrap_or_default(),
-        mode: page.description_mode.clone(),
-        update_event: Ev::Change,
-    }
-    .render();
-    StyledField {
-        label: "Description",
-        tip: Some("Describe the project in as much detail as you'd like."),
-        input: description,
-        ..Default::default()
-    }
-    .render()
-}
-
 /// Build project category dropdown with styled field wrapper
+#[inline(always)]
 fn category_field(page: &ProjectSettingsPage) -> Node<Msg> {
     let category = StyledSelect {
         id: FieldId::ProjectSettings(ProjectFieldId::Category),
@@ -239,6 +212,7 @@ fn category_select_option<'l>(pc: ProjectCategory) -> StyledSelectOption<'l> {
 }
 
 /// Build draggable columns preview with option to remove and add new columns
+#[inline(always)]
 fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
     let width = 100f64 / (model.issue_statuses.len() + 1) as f64;
     let column_style = format!("width: calc({width}% - 10px)", width = width);
@@ -269,7 +243,7 @@ fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
     .render()
 }
 
-#[inline]
+#[inline(always)]
 fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
     let on_click = mouse_ev(Ev::Click, move |_| {
         Msg::PageChanged(PageChanged::ProjectSettings(
@@ -317,7 +291,7 @@ fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
     }
 }
 
-#[inline]
+#[inline(always)]
 fn column_preview(
     is: &IssueStatus,
     page: &ProjectSettingsPage,
@@ -347,6 +321,7 @@ fn column_preview(
     }
 }
 
+#[inline(always)]
 fn show_column_preview(
     is: &IssueStatus,
     per_column_issue_count: &HashMap<i32, i32>,

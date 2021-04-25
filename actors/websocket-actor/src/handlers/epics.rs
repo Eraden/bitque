@@ -1,5 +1,7 @@
 use futures::executor::block_on;
-use jirs_data::{DescriptionString, EpicId, IssueType, NameString, UserProject, WsMsg};
+use jirs_data::{
+    DescriptionString, EndsAt, EpicId, IssueType, NameString, StartsAt, UserProject, WsMsg,
+};
 
 use crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult};
 
@@ -45,21 +47,60 @@ impl WsHandler<CreateEpic> for WebSocketActor {
     }
 }
 
-pub struct UpdateEpic {
+pub struct UpdateEpicName {
     pub epic_id: EpicId,
     pub name: NameString,
 }
 
-impl WsHandler<UpdateEpic> for WebSocketActor {
-    fn handle_msg(&mut self, msg: UpdateEpic, _ctx: &mut Self::Context) -> WsResult {
-        let UpdateEpic { epic_id, name } = msg;
+impl WsHandler<UpdateEpicName> for WebSocketActor {
+    fn handle_msg(&mut self, msg: UpdateEpicName, _ctx: &mut Self::Context) -> WsResult {
         let UserProject { project_id, .. } = self.require_user_project()?;
         let epic = db_or_debug_and_return!(
             self,
-            database_actor::epics::UpdateEpic {
+            database_actor::epics::UpdateEpicName {
                 project_id: *project_id,
-                epic_id,
-                name: name.clone(),
+                epic_id: msg.epic_id,
+                name: msg.name.clone(),
+            }
+        );
+        Ok(Some(WsMsg::EpicUpdated(epic)))
+    }
+}
+
+pub struct UpdateEpicStartsAt {
+    pub epic_id: EpicId,
+    pub starts_at: Option<StartsAt>,
+}
+
+impl WsHandler<UpdateEpicStartsAt> for WebSocketActor {
+    fn handle_msg(&mut self, msg: UpdateEpicStartsAt, _ctx: &mut Self::Context) -> WsResult {
+        let UserProject { project_id, .. } = self.require_user_project()?;
+        let epic = db_or_debug_and_return!(
+            self,
+            database_actor::epics::UpdateEpicStartsAt {
+                project_id: *project_id,
+                epic_id: msg.epic_id,
+                starts_at: msg.starts_at,
+            }
+        );
+        Ok(Some(WsMsg::EpicUpdated(epic)))
+    }
+}
+
+pub struct UpdateEpicEndsAt {
+    pub epic_id: EpicId,
+    pub ends_at: Option<EndsAt>,
+}
+
+impl WsHandler<UpdateEpicEndsAt> for WebSocketActor {
+    fn handle_msg(&mut self, msg: UpdateEpicEndsAt, _ctx: &mut Self::Context) -> WsResult {
+        let UserProject { project_id, .. } = self.require_user_project()?;
+        let epic = db_or_debug_and_return!(
+            self,
+            database_actor::epics::UpdateEpicEndsAt {
+                project_id: *project_id,
+                epic_id: msg.epic_id,
+                ends_at: msg.ends_at,
             }
         );
         Ok(Some(WsMsg::EpicUpdated(epic)))

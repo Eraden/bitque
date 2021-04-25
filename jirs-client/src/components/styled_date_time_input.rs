@@ -19,7 +19,7 @@ pub enum StyledDateTimeChanged {
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct StyledDateTimeInputState {
-    field_id: FieldId,
+    pub field_id: FieldId,
     pub timestamp: Option<chrono::NaiveDateTime>,
     pub popup_visible: bool,
 }
@@ -187,7 +187,7 @@ impl StyledDateTimeInput {
             children: vec![
                 h2![
                     left_action,
-                    span![current.format("%B %Y").to_string()],
+                    span![start.format("%B %Y").to_string()],
                     right_action
                 ],
                 div![
@@ -285,6 +285,7 @@ impl<'l> DayCell<'l> {
             ev(Ev::Click, move |ev| {
                 ev.stop_propagation();
                 ev.prevent_default();
+                log::info!("{:?}", date);
                 Msg::StyledDateTimeInputChanged(
                     field_id,
                     StyledDateTimeChanged::DayChanged(Some(date)),

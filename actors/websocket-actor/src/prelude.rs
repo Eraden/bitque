@@ -9,6 +9,16 @@ macro_rules! db_or_debug_and_return {
 }
 
 #[macro_export]
+macro_rules! db_or_debug_or_fallback {
+    ($s: ident, $msg: expr, $actor_err: expr, $mailbox_err: expr) => {
+        $crate::actor_or_debug_and_fallback!($s, db, $msg, $actor_err, $mailbox_err)
+    };
+    ($s: ident, $msg: expr) => {
+        $crate::actor_or_debug_and_fallback!($s, db, $msg)
+    };
+}
+
+#[macro_export]
 macro_rules! mail_or_debug_and_return {
     ($s: ident, $msg: expr, $actor_err: expr, $mailbox_err: expr) => {
         $crate::actor_or_debug_and_return!($s, mail, $msg, $actor_err, $mailbox_err)

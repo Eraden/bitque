@@ -3,11 +3,12 @@ use uuid::Uuid;
 
 use crate::{
     AvatarUrl, BindToken, Code, Comment, CommentId, CreateCommentPayload, CreateIssuePayload,
-    DescriptionString, EmailString, Epic, EpicId, HighlightedCode, Invitation, InvitationId,
-    InvitationToken, Issue, IssueFieldId, IssueId, IssueStatus, IssueStatusId, IssueType, Lang,
-    ListPosition, Message, MessageId, NameString, NumberOfDeleted, PayloadVariant, Position,
-    Project, TitleString, UpdateCommentPayload, UpdateProjectPayload, User, UserId, UserProject,
-    UserProjectId, UserRole, UsernameString,
+    DescriptionString, EmailString, EndsAt, Epic, EpicId, HighlightedCode, Invitation,
+    InvitationId, InvitationToken, Issue, IssueFieldId, IssueId, IssueStatus, IssueStatusId,
+    IssueType, Lang, ListPosition, Message, MessageId, NameString, NumberOfDeleted, PayloadVariant,
+    Position, Project, StartsAt, TextEditorMode, TitleString, UpdateCommentPayload,
+    UpdateProjectPayload, User, UserId, UserProject, UserProjectId, UserRole, UserSetting,
+    UsernameString,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -126,7 +127,7 @@ pub enum WsMsg {
 
     // auth
     AuthorizeLoad(Uuid),
-    AuthorizeLoaded(Result<User, String>),
+    AuthorizeLoaded(Result<(User, UserSetting), String>),
     AuthorizeExpired,
     AuthenticateRequest(EmailString, UsernameString),
     AuthenticateSuccess,
@@ -212,6 +213,10 @@ pub enum WsMsg {
     ProfileUpdate(EmailString, UsernameString),
     ProfileUpdated,
 
+    // user settings
+    UserSettingUpdated(UserSetting),
+    UserSettingSetEditorMode(TextEditorMode),
+
     // user projects
     UserProjectsLoad,
     UserProjectsLoaded(Vec<UserProject>),
@@ -234,7 +239,9 @@ pub enum WsMsg {
         Option<DescriptionString>,
     ),
     EpicCreated(Epic),
-    EpicUpdate(EpicId, NameString),
+    EpicUpdateName(EpicId, NameString),
+    EpicUpdateStartsAt(EpicId, Option<StartsAt>),
+    EpicUpdateEndsAt(EpicId, Option<EndsAt>),
     EpicUpdated(Epic),
     EpicDelete(EpicId),
     EpicDeleted(EpicId, NumberOfDeleted),

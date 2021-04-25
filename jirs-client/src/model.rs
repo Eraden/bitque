@@ -15,7 +15,7 @@ use crate::pages::reports_page::model::ReportsPage;
 use crate::pages::sign_in_page::model::SignInPage;
 use crate::pages::sign_up_page::model::SignUpPage;
 use crate::pages::users_page::model::UsersPage;
-use crate::Msg;
+use crate::{BuildMsg, Msg};
 
 pub trait IssueModal {
     fn epic_id_value(&self) -> Option<u32>;
@@ -104,6 +104,24 @@ impl Page {
             Page::Reports => "/reports".to_string(),
         }
     }
+
+    pub fn build_content(&self) -> PageContent {
+        match self {
+            Page::Project
+            | Page::DeleteEpic(..)
+            | Page::EditEpic(..)
+            | Page::EditIssue(_)
+            | Page::AddIssue => PageContent::Project(Box::new(ProjectPage::default())),
+            //
+            Page::SignIn => PageContent::SignIn(Box::new(SignInPage::default())),
+            Page::SignUp => PageContent::SignUp(Box::new(SignUpPage::default())),
+            Page::Invite => PageContent::Invite(Box::new(InvitePage::default())),
+            Page::Users => PageContent::Users(Box::new(UsersPage::default())),
+            Page::Reports => PageContent::Reports(Box::new(ReportsPage::default())),
+            // for those which requires additional data
+            _ => PageContent::Project(Box::new(ProjectPage::default())),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -141,13 +159,13 @@ impl Default for InvitationFormState {
 macro_rules! match_page {
     ($model: ident, $ty: ident) => {
         match &$model.page_content {
-            PageContent::$ty(page) => page,
+            crate::model::PageContent::$ty(page) => page,
             _ => return,
         }
     };
     ($model: ident, $ty: ident; Empty) => {
         match &$model.page_content {
-            PageContent::$ty(page) => page,
+            crate::model::PageContent::$ty(page) => page,
             _ => return Node::Empty,
         }
     };
@@ -212,6 +230,9 @@ pub struct Model {
     pub users: Vec<User>,
     pub users_by_id: HashMap<UserId, User>,
 
+    // user settings
+    pub user_settings: Option<UserSetting>,
+
     // comments
     pub comments: Vec<Comment>,
     pub comments_by_id: HashMap<CommentId, Comment>,
@@ -235,11 +256,14 @@ pub struct Model {
     pub epics: Vec<Epic>,
     pub epics_by_id: HashMap<EpicId, Epic>,
 
+    pub key_triggers: std::rc::Rc<std::cell::RefCell<HashMap<char, Box<dyn BuildMsg>>>>,
+    pub distinct_key_up: crate::shared::on_event::Distinct,
+
     pub show_extras: bool,
 }
 
 impl Model {
-    pub fn new(host_url: String, ws_url: String) -> Self {
+    pub fn new(host_url: String, ws_url: String, page: Page) -> Self {
         Self {
             ws: None,
             ws_queue: vec![],
@@ -249,10 +273,10 @@ impl Model {
             project_form: None,
             comment_form: None,
             comments_by_project_id: Default::default(),
-            page: Page::Project,
+            page_content: page.build_content(),
+            page,
             host_url,
             ws_url,
-            page_content: PageContent::Project(Box::new(ProjectPage::default())),
             project: None,
             current_user_project: None,
             about_tooltip_visible: false,
@@ -260,6 +284,7 @@ impl Model {
             issues: vec![],
             users: vec![],
             users_by_id: Default::default(),
+            user_settings: None,
             comments: vec![],
             comments_by_id: Default::default(),
             issue_statuses: vec![],
@@ -274,6 +299,8 @@ impl Model {
             epics_by_id: Default::default(),
             modals_stack: vec![],
             modals: Default::default(),
+            key_triggers: std::rc::Rc::new(std::cell::RefCell::new(HashMap::with_capacity(20))),
+            distinct_key_up: crate::shared::on_event::distinct(),
         }
     }
 

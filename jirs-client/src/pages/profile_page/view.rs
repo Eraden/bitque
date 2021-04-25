@@ -5,22 +5,20 @@ use seed::prelude::*;
 use seed::*;
 
 use crate::components::styled_button::{ButtonVariant, StyledButton};
+use crate::components::styled_checkbox::{ChildBuilder, StyledCheckbox, StyledCheckboxState};
 use crate::components::styled_field::StyledField;
 use crate::components::styled_form::StyledForm;
 use crate::components::styled_image_input::StyledImageInput;
 use crate::components::styled_input::{InputVariant, StyledInput};
 use crate::components::styled_select::{SelectVariant, StyledSelect};
 use crate::components::styled_select_child::StyledSelectOption;
-use crate::model::{Model, PageContent};
+use crate::model::Model;
 use crate::pages::profile_page::model::ProfilePage;
 use crate::shared::inner_layout;
-use crate::{FieldId, Msg, PageChanged, ProfilePageChange};
+use crate::{match_page, FieldId, Msg, PageChanged, ProfilePageChange};
 
 pub fn view(model: &Model) -> Node<Msg> {
-    let page = match &model.page_content {
-        PageContent::Profile(profile_page) => profile_page,
-        _ => return empty![],
-    };
+    let page = match_page!(model, Profile; Empty);
 
     let avatar = StyledImageInput {
         id: FieldId::Profile(UsersFieldId::Avatar),
@@ -87,12 +85,13 @@ pub fn view(model: &Model) -> Node<Msg> {
             avatar,
             username_field,
             email_field,
+            editor_mode_select(page),
             current_project,
             submit_field,
         ],
     }
     .render();
-    inner_layout(model, "profile", &[content])
+    inner_layout(model, "profile", &[div![C!["formContainer"], content]])
 }
 
 fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
@@ -147,10 +146,55 @@ fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
     .render()
 }
 
+#[inline(always)]
 fn project_select_option<'l>(project: &'l Project) -> StyledSelectOption<'l> {
     StyledSelectOption {
         text: Some(project.name.as_str()),
         value: project.id as u32,
+        ..Default::default()
+    }
+}
+
+#[inline(always)]
+fn editor_mode_select(page: &ProfilePage) -> Node<Msg> {
+    let time_tracking = StyledCheckbox {
+        options: Some(
+            vec![
+                TextEditorMode::MdOnly,
+                TextEditorMode::RteOnly,
+                TextEditorMode::Mixed,
+            ]
+            .into_iter()
+            .map(|tem| editor_mode_checkbox_option(tem, &page.text_editor_mode)),
+        ),
+        class_list: "timeTracking",
+    }
+    .render();
+    StyledField {
+        input: time_tracking,
+        label: "Text editor type",
+        tip: Some("You can choose if what kind of text editor you will have"),
+        ..Default::default()
+    }
+    .render()
+}
+
+#[inline(always)]
+fn editor_mode_checkbox_option<'l>(
+    tem: TextEditorMode,
+    state: &StyledCheckboxState,
+) -> ChildBuilder<'l> {
+    let value: u32 = tem.into();
+    ChildBuilder {
+        field_id: state.field_id.clone(),
+        selected: state.value == value,
+        label: match tem {
+            TextEditorMode::MdOnly => "Simple Markdown editor",
+            TextEditorMode::RteOnly => "Advanced Rich Text Editor",
+            TextEditorMode::Mixed => "Editor with possibility to switch between modes",
+        },
+        class_list: tem.to_str(),
+        value,
         ..Default::default()
     }
 }

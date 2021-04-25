@@ -1,15 +1,13 @@
 use jirs_data::{InvitationState, UserRole, UsersFieldId, WsMsg};
-use seed::log;
 use seed::prelude::Orders;
 
 use crate::components::styled_select::StyledSelectChanged;
 use crate::model::{InvitationFormState, Model, Page, PageContent};
 use crate::pages::users_page::model::UsersPage;
 use crate::ws::{invitation_load, send_ws_msg};
-use crate::{FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged};
+use crate::{match_page_mut, FieldId, Msg, PageChanged, UsersPageChange, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
-    log!(model);
     if model.user.is_none() {
         return;
     }
@@ -18,10 +16,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         build_page_content(model);
     }
 
-    let page = match &mut model.page_content {
-        PageContent::Users(page) => page,
-        _ => return,
-    };
+    let page = match_page_mut!(model, Users);
 
     page.user_role_state.update(&msg, orders);
 

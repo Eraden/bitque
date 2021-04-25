@@ -7,7 +7,9 @@ use crate::{resolve_page, Msg};
 pub mod aside;
 pub mod drag;
 pub mod navbar_left;
+pub mod on_event;
 pub mod tracking_widget;
+pub mod validate;
 
 pub trait ToChild<'l> {
     type Builder: 'l;

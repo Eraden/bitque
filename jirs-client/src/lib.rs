@@ -6,13 +6,14 @@ pub use fields::*;
 pub use images::*;
 use jirs_data::*;
 use seed::prelude::*;
-use seed::*;
 use web_sys::File;
 
 use crate::components::styled_date_time_input::StyledDateTimeChanged;
+use crate::components::styled_rte::RteMsg;
 use crate::components::styled_select::StyledSelectChanged;
 use crate::components::styled_tooltip;
 use crate::components::styled_tooltip::{TooltipVariant as StyledTooltip, TooltipVariant};
+use crate::modals::DebugMsg;
 use crate::model::{ModalType, Model, Page};
 use crate::shared::{go_to_board, go_to_login};
 use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
@@ -42,6 +43,7 @@ pub enum ResourceKind {
     Epic,
     Project,
     User,
+    UserSetting,
     UserProject,
     Message,
     Comment,
@@ -58,16 +60,18 @@ pub enum OperationKind {
     SingleModified,
 }
 
+pub trait BuildMsg: std::fmt::Debug {
+    fn build(&self) -> Msg;
+}
+
 #[derive(Debug)]
 pub enum Msg {
-    GlobalKeyDown {
-        key: String,
-        shift: bool,
-        ctrl: bool,
-        alt: bool,
-    },
+    #[cfg(debug_assertions)]
+    Debug(DebugMsg),
     PageChanged(PageChanged),
     ChangePage(model::Page),
+
+    Rte(FieldId, RteMsg),
 
     UserChanged(Option<User>),
     ProjectChanged(Option<Project>),
@@ -203,7 +207,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     };
 
     if cfg!(debug_assertions) {
-        log!(msg);
+        log::info!("msg {:?}", msg);
     }
 
     match &msg {
@@ -232,7 +236,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         _ => (),
     }
 
-    {
+    if !matches!(model.page, Page::SignIn | Page::SignUp) {
         use crate::shared::{aside, navbar_left};
         aside::update(&msg, model, orders);
         navbar_left::update(&msg, model, orders);
@@ -254,11 +258,13 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
         Page::Reports => pages::reports_page::update(msg, model, orders),
     }
     if cfg!(features = "print-model") {
-        log!(model);
+        log::debug!("{:?}", model);
     }
 }
 
 fn view(model: &model::Model) -> Node<Msg> {
+    model.key_triggers.borrow_mut().clear();
+
     match model.page {
         Page::Project
         | Page::AddIssue
@@ -275,6 +281,7 @@ fn view(model: &model::Model) -> Node<Msg> {
     }
 }
 
+#[inline(always)]
 fn resolve_page(url: Url) -> Option<Page> {
     if url.path().is_empty() {
         return Some(Page::Project);
@@ -310,49 +317,102 @@ fn resolve_page(url: Url) -> Option<Page> {
 #[wasm_bindgen]
 pub fn render() {
     let app = seed::App::start("app", init, update, view);
+    wasm_logger::init(wasm_logger::Config::default());
 
-    {
-        let app_clone = app.clone();
-        let on_key_down = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
-            let event: web_sys::KeyboardEvent = event.unchecked_into();
+    #[cfg(debug_assertions)]
+    crate::shared::on_event::keydown(move |ev| {
+        let app = app.clone();
+        let event = seed::to_keyboard_event(&ev);
 
-            let tag_name: String = seed::document()
-                .active_element()
-                .map(|el| el.tag_name())
-                .unwrap_or_default();
+        if seed::document()
+            .active_element()
+            .map(|el| el.tag_name() != "BODY")
+            .unwrap_or(true)
+            || !event.shift_key()
+            || !event.ctrl_key()
+        {
+            return;
+        }
 
-            let key = match tag_name.to_lowercase().as_str() {
-                "input" | "textarea" => return,
-                _ => event.key(),
-            };
+        let key: String = event.key();
+        match key.as_str() {
+            ">" => app.update(Msg::Debug(DebugMsg::Console)),
+            "?" => app.update(Msg::Debug(DebugMsg::Modal)),
+            _ => {}
+        };
+    });
 
-            let msg = Msg::GlobalKeyDown {
-                key,
-                shift: event.shift_key(),
-                ctrl: event.ctrl_key(),
-                alt: event.alt_key(),
-            };
-            app_clone.update(msg);
-        }) as Box<dyn FnMut(_)>);
-        seed::body()
-            .add_event_listener_with_callback("keyup", on_key_down.as_ref().unchecked_ref())
-            .expect("Failed to mount global key handler");
-        on_key_down.forget();
-    }
+    crate::shared::on_event::keydown(move |_ev| {
+        let element = match seed::document().active_element() {
+            Some(el) => el,
+            _ => return,
+        };
+        let class_list = element.class_name();
+        if !class_list.contains("textAreaInput") {
+            return;
+        }
+        if element.get_attribute("rows").as_deref() != Some("auto") {
+            return;
+        }
+        crate::components::styled_textarea::handle_resize(&element);
+    });
 }
 
 fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
+    let sender = orders.msg_sender();
+    let page = resolve_page(url).unwrap_or(Page::Project);
     let mut model = Model::new(
         location::host_url().to_string(),
         location::ws_url().to_string(),
+        page,
     );
-    model.page = resolve_page(url).unwrap_or(Page::Project);
+    let key_triggers = model.key_triggers.clone();
+
+    let sender_clone = sender.clone();
+    crate::shared::on_event::keypress(move |ev| {
+        let sender = sender_clone.clone();
+        let key_triggers = key_triggers.clone();
+        let event = seed::to_keyboard_event(&ev);
+
+        if seed::document()
+            .active_element()
+            .map(|el| el.tag_name() != "BODY")
+            .unwrap_or(true)
+        {
+            return;
+        }
+        ev.prevent_default();
+        ev.stop_propagation();
+
+        let key: String = event.key();
+        let t = key_triggers.borrow();
+        if let Some(b) = key.chars().next().and_then(|c| t.get(&c)) {
+            let msg = b.build();
+            sender.clone()(Some(msg));
+        }
+    });
+
+    {
+        let sender_clone = sender.clone();
+        let id = FieldId::ProjectSettings(ProjectFieldId::Description);
+        model
+            .distinct_key_up
+            .keyup_wih_reset(id.to_str(), 20, move |ev| {
+                let sender = sender_clone.clone();
+                let key_ev = seed::to_keyboard_event(&ev);
+                let target = key_ev.target().unwrap();
+                let el = seed::to_html_el(&target);
+                let value = el.inner_html();
+                sender.clone()(Some(Msg::StrInputChanged(id.clone(), value)));
+            });
+    }
+
     open_socket(&mut model, orders);
 
     model
 }
 
-#[inline]
+#[inline(always)]
 fn authorize_or_redirect(model: &mut Model, orders: &mut impl Orders<Msg>) {
     let pathname = seed::document().location().unwrap().pathname().unwrap();
     match crate::shared::read_auth_token() {

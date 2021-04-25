@@ -1,15 +1,15 @@
-use jirs_data::{Issue, IssueFieldId, IssueId, TimeTracking, UpdateIssuePayload};
+use jirs_data::{Issue, IssueFieldId, IssueId, TextEditorMode, TimeTracking, UpdateIssuePayload};
 use seed::prelude::*;
 
 use crate::components::styled_date_time_input::StyledDateTimeInputState;
-use crate::components::styled_editor::{Mode, StyledEditorState};
+use crate::components::styled_editor::StyledEditorState;
 use crate::components::styled_input::StyledInputState;
 use crate::components::styled_select::StyledSelectState;
 use crate::modals::time_tracking::value_for_time_tracking;
 use crate::model::{CommentForm, IssueModal};
 use crate::{EditIssueModalSection, FieldId, Msg};
 
-#[derive(Clone, Debug, PartialOrd, PartialEq)]
+#[derive(Debug)]
 pub struct Model {
     pub id: IssueId,
     pub link_copied: bool,
@@ -38,7 +38,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn new(issue: &Issue, time_tracking_type: TimeTracking) -> Self {
+    pub fn new(user_mode: TextEditorMode, issue: &Issue, time_tracking_type: TimeTracking) -> Self {
         Self {
             id: issue.id,
             link_copied: false,
@@ -110,8 +110,10 @@ impl Model {
             )
             .with_min(Some(3)),
             description_state: StyledEditorState::new(
-                Mode::View,
-                issue.description_text.as_deref().unwrap_or(""),
+                FieldId::EditIssueModal(EditIssueModalSection::Issue(IssueFieldId::Description)),
+                user_mode,
+                issue.description_text.as_deref().unwrap_or_default(),
+                issue.description.as_deref().unwrap_or_default(),
             ),
             comment_form: CommentForm {
                 id: None,
@@ -163,5 +165,6 @@ impl IssueModal for Model {
         self.epic_name_state.update(msg, orders);
 
         self.title_state.update(msg);
+        self.description_state.update(msg, orders);
     }
 }

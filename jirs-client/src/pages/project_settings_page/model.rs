@@ -1,6 +1,7 @@
-use jirs_data::{IssueStatusId, Project, ProjectFieldId, UpdateProjectPayload};
+use jirs_data::{IssueStatusId, Project, ProjectFieldId, TextEditorMode, UpdateProjectPayload};
 
 use crate::components::styled_checkbox::StyledCheckboxState;
+use crate::components::styled_editor::StyledEditorState;
 use crate::components::styled_input::StyledInputState;
 use crate::components::styled_select::StyledSelectState;
 use crate::shared::drag::DragState;
@@ -10,17 +11,16 @@ use crate::FieldId;
 pub struct ProjectSettingsPage {
     pub payload: UpdateProjectPayload,
     pub project_category_state: StyledSelectState,
-    pub description_mode: crate::components::styled_editor::Mode,
     pub time_tracking: StyledCheckboxState,
     pub column_drag: DragState,
     pub edit_column_id: Option<IssueStatusId>,
     pub creating_issue_status: bool,
     pub name: StyledInputState,
+    pub description: StyledEditorState,
 }
 
 impl ProjectSettingsPage {
-    pub fn new(project: &Project) -> Self {
-        use crate::components::styled_editor::Mode as EditorMode;
+    pub fn new(mode: TextEditorMode, project: &Project) -> Self {
         let jirs_data::Project {
             id,
             name,
@@ -39,7 +39,6 @@ impl ProjectSettingsPage {
                 category: Some(*category),
                 time_tracking: Some(*time_tracking),
             },
-            description_mode: EditorMode::View,
             project_category_state: StyledSelectState::new(
                 FieldId::ProjectSettings(ProjectFieldId::Category),
                 vec![(*category).into()],
@@ -53,6 +52,12 @@ impl ProjectSettingsPage {
             creating_issue_status: false,
             name: StyledInputState::new(
                 FieldId::ProjectSettings(ProjectFieldId::IssueStatusName),
+                "",
+            ),
+            description: StyledEditorState::new(
+                FieldId::ProjectSettings(ProjectFieldId::DescriptionMode),
+                mode,
+                "",
                 "",
             ),
         }

@@ -5,6 +5,7 @@ pub enum ProjectFieldId {
     Name,
     Url,
     Description,
+    DescriptionMode,
     Category,
     TimeTracking,
     IssueStatusName,
@@ -30,6 +31,7 @@ pub enum UsersFieldId {
     UserRole,
     Avatar,
     CurrentProject,
+    TextEditorMode,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]

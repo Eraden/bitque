@@ -7,37 +7,35 @@ use uuid::Uuid;
 
 use crate::model::{self, Model, Page, PageContent};
 use crate::pages::sign_in_page::model::SignInPage;
+use crate::shared::validate::*;
 use crate::shared::write_auth_token;
 use crate::ws::send_ws_msg;
-use crate::{FieldId, Msg, WebSocketChanged};
+use crate::{match_page_mut, FieldId, Msg, WebSocketChanged};
 
 pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.page != Page::SignIn {
         return;
-    }
-
-    if let Msg::ChangePage(Page::SignIn) = msg {
+    } else if !matches!(model.page_content, PageContent::SignIn(..)) {
+        build_page_content(model);
+    } else if matches!(msg, Msg::ChangePage(Page::SignIn)) {
         build_page_content(model);
         return;
     };
 
-    let page = match &mut model.page_content {
-        PageContent::SignIn(page) => page,
-        _ => return,
-    };
+    let page = match_page_mut!(model, SignIn);
 
     match msg {
         Msg::StrInputChanged(FieldId::SignIn(SignInFieldId::Username), value) => {
+            page.username_v.validate(&value);
             page.username = value;
-            page.username_touched = true;
         }
         Msg::StrInputChanged(FieldId::SignIn(SignInFieldId::Email), value) => {
+            page.email_v.validate(&value);
             page.email = value;
-            page.email_touched = true;
         }
         Msg::StrInputChanged(FieldId::SignIn(SignInFieldId::Token), value) => {
+            page.token_v.validate(&value);
             page.token = value;
-            page.token_touched = true;
         }
         Msg::SignInRequest => {
             send_ws_msg(

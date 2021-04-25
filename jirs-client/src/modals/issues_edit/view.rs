@@ -8,32 +8,42 @@ use seed::*;
 
 use crate::components::styled_avatar::StyledAvatar;
 use crate::components::styled_button::{ButtonVariant, StyledButton};
-use crate::components::styled_editor::StyledEditor;
+use crate::components::styled_editor::render_styled_editor;
 use crate::components::styled_field::StyledField;
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::components::styled_input::StyledInput;
 use crate::components::styled_modal::*;
 use crate::components::styled_select::{SelectVariant, StyledSelect, StyledSelectState};
 use crate::components::styled_select_child::StyledSelectOption;
+use crate::components::styled_tip::styled_tip;
 use crate::modals::epic_field;
 use crate::modals::issues_edit::Model as EditIssueModal;
 use crate::modals::time_tracking::time_tracking_field;
 use crate::model::{ModalType, Model};
 use crate::shared::tracking_widget::tracking_link;
-use crate::{EditIssueModalSection, FieldChange, FieldId, Msg};
+use crate::{BuildMsg, EditIssueModalSection, FieldChange, FieldId, Msg};
 
 mod comments;
 
+#[inline(always)]
 pub fn view(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     model
         .issues_by_id
         .get(&modal.id)
         .map(|_issue| {
-            StyledModal::centered_with_width_and_body(1040, vec![details(model, modal)]).render()
+            StyledModal {
+                variant: ModalVariant::Center,
+                width: Some(1014),
+                with_icon: false,
+                children: vec![details(model, modal)],
+                class_list: "",
+            }
+            .render()
         })
         .unwrap_or(Node::Empty)
 }
 
+#[inline(always)]
 pub fn details(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     div![
         C!["issueDetails"],
@@ -46,6 +56,7 @@ pub fn details(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     ]
 }
 
+#[inline(always)]
 fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let EditIssueModal {
         id,
@@ -189,9 +200,9 @@ fn type_select_option<'l>(t: IssueType, text: &'l str) -> StyledSelectOption<'l>
     }
 }
 
+#[inline(always)]
 fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let EditIssueModal {
-        payload,
         description_state,
         comment_form,
         ..
@@ -209,19 +220,7 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     }
     .render();
 
-    let description = {
-        StyledEditor {
-            id: Some(FieldId::EditIssueModal(EditIssueModalSection::Issue(
-                IssueFieldId::Description,
-            ))),
-            initial_text: description_state.initial_text.as_str(),
-            text: description_state.initial_text.as_str(),
-            html: payload.description.as_deref().unwrap_or_default(),
-            mode: description_state.mode.clone(),
-            update_event: Ev::Change,
-        }
-        .render()
-    };
+    let description = render_styled_editor(&description_state);
     let description_field = StyledField {
         input: description,
         ..Default::default()
@@ -265,13 +264,7 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
                 div![
                     C!["right"],
                     create_comment,
-                    div![
-                        C!["proTip"],
-                        strong![C!["strong"], "Pro tip: "],
-                        "press ",
-                        span![C!["tipLetter"], "M"],
-                        " to comment"
-                    ]
+                    styled_tip('m', model, EnableCommentBuilder)
                 ]
             ],
             comments
@@ -279,6 +272,19 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     ]
 }
 
+#[derive(Debug)]
+pub struct EnableCommentBuilder;
+
+impl BuildMsg for EnableCommentBuilder {
+    fn build(&self) -> Msg {
+        Msg::ModalChanged(FieldChange::ToggleCommentForm(
+            FieldId::EditIssueModal(EditIssueModalSection::Comment(CommentFieldId::Body)),
+            true,
+        ))
+    }
+}
+
+#[inline(always)]
 fn right_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     let EditIssueModal {
         payload,
@@ -377,7 +383,7 @@ fn priority_select_option<'l>(ip: IssuePriority) -> StyledSelectOption<'l> {
     StyledSelectOption {
         icon: Some(
             StyledIcon {
-                icon: ip.clone().into(),
+                icon: ip.into(),
                 class_list: ip.to_str(),
                 ..Default::default()
             }
