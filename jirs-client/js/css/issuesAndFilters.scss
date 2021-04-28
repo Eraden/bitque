@@ -1,178 +1,229 @@
 #issuesAndFilters {
-    display: block;
+  display: block;
 
-    > .filters {
+  > .filters {
+    margin: {
+      top: 5px;
+      bottom: 5px;
+    }
+
+    > .pseudoInput {
+      display: flex;
+
+      > .part {
+        display: flex;
+        line-height: 24px;
+        background: var(--borderLightest);
+        padding: 8px 14px;
+        cursor: pointer;
         margin: {
-            top: 5px;
-            bottom: 5px;
+          left: 5px;
+          right: 5px;
         }
 
+        > span {
+          word-wrap: break-spaces;
+          word-break: keep-all;
+          white-space: nowrap;
+        }
 
-        > .pseudoInput {
-            display: flex;
+        &:hover {
+          > .styledButton {
+            display: block;
+          }
+        }
+
+        > .styledButton {
+          margin: {
+            left: 5px;
+            top: 0;
+            bottom: 0;
+          };
+          font-size: 12px;
+          line-height: 24px;
+          background: var(--borderLightest);
+
+          > .styledIcon {
+            color: var(----secondary);
+            background: var(--borderLightest);
+          }
+
+          display: none;
+
+          &:hover {
+            color: var(--borderInputFocus);
+            background: var(--borderLightest);
 
             > .styledIcon {
-                line-height: 39px;
-                width: 24px;
+              color: var(----secondary);
+              background: var(--borderLightest);
             }
-
-            > .styledSelect {
-                display: inline;
-                min-width: 20px;
-
-                > .valueContainer {
-                    min-height: 100%;
-                }
-            }
+          }
         }
-    }
+      }
 
-    > .container {
+      > .styledIcon {
+        line-height: 39px;
+        width: 24px;
+      }
+
+      > .styledSelect {
+        display: inline;
+        min-width: 20px;
+
+        > .valueContainer {
+          min-height: 100%;
+        }
+      }
+    }
+  }
+
+  > .container {
+    display: flex;
+    justify-content: space-between;
+
+    --listWidth: 338px;
+
+    > .issueInfo {
+      width: calc(100% - var(--listWidth));
+      padding: {
+        left: 10px;
+        right: 10px;
+        top: 5px;
+        bottom: 5px;
+      };
+
+      > .header {
+        display: grid;
+        grid-template-areas: "icon link" "icon name";
+        grid-template-columns: 48px;
+
+        > .logo {
+          width: 48px;
+        }
+
+        > .path {
+          display: flex;
+          justify-content: space-between;
+
+          > span {
+            margin: 0 5px;
+            font-family: var(--font-medium);
+            height: 32px;
+            vertical-align: middle;
+            line-height: 2;
+            appearance: none;
+            cursor: none;
+            user-select: none;
+            font-size: 14.5px;
+          }
+
+          > .styledLink, > span {
+            color: var(--textLink);
+
+            > span {
+              color: var(--textLink);
+            }
+          }
+        }
+
+        > .title {
+        }
+      }
+
+      > .issueBody {
         display: flex;
-        justify-content: space-between;
 
-        --listWidth: 338px;
+        > .details {
+          list-style: none;
 
-        > .issueInfo {
-            width: calc(100% - var(--listWidth));
-            padding: {
-                left: 10px;
-                right: 10px;
-                top: 5px;
-                bottom: 5px;
-            };
+          > .line {
+            --lineWidth: 460px;
+            --nameWidth: 150px;
 
-            > .header {
-                display: grid;
-                grid-template-areas: "icon link" "icon name";
-                grid-template-columns: 48px;
-
-                > .logo {
-                    width: 48px;
-                }
-
-                > .path {
-                    display: flex;
-                    justify-content: space-between;
-
-                    > span {
-                        margin: 0 5px;
-                        font-family: var(--font-medium);
-                        height: 32px;
-                        vertical-align: middle;
-                        line-height: 2;
-                        appearance: none;
-                        cursor: none;
-                        user-select: none;
-                        font-size: 14.5px;
-                    }
-
-                    > .styledLink, > span {
-                        color: var(--textLink);
-
-                        > span {
-                            color: var(--textLink);
-                        }
-                    }
-                }
-
-                > .title {
-                }
-            }
-
-            > .issueBody {
-                display: flex;
-
-                > .details {
-                    list-style: none;
-
-                    > .line {
-                        --lineWidth: 460px;
-                        --nameWidth: 150px;
-
-                        list-style: none;
-                        width: var(--lineWidth);
-                        display: flex;
-                        justify-content: space-between;
-                        padding: {
-                            top: 2px;
-                            bottom: 2px;
-                            left: 5px;
-                            right: 5px;
-                        };
-                        font-size: 14px;
-
-                        > .detailsTitle {
-                            color: var(--textLight);
-                            width: var(--nameWidth);
-                            font-size: 14px;
-                        }
-
-                        > .detailsValue {
-                            width: calc(var(--lineWidth) - var(--nameWidth));
-                            font-size: 14px;
-                        }
-                    }
-                }
-            }
-        }
-
-        > .issuesList {
-            width: var(--listWidth);
             list-style: none;
+            width: var(--lineWidth);
+            display: flex;
+            justify-content: space-between;
+            padding: {
+              top: 2px;
+              bottom: 2px;
+              left: 5px;
+              right: 5px;
+            };
+            font-size: 14px;
 
-            > .listItem {
-                list-style: none;
-
-                > .issue {
-                    display: grid;
-                    grid-template-areas: "type number" "priority name";
-                    grid-template-columns: 32px auto;
-                    border: {
-                        bottom: 1px solid var(--borderLight);
-                    }
-                    padding: {
-                        left: 10px;
-                        right: 10px;
-                        top: 5px;
-                        bottom: 5px;
-                    };
-                    cursor: pointer;
-
-                    &.active {
-                        background-color: var(--backgroundLightPrimary);
-                    }
-
-                    &:hover {
-                        background-color: var(--backgroundLightest);
-
-                        &.active {
-                            background-color: var(--backgroundLightPrimary);
-                        }
-                    }
-
-                    > .type {
-                        grid-area: type;
-                    }
-
-                    > .number {
-                        grid-area: number;
-
-                        > .issueLink {
-                            display: inline;
-                            cursor: alias;
-                        }
-                    }
-
-                    > .priority {
-                        grid-area: priority;
-                    }
-
-                    > .name {
-                        grid-area: name;
-                    }
-                }
+            > .detailsTitle {
+              color: var(--textLight);
+              width: var(--nameWidth);
+              font-size: 14px;
             }
+
+            > .detailsValue {
+              width: calc(var(--lineWidth) - var(--nameWidth));
+              font-size: 14px;
+            }
+          }
         }
+      }
     }
+
+    > .issuesList {
+      width: var(--listWidth);
+      list-style: none;
+
+      > .listItem {
+        list-style: none;
+
+        > .issue {
+          display: grid;
+          grid-template-areas: "type number" "priority name";
+          grid-template-columns: 32px auto;
+          border: {
+            bottom: 1px solid var(--borderLight);
+          }
+          padding: {
+            left: 10px;
+            right: 10px;
+            top: 5px;
+            bottom: 5px;
+          };
+          cursor: pointer;
+
+          &.active {
+            background-color: var(--backgroundLightPrimary);
+          }
+
+          &:hover {
+            background-color: var(--backgroundLightest);
+
+            &.active {
+              background-color: var(--backgroundLightPrimary);
+            }
+          }
+
+          > .type {
+            grid-area: type;
+          }
+
+          > .number {
+            grid-area: number;
+
+            > .issueLink {
+              display: inline;
+              cursor: alias;
+            }
+          }
+
+          > .priority {
+            grid-area: priority;
+          }
+
+          > .name {
+            grid-area: name;
+          }
+        }
+      }
+    }
+  }
 }

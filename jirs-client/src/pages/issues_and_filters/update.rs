@@ -2,7 +2,7 @@ use seed::prelude::*;
 
 use crate::components::styled_select::StyledSelectChanged;
 use crate::model::{Model, PageContent};
-use crate::pages::issues_and_filters::FieldOption;
+use crate::pages::issues_and_filters::{FieldOption, JqlPart, JqlValueOption, OpOption};
 use crate::ws::board_load;
 use crate::{FieldId, IssuesAndFiltersId, Msg, OperationKind, Page, ResourceKind};
 
@@ -55,10 +55,20 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             match page.jql_parts.len() % 3 {
                 0 => {
                     let field = FieldOption::from(n);
-                    page.jql_parts.push(field.to_label().to_string());
+                    page.jql_parts.push(JqlPart::Field(field));
                 }
-                1 => {}
-                2 => {}
+                1 => {
+                    let field = OpOption::from(n);
+                    page.jql_parts.push(JqlPart::Op(field));
+                }
+                2 => {
+                    let u = match model.users.get(n as usize) {
+                        Some(u) => u,
+                        _ => return,
+                    };
+                    let field = JqlValueOption::User(u.id, u.name.clone());
+                    page.jql_parts.push(JqlPart::Value(field));
+                }
                 _ => {}
             }
             page.current_jql_part.reset();

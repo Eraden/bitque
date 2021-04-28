@@ -105,7 +105,7 @@ impl StyledDateTimeInput {
         let calendar_start = StyledDateTimeInput::calendar_start(start);
         let calendar_end = StyledDateTimeInput::calendar_end(end);
         let current_month_range = start..=end;
-        let current = calendar_start;
+        // let current = calendar_start;
         let mut weeks = vec![];
         let mut current_week = vec![];
 
