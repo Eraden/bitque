@@ -9,18 +9,18 @@
 @import "css/shared.scss";
 @import "css/styledTooltip.scss";
 @import "css/styledAvatar.scss";
-@import "./css/styledSelect.scss";
-@import "./css/styledSelectChild.scss";
+@import "css/styledSelect.scss";
+@import "css/styledSelectChild.scss";
 @import "css/styledButton.scss";
 @import "css/styledInput.scss";
 @import "css/styledImageInput.scss";
-@import "./css/styledModal.scss";
+@import "css/styledModal.scss";
 @import "css/styledTextArea.scss";
 @import "css/styledForm.scss";
 @import "css/styledEditor.scss";
 @import "css/styledComment.scss";
 @import "css/styledPage.scss";
-@import "./css/styledLink.scss";
+@import "css/styledLink.scss";
 @import "css/styledRte.scss";
 @import "css/styledDateTimeInput.scss";
 @import "css/app.scss";
@@ -35,3 +35,4 @@
 @import "css/invite.scss";
 @import "css/reports.scss";
 @import "css/profile.scss";
+@import "css/issuesAndFilters.scss";

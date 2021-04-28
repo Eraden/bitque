@@ -23,7 +23,7 @@ impl InputVariant {
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct StyledInputState {
-    id: FieldId,
+    pub field_id: FieldId,
     touched: bool,
     pub value: String,
     pub min: Option<usize>,
@@ -37,7 +37,7 @@ impl StyledInputState {
         S: Into<String>,
     {
         Self {
-            id,
+            field_id: id,
             touched: false,
             value: value.into(),
             min: None,
@@ -75,7 +75,7 @@ impl StyledInputState {
     #[inline(always)]
     pub fn update(&mut self, msg: &Msg) {
         match msg {
-            Msg::StrInputChanged(field_id, s) if field_id == &self.id => {
+            Msg::StrInputChanged(field_id, s) if field_id == &self.field_id => {
                 self.value = s.clone();
                 self.touched = true;
             }

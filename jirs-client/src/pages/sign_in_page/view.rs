@@ -63,6 +63,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         children: vec![span!["Register"]],
         class_list: "signUpLink",
         href: "/register",
+        ..Default::default()
     }
     .render();
     let submit_field = StyledField {

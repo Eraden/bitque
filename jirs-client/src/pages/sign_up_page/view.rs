@@ -63,6 +63,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
         children: vec![span!["Sign In"]],
         class_list: "signInLink",
         href: "/login",
+        ..Default::default()
     }
     .render();
 

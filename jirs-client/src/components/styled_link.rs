@@ -5,23 +5,19 @@ use seed::*;
 
 use crate::Msg;
 
+#[derive(Debug, Default)]
 pub struct StyledLink<'l> {
     pub children: Vec<Node<Msg>>,
     pub class_list: &'l str,
     pub href: &'l str,
+    pub disabled: bool,
 }
 
 impl<'l> StyledLink<'l> {
     #[inline(always)]
     pub fn render(self) -> Node<Msg> {
-        let StyledLink {
-            children,
-            class_list,
-            href,
-        } = self;
-
         let on_click = {
-            let href = href.to_string();
+            let href = self.href.to_string();
             mouse_ev("click", move |ev| {
                 if href.starts_with('/') {
                     ev.prevent_default();
@@ -36,10 +32,10 @@ impl<'l> StyledLink<'l> {
         };
 
         a![
-            C!["styledLink", class_list],
-            attrs![ At::Href => href ],
+            C!["styledLink", self.class_list],
+            attrs![ At::Href => self.href ],
             on_click,
-            children,
+            self.children,
         ]
     }
 }

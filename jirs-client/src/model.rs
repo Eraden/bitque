@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use crate::components::styled_select::StyledSelectState;
 use crate::pages::invite_page::InvitePage;
+use crate::pages::issues_and_filters::IssuesAndFiltersPage;
 use crate::pages::profile_page::model::ProfilePage;
 use crate::pages::project_page::model::ProjectPage;
 use crate::pages::project_settings_page::ProjectSettingsPage;
@@ -75,6 +76,7 @@ pub enum Page {
     // issue
     EditIssue(EpicId),
     AddIssue,
+    IssuesAndFilters,
     // settings
     ProjectSettings,
     // auth
@@ -95,6 +97,7 @@ impl Page {
             Page::EditEpic(id) => format!("/edit-epic/{id}", id = id),
             Page::EditIssue(id) => format!("/issues/{id}", id = id),
             Page::AddIssue => "/add-issue".to_string(),
+            Page::IssuesAndFilters => "/issues-and-filters".to_string(),
             Page::ProjectSettings => "/project-settings".to_string(),
             Page::SignIn => "/login".to_string(),
             Page::SignUp => "/register".to_string(),
@@ -190,6 +193,7 @@ pub enum PageContent {
     Users(Box<UsersPage>),
     Profile(Box<ProfilePage>),
     Reports(Box<ReportsPage>),
+    IssuesAndFilters(Box<IssuesAndFiltersPage>),
 }
 
 #[derive(Debug)]

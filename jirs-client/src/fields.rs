@@ -85,6 +85,11 @@ impl ButtonId {
 }
 
 #[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+pub enum IssuesAndFiltersId {
+    Jql,
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
 pub enum FieldId {
     NoField,
     SignIn(SignInFieldId),
@@ -95,6 +100,7 @@ pub enum FieldId {
     // issue
     AddIssueModal(IssueFieldId),
     EditIssueModal(EditIssueModalSection),
+    IssuesAndFilters(IssuesAndFiltersId),
     // epic
     EditEpic(EpicFieldId),
     // project boards
@@ -196,6 +202,9 @@ impl FieldId {
                 EpicFieldId::TransformInto => "epicEpic-transformInto",
             },
             FieldId::Rte(..) => "rte",
+            FieldId::IssuesAndFilters(sub) => match sub {
+                IssuesAndFiltersId::Jql => "issuesAndFilters-jql",
+            },
         }
     }
 }

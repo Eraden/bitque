@@ -217,6 +217,7 @@ fn issue_list(page: &ReportsPage, project_name: &str, this_month_updated: &[&Iss
                 ],
                 class_list: "withIcon",
                 href: format!("/issues/{}", id).as_str(),
+                ..Default::default()
             }.render();
 
             li![

@@ -46,6 +46,10 @@ pub struct StyledSelectState {
 }
 
 impl StyledSelectState {
+    pub fn field_id(&self) -> FieldId {
+        self.field_id.clone()
+    }
+
     pub fn reset(&mut self) {
         self.text_filter.clear();
         self.opened = false;
