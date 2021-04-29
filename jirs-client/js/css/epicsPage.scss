@@ -1,0 +1,42 @@
+#epics {
+    > section {
+        > h1 {
+            font-family: var(--font-bold);
+        }
+
+        > .description {
+            font-family: var(--font-regular);
+            margin: {
+                top: 5px;
+            }
+        }
+
+        > ul.epicsList {
+            margin: 0;
+            margin: {
+                top: 5px;
+            }
+            list-style: none;
+            padding: 0;
+
+
+            > li.epic {
+                padding: 0;
+                margin: {
+                    top: 5px;
+                    bottom: 5px;
+                };
+                display: flex;
+                justify-content: space-between;
+
+                > .epicName {
+                    //
+                }
+
+                > .date {
+                    width: 250px;
+                }
+            }
+        }
+    }
+}

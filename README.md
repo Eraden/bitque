@@ -64,8 +64,8 @@ https://git.sr.ht/~tsumanu/jirs
 * [ ] Insert Code in Rich Text Editor
 * [X] Code syntax
 * [X] Personal settings to choose MDE (Markdown Editor) or RTE
-* [ ] Issues and filters view
-* [ ] Issues and filters working filters
+* [X] Issues and filters view
+* [X] Issues and filters working filters
 
 ## How to run it
 

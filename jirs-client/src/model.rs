@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::components::styled_select::StyledSelectState;
+use crate::pages::epics_page::EpicsPage;
 use crate::pages::invite_page::InvitePage;
 use crate::pages::issues_and_filters::IssuesAndFiltersPage;
 use crate::pages::profile_page::model::ProfilePage;
@@ -73,6 +74,7 @@ pub enum Page {
     // epic
     DeleteEpic(EpicId),
     EditEpic(EpicId),
+    Epics,
     // issue
     EditIssue(EpicId),
     AddIssue,
@@ -105,6 +107,7 @@ impl Page {
             Page::Users => "/users".to_string(),
             Page::Profile => "/profile".to_string(),
             Page::Reports => "/reports".to_string(),
+            Page::Epics => "/epics".to_string(),
         }
     }
 
@@ -194,6 +197,7 @@ pub enum PageContent {
     Profile(Box<ProfilePage>),
     Reports(Box<ReportsPage>),
     IssuesAndFilters(Box<IssuesAndFiltersPage>),
+    Epics(Box<EpicsPage>),
 }
 
 #[derive(Debug)]

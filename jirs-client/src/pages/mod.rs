@@ -1,3 +1,4 @@
+pub mod epics_page;
 pub mod invite_page;
 pub mod issues_and_filters;
 pub mod profile_page;
