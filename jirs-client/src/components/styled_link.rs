@@ -3,7 +3,7 @@ use std::str::FromStr;
 use seed::prelude::*;
 use seed::*;
 
-use crate::Msg;
+use crate::{resolve_page, Msg};
 
 #[derive(Debug, Default)]
 pub struct StyledLink<'l> {
@@ -24,6 +24,9 @@ impl<'l> StyledLink<'l> {
                     ev.stop_propagation();
                     if let Ok(url) = seed::Url::from_str(href.as_str()) {
                         url.go_and_push();
+                        if let Some(page) = resolve_page(url) {
+                            return Some(Msg::ChangePage(page));
+                        }
                     }
                 }
 

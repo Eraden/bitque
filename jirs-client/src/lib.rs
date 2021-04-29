@@ -15,6 +15,7 @@ use crate::components::styled_tooltip;
 use crate::components::styled_tooltip::{TooltipVariant as StyledTooltip, TooltipVariant};
 use crate::modals::DebugMsg;
 use crate::model::{ModalType, Model, Page};
+use crate::pages::issues_and_filters::IssuesAndFiltersMsg;
 use crate::shared::{go_to_board, go_to_login};
 use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
 
@@ -101,6 +102,9 @@ pub enum Msg {
     ProjectToggleOnlyMy,
     ProjectToggleRecentlyUpdated,
     ProjectClearFilters,
+
+    // issues and filters
+    IssuesAndFilters(IssuesAndFiltersMsg),
 
     // inputs
     StrInputChanged(FieldId, String),

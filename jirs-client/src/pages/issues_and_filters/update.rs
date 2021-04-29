@@ -1,12 +1,13 @@
 use seed::prelude::*;
 
+use super::IssuesAndFiltersMsg;
 use crate::components::styled_select::StyledSelectChanged;
 use crate::model::{Model, PageContent};
-use crate::pages::issues_and_filters::{FieldOption, JqlPart, JqlValueOption, OpOption};
+use crate::pages::issues_and_filters::{
+    FieldOption, JqlPart, JqlPartType, JqlValueOption, KeywordOption, OpOption,
+};
 use crate::ws::board_load;
-use crate::{FieldId, IssuesAndFiltersId, Msg, OperationKind, Page, ResourceKind};
-
-mod jql;
+use crate::{match_page, FieldId, IssuesAndFiltersId, Msg, OperationKind, Page, ResourceKind};
 
 pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Orders<Msg>) {
     if model.user.is_none() {
@@ -31,8 +32,14 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
     crate::match_page_mut!(model, IssuesAndFilters).update(&msg, orders);
 
     match msg {
+        Msg::IssuesAndFilters(IssuesAndFiltersMsg::RemoveFilter(idx)) => {
+            crate::match_page_mut!(model, IssuesAndFilters)
+                .jql
+                .remove_from(idx);
+        }
         Msg::ResourceChanged(ResourceKind::Issue, OperationKind::ListLoaded, _) => {
-            let issues = super::IssuesAndFiltersPage::visible_issues(model.issues());
+            let jql = &match_page!(model, IssuesAndFilters).jql;
+            let issues = super::IssuesAndFiltersPage::visible_issues(model.issues(), jql);
             let first_id = model.issues().first().as_ref().map(|issue| issue.id);
             let page = crate::match_page_mut!(model, IssuesAndFilters);
             if page.active_id.is_none() {
@@ -52,26 +59,56 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             StyledSelectChanged::Changed(Some(n)),
         ) if n != 0 => {
             let page = crate::match_page_mut!(model, IssuesAndFilters);
-            match page.jql_parts.len() % 3 {
-                0 => {
+            match page.jql.current_token() {
+                None | Some(JqlPartType::Keyword) => {
                     let field = FieldOption::from(n);
-                    page.jql_parts.push(JqlPart::Field(field));
+                    page.jql.push(JqlPart::Field(field));
                 }
-                1 => {
+                Some(JqlPartType::Field) => {
                     let field = OpOption::from(n);
-                    page.jql_parts.push(JqlPart::Op(field));
+                    page.jql.push(JqlPart::Op(field));
                 }
-                2 => {
+                Some(JqlPartType::Op)
+                    if matches!(
+                        page.jql.field(),
+                        Some(JqlPart::Field(FieldOption::Assignee))
+                    ) =>
+                {
                     let u = match model.users.get(n as usize) {
                         Some(u) => u,
                         _ => return,
                     };
                     let field = JqlValueOption::User(u.id, u.name.clone());
-                    page.jql_parts.push(JqlPart::Value(field));
+                    page.jql.push(JqlPart::Value(field));
+                }
+                Some(JqlPartType::Op)
+                    if matches!(page.jql.field(), Some(JqlPart::Field(FieldOption::Type))) =>
+                {
+                    page.jql
+                        .push(JqlPart::Value(JqlValueOption::Type(n.into())));
+                }
+                Some(JqlPartType::Op)
+                    if matches!(
+                        page.jql.field(),
+                        Some(JqlPart::Field(FieldOption::Priority))
+                    ) =>
+                {
+                    page.jql
+                        .push(JqlPart::Value(JqlValueOption::Priority(n.into())));
+                }
+                Some(JqlPartType::Value) => {
+                    let field = KeywordOption::from(n);
+                    page.jql.push(JqlPart::Keyword(field));
                 }
                 _ => {}
             }
             page.current_jql_part.reset();
+            page.current_jql_part.opened = true;
+            let issues = super::IssuesAndFiltersPage::visible_issues(
+                model.issues(),
+                &crate::match_page!(model, IssuesAndFilters).jql,
+            );
+            crate::match_page_mut!(model, IssuesAndFilters).visible_issues = issues;
         }
         _ => {}
     }
