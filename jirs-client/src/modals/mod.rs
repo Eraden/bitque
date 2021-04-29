@@ -35,14 +35,8 @@ macro_rules! match_modal {
 
 #[macro_export]
 macro_rules! match_modal_mut {
-    ($model: ident, $ty: ident) => {
-        match $model.modals.iter_mut().find_map(|modal| {
-            if let crate::model::ModalType::$ty(modal) = modal {
-                Some(modal)
-            } else {
-                None
-            }
-        }) {
+    ($model: ident, $field: ident) => {
+        match $model.modals.$field {
             Some(modal) => modal,
             _ => return,
         }

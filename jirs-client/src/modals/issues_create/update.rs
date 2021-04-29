@@ -3,6 +3,7 @@ use seed::prelude::*;
 
 use crate::components::styled_select::StyledSelectChanged;
 use crate::model::IssueModal;
+use crate::shared::validate::Validator;
 use crate::ws::send_ws_msg;
 use crate::{FieldId, Msg, OperationKind, ResourceKind};
 
@@ -18,6 +19,9 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
     modal.update_states(msg, orders);
 
     match msg {
+        Msg::StrInputChanged(FieldId::AddIssueModal(IssueFieldId::Title), s) => {
+            modal.title_validator.validate(s);
+        }
         Msg::AddEpic => {
             send_ws_msg(
                 WsMsg::EpicCreate(modal.title_state.value.clone(), None, None),

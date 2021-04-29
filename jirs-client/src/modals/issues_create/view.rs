@@ -17,6 +17,7 @@ use crate::modals::epic_field;
 use crate::modals::issues_create::{Model as AddIssueModal, Type};
 use crate::model::Model;
 use crate::{FieldId, Msg};
+use crate::shared::validate::Validator;
 
 pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let issue_type = modal
@@ -190,7 +191,8 @@ fn type_select_option<'l>(t: Type) -> StyledSelectOption<'l> {
 fn short_summary_field(modal: &AddIssueModal) -> Node<Msg> {
     let short_summary = StyledInput {
         value: modal.title_state.value.as_str(),
-        valid: modal.title_state.is_valid(),
+        valid: modal.title_validator.is_valid(),
+        err_msg: modal.title_validator.message(),
         id: Some(FieldId::AddIssueModal(IssueFieldId::Title)),
         ..Default::default()
     }

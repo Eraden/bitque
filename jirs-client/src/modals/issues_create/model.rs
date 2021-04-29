@@ -7,6 +7,7 @@ use crate::components::styled_date_time_input::*;
 use crate::components::styled_input::*;
 use crate::components::styled_select::*;
 use crate::model::IssueModal;
+use crate::shared::validate::*;
 use crate::{FieldId, Msg};
 
 #[derive(Copy, Clone, EnumPrimitive, EnumIter)]
@@ -49,7 +50,9 @@ impl Type {
     }
 }
 
-#[derive(Clone, Debug, PartialOrd, PartialEq)]
+pub type TitleValidator = Touched<Between<4, 60>>;
+
+#[derive(Debug)]
 pub struct Model {
     pub priority: IssuePriority,
     pub description: Option<String>,
@@ -65,6 +68,8 @@ pub struct Model {
 
     // modal fields
     pub title_state: StyledInputState,
+    pub title_validator: TitleValidator,
+
     pub type_state: StyledSelectState,
     pub reporter_state: StyledSelectState,
     pub assignees_state: StyledSelectState,
@@ -90,7 +95,10 @@ impl Default for Model {
             reporter_id: Default::default(),
             issue_status_id: Default::default(),
             epic_id: Default::default(),
+
             title_state: StyledInputState::new(FieldId::AddIssueModal(IssueFieldId::Title), ""),
+            title_validator: TitleValidator::default(),
+
             type_state: StyledSelectState::new(FieldId::AddIssueModal(IssueFieldId::Type), vec![]),
             reporter_state: StyledSelectState::new(
                 FieldId::AddIssueModal(IssueFieldId::Reporter),
