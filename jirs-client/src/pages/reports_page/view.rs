@@ -201,9 +201,9 @@ fn issue_list(page: &ReportsPage, project_name: &str, this_month_updated: &[&Iss
             } = issue;
             let day = date.format("%Y-%m-%d").to_string();
 
-            let type_icon = StyledIcon::from(Icon::from(issue_type.clone()))
+            let type_icon = StyledIcon::from(Icon::from(*issue_type))
                 .render();
-            let priority_icon = StyledIcon::from(Icon::from(priority.clone()))
+            let priority_icon = StyledIcon::from(Icon::from(*priority))
                 .render();
             let desc = Node::from_html(None,
                                        description

@@ -60,7 +60,7 @@ impl WsHandler<UpdateEpicName> for WebSocketActor {
             database_actor::epics::UpdateEpicName {
                 project_id: *project_id,
                 epic_id: msg.epic_id,
-                name: msg.name.clone(),
+                name: msg.name,
             }
         );
         Ok(Some(WsMsg::EpicUpdated(epic)))

@@ -195,7 +195,9 @@ impl CreateIssue {
             }
             .execute(conn)?
             .first()
-            .ok_or_else(|| crate::DatabaseError::Issue(crate::IssueError::NoIssueStatuses))?
+            .ok_or(crate::DatabaseError::Issue(
+                crate::IssueError::NoIssueStatuses,
+            ))?
             .id
         } else {
             msg.issue_status_id
@@ -225,7 +227,8 @@ impl CreateIssue {
         crate::issue_assignees::AsignMultiple {
             issue_id: issue.id,
             user_ids: assign_users,
-        };
+        }
+        .execute(conn);
         issues.find(issue.id).get_result(conn).map_err(|e| {
             log::error!("{:?}", e);
             crate::DatabaseError::GenericFailure(

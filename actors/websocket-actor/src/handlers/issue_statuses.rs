@@ -49,8 +49,8 @@ impl WsHandler<DeleteIssueStatus> for WebSocketActor {
         let n = db_or_debug_and_return!(
             self,
             issue_statuses::DeleteIssueStatus {
-                issue_status_id,
                 project_id,
+                issue_status_id
             }
         );
         Ok(Some(WsMsg::IssueStatusDeleted(msg.issue_status_id, n)))
@@ -76,9 +76,9 @@ impl WsHandler<UpdateIssueStatus> for WebSocketActor {
             self,
             issue_statuses::UpdateIssueStatus {
                 issue_status_id,
-                position,
-                name,
                 project_id,
+                position,
+                name
             }
         );
         let msg = Some(WsMsg::IssueStatusUpdated(issue_status));

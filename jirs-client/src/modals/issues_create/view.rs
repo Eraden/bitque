@@ -354,7 +354,7 @@ fn priority_select_option<'l>(priority: IssuePriority) -> StyledSelectOption<'l>
     StyledSelectOption {
         icon: Some(
             StyledIcon {
-                icon: priority.clone().into(),
+                icon: priority.into(),
                 class_list: priority.to_str(),
                 ..Default::default()
             }

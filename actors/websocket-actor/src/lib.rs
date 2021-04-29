@@ -103,13 +103,13 @@ impl WebSocketActor {
             WsMsg::IssueStatusUpdate(issue_status_id, name, position) => self.handle_msg(
                 UpdateIssueStatus {
                     issue_status_id,
-                    name,
                     position,
+                    name,
                 },
                 ctx,
             )?,
             WsMsg::IssueStatusCreate(name, position) => {
-                self.handle_msg(CreateIssueStatus { name, position }, ctx)?
+                self.handle_msg(CreateIssueStatus { position, name }, ctx)?
             }
 
             // projects
@@ -166,7 +166,7 @@ impl WebSocketActor {
 
             // invitations
             WsMsg::InvitationSendRequest { name, email, role } => {
-                self.handle_msg(CreateInvitation { name, email, role }, ctx)?
+                self.handle_msg(CreateInvitation { email, name, role }, ctx)?
             }
             WsMsg::InvitationListLoad => self.handle_msg(ListInvitation, ctx)?,
             WsMsg::InvitationAcceptRequest(invitation_token) => {
@@ -177,7 +177,7 @@ impl WebSocketActor {
 
             // users
             WsMsg::ProfileUpdate(email, name) => {
-                self.handle_msg(ProfileUpdate { email, name }, ctx)?
+                self.handle_msg(ProfileUpdate { name, email }, ctx)?
             }
 
             // messages
@@ -189,8 +189,8 @@ impl WebSocketActor {
             WsMsg::EpicCreate(name, description, description_html) => self.handle_msg(
                 epics::CreateEpic {
                     name,
-                    description_html,
                     description,
+                    description_html,
                 },
                 ctx,
             )?,
@@ -252,17 +252,13 @@ impl WebSocketActor {
     }
 
     fn require_user(&self) -> Result<&User, WsMsg> {
-        self.current_user
-            .as_ref()
-            .map(|u| u)
-            .ok_or_else(|| WsMsg::AuthorizeExpired)
+        self.current_user.as_ref().ok_or(WsMsg::AuthorizeExpired)
     }
 
     fn require_user_project(&self) -> Result<&UserProject, WsMsg> {
         self.current_user_project
             .as_ref()
-            .map(|u| u)
-            .ok_or_else(|| WsMsg::AuthorizeExpired)
+            .ok_or(WsMsg::AuthorizeExpired)
     }
 
     fn load_user_project(&self) -> Result<UserProject, WsMsg> {

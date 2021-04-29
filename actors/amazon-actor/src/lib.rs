@@ -1,4 +1,3 @@
-use actix;
 use rusoto_s3::{PutObjectRequest, S3Client, S3};
 
 #[derive(Debug)]

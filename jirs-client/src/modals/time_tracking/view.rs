@@ -119,8 +119,8 @@ pub fn time_tracking_field(
         .render(),
     };
     StyledField {
-        input,
         label,
+        input,
         ..Default::default()
     }
     .render()

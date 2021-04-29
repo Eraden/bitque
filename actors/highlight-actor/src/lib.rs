@@ -64,19 +64,19 @@ impl HighlightActor {
             .first()
             .and_then(|idx| self.syntax_set.syntaxes().get(*idx))
             .map(|st| st.name.as_str())
-            .ok_or_else(|| HighlightError::UnknownLanguage)?;
+            .ok_or(HighlightError::UnknownLanguage)?;
 
         let set = self
             .syntax_set
             .as_ref()
             .find_syntax_by_name(lang)
-            .ok_or_else(|| HighlightError::UnknownLanguage)?;
+            .ok_or(HighlightError::UnknownLanguage)?;
         let theme: &syntect::highlighting::Theme = self
             .theme_set
             .as_ref()
             .themes
             .get("GitHub")
-            .ok_or_else(|| HighlightError::UnknownTheme)?;
+            .ok_or(HighlightError::UnknownTheme)?;
 
         let mut hi = HighlightLines::new(set, theme);
         Ok(hi.highlight(code, self.syntax_set.as_ref()))

@@ -10,7 +10,6 @@ use database_actor::user_projects::CurrentUserProject;
 use database_actor::users::UpdateAvatarUrl;
 use database_actor::DbExecutor;
 #[cfg(feature = "local-storage")]
-use filesystem_actor;
 use futures::executor::block_on;
 use futures::{StreamExt, TryStreamExt};
 use jirs_data::{User, UserId, WsMsg};
