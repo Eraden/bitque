@@ -228,7 +228,7 @@ impl CreateIssue {
             issue_id: issue.id,
             user_ids: assign_users,
         }
-        .execute(conn);
+        .execute(conn)?;
         issues.find(issue.id).get_result(conn).map_err(|e| {
             log::error!("{:?}", e);
             crate::DatabaseError::GenericFailure(

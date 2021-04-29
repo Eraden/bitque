@@ -36,6 +36,11 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             crate::match_page_mut!(model, IssuesAndFilters)
                 .jql
                 .remove_from(idx);
+            let issues = super::IssuesAndFiltersPage::visible_issues(
+                model.issues(),
+                &crate::match_page!(model, IssuesAndFilters).jql,
+            );
+            crate::match_page_mut!(model, IssuesAndFilters).visible_issues = issues;
         }
         Msg::ResourceChanged(ResourceKind::Issue, OperationKind::ListLoaded, _) => {
             let jql = &match_page!(model, IssuesAndFilters).jql;
