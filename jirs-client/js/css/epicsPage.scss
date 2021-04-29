@@ -1,5 +1,8 @@
 #epics {
     > section {
+        max-width: 1024px;
+        margin: 0 auto;
+
         > h1 {
             font-family: var(--font-bold);
         }
@@ -7,7 +10,8 @@
         > .description {
             font-family: var(--font-regular);
             margin: {
-                top: 5px;
+                top: 16px;
+                bottom: 16px;
             }
         }
 
@@ -22,19 +26,52 @@
 
             > li.epic {
                 padding: 0;
-                margin: {
-                    top: 5px;
-                    bottom: 5px;
-                };
-                display: flex;
-                justify-content: space-between;
+                margin: 5px 0 0;
 
-                > .epicName {
-                    //
+                > .firstRow {
+                    display: flex;
+                    justify-content: space-between;
+                    margin: {
+                        top: 5px;
+                        bottom: 5px;
+                    };
+
+                    > .epicName {
+                        font-family: var(--font-black);
+                        font-size: 16px;
+                    }
+
+                    > .date {
+                        width: 400px;
+                        display: flex;
+                        justify-content: space-between;
+                    }
+
+                    > .counter {
+                        //
+                    }
                 }
 
-                > .date {
-                    width: 250px;
+                > .secondRow {
+                    margin: {
+                        top: 5px;
+                        bottom: 5px;
+                        left: 20px;
+                        right: 20px;
+                    };
+
+                    > .issues {
+                        > .issue {
+                            display: flex;
+                            justify-content: space-between;
+
+                            > .flags {
+                                display: flex;
+                                justify-content: space-between;
+                                width: 40px;
+                            }
+                        }
+                    }
                 }
             }
         }

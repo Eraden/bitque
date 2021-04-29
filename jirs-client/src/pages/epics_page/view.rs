@@ -1,38 +1,49 @@
 use chrono::NaiveDateTime;
+use jirs_data::Issue;
 use seed::prelude::*;
 use seed::*;
 
+use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::model::Model;
 use crate::shared::inner_layout;
 use crate::Msg;
 
 pub fn view(model: &Model) -> Node<Msg> {
+    let page = crate::match_page!(model, Epics; Empty);
+
     let epics: Vec<Node<Msg>> = model
         .epics
         .iter()
         .map(|epic| {
+            let issues = page
+                .issues(epic.id)
+                .map(|v| {
+                    v.iter()
+                        .filter_map(|i| model.issues_by_id.get(i))
+                        .collect::<Vec<&Issue>>()
+                })
+                .unwrap_or_default();
+
             li![
                 C!["epic"],
-                div![C!["epicName"], &epic.name],
                 div![
-                    C!["date"],
+                    C!["firstRow"],
+                    div![C!["epicName"], &epic.name],
                     div![
-                        C!["startsAt"],
-                        span!["Stats At:"],
-                        span![epic
-                            .starts_at
-                            .as_ref()
-                            .map(|d| format!("{}", d.format("%e %B %Y")))
-                            .unwrap_or_default()]
+                        C!["date"],
+                        date_field("Starts at:", "startsAt", epic.starts_at.as_ref()),
+                        date_field("Ends at:", "endsAt", epic.ends_at.as_ref()),
                     ],
+                    div![C!["counter"], "Number of issues:", issues.len()],
+                ],
+                div![
+                    C!["secondRow"],
                     div![
-                        C!["endsAt"],
-                        span!["Ends At: "],
-                        span![epic
-                            .ends_at
-                            .as_ref()
-                            .map(|d| format!("{}", d.format("%e %B %Y")))
-                            .unwrap_or_default()]
+                        C!["issues"],
+                        issues
+                            .into_iter()
+                            .map(|issue| render_issue(issue))
+                            .collect::<Vec<Node<Msg>>>()
                     ]
                 ]
             ]
@@ -44,14 +55,41 @@ pub fn view(model: &Model) -> Node<Msg> {
         "epics",
         &[section![
             h1!["Epics"],
-            p!["Epics and issues grouped in them"],
+            p![C!["description"], "Epics and issues grouped in them"],
             ul![C!["epicsList"], epics]
         ]],
     )
 }
 
-fn date_field(name: &str, date: Option<&NaiveDateTime>) -> Node<Msg> {
+fn date_field(
+    name: &'static str,
+    class_name: &'static str,
+    date: Option<&NaiveDateTime>,
+) -> Node<Msg> {
     match date {
-        _ => Node::Empty,
+        None => Node::Empty,
+        Some(d) => div![
+            C![class_name],
+            span![name],
+            span![format!("{}", d.format("%e %B %Y"))]
+        ],
     }
+}
+
+fn render_issue(issue: &Issue) -> Node<Msg> {
+    div![
+        C!["issue"],
+        div![C!["name"], issue.title.as_str()],
+        div![
+            C!["flags"],
+            div![
+                C!["type"],
+                StyledIcon::from(Icon::from(issue.issue_type)).render()
+            ],
+            div![
+                C!["priority"],
+                StyledIcon::from(Icon::from(issue.priority)).render()
+            ],
+        ]
+    ]
 }
