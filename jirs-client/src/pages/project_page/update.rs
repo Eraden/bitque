@@ -127,5 +127,8 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
 }
 
 fn build_page_content(model: &mut Model) {
+    if matches!(model.page_content, PageContent::Project(..)) {
+        return;
+    }
     model.page_content = PageContent::Project(Box::new(ProjectPage::default()));
 }

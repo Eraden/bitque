@@ -17,8 +17,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
     match msg {
         Msg::ProjectChanged(Some(_)) => {
-            build_page_content(model);
-            send_ws_msg(WsMsg::IssueStatusesLoad, model.ws.as_ref(), orders);
+            build_page_content(model, orders);
         }
         Msg::WebSocketChange(ref change) => match change {
             WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
@@ -35,7 +34,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             _ => (),
         },
         Msg::ChangePage(Page::ProjectSettings) => {
-            build_page_content(model);
+            build_page_content(model, orders);
             if model.user.is_some() {
                 board_load(model, orders);
             }
@@ -55,8 +54,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     if matches!(model.page, Page::ProjectSettings)
         && !matches!(model.page_content, PageContent::ProjectSettings(..))
     {
-        build_page_content(model);
-        send_ws_msg(WsMsg::IssueStatusesLoad, model.ws.as_ref(), orders);
+        build_page_content(model, orders);
     }
 
     let page = match_page_mut!(model, ProjectSettings);
@@ -80,8 +78,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             FieldId::ProjectSettings(ProjectFieldId::Category),
             StyledSelectChanged::Changed(Some(value)),
         ) => {
-            let category = value.into();
-            page.payload.category = Some(category);
+            page.payload.category = Some(value.into());
         }
         Msg::PageChanged(PageChanged::ProjectSettings(
             ProjectPageChange::SubmitProjectSettingsForm,
@@ -174,7 +171,7 @@ fn exchange_position(bellow_id: IssueStatusId, model: &mut Model) {
     }
     let dragged_id = match page.column_drag.dragged_id.as_ref().cloned() {
         Some(id) => id,
-        _ => return error!("Nothing is dragged"),
+        _ => return log::error!("Nothing is dragged"),
     };
 
     let mut below = None;
@@ -221,7 +218,7 @@ fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
             std::mem::swap(&mut old, &mut page.column_drag.dirty);
             old
         }
-        _ => return error!("bad content type"),
+        _ => return log::error!("bad content type"),
     };
     for id in dirty {
         let IssueStatus { name, position, .. } =
@@ -237,7 +234,10 @@ fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
     }
 }
 
-fn build_page_content(model: &mut Model) {
+fn build_page_content(model: &mut Model, orders: &mut impl Orders<Msg>) {
+    if matches!(model.page_content, PageContent::ProjectSettings(..)) {
+        return;
+    }
     if let Some(project) = &model.project {
         let mode = model
             .user_settings
@@ -247,4 +247,6 @@ fn build_page_content(model: &mut Model) {
         model.page_content =
             PageContent::ProjectSettings(Box::new(ProjectSettingsPage::new(mode, project)));
     }
+
+    send_ws_msg(WsMsg::IssueStatusesLoad, model.ws.as_ref(), orders);
 }

@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use jirs_data::Issue;
+use jirs_data::{Issue, IssueStatus};
 use seed::prelude::*;
 use seed::*;
 
@@ -42,7 +42,10 @@ pub fn view(model: &Model) -> Node<Msg> {
                         C!["issues"],
                         issues
                             .into_iter()
-                            .map(|issue| render_issue(issue))
+                            .map(|issue| render_issue(
+                                issue,
+                                model.issue_statuses_by_id.get(&issue.issue_status_id)
+                            ))
                             .collect::<Vec<Node<Msg>>>()
                     ]
                 ]
@@ -76,10 +79,16 @@ fn date_field(
     }
 }
 
-fn render_issue(issue: &Issue) -> Node<Msg> {
+fn render_issue(issue: &Issue, status: Option<&IssueStatus>) -> Node<Msg> {
     div![
         C!["issue"],
         div![C!["name"], issue.title.as_str()],
+        div![
+            C!["status"],
+            status
+                .map(|status| status.name.as_str())
+                .unwrap_or_default()
+        ],
         div![
             C!["flags"],
             div![
