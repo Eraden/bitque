@@ -16,12 +16,15 @@ impl EpicsPage {
     }
 
     pub fn build_issues_per_epic(model: &Model) -> HashMap<EpicId, Vec<IssueId>> {
-        model.issues().iter().fold(HashMap::new(), |mut h, issue| {
-            if let Some(epic_id) = issue.epic_id.as_ref() {
-                h.entry(*epic_id).or_default().push(issue.id);
-            }
-            h
-        })
+        model.issues().iter().fold(
+            HashMap::with_capacity(model.issues().len()),
+            |mut h, issue| {
+                if let Some(epic_id) = issue.epic_id.as_ref() {
+                    h.entry(*epic_id).or_default().push(issue.id);
+                }
+                h
+            },
+        )
     }
 
     pub fn issues(&self, epic_id: EpicId) -> Option<&Vec<IssueId>> {

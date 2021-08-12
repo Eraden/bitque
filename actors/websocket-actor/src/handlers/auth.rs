@@ -7,10 +7,8 @@ use jirs_data::msg::WsError;
 use jirs_data::{Token, WsMsg};
 use mail_actor::welcome::Welcome;
 
-use crate::{
-    db_or_debug_and_return, db_or_debug_or_fallback, mail_or_debug_and_return, WebSocketActor,
-    WsHandler, WsResult,
-};
+use crate::server::InnerMsg;
+use crate::{db_or_debug_and_return, db_or_debug_or_fallback, mail_or_debug_and_return, *};
 
 pub struct Authenticate {
     pub name: String,
@@ -69,7 +67,7 @@ impl WsHandler<CheckAuthToken> for WebSocketActor {
         self.current_user_project = self.load_user_project().ok();
         self.current_project = self.load_project().ok();
 
-        block_on(self.join_channel(ctx.address().recipient()));
+        block_on(self.join_channel(ctx.address().recipient::<InnerMsg>()));
         Ok(Some(WsMsg::AuthorizeLoaded(Ok((user, setting)))))
     }
 }

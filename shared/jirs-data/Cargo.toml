@@ -17,8 +17,8 @@ backend = ["diesel", "actix", "derive_enum_sql"]
 frontend = []
 
 [dependencies]
-serde = "*"
-serde_json = "*"
+serde = { version = "*" }
+serde_json = { version = "*" }
 chrono = { version = "*", features = ["serde"] }
 uuid = { version = ">=0.7.0, <0.9.0", features = ["serde"] }
 

@@ -130,7 +130,7 @@ async fn update_avatar(data: FormData, host_url: String) -> Option<Msg> {
     let path = format!("{}/avatar/", host_url);
     let result = Request::new(path)
         .method(Method::Post)
-        .body(data.into())
+        .body(&data)
         .fetch()
         .await;
     let response = match result {

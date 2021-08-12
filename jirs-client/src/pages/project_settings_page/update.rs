@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
 use jirs_data::{IssueStatus, IssueStatusId, ProjectFieldId, UpdateProjectPayload, WsMsg};
-use seed::error;
 use seed::prelude::Orders;
 
 use crate::components::styled_select::StyledSelectChanged;

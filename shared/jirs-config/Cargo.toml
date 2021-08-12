@@ -20,9 +20,10 @@ hi = []
 mail = []
 web = ["aws-s3", "local-storage"]
 websocket = []
+default = ["local-storage", "database", "hi", "mail", "web", "websocket"]
 
 [dependencies]
-serde = "*"
+serde = { version = "*" }
 toml = { version = "*" }
 
 # Amazon S3

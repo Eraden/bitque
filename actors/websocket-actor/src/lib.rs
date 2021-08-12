@@ -26,7 +26,7 @@ trait WsMessageSender {
     fn send_msg(&mut self, msg: &jirs_data::WsMsg);
 }
 
-struct WebSocketActor {
+pub struct WebSocketActor {
     db: Data<Addr<DbExecutor>>,
     mail: Data<Addr<MailExecutor>>,
     addr: Addr<WsServer>,
@@ -36,13 +36,20 @@ struct WebSocketActor {
     current_project: Option<jirs_data::Project>,
 }
 
-impl Actor for WebSocketActor {
-    type Context = ws::WebsocketContext<WebSocketActor>;
+pub type WsCtx = ws::WebsocketContext<WebSocketActor>;
+
+impl actix::Actor for WebSocketActor {
+    type Context = WsCtx;
 }
 
 impl WsMessageSender for ws::WebsocketContext<WebSocketActor> {
     fn send_msg(&mut self, msg: &WsMsg) {
-        self.binary(bincode::serialize(msg).unwrap())
+        match bincode::serialize(msg) {
+            Err(err) => {
+                log::error!("{}", err);
+            }
+            Ok(v) => self.binary(v),
+        }
     }
 }
 
@@ -328,7 +335,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
             self.addr.do_send(InnerMsg::Leave(
                 up.project_id,
                 user.id,
-                ctx.address().recipient(),
+                ctx.address().recipient::<InnerMsg>(),
             ));
         }
         ctx.stop()
@@ -337,7 +344,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocketActor {
 
 pub trait WsHandler<Message>
 where
-    Self: Actor,
+    Self: actix::Actor<Context = WsCtx>,
 {
     fn handle_msg(&mut self, msg: Message, _ctx: &mut <Self as Actor>::Context) -> WsResult;
 }

@@ -15,10 +15,7 @@ path = "./src/main.rs"
 [features]
 aws-s3 = ["amazon-actor"]
 local-storage = ["filesystem-actor"]
-default = [
-    "aws-s3",
-    "local-storage",
-]
+default = ["local-storage"]
 
 [dependencies]
 actix = { version = "0.10.0" }

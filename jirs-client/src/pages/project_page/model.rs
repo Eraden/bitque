@@ -68,10 +68,15 @@ impl ProjectPage {
             issues.collect()
         };
 
-        let issues_per_epic_id = issues.into_iter().fold(HashMap::new(), |mut m, issue| {
-            m.entry(issue.epic_id).or_insert_with(Vec::new).push(issue);
-            m
-        });
+        let issues_per_epic_id = {
+            let issues_len = issues.len();
+            issues
+                .into_iter()
+                .fold(HashMap::with_capacity(issues_len), |mut m, issue| {
+                    m.entry(issue.epic_id).or_insert_with(Vec::new).push(issue);
+                    m
+                })
+        };
 
         epics
             .map(|epic| {
