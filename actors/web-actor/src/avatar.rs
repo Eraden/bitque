@@ -160,13 +160,13 @@ async fn update_user_avatar(
         Ok(Ok(user)) => Ok(user),
 
         Ok(Err(e)) => {
-            error!("{:?}", e);
+            common::log::error!("{:?}", e);
             Err(actix_web::Error::from(
                 HttpResponse::Unauthorized().finish(),
             ))
         }
         Err(e) => {
-            error!("{:?}", e);
+            common::log::error!("{:?}", e);
             Err(actix_web::Error::from(
                 HttpResponse::Unauthorized().finish(),
             ))
@@ -191,11 +191,11 @@ async fn handle_token(
         Ok(Ok(user)) => Ok(user.id),
 
         Ok(Err(e)) => {
-            error!("{:?}", e);
+            common::log::error!("{:?}", e);
             Err(HttpResponse::Unauthorized().finish().into())
         }
         Err(e) => {
-            error!("{:?}", e);
+            common::log::error!("{:?}", e);
             Err(HttpResponse::Unauthorized().finish().into())
         }
     }

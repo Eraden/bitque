@@ -42,10 +42,6 @@ num-integer = { version = "0.1.32" }
 bigdecimal = { version = ">= 0.0.10, <= 0.1.0" }
 bitflags = { version = "1.0" }
 
-log = "0.4"
-pretty_env_logger = "0.4"
-env_logger = "0.7"
-
 [dependencies.jirs-config]
 path = "../../shared/jirs-config"
 features = ["database"]

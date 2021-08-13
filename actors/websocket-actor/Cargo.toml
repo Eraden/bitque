@@ -28,10 +28,6 @@ flate2 = { version = "*" }
 syntect = { version = "*" }
 lazy_static = { version = "*" }
 
-log = { version = "0.4" }
-pretty_env_logger = { version = "0.4" }
-env_logger = { version = "0.7" }
-
 uuid = { version = "0.8.1", features = ["serde", "v4", "v5"] }
 
 [dependencies.comrak]

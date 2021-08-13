@@ -75,7 +75,7 @@ impl<'l> Guard<'l> {
         use diesel::prelude::*;
         let tm = conn.transaction_manager();
         tm.begin_transaction(conn).map_err(|e| {
-            log::error!("{:?}", e);
+            common::log::error!("{:?}", e);
             crate::DatabaseError::DatabaseConnectionLost
         })?;
         Ok(Self { conn, tm })
@@ -91,15 +91,15 @@ impl<'l> Guard<'l> {
         match r {
             Ok(r) => {
                 self.tm.commit_transaction(self.conn).map_err(|e| {
-                    log::error!("{:?}", e);
+                    common::log::error!("{:?}", e);
                     crate::DatabaseError::DatabaseConnectionLost
                 })?;
                 Ok(r)
             }
             Err(e) => {
-                log::error!("{:?}", e);
+                common::log::error!("{:?}", e);
                 self.tm.rollback_transaction(self.conn).map_err(|e| {
-                    log::error!("{:?}", e);
+                    common::log::error!("{:?}", e);
                     crate::DatabaseError::DatabaseConnectionLost
                 })?;
                 Err(e)

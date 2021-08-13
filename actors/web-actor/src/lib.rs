@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate log;
-
 use actix::Addr;
 use actix_web::web::Data;
 use actix_web::{HttpRequest, HttpResponse};

@@ -2,13 +2,13 @@
 macro_rules! db_pool {
     ($self: expr) => {
         &$self.pool.get().map_err(|e| {
-            log::error!("{:?}", e);
+            common::log::error!("{:?}", e);
             $crate::DatabaseError::DatabaseConnectionLost
         })?
     };
     ($self: expr, $pool: expr) => {
         &$pool.get().map_err(|e| {
-            log::error!("{:?}", e);
+            common::log::error!("{:?}", e);
             $crate::DatabaseError::DatabaseConnectionLost
         })?
     };
@@ -18,7 +18,7 @@ macro_rules! db_pool {
 macro_rules! q {
     ($q: expr) => {{
         let q = $q;
-        log::debug!(
+        common::log::debug!(
             "{}",
             diesel::debug_query::<diesel::pg::Pg, _>(&q).to_string()
         );
@@ -40,7 +40,7 @@ macro_rules! db_find {
             $crate::q!($q)
                 .first($conn)
                 .map_err(|e| {
-                    log::error!("{:?}", e);
+                    common::log::error!("{:?}", e);
                     $crate::DatabaseError::GenericFailure(
                         $crate::OperationError::LoadCollection,
                         $crate::ResourceKind::$resource,
@@ -81,7 +81,7 @@ macro_rules! db_load {
             $crate::q!($q)
                   .load(conn)
                   .map_err(|e| {
-                      log::error!("{:?}", e);
+                      common::log::error!("{:?}", e);
                       $crate::DatabaseError::GenericFailure(
                           $crate::OperationError::LoadCollection,
                           $crate::ResourceKind::$resource,
@@ -120,7 +120,7 @@ macro_rules! db_load_field {
             $crate::q!($q)
                   .load(conn)
                   .map_err(|e| {
-                      log::error!("{:?}", e);
+                      common::log::error!("{:?}", e);
                       $crate::DatabaseError::GenericFailure(
                           $crate::OperationError::LoadCollection,
                           $crate::ResourceKind::$resource,
@@ -162,7 +162,7 @@ macro_rules! db_create {
               $crate::q!($q)
                 .get_result::<$resource>($conn)
                 .map_err(|e| {
-                    log::error!("{:?}", e);
+                    common::log::error!("{:?}", e);
                     $crate::DatabaseError::GenericFailure(
                         $crate::OperationError::Create,
                         $crate::ResourceKind::$resource,
@@ -205,7 +205,7 @@ macro_rules! db_update {
             $crate::q!($q)
                 .get_result::<$resource>($conn)
                 .map_err(|e| {
-                    log::error!("{:?}", e);
+                    common::log::error!("{:?}", e);
                     $crate::DatabaseError::GenericFailure(
                         $crate::OperationError::Update,
                         $crate::ResourceKind::$resource,
@@ -247,7 +247,7 @@ macro_rules! db_delete {
             $crate::q!($q)
                 .execute($conn)
                 .map_err(|e| {
-                    log::error!("{:?}", e);
+                    common::log::error!("{:?}", e);
                     $crate::DatabaseError::GenericFailure(
                         $crate::OperationError::Delete,
                         $crate::ResourceKind::$resource,

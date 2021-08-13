@@ -20,4 +20,8 @@ actix_derive = { version = "*" }
 serde = { version = "*" }
 serde_derive = { version = "*" }
 
+log = "0.4"
+pretty_env_logger = "0.4"
+env_logger = "0.7"
+
 reexport-proc-macro = { version = "*" }

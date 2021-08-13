@@ -1,17 +1,14 @@
-#[macro_use]
-extern crate log;
-
 use actix::{Actor, ActorContext, Addr, AsyncContext, Handler, Recipient, StreamHandler};
 use actix_web::web::{self, Data};
 use actix_web::{get, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
+use common::log::*;
 use common::{actix_web, actix_web_actors};
 use database_actor::projects::LoadCurrentProject;
 use database_actor::user_projects::CurrentUserProject;
 use database_actor::DbExecutor;
 use futures::executor::block_on;
 use jirs_data::{Project, User, UserProject, WsMsg};
-use log::*;
 use mail_actor::MailExecutor;
 
 use crate::handlers::*;
@@ -47,7 +44,7 @@ impl WsMessageSender for ws::WebsocketContext<WebSocketActor> {
     fn send_msg(&mut self, msg: &WsMsg) {
         match bincode::serialize(msg) {
             Err(err) => {
-                log::error!("{}", err);
+                common::log::error!("{}", err);
             }
             Ok(v) => self.binary(v),
         }

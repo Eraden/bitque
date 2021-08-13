@@ -34,11 +34,11 @@ macro_rules! actor_or_debug_and_return {
         match block_on($s.$actor.send($msg)) {
             Ok(Ok(r)) => r,
             Ok(Err(e)) => {
-                log::error!("{:?}", e);
+                common::log::error!("{:?}", e);
                 return $actor_err;
             }
             Err(e) => {
-                log::error!("{:?}", e);
+                common::log::error!("{:?}", e);
                 return $mailbox_err;
             }
         }
@@ -56,10 +56,10 @@ macro_rules! actor_or_debug_and_ignore {
                 $on_success(r);
             }
             Ok(Err(e)) => {
-                log::error!("{:?}", e);
+                common::log::error!("{:?}", e);
             }
             Err(e) => {
-                log::error!("{:?}", e);
+                common::log::error!("{:?}", e);
             }
         }
     };
@@ -71,11 +71,11 @@ macro_rules! actor_or_debug_and_fallback {
         match block_on($s.$actor.send($msg)) {
             Ok(Ok(r)) => r,
             Ok(Err(e)) => {
-                log::error!("{:?}", e);
+                common::log::error!("{:?}", e);
                 $actor_err
             }
             Err(e) => {
-                log::error!("{:?}", e);
+                common::log::error!("{:?}", e);
                 $mailbox_err
             }
         }

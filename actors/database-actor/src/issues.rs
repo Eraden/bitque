@@ -88,7 +88,7 @@ impl UpdateIssue {
             ))
             .get_result(conn)
             .map_err(|e| {
-                log::debug!("{:?}", e);
+                common::log::debug!("{:?}", e);
                 crate::DatabaseError::GenericFailure(
                     crate::OperationError::Create,
                     crate::ResourceKind::Issue,
@@ -186,7 +186,7 @@ impl CreateIssue {
             .select(sql("COALESCE(max(list_position), 0) + 1"))
             .get_result::<i32>(conn)
             .map_err(|e| {
-                log::error!("resolve new issue position failed {}", e);
+                common::log::error!("resolve new issue position failed {}", e);
                 crate::DatabaseError::Issue(crate::IssueError::BadListPosition)
             })?;
         let i_s_id: IssueStatusId = if msg.issue_status_id == 0 {
@@ -230,7 +230,7 @@ impl CreateIssue {
         }
         .execute(conn)?;
         issues.find(issue.id).get_result(conn).map_err(|e| {
-            log::error!("{:?}", e);
+            common::log::error!("{:?}", e);
             crate::DatabaseError::GenericFailure(
                 crate::OperationError::Create,
                 crate::ResourceKind::Issue,

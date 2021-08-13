@@ -157,7 +157,7 @@ fn build_create_exec(
                     use crate::schema::{schema}::dsl::*;
                     let msg = self;
                     crate::q!({query}).get_result(conn).map_err(|e| {{
-                        log::error!("{{:?}}", e);
+                        common::log::error!("{{:?}}", e);
                         crate::DatabaseError::GenericFailure(
                             crate::OperationError::Create,
                             crate::ResourceKind::{resource},
@@ -192,7 +192,7 @@ fn build_find_exec(
                 use crate::schema::{schema}::dsl::*;
                 let msg = self;
                 crate::q!({query}).first(conn).map_err(|e| {{
-                    log::error!("{{:?}}", e);
+                    common::log::error!("{{:?}}", e);
                     crate::DatabaseError::GenericFailure(
                         crate::OperationError::LoadSingle,
                         crate::ResourceKind::{resource},
@@ -226,7 +226,7 @@ fn build_load_exec(
                 use crate::schema::{schema}::dsl::*;
                 let msg = self;
                 crate::q!({query}).load(conn).map_err(|e| {{
-                    log::error!("{{:?}}", e);
+                    common::log::error!("{{:?}}", e);
                     crate::DatabaseError::GenericFailure(
                         crate::OperationError::LoadCollection,
                         crate::ResourceKind::{resource},
@@ -260,7 +260,7 @@ fn build_update_exec(
                 use crate::schema::{schema}::dsl::*;
                 let msg = self;
                 crate::q!({query}).get_result(conn).map_err(|e| {{
-                    log::error!("{{:?}}", e);
+                    common::log::error!("{{:?}}", e);
                     crate::DatabaseError::GenericFailure(
                         crate::OperationError::Update,
                         crate::ResourceKind::{resource},
@@ -294,7 +294,7 @@ fn build_destroy_exec(
                 use crate::schema::{schema}::dsl::*;
                 let msg = self;
                 crate::q!({query}).execute(conn).map_err(|e| {{
-                    log::error!("{{:?}}", e);
+                    common::log::error!("{{:?}}", e);
                     crate::DatabaseError::GenericFailure(
                         crate::OperationError::Delete,
                         crate::ResourceKind::{resource},

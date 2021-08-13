@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use actix::{Actor, Context, Recipient};
+use common::log::*;
 use jirs_data::{ProjectId, UserId, WsMsg};
 
 #[derive(actix::Message, Debug)]
@@ -110,8 +111,8 @@ impl WsServer {
     fn send_to_recipients(&self, recipients: &[Recipient<InnerMsg>], msg: &WsMsg) {
         for recipient in recipients.iter() {
             match recipient.do_send(InnerMsg::Transfer(msg.clone())) {
-                Ok(_) => debug!("msg sent"),
-                Err(e) => error!("{}", e),
+                Ok(_) => common::log::debug!("msg sent"),
+                Err(e) => common::log::error!("{}", e),
             };
         }
     }
