@@ -25,3 +25,5 @@ pretty_env_logger = "0.4"
 env_logger = "0.7"
 
 reexport-proc-macro = { version = "*" }
+
+bytes = { version = "0.5.6" }

@@ -19,8 +19,6 @@ actix-files = { version = "0.5.0" }
 
 futures = { version = "0.3.8" }
 
-bytes = { version = "0.5.6" }
-
 [dependencies.jirs-config]
 path = "../../shared/jirs-config"
 features = ["local-storage"]

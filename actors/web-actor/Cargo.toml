@@ -27,8 +27,6 @@ toml = { version = "*" }
 
 actix-multipart = "*"
 
-bytes = { version = "0.5.6" }
-
 futures = { version = "0.3.8" }
 openssl-sys = { version = "*", features = ["vendored"] }
 libc = { version = "0.2.0", default-features = false }

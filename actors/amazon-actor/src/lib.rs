@@ -21,7 +21,7 @@ impl actix::Actor for AmazonExecutor {
 #[derive(actix::Message)]
 #[rtype(result = "Result<String, AmazonError>")]
 pub struct S3PutObject {
-    pub source: tokio::sync::broadcast::Receiver<bytes::Bytes>,
+    pub source: tokio::sync::broadcast::Receiver<common::bytes::Bytes>,
     pub file_name: String,
 }
 
@@ -30,6 +30,7 @@ impl actix::Handler<S3PutObject> for AmazonExecutor {
 
     fn handle(&mut self, msg: S3PutObject, _ctx: &mut Self::Context) -> Self::Result {
         let S3PutObject {
+            // source,
             mut source,
             file_name,
         } = msg;
@@ -39,16 +40,18 @@ impl actix::Handler<S3PutObject> for AmazonExecutor {
             .expect("Failed to start amazon agent")
             .block_on(async {
                 let s3 = jirs_config::amazon::config();
-                log::debug!("{:?}", s3);
+                common::log::debug!("{:?}", s3);
 
                 // TODO: Unable to upload as stream because there is no size_hint
-                // use futures::stream::*;
                 // let stream = source
                 //     .into_stream()
                 //     .map_err(|_e| std::io::Error::from_raw_os_error(1));
-
+                // let stream = futures::StreamExt::map(stream, |b| {
+                //     use common::bytes::Buf;
+                //     ::bytes::Bytes::from(b.bytes())
+                // });
+                use common::bytes::Buf;
                 let mut v: Vec<u8> = vec![];
-                use bytes::Buf;
                 while let Ok(b) = source.recv().await {
                     v.extend_from_slice(b.bytes())
                 }
@@ -64,11 +67,11 @@ impl actix::Handler<S3PutObject> for AmazonExecutor {
                 let id = match client.put_object(put_object).await {
                     Ok(obj) => obj,
                     Err(e) => {
-                        log::error!("{}", e);
+                        common::log::error!("{}", e);
                         return Err(AmazonError::UploadFailed);
                     }
                 };
-                log::debug!("{:?}", id);
+                common::log::debug!("{:?}", id);
                 Ok(aws_s3_url(file_name.as_str()))
             })
     }

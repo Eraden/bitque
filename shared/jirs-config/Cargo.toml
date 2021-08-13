@@ -29,12 +29,12 @@ toml = { version = "*" }
 # Amazon S3
 [dependencies.rusoto_s3]
 optional = true
-version = "0.45.0"
+version = "0.47.0"
 
 [dependencies.rusoto_core]
 optional = true
-version = "0.45.0"
+version = "0.47.0"
 
 [dependencies.rusoto_signature]
 optional = true
-version = "0.45.0"
+version = "0.47.0"

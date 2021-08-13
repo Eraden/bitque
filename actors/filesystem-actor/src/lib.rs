@@ -42,7 +42,7 @@ impl actix::Actor for FileSystemExecutor {
 #[derive(actix::Message)]
 #[rtype(result = "Result<usize, FsError>")]
 pub struct CreateFile {
-    pub source: tokio::sync::broadcast::Receiver<bytes::Bytes>,
+    pub source: tokio::sync::broadcast::Receiver<common::bytes::Bytes>,
     pub file_name: String,
 }
 

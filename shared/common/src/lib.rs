@@ -2,7 +2,7 @@
 extern crate reexport_proc_macro;
 
 pub use {
-    actix_cors, actix_rt, actix_service, actix_web, actix_web_actors, env_logger, log,
+    actix_cors, actix_rt, actix_service, actix_web, actix_web_actors, bytes, env_logger, log,
     pretty_env_logger, serde,
 };
 

@@ -15,18 +15,13 @@ path = "./src/lib.rs"
 [dependencies]
 common = { path = "../../shared/common" }
 actix = { version = "0.10.0" }
+bytes = { version = "1.0.0" }
 
 serde = { version = "*" }
-
-bytes = { version = "0.5.6" }
 
 futures = { version = "0.3.8" }
 openssl-sys = { version = "*", features = ["vendored"] }
 libc = { version = "0.2.0", default-features = false }
-
-log = "0.4"
-pretty_env_logger = "0.4"
-env_logger = "0.7"
 
 uuid = { version = "0.8.1", features = ["serde", "v4", "v5"] }
 
@@ -36,13 +31,13 @@ features = ["mail", "web", "local-storage"]
 
 # Amazon S3
 [dependencies.rusoto_s3]
-version = "0.45.0"
+version = "0.47.0"
 
 [dependencies.rusoto_core]
-version = "0.45.0"
+version = "0.47.0"
 
 [dependencies.rusoto_signature]
-version = "0.45.0"
+version = "0.47.0"
 
 [dependencies.tokio]
 version = "0.2.23"

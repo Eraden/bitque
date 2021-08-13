@@ -97,7 +97,7 @@ pub(crate) async fn handle_image(
 }
 
 /// Read file from client
-async fn read_form_data(field: &mut Field, sender: Sender<bytes::Bytes>) {
+async fn read_form_data(field: &mut Field, sender: Sender<common::bytes::Bytes>) {
     while let Some(chunk) = field.next().await {
         let data = chunk.unwrap();
         if let Err(err) = sender.send(data) {
