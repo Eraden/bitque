@@ -16,8 +16,8 @@ use crate::components::styled_textarea::StyledTextarea;
 use crate::modals::epic_field;
 use crate::modals::issues_create::{Model as AddIssueModal, Type};
 use crate::model::Model;
-use crate::{FieldId, Msg};
 use crate::shared::validate::Validator;
+use crate::{FieldId, Msg};
 
 pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let issue_type = modal

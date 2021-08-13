@@ -28,7 +28,7 @@ optional = true
 
 [dependencies.diesel]
 optional = true
-version = "1.4.5"
+version = "*"
 features = ["unstable", "postgres", "numeric", "extras", "uuidv07"]
 
 [dependencies.derive_enum_iter]

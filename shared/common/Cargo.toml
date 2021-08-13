@@ -1,0 +1,23 @@
+[package]
+name = "common"
+version = "0.1.0"
+authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
+edition = "2018"
+description = "JIRS (Simplified JIRA in Rust) Actix server"
+repository = "https://gitlab.com/adrian.wozniak/jirs"
+license = "MPL-2.0"
+
+[dependencies]
+actix = { version = "0.10.0" }
+
+actix-web = { version = "*" }
+actix-cors = { version = "*" }
+actix-service = { version = "*" }
+actix-rt = { version = "1" }
+actix-web-actors = { version = "*" }
+actix_derive = { version = "*" }
+
+serde = { version = "*" }
+serde_derive = { version = "*" }
+
+reexport-proc-macro = { version = "*" }

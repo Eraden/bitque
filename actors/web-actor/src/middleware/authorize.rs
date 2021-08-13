@@ -1,11 +1,13 @@
 use actix_web::http::header::{self};
 use actix_web::http::HeaderMap;
+use common::*;
 
 pub fn token_from_headers(
     headers: &HeaderMap,
 ) -> std::result::Result<uuid::Uuid, crate::errors::ServiceError> {
     headers
-        .get(header::AUTHORIZATION).ok_or(crate::errors::ServiceError::Unauthorized)
+        .get(header::AUTHORIZATION)
+        .ok_or(crate::errors::ServiceError::Unauthorized)
         .map(|h| h.to_str().unwrap_or_default())
         .and_then(|s| parse_bearer(s))
 }

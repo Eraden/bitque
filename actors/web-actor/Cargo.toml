@@ -18,16 +18,13 @@ aws-s3 = ["amazon-actor"]
 default = ["local-storage", "aws-s3"]
 
 [dependencies]
+common = { path = "../../shared/common" }
+actix = { version = "0.10.0" }
+
 serde = "*"
 bincode = "*"
 toml = { version = "*" }
 
-actix = { version = "0.10.0" }
-actix-web = { version = "*" }
-actix-cors = { version = "*" }
-actix-service = { version = "*" }
-actix-rt = "1"
-actix-web-actors = "*"
 actix-multipart = "*"
 
 bytes = { version = "0.5.6" }

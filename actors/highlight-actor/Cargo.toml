@@ -13,12 +13,14 @@ name = "highlight_actor"
 path = "./src/lib.rs"
 
 [dependencies]
+common = { path = "../../shared/common" }
+actix = { version = "0.10.0" }
+
 serde = "*"
 bincode = "*"
 toml = { version = "*" }
 
 simsearch = { version = "0.2" }
-actix = { version = "0.10.0" }
 
 flate2 = { version = "*" }
 syntect = { version = "*" }

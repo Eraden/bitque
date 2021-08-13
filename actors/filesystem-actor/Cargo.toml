@@ -13,6 +13,7 @@ name = "filesystem_actor"
 path = "./src/lib.rs"
 
 [dependencies]
+common = { path = "../../shared/common" }
 actix = { version = "0.10.0" }
 
 futures = { version = "0.3.8" }

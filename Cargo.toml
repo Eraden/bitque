@@ -10,6 +10,7 @@
 
 [workspace]
 members = [
+    "./shared/common",
     "./jirs-cli",
     "./jirs-server",
     "./shared/jirs-config",

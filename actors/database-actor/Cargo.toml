@@ -13,12 +13,12 @@ name = "database_actor"
 path = "./src/lib.rs"
 
 [dependencies]
+common = { path = "../../shared/common" }
+actix = { version = "0.10.0" }
+
 serde = "*"
 bincode = "*"
 toml = { version = "*" }
-
-actix = { version = "0.10.0" }
-actix-web = { version = "*" }
 
 futures = { version = "0.3.8" }
 openssl-sys = { version = "*", features = ["vendored"] }
@@ -58,5 +58,5 @@ features = ["backend"]
 path = "../../derive/derive_db_execute"
 
 [dependencies.diesel]
-version = "1.4.5"
+version = "*"
 features = ["unstable", "postgres", "numeric", "extras", "uuidv07"]

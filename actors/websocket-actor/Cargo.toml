@@ -13,13 +13,12 @@ name = "websocket_actor"
 path = "./src/lib.rs"
 
 [dependencies]
-serde = "*"
-bincode = "*"
-toml = { version = "*" }
-
+common = { path = "../../shared/common" }
 actix = { version = "0.10.0" }
-actix-web = { version = "*" }
-actix-web-actors = "*"
+
+serde = { version = "*" }
+bincode = { version = "*" }
+toml = { version = "*" }
 
 futures = { version = "0.3.8" }
 openssl-sys = { version = "*", features = ["vendored"] }

@@ -13,12 +13,10 @@ name = "amazon_actor"
 path = "./src/lib.rs"
 
 [dependencies]
-serde = "*"
-
+common = { path = "../../shared/common" }
 actix = { version = "0.10.0" }
-actix-service = { version = "*" }
-actix-rt = "1"
-actix-web-actors = "*"
+
+serde = { version = "*" }
 
 bytes = { version = "0.5.6" }
 

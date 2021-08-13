@@ -1,8 +1,11 @@
 #![feature(async_closure)]
 #![recursion_limit = "256"]
 
+extern crate common;
+
 use actix::Actor;
 use actix_web::{App, HttpServer};
+use common::*;
 
 pub mod errors;
 

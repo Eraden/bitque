@@ -5,6 +5,7 @@ use actix_multipart::{Field, Multipart};
 use actix_web::http::header::ContentDisposition;
 use actix_web::web::Data;
 use actix_web::{post, web, Error, HttpResponse};
+use common::*;
 use database_actor::authorize_user::AuthorizeUser;
 use database_actor::user_projects::CurrentUserProject;
 use database_actor::users::UpdateAvatarUrl;
