@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgSession;
 use jirs_data::{SignUpFieldId, WsMsg};
 use seed::prelude::*;
 
@@ -32,16 +33,16 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         }
         Msg::SignUpRequest => {
             send_ws_msg(
-                WsMsg::SignUpRequest(page.email.clone(), page.username.clone()),
+                WsMsgSession::SignUpRequest(page.email.clone(), page.username.clone()).into(),
                 model.ws.as_ref(),
                 orders,
             );
         }
         Msg::WebSocketChange(change) => match change {
-            WebSocketChanged::WsMsg(WsMsg::SignUpSuccess) => {
+            WebSocketChanged::WsMsg(WsMsg::Session(WsMsgSession::SignUpSuccess)) => {
                 page.sign_up_success = true;
             }
-            WebSocketChanged::WsMsg(WsMsg::SignUpPairTaken) => {
+            WebSocketChanged::WsMsg(WsMsg::Session(WsMsgSession::SignUpPairTaken)) => {
                 page.error = "Pair you give is either taken or is not matching".to_string();
             }
             _ => (),

@@ -1,10 +1,30 @@
 use database_actor::users::Register as DbRegister;
 use database_actor::{self};
-use jirs_data::msg::{WsMsgInvitation, WsMsgProject};
+use jirs_data::msg::{WsMsgInvitation, WsMsgProject, WsMsgSession, WsMsgUser};
 use jirs_data::{UserId, UserProject, UserRole, WsMsg};
 
 use crate::handlers::auth::Authenticate;
+use crate::handlers::user_settings;
 use crate::{db_or_debug_and_return, AsyncHandler, WebSocketActor, WsResult};
+
+#[async_trait::async_trait]
+impl AsyncHandler<WsMsgUser> for WebSocketActor {
+    async fn exec(&mut self, msg: WsMsgUser) -> WsResult {
+        match msg {
+            // user settings
+            WsMsgUser::UserSettingSetEditorMode(mode) => {
+                self.exec(user_settings::SetTextEditorMode { mode }).await
+            }
+
+            // users
+            WsMsgUser::ProfileUpdate(email, name) => self.exec(ProfileUpdate { name, email }).await,
+
+            WsMsgUser::AvatarUrlChanged(_, _) => Ok(None),
+            WsMsgUser::ProfileUpdated => Ok(None),
+            WsMsgUser::UserSettingUpdated(_) => Ok(None),
+        }
+    }
+}
 
 pub struct LoadProjectUsers;
 
@@ -36,7 +56,7 @@ impl AsyncHandler<Register> for WebSocketActor {
                 project_id: None,
                 role: UserRole::Owner,
             },
-            Ok(Some(WsMsg::SignUpPairTaken)),
+            Ok(Some(WsMsgSession::SignUpPairTaken.into())),
             Ok(None); async
         );
 
@@ -45,7 +65,7 @@ impl AsyncHandler<Register> for WebSocketActor {
             Err(e) => return Ok(Some(e)),
         };
 
-        Ok(Some(WsMsg::SignUpSuccess))
+        Ok(Some(WsMsgSession::SignUpSuccess.into()))
     }
 }
 
@@ -84,7 +104,7 @@ impl AsyncHandler<ProfileUpdate> for WebSocketActor {
             }; async
         );
 
-        Ok(Some(WsMsg::ProfileUpdated))
+        Ok(Some(WsMsgUser::ProfileUpdated.into()))
     }
 }
 

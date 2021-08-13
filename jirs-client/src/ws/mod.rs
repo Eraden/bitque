@@ -1,5 +1,8 @@
 pub use init_load_sets::*;
-use jirs_data::msg::{WsMsgComment, WsMsgEpic, WsMsgIssue, WsMsgIssueStatus, WsMsgProject};
+use jirs_data::msg::{
+    WsMsgComment, WsMsgEpic, WsMsgIssue, WsMsgIssueStatus, WsMsgMessage, WsMsgProject,
+    WsMsgSession, WsMsgUser,
+};
 use jirs_data::*;
 use seed::prelude::*;
 
@@ -92,7 +95,7 @@ pub async fn read_incoming(msg: WebSocketMessage) -> Msg {
 pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         // auth
-        WsMsg::AuthorizeLoaded(Ok((user, setting))) => {
+        WsMsg::Session(WsMsgSession::AuthorizeLoaded(Ok((user, setting)))) => {
             model.user = Some(user);
             model.user_settings = Some(setting);
 
@@ -119,7 +122,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     model.user.as_ref().map(|u| u.id),
                 ));
         }
-        WsMsg::AuthorizeExpired => {
+        WsMsg::Session(WsMsgSession::AuthorizeExpired) => {
             log::warn!("Received token expired");
             if let Ok(msg) = write_auth_token(None) {
                 orders.skip().send_msg(msg).send_msg(Msg::ResourceChanged(
@@ -166,7 +169,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         // user settings
-        WsMsg::UserSettingUpdated(setting) => {
+        WsMsg::User(WsMsgUser::UserSettingUpdated(setting)) => {
             model.user_settings = Some(setting);
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::UserSetting,
@@ -331,7 +334,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 Some(comment_id),
             ));
         }
-        WsMsg::AvatarUrlChanged(user_id, avatar_url) => {
+        WsMsg::User(WsMsgUser::AvatarUrlChanged(user_id, avatar_url)) => {
             for user in model.users.iter_mut() {
                 if user.id == user_id {
                     user.avatar_url = Some(avatar_url.clone());
@@ -349,7 +352,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         // messages
-        WsMsg::MessageUpdated(mut received) => {
+        WsMsg::Message(WsMsgMessage::MessageUpdated(mut received)) => {
             if let Some(idx) = model.messages.iter().position(|m| m.id == received.id) {
                 std::mem::swap(&mut model.messages[idx], &mut received);
             }
@@ -360,7 +363,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 Some(received.id),
             ));
         }
-        WsMsg::MessagesLoaded(v) => {
+        WsMsg::Message(WsMsgMessage::MessagesLoaded(v)) => {
             model.messages = v;
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
             orders.send_msg(Msg::ResourceChanged(
@@ -369,7 +372,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 None,
             ));
         }
-        WsMsg::MessageMarkedSeen(id, _count) => {
+        WsMsg::Message(WsMsgMessage::MessageMarkedSeen(id, _count)) => {
             if let Some(idx) = model.messages.iter().position(|m| m.id == id) {
                 model.messages.remove(idx);
             }

@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgUser;
 use jirs_data::{ProjectId, User, UsersFieldId, WsMsg};
 use seed::prelude::{Method, Orders, Request};
 use web_sys::FormData;
@@ -54,9 +55,8 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             orders.perform_cmd(update_avatar(fd, model.host_url.clone()));
             orders.skip();
         }
-        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::AvatarUrlChanged(
-            user_id,
-            avatar_url,
+        Msg::WebSocketChange(WebSocketChanged::WsMsg(WsMsg::User(
+            WsMsgUser::AvatarUrlChanged(user_id, avatar_url),
         ))) => {
             if let Some(User { id, .. }) = model.user.as_mut() {
                 if *id == user_id {
@@ -69,17 +69,18 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
         Msg::U32InputChanged(FieldId::Profile(UsersFieldId::TextEditorMode), v) => {
             send_ws_msg(
-                WsMsg::UserSettingSetEditorMode(v.into()),
+                WsMsgUser::UserSettingSetEditorMode(v.into()).into(),
                 model.ws.as_ref(),
                 orders,
             );
         }
         Msg::PageChanged(PageChanged::Profile(ProfilePageChange::SubmitForm)) => {
             send_ws_msg(
-                WsMsg::ProfileUpdate(
+                WsMsgUser::ProfileUpdate(
                     profile_page.email.value.clone(),
                     profile_page.name.value.clone(),
-                ),
+                )
+                .into(),
                 model.ws.as_ref(),
                 orders,
             );

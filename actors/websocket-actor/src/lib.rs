@@ -8,7 +8,7 @@ use database_actor::projects::LoadCurrentProject;
 use database_actor::user_projects::CurrentUserProject;
 use database_actor::DbExecutor;
 use futures::executor::block_on as wait;
-use jirs_data::msg::WsMsgInvitation;
+use jirs_data::msg::{WsMsgInvitation, WsMsgSession};
 use jirs_data::{Project, User, UserProject, WsMsg};
 use mail_actor::MailExecutor;
 
@@ -84,7 +84,7 @@ impl WebSocketActor {
         match msg {
             WsMsg::Ping => return Ok(Some(WsMsg::Pong)),
             WsMsg::Pong => return Ok(Some(WsMsg::Ping)),
-            WsMsg::AuthorizeLoad(uuid) => {
+            WsMsg::Session(WsMsgSession::AuthorizeLoad(uuid)) => {
                 return Ok(self.handle_msg(CheckAuthToken { token: uuid }, ctx)?)
             }
             WsMsg::Invitation(WsMsgInvitation::InvitationAcceptRequest(invitation_token)) => {
@@ -107,27 +107,9 @@ impl WebSocketActor {
                 id: user_project_id,
             }),
 
-            // auth
-            WsMsg::BindTokenCheck(uuid) => self.exec(CheckBindToken { bind_token: uuid }),
-            WsMsg::AuthenticateRequest(email, name) => self.exec(Authenticate { name, email }),
-
-            // register
-            WsMsg::SignUpRequest(email, username) => self.exec(Register {
-                name: username,
-                email,
-            }),
-
-            // user settings
-            WsMsg::UserSettingSetEditorMode(mode) => {
-                self.exec(user_settings::SetTextEditorMode { mode })
-            }
-
-            // users
-            WsMsg::ProfileUpdate(email, name) => self.exec(ProfileUpdate { name, email }),
-
-            // messages
-            WsMsg::MessagesLoad => self.exec(LoadMessages),
-            WsMsg::MessageMarkSeen(id) => self.exec(MarkMessageSeen { id }),
+            WsMsg::User(m) => self.exec(m),
+            WsMsg::Message(m) => self.exec(m),
+            WsMsg::Session(m) => self.exec(m),
 
             // hi
             WsMsg::HighlightCode(lang, code) => self.exec(hi::HighlightCode(lang, code)),
@@ -169,13 +151,15 @@ impl WebSocketActor {
     }
 
     fn require_user(&self) -> Result<&User, WsMsg> {
-        self.current_user.as_ref().ok_or(WsMsg::AuthorizeExpired)
+        self.current_user
+            .as_ref()
+            .ok_or(WsMsgSession::AuthorizeExpired.into())
     }
 
     fn require_user_project(&self) -> Result<&UserProject, WsMsg> {
         self.current_user_project
             .as_ref()
-            .ok_or(WsMsg::AuthorizeExpired)
+            .ok_or(WsMsgSession::AuthorizeExpired.into())
     }
 
     fn load_user_project(&self) -> Result<UserProject, WsMsg> {
@@ -184,11 +168,11 @@ impl WebSocketActor {
             Ok(Ok(user_project)) => Ok(user_project),
             Ok(Err(e)) => {
                 error!("load_user_project encounter service error {:?}", e);
-                Err(WsMsg::AuthorizeExpired)
+                Err(WsMsgSession::AuthorizeExpired.into())
             }
             Err(e) => {
                 error!("load_user_project encounter mailbox error {}", e);
-                Err(WsMsg::AuthorizeExpired)
+                Err(WsMsgSession::AuthorizeExpired.into())
             }
         }
     }
@@ -199,11 +183,11 @@ impl WebSocketActor {
             Ok(Ok(project)) => Ok(project),
             Ok(Err(e)) => {
                 error!("{:?}", e);
-                Err(WsMsg::AuthorizeExpired)
+                Err(WsMsgSession::AuthorizeExpired.into())
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(WsMsg::AuthorizeExpired)
+                Err(WsMsgSession::AuthorizeExpired.into())
             }
         }
     }

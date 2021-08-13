@@ -1,7 +1,7 @@
 use database_actor::invitations;
 use database_actor::messages::CreateMessageReceiver;
 use futures::executor::block_on;
-use jirs_data::msg::WsMsgInvitation;
+use jirs_data::msg::{WsMsgInvitation, WsMsgMessage};
 use jirs_data::{
     EmailString, InvitationId, InvitationToken, MessageType, UserRole, UsernameString, WsMsg,
 };
@@ -112,13 +112,11 @@ impl AsyncHandler<CreateInvitation> for WebSocketActor {
         })) {
             self.addr.do_send(InnerMsg::SendToUser(
                 message.receiver_id,
-                WsMsg::MessageUpdated(message),
+                WsMsgMessage::MessageUpdated(message).into(),
             ));
         }
 
-        Ok(Some(WsMsg::Invitation(
-            WsMsgInvitation::InvitationSendSuccess,
-        )))
+        Ok(Some(WsMsgInvitation::InvitationSendSuccess.into()))
     }
 }
 
@@ -188,13 +186,13 @@ impl WsHandler<AcceptInvitation> for WebSocketActor {
                     message_id: message.id,
                 },
                 |n| {
-                    ctx.send_msg(&WsMsg::MessageMarkedSeen(message.id, n));
+                    ctx.send_msg(&WsMsgMessage::MessageMarkedSeen(message.id, n).into());
                 }
             );
         }
 
-        Ok(Some(WsMsg::Invitation(
-            WsMsgInvitation::InvitationAcceptSuccess(token.access_token),
-        )))
+        Ok(Some(
+            WsMsgInvitation::InvitationAcceptSuccess(token.access_token).into(),
+        ))
     }
 }

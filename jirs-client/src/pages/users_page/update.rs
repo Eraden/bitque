@@ -1,4 +1,4 @@
-use jirs_data::msg::WsMsgInvitation;
+use jirs_data::msg::{WsMsgInvitation, WsMsgSession};
 use jirs_data::{InvitationState, UserRole, UsersFieldId, WsMsg};
 use seed::prelude::Orders;
 
@@ -26,7 +26,9 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             invitation_load(model, orders);
         }
         Msg::WebSocketChange(change) => match change {
-            WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) if model.user.is_some() => {
+            WebSocketChanged::WsMsg(WsMsg::Session(WsMsgSession::AuthorizeLoaded(Ok(_))))
+                if model.user.is_some() =>
+            {
                 invitation_load(model, orders);
             }
             WebSocketChanged::WsMsg(WsMsg::Invitation(WsMsgInvitation::InvitedUsersLoaded(

@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use jirs_data::msg::WsMsgSession;
 use jirs_data::{SignInFieldId, WsMsg};
 use seed::prelude::*;
 use seed::*;
@@ -39,7 +40,7 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         }
         Msg::SignInRequest => {
             send_ws_msg(
-                WsMsg::AuthenticateRequest(page.email.clone(), page.username.clone()),
+                WsMsgSession::AuthenticateRequest(page.email.clone(), page.username.clone()).into(),
                 model.ws.as_ref(),
                 orders,
             );
@@ -52,13 +53,17 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
                     return;
                 }
             };
-            send_ws_msg(WsMsg::BindTokenCheck(bind_token), model.ws.as_ref(), orders);
+            send_ws_msg(
+                WsMsgSession::BindTokenCheck(bind_token).into(),
+                model.ws.as_ref(),
+                orders,
+            );
         }
         Msg::WebSocketChange(change) => match change {
-            WebSocketChanged::WsMsg(WsMsg::AuthenticateSuccess) => {
+            WebSocketChanged::WsMsg(WsMsg::Session(WsMsgSession::AuthenticateSuccess)) => {
                 page.login_success = true;
             }
-            WebSocketChanged::WsMsg(WsMsg::BindTokenOk(access_token)) => {
+            WebSocketChanged::WsMsg(WsMsg::Session(WsMsgSession::BindTokenOk(access_token))) => {
                 match write_auth_token(Some(access_token)) {
                     Ok(msg) => {
                         orders.skip().send_msg(msg);

@@ -1,4 +1,5 @@
-use jirs_data::{TextEditorMode, UserId, UserSetting, WsMsg};
+use jirs_data::msg::WsMsgUser;
+use jirs_data::{TextEditorMode, UserId, UserSetting};
 
 use crate::{db_or_debug_and_return, AsyncHandler, WebSocketActor, WsResult};
 
@@ -25,6 +26,6 @@ impl AsyncHandler<SetTextEditorMode> for WebSocketActor {
                 mode: msg.mode
             }; async
         );
-        Ok(Some(WsMsg::UserSettingUpdated(setting)))
+        Ok(Some(WsMsgUser::UserSettingUpdated(setting).into()))
     }
 }

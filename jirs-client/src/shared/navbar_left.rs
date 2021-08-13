@@ -1,4 +1,4 @@
-use jirs_data::msg::WsMsgInvitation;
+use jirs_data::msg::{WsMsgInvitation, WsMsgMessage};
 use jirs_data::{InvitationToken, Message, MessageType, WsMsg};
 use seed::prelude::*;
 use seed::*;
@@ -42,7 +42,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::MessageInvitationDismiss(token) => {
             WsMsgInvitation::InvitationRejectRequest(*token).into()
         }
-        Msg::MessageSeen(id) => WsMsg::MessageMarkSeen(*id),
+        Msg::MessageSeen(id) => WsMsg::Message(WsMsgMessage::MessageMarkSeen(*id)),
         _ => return,
     };
     send_ws_msg(m, model.ws.as_ref(), orders);

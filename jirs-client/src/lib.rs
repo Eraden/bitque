@@ -1,9 +1,10 @@
-#![feature(type_ascription, trait_alias, drain_filter)]
+#![feature(type_ascription, trait_alias, drain_filter, or_patterns)]
 
 pub use changes::*;
 pub use components::*;
 pub use fields::*;
 pub use images::*;
+use jirs_data::msg::WsMsgSession;
 use jirs_data::*;
 use seed::prelude::*;
 use web_sys::File;
@@ -425,7 +426,11 @@ fn authorize_or_redirect(model: &mut Model, orders: &mut impl Orders<Msg>) {
     let pathname = seed::document().location().unwrap().pathname().unwrap();
     match crate::shared::read_auth_token() {
         Ok(token) => {
-            send_ws_msg(WsMsg::AuthorizeLoad(token), model.ws.as_ref(), orders);
+            send_ws_msg(
+                WsMsgSession::AuthorizeLoad(token).into(),
+                model.ws.as_ref(),
+                orders,
+            );
         }
         Err(..) => {
             match pathname.as_str() {

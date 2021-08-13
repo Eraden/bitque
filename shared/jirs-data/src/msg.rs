@@ -247,11 +247,7 @@ impl From<WsMsgProject> for WsMsg {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum WsMsg {
-    Ping,
-    Pong,
-    Die,
-
+pub enum WsMsgSession {
     // auth
     AuthorizeLoad(Uuid),
     AuthorizeLoaded(Result<(User, UserSetting), String>),
@@ -266,22 +262,16 @@ pub enum WsMsg {
     SignUpRequest(EmailString, UsernameString),
     SignUpSuccess,
     SignUpPairTaken,
+}
 
-    // invitations
-    Invitation(WsMsgInvitation),
+impl From<WsMsgSession> for WsMsg {
+    fn from(msg: WsMsgSession) -> WsMsg {
+        WsMsg::Session(msg)
+    }
+}
 
-    // project page
-    Project(WsMsgProject),
-
-    // issue
-    Issue(WsMsgIssue),
-
-    // issue status
-    IssueStatus(WsMsgIssueStatus),
-
-    // comments
-    Comment(WsMsgComment),
-
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum WsMsgUser {
     // users
     AvatarUrlChanged(UserId, AvatarUrl),
     ProfileUpdate(EmailString, UsernameString),
@@ -290,22 +280,51 @@ pub enum WsMsg {
     // user settings
     UserSettingUpdated(UserSetting),
     UserSettingSetEditorMode(TextEditorMode),
+}
 
-    // user projects
-    UserProjectsLoad,
-    UserProjectsLoaded(Vec<UserProject>),
-    UserProjectSetCurrent(UserProjectId),
-    UserProjectCurrentChanged(UserProject),
+impl From<WsMsgUser> for WsMsg {
+    fn from(msg: WsMsgUser) -> WsMsg {
+        WsMsg::User(msg)
+    }
+}
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum WsMsgMessage {
     // messages
     MessageUpdated(Message),
     MessagesLoad,
     MessagesLoaded(Vec<Message>),
     MessageMarkSeen(MessageId),
     MessageMarkedSeen(MessageId, NumberOfDeleted),
+}
 
-    // epics
+impl From<WsMsgMessage> for WsMsg {
+    fn from(msg: WsMsgMessage) -> WsMsg {
+        WsMsg::Message(msg)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum WsMsg {
+    Ping,
+    Pong,
+    Die,
+
+    Session(WsMsgSession),
+    Invitation(WsMsgInvitation),
+    Project(WsMsgProject),
+    Issue(WsMsgIssue),
+    IssueStatus(WsMsgIssueStatus),
+    Comment(WsMsgComment),
+    User(WsMsgUser),
+    Message(WsMsgMessage),
     Epic(WsMsgEpic),
+
+    // user projects
+    UserProjectsLoad,
+    UserProjectsLoaded(Vec<UserProject>),
+    UserProjectSetCurrent(UserProjectId),
+    UserProjectCurrentChanged(UserProject),
 
     // highlight
     HighlightCode(Lang, Code),

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use jirs_data::msg::{WsMsgIssueStatus, WsMsgProject};
+use jirs_data::msg::{WsMsgIssueStatus, WsMsgProject, WsMsgSession};
 use jirs_data::{IssueStatus, IssueStatusId, ProjectFieldId, UpdateProjectPayload, WsMsg};
 use seed::prelude::Orders;
 
@@ -20,7 +20,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             build_page_content(model, orders);
         }
         Msg::WebSocketChange(ref change) => match change {
-            WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
+            WebSocketChanged::WsMsg(WsMsg::Session(WsMsgSession::AuthorizeLoaded(..))) => {
                 board_load(model, orders);
             }
             WebSocketChanged::WsMsg(WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusCreated(

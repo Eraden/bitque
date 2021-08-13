@@ -1,4 +1,4 @@
-use jirs_data::msg::WsMsgProject;
+use jirs_data::msg::{WsMsgMessage, WsMsgProject};
 use jirs_data::{UserRole, WsMsg};
 use seed::prelude::*;
 use seed::*;
@@ -16,7 +16,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 WsMsg::UserProjectsLoad,
                 WsMsg::Project(WsMsgProject::ProjectsLoad),
                 WsMsg::Project(WsMsgProject::ProjectUsersLoad),
-                WsMsg::MessagesLoad,
+                WsMsg::Message(WsMsgMessage::MessagesLoad),
             ],
             model.ws.as_ref(),
             orders,

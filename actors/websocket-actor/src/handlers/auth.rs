@@ -3,12 +3,45 @@ use database_actor::authorize_user::AuthorizeUser;
 use database_actor::tokens::{CreateBindToken, FindBindToken};
 use database_actor::users::LookupUser;
 use futures::executor::block_on;
-use jirs_data::msg::WsError;
+use jirs_data::msg::{WsError, WsMsgSession};
 use jirs_data::{Token, WsMsg};
 use mail_actor::welcome::Welcome;
 
 use crate::server::InnerMsg;
 use crate::{db_or_debug_and_return, db_or_debug_or_fallback, mail_or_debug_and_return, *};
+
+#[async_trait::async_trait]
+impl AsyncHandler<WsMsgSession> for WebSocketActor {
+    async fn exec(&mut self, msg: WsMsgSession) -> WsResult {
+        match msg {
+            // auth
+            WsMsgSession::BindTokenCheck(uuid) => {
+                self.exec(CheckBindToken { bind_token: uuid }).await
+            }
+            WsMsgSession::AuthenticateRequest(email, name) => {
+                self.exec(Authenticate { name, email }).await
+            }
+
+            // register
+            WsMsgSession::SignUpRequest(email, username) => {
+                self.exec(Register {
+                    name: username,
+                    email,
+                })
+                .await
+            }
+
+            WsMsgSession::AuthorizeLoad(_) => Ok(None),
+            WsMsgSession::AuthorizeLoaded(_) => Ok(None),
+            WsMsgSession::AuthorizeExpired => Ok(None),
+            WsMsgSession::AuthenticateSuccess => Ok(None),
+            WsMsgSession::BindTokenBad => Ok(None),
+            WsMsgSession::BindTokenOk(_) => Ok(None),
+            WsMsgSession::SignUpSuccess => Ok(None),
+            WsMsgSession::SignUpPairTaken => Ok(None),
+        }
+    }
+}
 
 pub struct Authenticate {
     pub name: String,
@@ -36,7 +69,7 @@ impl AsyncHandler<Authenticate> for WebSocketActor {
                 }; async
             );
         }
-        Ok(Some(WsMsg::AuthenticateSuccess))
+        Ok(Some(WsMsgSession::AuthenticateSuccess.into()))
     }
 }
 
@@ -51,10 +84,10 @@ impl WsHandler<CheckAuthToken> for WebSocketActor {
             AuthorizeUser {
                 access_token: msg.token,
             },
-            Ok(Some(WsMsg::AuthorizeLoaded(Err(
-                "Invalid auth token".to_string()
-            )))),
-            Ok(Some(WsMsg::AuthorizeExpired))
+            Ok(Some(
+                WsMsgSession::AuthorizeLoaded(Err("Invalid auth token".to_string())).into()
+            )),
+            Ok(Some(WsMsgSession::AuthorizeExpired.into()))
         );
 
         let setting: jirs_data::UserSetting = db_or_debug_or_fallback!(
@@ -69,7 +102,9 @@ impl WsHandler<CheckAuthToken> for WebSocketActor {
         self.current_project = self.load_project().ok();
 
         block_on(self.join_channel(ctx.address().recipient::<InnerMsg>()));
-        Ok(Some(WsMsg::AuthorizeLoaded(Ok((user, setting)))))
+        Ok(Some(
+            WsMsgSession::AuthorizeLoaded(Ok((user, setting))).into(),
+        ))
     }
 }
 
@@ -85,9 +120,9 @@ impl AsyncHandler<CheckBindToken> for WebSocketActor {
             FindBindToken {
                 token: msg.bind_token,
             },
-            Ok(Some(WsMsg::BindTokenBad)),
+            Ok(Some(WsMsgSession::BindTokenBad.into())),
             Ok(None); async
         );
-        Ok(Some(WsMsg::BindTokenOk(token.access_token)))
+        Ok(Some(WsMsgSession::BindTokenOk(token.access_token).into()))
     }
 }
