@@ -10,12 +10,12 @@ license = "MPL-2.0"
 [dependencies]
 actix = { version = "0.10.0" }
 
-actix-web = { version = "*" }
-actix-cors = { version = "*" }
-actix-service = { version = "*" }
+actix-web = { version = "3.3.2" }
+actix-cors = { version = "0.5.4" }
+actix-service = { version = "1.0.6" }
 actix-rt = { version = "1" }
-actix-web-actors = { version = "*" }
-actix_derive = { version = "*" }
+actix-web-actors = { version = "3.0.0" }
+actix_derive = { version = "0.5.0" }
 
 serde = { version = "*" }
 serde_derive = { version = "*" }

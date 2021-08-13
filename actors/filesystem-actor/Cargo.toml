@@ -15,14 +15,11 @@ path = "./src/lib.rs"
 [dependencies]
 common = { path = "../../shared/common" }
 actix = { version = "0.10.0" }
+actix-files = { version = "0.5.0" }
 
 futures = { version = "0.3.8" }
 
 bytes = { version = "0.5.6" }
-
-# Local storage
-[dependencies.actix-files]
-version = "*"
 
 [dependencies.jirs-config]
 path = "../../shared/jirs-config"

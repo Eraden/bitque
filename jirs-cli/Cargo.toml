@@ -9,8 +9,9 @@ name = "jirs"
 path = "./src/main.rs"
 
 [dependencies]
+common = { path = "../shared/common" }
+
 tui = { version = "0.9.5", features = ["termion"] }
 clap = { version = "2.33.0" }
-actix = { version = "0.9.0" }
-actix-rt = { version = "1.0.0" }
+actix = { version = "0.10.0" }
 termion = { version = "*" }
