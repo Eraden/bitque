@@ -1,29 +1,53 @@
-use futures::executor::block_on;
+use jirs_data::msg::WsMsgComment;
 use jirs_data::{CommentId, CreateCommentPayload, IssueId, UpdateCommentPayload, WsMsg};
 
-use crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult};
+use crate::{db_or_debug_and_return, AsyncHandler, WebSocketActor, WsResult};
+
+#[async_trait::async_trait]
+impl AsyncHandler<WsMsgComment> for WebSocketActor {
+    async fn exec(&mut self, msg: WsMsgComment) -> WsResult {
+        match msg {
+            WsMsgComment::IssueCommentsLoad(issue_id) => {
+                self.exec(LoadIssueComments { issue_id }).await
+            }
+            WsMsgComment::CommentCreate(payload) => self.exec(payload).await,
+            WsMsgComment::CommentUpdate(payload) => self.exec(payload).await,
+            WsMsgComment::CommentDelete(comment_id) => {
+                self.exec(DeleteComment { comment_id }).await
+            }
+            WsMsgComment::IssueCommentsLoaded(_) => Ok(None),
+            WsMsgComment::CommentCreated(_) => Ok(None),
+            WsMsgComment::CommentUpdated(_) => Ok(None),
+            WsMsgComment::CommentDeleted(_, _) => Ok(None),
+        }
+    }
+}
 
 pub struct LoadIssueComments {
     pub issue_id: IssueId,
 }
 
-impl WsHandler<LoadIssueComments> for WebSocketActor {
-    fn handle_msg(&mut self, msg: LoadIssueComments, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<LoadIssueComments> for WebSocketActor {
+    async fn exec(&mut self, msg: LoadIssueComments) -> WsResult {
         self.require_user()?;
 
         let comments = db_or_debug_and_return!(
             self,
             database_actor::comments::LoadIssueComments {
                 issue_id: msg.issue_id,
-            }
+            }; async
         );
 
-        Ok(Some(WsMsg::IssueCommentsLoaded(comments)))
+        Ok(Some(WsMsg::Comment(WsMsgComment::IssueCommentsLoaded(
+            comments,
+        ))))
     }
 }
 
-impl WsHandler<CreateCommentPayload> for WebSocketActor {
-    fn handle_msg(&mut self, mut msg: CreateCommentPayload, ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<CreateCommentPayload> for WebSocketActor {
+    async fn exec(&mut self, mut msg: CreateCommentPayload) -> WsResult {
         use database_actor::comments::CreateComment;
 
         let user_id = self.require_user()?.id;
@@ -37,14 +61,15 @@ impl WsHandler<CreateCommentPayload> for WebSocketActor {
                 user_id,
                 issue_id,
                 body: msg.body,
-            }
+            }; async
         );
-        self.handle_msg(LoadIssueComments { issue_id }, ctx)
+        self.exec(LoadIssueComments { issue_id }).await
     }
 }
 
-impl WsHandler<UpdateCommentPayload> for WebSocketActor {
-    fn handle_msg(&mut self, msg: UpdateCommentPayload, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<UpdateCommentPayload> for WebSocketActor {
+    async fn exec(&mut self, msg: UpdateCommentPayload) -> WsResult {
         use database_actor::comments::UpdateComment;
 
         let user_id = self.require_user()?.id;
@@ -60,9 +85,9 @@ impl WsHandler<UpdateCommentPayload> for WebSocketActor {
                 comment_id,
                 user_id,
                 body,
-            }
+            }; async
         );
-        self.broadcast(&WsMsg::CommentUpdated(comment));
+        self.broadcast(&WsMsg::Comment(WsMsgComment::CommentUpdated(comment)));
         Ok(None)
     }
 }
@@ -71,8 +96,9 @@ pub struct DeleteComment {
     pub comment_id: CommentId,
 }
 
-impl WsHandler<DeleteComment> for WebSocketActor {
-    fn handle_msg(&mut self, msg: DeleteComment, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<DeleteComment> for WebSocketActor {
+    async fn exec(&mut self, msg: DeleteComment) -> WsResult {
         use database_actor::comments::DeleteComment;
 
         let user_id = self.require_user()?.id;
@@ -82,8 +108,11 @@ impl WsHandler<DeleteComment> for WebSocketActor {
             DeleteComment {
                 comment_id: msg.comment_id,
                 user_id,
-            }
+            }; async
         );
-        Ok(Some(WsMsg::CommentDeleted(msg.comment_id, n)))
+        Ok(Some(WsMsg::Comment(WsMsgComment::CommentDeleted(
+            msg.comment_id,
+            n,
+        ))))
     }
 }

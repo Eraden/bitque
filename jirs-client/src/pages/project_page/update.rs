@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgIssue;
 use jirs_data::*;
 use seed::prelude::Orders;
 
@@ -106,7 +107,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             }
             Msg::DeleteIssue(issue_id) => {
                 send_ws_msg(
-                    jirs_data::WsMsg::IssueDelete(issue_id),
+                    jirs_data::WsMsg::Issue(WsMsgIssue::IssueDelete(issue_id)),
                     model.ws.as_ref(),
                     orders,
                 );

@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgIssue;
 use jirs_data::*;
 use seed::prelude::Orders;
 use seed::*;
@@ -104,7 +105,7 @@ pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
         .collect();
 
     send_ws_msg(
-        WsMsg::IssueSyncListPosition(changes),
+        WsMsg::Issue(WsMsgIssue::IssueSyncListPosition(changes)),
         model.ws.as_ref(),
         orders,
     );

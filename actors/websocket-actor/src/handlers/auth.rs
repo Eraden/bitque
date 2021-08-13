@@ -15,24 +15,25 @@ pub struct Authenticate {
     pub email: String,
 }
 
-impl WsHandler<Authenticate> for WebSocketActor {
-    fn handle_msg(&mut self, msg: Authenticate, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<Authenticate> for WebSocketActor {
+    async fn exec(&mut self, msg: Authenticate) -> WsResult {
         let Authenticate { name, email } = msg;
         // TODO check attempt number, allow only 5 times per day
         let user = db_or_debug_and_return!(
             self,
             LookupUser { name, email },
             Ok(Some(WsMsg::Error(WsError::InvalidLoginPair))),
-            Ok(Some(WsMsg::Error(WsError::InvalidLoginPair)))
+            Ok(Some(WsMsg::Error(WsError::InvalidLoginPair))); async
         );
-        let token = db_or_debug_and_return!(self, CreateBindToken { user_id: user.id });
+
+        let token = db_or_debug_and_return!(self, CreateBindToken { user_id: user.id }; async);
         if let Some(bind_token) = token.bind_token.as_ref().cloned() {
             let _ = mail_or_debug_and_return!(
                 self,
-                Welcome {
-                    bind_token,
+                Welcome {bind_token,
                     email: user.email,
-                }
+                }; async
             );
         }
         Ok(Some(WsMsg::AuthenticateSuccess))
@@ -76,15 +77,16 @@ pub struct CheckBindToken {
     pub bind_token: uuid::Uuid,
 }
 
-impl WsHandler<CheckBindToken> for WebSocketActor {
-    fn handle_msg(&mut self, msg: CheckBindToken, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<CheckBindToken> for WebSocketActor {
+    async fn exec(&mut self, msg: CheckBindToken) -> WsResult {
         let token: Token = db_or_debug_and_return!(
             self,
             FindBindToken {
                 token: msg.bind_token,
             },
             Ok(Some(WsMsg::BindTokenBad)),
-            Ok(None)
+            Ok(None); async
         );
         Ok(Some(WsMsg::BindTokenOk(token.access_token)))
     }

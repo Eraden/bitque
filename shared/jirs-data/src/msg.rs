@@ -120,27 +120,60 @@ impl WsError {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum WsMsg {
-    Ping,
-    Pong,
-    Die,
+pub enum WsMsgIssue {
+    IssueUpdate(IssueId, IssueFieldId, PayloadVariant),
+    IssueUpdated(Issue),
+    IssueDelete(IssueId),
+    IssueDeleted(IssueId, NumberOfDeleted),
+    IssueCreate(CreateIssuePayload),
+    IssueCreated(Issue),
+    IssueSyncListPosition(Vec<(IssueId, ListPosition, IssueStatusId, Option<IssueId>)>),
+}
 
-    // auth
-    AuthorizeLoad(Uuid),
-    AuthorizeLoaded(Result<(User, UserSetting), String>),
-    AuthorizeExpired,
-    AuthenticateRequest(EmailString, UsernameString),
-    AuthenticateSuccess,
-    BindTokenCheck(Uuid),
-    BindTokenBad,
-    BindTokenOk(Uuid),
+impl From<WsMsgIssue> for WsMsg {
+    fn from(msg: WsMsgIssue) -> Self {
+        WsMsg::Issue(msg)
+    }
+}
 
-    // Sign up
-    SignUpRequest(EmailString, UsernameString),
-    SignUpSuccess,
-    SignUpPairTaken,
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum WsMsgIssueStatus {
+    IssueStatusesLoad,
+    IssueStatusesLoaded(Vec<IssueStatus>),
+    IssueStatusUpdate(IssueStatusId, TitleString, Position),
+    IssueStatusUpdated(IssueStatus),
+    IssueStatusCreate(TitleString, Position),
+    IssueStatusCreated(IssueStatus),
+    IssueStatusDelete(IssueStatusId),
+    IssueStatusDeleted(IssueStatusId, NumberOfDeleted),
+}
 
-    // invitations
+impl From<WsMsgIssueStatus> for WsMsg {
+    fn from(msg: WsMsgIssueStatus) -> Self {
+        WsMsg::IssueStatus(msg)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum WsMsgComment {
+    IssueCommentsLoad(IssueId),
+    IssueCommentsLoaded(Vec<Comment>),
+    CommentCreate(CreateCommentPayload),
+    CommentCreated(Comment),
+    CommentUpdate(UpdateCommentPayload),
+    CommentUpdated(Comment),
+    CommentDelete(CommentId),
+    CommentDeleted(CommentId, NumberOfDeleted),
+}
+
+impl From<WsMsgComment> for WsMsg {
+    fn from(msg: WsMsgComment) -> Self {
+        WsMsg::Comment(msg)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum WsMsgInvitation {
     InvitationListLoad,
     InvitationListLoaded(Vec<Invitation>),
     //
@@ -168,8 +201,35 @@ pub enum WsMsg {
     //
     InvitedUserRemoveRequest(UserId),
     InvitedUserRemoveSuccess(UserId),
+}
 
-    // project page
+impl From<WsMsgInvitation> for WsMsg {
+    fn from(msg: WsMsgInvitation) -> Self {
+        WsMsg::Invitation(msg)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum WsMsgEpic {
+    EpicsLoad,
+    EpicsLoaded(Vec<Epic>),
+    EpicCreate(
+        NameString,
+        Option<DescriptionString>,
+        Option<DescriptionString>,
+    ),
+    EpicCreated(Epic),
+    EpicUpdateName(EpicId, NameString),
+    EpicUpdateStartsAt(EpicId, Option<StartsAt>),
+    EpicUpdateEndsAt(EpicId, Option<EndsAt>),
+    EpicUpdated(Epic),
+    EpicDelete(EpicId),
+    EpicDeleted(EpicId, NumberOfDeleted),
+    EpicTransform(EpicId, IssueType),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum WsMsgProject {
     ProjectsLoad,
     ProjectsLoaded(Vec<Project>),
 
@@ -178,35 +238,49 @@ pub enum WsMsg {
     ProjectUsersLoad,
     ProjectUsersLoaded(Vec<User>),
     ProjectUpdateLoad(UpdateProjectPayload),
+}
+
+impl From<WsMsgProject> for WsMsg {
+    fn from(msg: WsMsgProject) -> Self {
+        WsMsg::Project(msg)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum WsMsg {
+    Ping,
+    Pong,
+    Die,
+
+    // auth
+    AuthorizeLoad(Uuid),
+    AuthorizeLoaded(Result<(User, UserSetting), String>),
+    AuthorizeExpired,
+    AuthenticateRequest(EmailString, UsernameString),
+    AuthenticateSuccess,
+    BindTokenCheck(Uuid),
+    BindTokenBad,
+    BindTokenOk(Uuid),
+
+    // Sign up
+    SignUpRequest(EmailString, UsernameString),
+    SignUpSuccess,
+    SignUpPairTaken,
+
+    // invitations
+    Invitation(WsMsgInvitation),
+
+    // project page
+    Project(WsMsgProject),
 
     // issue
-    IssueUpdate(IssueId, IssueFieldId, PayloadVariant),
-    IssueUpdated(Issue),
-    IssueDelete(IssueId),
-    IssueDeleted(IssueId, NumberOfDeleted),
-    IssueCreate(CreateIssuePayload),
-    IssueCreated(Issue),
-    IssueSyncListPosition(Vec<(IssueId, ListPosition, IssueStatusId, Option<IssueId>)>),
+    Issue(WsMsgIssue),
 
     // issue status
-    IssueStatusesLoad,
-    IssueStatusesLoaded(Vec<IssueStatus>),
-    IssueStatusUpdate(IssueStatusId, TitleString, Position),
-    IssueStatusUpdated(IssueStatus),
-    IssueStatusCreate(TitleString, Position),
-    IssueStatusCreated(IssueStatus),
-    IssueStatusDelete(IssueStatusId),
-    IssueStatusDeleted(IssueStatusId, NumberOfDeleted),
+    IssueStatus(WsMsgIssueStatus),
 
     // comments
-    IssueCommentsLoad(IssueId),
-    IssueCommentsLoaded(Vec<Comment>),
-    CommentCreate(CreateCommentPayload),
-    CommentCreated(Comment),
-    CommentUpdate(UpdateCommentPayload),
-    CommentUpdated(Comment),
-    CommentDelete(CommentId),
-    CommentDeleted(CommentId, NumberOfDeleted),
+    Comment(WsMsgComment),
 
     // users
     AvatarUrlChanged(UserId, AvatarUrl),
@@ -231,21 +305,7 @@ pub enum WsMsg {
     MessageMarkedSeen(MessageId, NumberOfDeleted),
 
     // epics
-    EpicsLoad,
-    EpicsLoaded(Vec<Epic>),
-    EpicCreate(
-        NameString,
-        Option<DescriptionString>,
-        Option<DescriptionString>,
-    ),
-    EpicCreated(Epic),
-    EpicUpdateName(EpicId, NameString),
-    EpicUpdateStartsAt(EpicId, Option<StartsAt>),
-    EpicUpdateEndsAt(EpicId, Option<EndsAt>),
-    EpicUpdated(Epic),
-    EpicDelete(EpicId),
-    EpicDeleted(EpicId, NumberOfDeleted),
-    EpicTransform(EpicId, IssueType),
+    Epic(WsMsgEpic),
 
     // highlight
     HighlightCode(Lang, Code),

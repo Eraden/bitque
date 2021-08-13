@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgInvitation;
 use jirs_data::{InvitationState, UserRole, UsersFieldId, WsMsg};
 use seed::prelude::Orders;
 
@@ -28,13 +29,19 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(Ok(_))) if model.user.is_some() => {
                 invitation_load(model, orders);
             }
-            WebSocketChanged::WsMsg(WsMsg::InvitedUsersLoaded(users)) => {
+            WebSocketChanged::WsMsg(WsMsg::Invitation(WsMsgInvitation::InvitedUsersLoaded(
+                users,
+            ))) => {
                 page.invited_users = users;
             }
-            WebSocketChanged::WsMsg(WsMsg::InvitationListLoaded(invitations)) => {
+            WebSocketChanged::WsMsg(WsMsg::Invitation(WsMsgInvitation::InvitationListLoaded(
+                invitations,
+            ))) => {
                 page.invitations = invitations;
             }
-            WebSocketChanged::WsMsg(WsMsg::InvitationRevokeSuccess(id)) => {
+            WebSocketChanged::WsMsg(WsMsg::Invitation(
+                WsMsgInvitation::InvitationRevokeSuccess(id),
+            )) => {
                 let mut old = vec![];
                 std::mem::swap(&mut page.invitations, &mut old);
                 for mut invitation in old {
@@ -43,9 +50,15 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     }
                     page.invitations.push(invitation);
                 }
-                send_ws_msg(WsMsg::InvitationListLoad, model.ws.as_ref(), orders);
+                send_ws_msg(
+                    WsMsgInvitation::InvitationListLoad.into(),
+                    model.ws.as_ref(),
+                    orders,
+                );
             }
-            WebSocketChanged::WsMsg(WsMsg::InvitedUserRemoveSuccess(removed_id)) => {
+            WebSocketChanged::WsMsg(WsMsg::Invitation(
+                WsMsgInvitation::InvitedUserRemoveSuccess(removed_id),
+            )) => {
                 let mut old = vec![];
                 std::mem::swap(&mut page.invited_users, &mut old);
                 for user in old {
@@ -54,11 +67,15 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     }
                 }
             }
-            WebSocketChanged::WsMsg(WsMsg::InvitationSendSuccess) => {
-                send_ws_msg(WsMsg::InvitationListLoad, model.ws.as_ref(), orders);
+            WebSocketChanged::WsMsg(WsMsg::Invitation(WsMsgInvitation::InvitationSendSuccess)) => {
+                send_ws_msg(
+                    WsMsgInvitation::InvitationListLoad.into(),
+                    model.ws.as_ref(),
+                    orders,
+                );
                 page.form_state = InvitationFormState::Succeed;
             }
-            WebSocketChanged::WsMsg(WsMsg::InvitationSendFailure) => {
+            WebSocketChanged::WsMsg(WsMsg::Invitation(WsMsgInvitation::InvitationSendFailure)) => {
                 page.form_state = InvitationFormState::Failed;
             }
             _ => (),
@@ -94,25 +111,25 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
             page.form_state = InvitationFormState::Sent;
             send_ws_msg(
-                WsMsg::InvitationSendRequest {
+                WsMsg::Invitation(WsMsgInvitation::InvitationSendRequest {
                     name: page.name.clone(),
                     email: page.email.clone(),
                     role,
-                },
+                }),
                 model.ws.as_ref(),
                 orders,
             );
         }
         Msg::InviteRevokeRequest(invitation_id) => {
             send_ws_msg(
-                WsMsg::InvitationRevokeRequest(invitation_id),
+                WsMsg::Invitation(WsMsgInvitation::InvitationRevokeRequest(invitation_id)),
                 model.ws.as_ref(),
                 orders,
             );
         }
         Msg::InvitedUserRemove(user_id) => {
             send_ws_msg(
-                WsMsg::InvitedUserRemoveRequest(user_id),
+                WsMsg::Invitation(WsMsgInvitation::InvitedUserRemoveRequest(user_id)),
                 model.ws.as_ref(),
                 orders,
             );

@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgEpic;
 use jirs_data::{EpicFieldId, IssueType, WsMsg};
 use seed::prelude::*;
 
@@ -35,7 +36,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         Msg::StrInputChanged(FieldId::EditEpic(EpicFieldId::Name), s) => {
             let epic_id = modal.epic_id;
             send_ws_msg(
-                WsMsg::EpicUpdateName(epic_id, s.to_string()),
+                WsMsg::Epic(WsMsgEpic::EpicUpdateName(epic_id, s.to_string())),
                 model.ws.as_ref(),
                 orders,
             );
@@ -46,7 +47,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         ) => {
             let epic_id = modal.epic_id;
             send_ws_msg(
-                WsMsg::EpicUpdateStartsAt(epic_id, Some(*date)),
+                WsMsg::Epic(WsMsgEpic::EpicUpdateStartsAt(epic_id, Some(*date))),
                 model.ws.as_ref(),
                 orders,
             );
@@ -57,7 +58,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         ) => {
             let epic_id = modal.epic_id;
             send_ws_msg(
-                WsMsg::EpicUpdateEndsAt(epic_id, Some(*date)),
+                WsMsg::Epic(WsMsgEpic::EpicUpdateEndsAt(epic_id, Some(*date))),
                 model.ws.as_ref(),
                 orders,
             );
@@ -66,7 +67,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
             let epic_id = modal.epic_id;
             let issue_type: IssueType = modal.transform_into.value.into();
             send_ws_msg(
-                WsMsg::EpicTransform(epic_id, issue_type),
+                WsMsg::Epic(WsMsgEpic::EpicTransform(epic_id, issue_type)),
                 model.ws.as_ref(),
                 orders,
             );

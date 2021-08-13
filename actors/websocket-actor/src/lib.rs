@@ -7,7 +7,8 @@ use common::{actix_web, actix_web_actors};
 use database_actor::projects::LoadCurrentProject;
 use database_actor::user_projects::CurrentUserProject;
 use database_actor::DbExecutor;
-use futures::executor::block_on;
+use futures::executor::block_on as wait;
+use jirs_data::msg::WsMsgInvitation;
 use jirs_data::{Project, User, UserProject, WsMsg};
 use mail_actor::MailExecutor;
 
@@ -80,154 +81,65 @@ impl WebSocketActor {
             debug!("incoming message: {:?}", msg);
         }
 
-        let msg = match msg {
-            WsMsg::Ping => Some(WsMsg::Pong),
-            WsMsg::Pong => Some(WsMsg::Ping),
-
-            // issues
-            WsMsg::IssueUpdate(id, field_id, payload) => self.handle_msg(
-                UpdateIssueHandler {
-                    id,
-                    field_id,
-                    payload,
-                },
-                ctx,
-            )?,
-            WsMsg::IssueCreate(payload) => self.handle_msg(payload, ctx)?,
-            WsMsg::IssueDelete(id) => self.handle_msg(DeleteIssue { id }, ctx)?,
-            WsMsg::IssueSyncListPosition(sync) => {
-                self.handle_msg(SyncIssueListPosition(sync), ctx)?
+        match msg {
+            WsMsg::Ping => return Ok(Some(WsMsg::Pong)),
+            WsMsg::Pong => return Ok(Some(WsMsg::Ping)),
+            WsMsg::AuthorizeLoad(uuid) => {
+                return Ok(self.handle_msg(CheckAuthToken { token: uuid }, ctx)?)
             }
-            WsMsg::ProjectIssuesLoad => self.handle_msg(LoadIssues, ctx)?,
-
-            // issue statuses
-            WsMsg::IssueStatusesLoad => self.handle_msg(LoadIssueStatuses, ctx)?,
-            WsMsg::IssueStatusDelete(issue_status_id) => {
-                self.handle_msg(DeleteIssueStatus { issue_status_id }, ctx)?
+            WsMsg::Invitation(WsMsgInvitation::InvitationAcceptRequest(invitation_token)) => {
+                return Ok(self.handle_msg(AcceptInvitation { invitation_token }, ctx)?)
             }
-            WsMsg::IssueStatusUpdate(issue_status_id, name, position) => self.handle_msg(
-                UpdateIssueStatus {
-                    issue_status_id,
-                    position,
-                    name,
-                },
-                ctx,
-            )?,
-            WsMsg::IssueStatusCreate(name, position) => {
-                self.handle_msg(CreateIssueStatus { position, name }, ctx)?
-            }
+            _ => {}
+        };
 
-            // projects
-            WsMsg::ProjectsLoad => self.handle_msg(LoadProjects, ctx)?,
-            WsMsg::ProjectUpdateLoad(payload) => self.handle_msg(payload, ctx)?,
+        let fut = match msg {
+            WsMsg::Project(m) => self.exec(m),
+            WsMsg::Issue(m) => self.exec(m),
+            WsMsg::IssueStatus(m) => self.exec(m),
+            WsMsg::Comment(m) => self.exec(m),
+            WsMsg::Invitation(m) => self.exec(m),
+            WsMsg::Epic(m) => self.exec(m),
 
             // user projects
-            WsMsg::UserProjectsLoad => self.handle_msg(LoadUserProjects, ctx)?,
-            WsMsg::UserProjectSetCurrent(user_project_id) => self.handle_msg(
-                SetCurrentUserProject {
-                    id: user_project_id,
-                },
-                ctx,
-            )?,
+            WsMsg::UserProjectsLoad => self.exec(LoadUserProjects),
+            WsMsg::UserProjectSetCurrent(user_project_id) => self.exec(SetCurrentUserProject {
+                id: user_project_id,
+            }),
 
             // auth
-            WsMsg::AuthorizeLoad(uuid) => self.handle_msg(CheckAuthToken { token: uuid }, ctx)?,
-            WsMsg::BindTokenCheck(uuid) => {
-                self.handle_msg(CheckBindToken { bind_token: uuid }, ctx)?
-            }
-            WsMsg::AuthenticateRequest(email, name) => {
-                self.handle_msg(Authenticate { name, email }, ctx)?
-            }
+            WsMsg::BindTokenCheck(uuid) => self.exec(CheckBindToken { bind_token: uuid }),
+            WsMsg::AuthenticateRequest(email, name) => self.exec(Authenticate { name, email }),
 
             // register
-            WsMsg::SignUpRequest(email, username) => self.handle_msg(
-                Register {
-                    name: username,
-                    email,
-                },
-                ctx,
-            )?,
-
-            // users
-            WsMsg::ProjectUsersLoad => self.handle_msg(LoadProjectUsers, ctx)?,
-            WsMsg::InvitedUserRemoveRequest(user_id) => {
-                self.handle_msg(RemoveInvitedUser { user_id }, ctx)?
-            }
+            WsMsg::SignUpRequest(email, username) => self.exec(Register {
+                name: username,
+                email,
+            }),
 
             // user settings
             WsMsg::UserSettingSetEditorMode(mode) => {
-                self.handle_msg(user_settings::SetTextEditorMode { mode }, ctx)?
+                self.exec(user_settings::SetTextEditorMode { mode })
             }
-
-            // comments
-            WsMsg::IssueCommentsLoad(issue_id) => {
-                self.handle_msg(LoadIssueComments { issue_id }, ctx)?
-            }
-            WsMsg::CommentCreate(payload) => self.handle_msg(payload, ctx)?,
-            WsMsg::CommentUpdate(payload) => self.handle_msg(payload, ctx)?,
-            WsMsg::CommentDelete(comment_id) => {
-                self.handle_msg(DeleteComment { comment_id }, ctx)?
-            }
-
-            // invitations
-            WsMsg::InvitationSendRequest { name, email, role } => {
-                self.handle_msg(CreateInvitation { email, name, role }, ctx)?
-            }
-            WsMsg::InvitationListLoad => self.handle_msg(ListInvitation, ctx)?,
-            WsMsg::InvitationAcceptRequest(invitation_token) => {
-                self.handle_msg(AcceptInvitation { invitation_token }, ctx)?
-            }
-            WsMsg::InvitationRevokeRequest(id) => self.handle_msg(RevokeInvitation { id }, ctx)?,
-            WsMsg::InvitedUsersLoad => self.handle_msg(LoadInvitedUsers, ctx)?,
 
             // users
-            WsMsg::ProfileUpdate(email, name) => {
-                self.handle_msg(ProfileUpdate { name, email }, ctx)?
-            }
+            WsMsg::ProfileUpdate(email, name) => self.exec(ProfileUpdate { name, email }),
 
             // messages
-            WsMsg::MessagesLoad => self.handle_msg(LoadMessages, ctx)?,
-            WsMsg::MessageMarkSeen(id) => self.handle_msg(MarkMessageSeen { id }, ctx)?,
-
-            // epics
-            WsMsg::EpicsLoad => self.handle_msg(epics::LoadEpics, ctx)?,
-            WsMsg::EpicCreate(name, description, description_html) => self.handle_msg(
-                epics::CreateEpic {
-                    name,
-                    description,
-                    description_html,
-                },
-                ctx,
-            )?,
-            WsMsg::EpicUpdateName(epic_id, name) => {
-                self.handle_msg(epics::UpdateEpicName { epic_id, name }, ctx)?
-            }
-            WsMsg::EpicUpdateStartsAt(epic_id, starts_at) => {
-                self.handle_msg(epics::UpdateEpicStartsAt { epic_id, starts_at }, ctx)?
-            }
-            WsMsg::EpicUpdateEndsAt(epic_id, ends_at) => {
-                self.handle_msg(epics::UpdateEpicEndsAt { epic_id, ends_at }, ctx)?
-            }
-            WsMsg::EpicDelete(epic_id) => self.handle_msg(epics::DeleteEpic { epic_id }, ctx)?,
-            WsMsg::EpicTransform(epic_id, issue_type) => self.handle_msg(
-                epics::TransformEpic {
-                    epic_id,
-                    issue_type,
-                },
-                ctx,
-            )?,
+            WsMsg::MessagesLoad => self.exec(LoadMessages),
+            WsMsg::MessageMarkSeen(id) => self.exec(MarkMessageSeen { id }),
 
             // hi
-            WsMsg::HighlightCode(lang, code) => {
-                self.handle_msg(hi::HighlightCode(lang, code), ctx)?
-            }
+            WsMsg::HighlightCode(lang, code) => self.exec(hi::HighlightCode(lang, code)),
 
             // else fail
             _ => {
                 error!("No handle for {:?} specified", msg);
-                None
+                return Ok(None);
             }
         };
+        let msg = wait(fut)?;
+
         if msg.is_some() && msg != Some(WsMsg::Pong) {
             info!("sending message {:?}", msg);
         }
@@ -251,8 +163,8 @@ impl WebSocketActor {
             .send(InnerMsg::Join(project_id, user.id, addr))
             .await
         {
-            Err(e) => error!("{}", e),
-            _ => info!("  joined channel"),
+            Err(e) => common::log::error!("{:?}", e),
+            _ => common::log::info!("  joined channel"),
         };
     }
 
@@ -268,7 +180,7 @@ impl WebSocketActor {
 
     fn load_user_project(&self) -> Result<UserProject, WsMsg> {
         let user_id = self.require_user()?.id;
-        match block_on(self.db.send(CurrentUserProject { user_id })) {
+        match wait(self.db.send(CurrentUserProject { user_id })) {
             Ok(Ok(user_project)) => Ok(user_project),
             Ok(Err(e)) => {
                 error!("load_user_project encounter service error {:?}", e);
@@ -283,14 +195,14 @@ impl WebSocketActor {
 
     fn load_project(&self) -> Result<Project, WsMsg> {
         let project_id = self.require_user_project()?.project_id;
-        match block_on(self.db.send(LoadCurrentProject { project_id })) {
+        match wait(self.db.send(LoadCurrentProject { project_id })) {
             Ok(Ok(project)) => Ok(project),
             Ok(Err(e)) => {
                 error!("{:?}", e);
                 Err(WsMsg::AuthorizeExpired)
             }
             Err(e) => {
-                error!("{}", e);
+                error!("{:?}", e);
                 Err(WsMsg::AuthorizeExpired)
             }
         }
@@ -345,6 +257,14 @@ where
     Self: actix::Actor<Context = WsCtx>,
 {
     fn handle_msg(&mut self, msg: Message, _ctx: &mut <Self as Actor>::Context) -> WsResult;
+}
+
+#[async_trait::async_trait]
+pub trait AsyncHandler<Message>
+where
+    Self: actix::Actor<Context = WsCtx>,
+{
+    async fn exec(&mut self, msg: Message) -> WsResult;
 }
 
 #[get("/ws/")]

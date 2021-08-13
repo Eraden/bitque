@@ -1,20 +1,21 @@
 use database_actor::users::Register as DbRegister;
 use database_actor::{self};
-use futures::executor::block_on;
+use jirs_data::msg::{WsMsgInvitation, WsMsgProject};
 use jirs_data::{UserId, UserProject, UserRole, WsMsg};
 
 use crate::handlers::auth::Authenticate;
-use crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult};
+use crate::{db_or_debug_and_return, AsyncHandler, WebSocketActor, WsResult};
 
 pub struct LoadProjectUsers;
 
-impl WsHandler<LoadProjectUsers> for WebSocketActor {
-    fn handle_msg(&mut self, _msg: LoadProjectUsers, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<LoadProjectUsers> for WebSocketActor {
+    async fn exec(&mut self, _msg: LoadProjectUsers) -> WsResult {
         use database_actor::users::LoadProjectUsers as Msg;
 
         let project_id = self.require_user_project()?.project_id;
-        let v = db_or_debug_and_return!(self, Msg { project_id });
-        Ok(Some(WsMsg::ProjectUsersLoaded(v)))
+        let v = db_or_debug_and_return!(self, Msg { project_id }; async);
+        Ok(Some(WsMsg::Project(WsMsgProject::ProjectUsersLoaded(v))))
     }
 }
 
@@ -23,8 +24,9 @@ pub struct Register {
     pub email: String,
 }
 
-impl WsHandler<Register> for WebSocketActor {
-    fn handle_msg(&mut self, msg: Register, ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<Register> for WebSocketActor {
+    async fn exec(&mut self, msg: Register) -> WsResult {
         let Register { name, email } = msg;
         let _ = db_or_debug_and_return!(
             self,
@@ -35,10 +37,10 @@ impl WsHandler<Register> for WebSocketActor {
                 role: UserRole::Owner,
             },
             Ok(Some(WsMsg::SignUpPairTaken)),
-            Ok(None)
+            Ok(None); async
         );
 
-        match self.handle_msg(Authenticate { name, email }, ctx) {
+        match self.exec(Authenticate { name, email }).await {
             Ok(_) => (),
             Err(e) => return Ok(Some(e)),
         };
@@ -49,14 +51,16 @@ impl WsHandler<Register> for WebSocketActor {
 
 pub struct LoadInvitedUsers;
 
-impl WsHandler<LoadInvitedUsers> for WebSocketActor {
-    fn handle_msg(&mut self, _msg: LoadInvitedUsers, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<LoadInvitedUsers> for WebSocketActor {
+    async fn exec(&mut self, _msg: LoadInvitedUsers) -> WsResult {
         let user_id = self.require_user()?.id;
 
-        let users =
-            db_or_debug_and_return!(self, database_actor::users::LoadInvitedUsers { user_id });
+        let users = db_or_debug_and_return!(self, database_actor::users::LoadInvitedUsers { user_id }; async);
 
-        Ok(Some(WsMsg::InvitedUsersLoaded(users)))
+        Ok(Some(WsMsg::Invitation(
+            WsMsgInvitation::InvitedUsersLoaded(users),
+        )))
     }
 }
 
@@ -65,8 +69,9 @@ pub struct ProfileUpdate {
     pub email: String,
 }
 
-impl WsHandler<ProfileUpdate> for WebSocketActor {
-    fn handle_msg(&mut self, msg: ProfileUpdate, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<ProfileUpdate> for WebSocketActor {
+    async fn exec(&mut self, msg: ProfileUpdate) -> WsResult {
         let user_id = self.require_user()?.id;
         let ProfileUpdate { name, email } = msg;
 
@@ -76,7 +81,7 @@ impl WsHandler<ProfileUpdate> for WebSocketActor {
                 user_id,
                 name,
                 email,
-            }
+            }; async
         );
 
         Ok(Some(WsMsg::ProfileUpdated))
@@ -87,8 +92,9 @@ pub struct RemoveInvitedUser {
     pub user_id: UserId,
 }
 
-impl WsHandler<RemoveInvitedUser> for WebSocketActor {
-    fn handle_msg(&mut self, msg: RemoveInvitedUser, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<RemoveInvitedUser> for WebSocketActor {
+    async fn exec(&mut self, msg: RemoveInvitedUser) -> WsResult {
         let RemoveInvitedUser {
             user_id: invited_id,
         } = msg;
@@ -103,8 +109,10 @@ impl WsHandler<RemoveInvitedUser> for WebSocketActor {
                 invited_id,
                 inviter_id,
                 project_id,
-            }
+            }; async
         );
-        Ok(Some(WsMsg::InvitedUserRemoveSuccess(invited_id)))
+        Ok(Some(WsMsg::Invitation(
+            WsMsgInvitation::InvitedUserRemoveSuccess(invited_id),
+        )))
     }
 }

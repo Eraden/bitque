@@ -1,12 +1,12 @@
-use futures::executor::block_on;
 use jirs_data::{Code, Lang, WsMsg};
 
-use crate::{actor_or_debug_and_return, WebSocketActor, WsHandler, WsResult};
+use crate::{actor_or_debug_and_return, AsyncHandler, WebSocketActor, WsResult};
 
 pub struct HighlightCode(pub Lang, pub Code);
 
-impl WsHandler<HighlightCode> for WebSocketActor {
-    fn handle_msg(&mut self, msg: HighlightCode, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<HighlightCode> for WebSocketActor {
+    async fn exec(&mut self, msg: HighlightCode) -> WsResult {
         self.require_user()?;
         let res = actor_or_debug_and_return!(
             self,
@@ -14,7 +14,7 @@ impl WsHandler<HighlightCode> for WebSocketActor {
             highlight_actor::HighlightCode {
                 code: msg.1,
                 lang: msg.0,
-            }
+            }; async
         );
         Ok(Some(WsMsg::HighlightedCode(res)))
     }

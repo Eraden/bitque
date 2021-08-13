@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgInvitation;
 use jirs_data::{InvitationToken, Message, MessageType, WsMsg};
 use seed::prelude::*;
 use seed::*;
@@ -35,8 +36,12 @@ impl IntoNavItemIcon for Icon {
 
 pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     let m = match msg {
-        Msg::MessageInvitationApproved(token) => WsMsg::InvitationAcceptRequest(*token),
-        Msg::MessageInvitationDismiss(token) => WsMsg::InvitationRejectRequest(*token),
+        Msg::MessageInvitationApproved(token) => {
+            WsMsgInvitation::InvitationAcceptRequest(*token).into()
+        }
+        Msg::MessageInvitationDismiss(token) => {
+            WsMsgInvitation::InvitationRejectRequest(*token).into()
+        }
         Msg::MessageSeen(id) => WsMsg::MessageMarkSeen(*id),
         _ => return,
     };

@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use jirs_data::fields::*;
+use jirs_data::msg::WsMsgInvitation;
 use jirs_data::WsMsg;
 use seed::prelude::*;
 
@@ -26,10 +27,10 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
     match msg {
         Msg::WebSocketChange(WebSocketChanged::WsMsg(ws_msg)) => match ws_msg {
-            WsMsg::InvitationAcceptFailure(_) => {
+            WsMsg::Invitation(WsMsgInvitation::InvitationAcceptFailure(_)) => {
                 page.error = Some("Invalid token".to_string());
             }
-            WsMsg::InvitationAcceptSuccess(token) => {
+            WsMsg::Invitation(WsMsgInvitation::InvitationAcceptSuccess(token)) => {
                 if let Ok(Msg::AuthTokenStored) = write_auth_token(Some(token)) {
                     authorize_or_redirect(model, orders);
                 }
@@ -44,7 +45,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::PageChanged(PageChanged::Invitation(InvitationPageChange::SubmitForm)) => {
             if let Ok(token) = uuid::Uuid::from_str(page.token.as_str()) {
                 send_ws_msg(
-                    WsMsg::InvitationAcceptRequest(token),
+                    WsMsgInvitation::InvitationAcceptRequest(token).into(),
                     model.ws.as_ref(),
                     orders,
                 );

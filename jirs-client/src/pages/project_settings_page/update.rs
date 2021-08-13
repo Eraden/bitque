@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use jirs_data::msg::{WsMsgIssueStatus, WsMsgProject};
 use jirs_data::{IssueStatus, IssueStatusId, ProjectFieldId, UpdateProjectPayload, WsMsg};
 use seed::prelude::Orders;
 
@@ -22,7 +23,9 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             WebSocketChanged::WsMsg(WsMsg::AuthorizeLoaded(..)) => {
                 board_load(model, orders);
             }
-            WebSocketChanged::WsMsg(WsMsg::IssueStatusCreated(_)) => {
+            WebSocketChanged::WsMsg(WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusCreated(
+                _,
+            ))) => {
                 match &mut model.page_content {
                     PageContent::ProjectSettings(page) if Some(0) == page.edit_column_id => {
                         page.reset();
@@ -83,14 +86,15 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ProjectPageChange::SubmitProjectSettingsForm,
         )) => {
             send_ws_msg(
-                WsMsg::ProjectUpdateLoad(UpdateProjectPayload {
+                WsMsgProject::ProjectUpdateLoad(UpdateProjectPayload {
                     id: page.payload.id,
                     name: page.payload.name.clone(),
                     url: page.payload.url.clone(),
                     description: page.payload.description.clone(),
                     category: page.payload.category,
                     time_tracking: Some(page.time_tracking.value.into()),
-                }),
+                })
+                .into(),
                 model.ws.as_ref(),
                 orders,
             );
@@ -129,7 +133,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     .map(|is| (is.id, is.position))
                 {
                     send_ws_msg(
-                        WsMsg::IssueStatusUpdate(id, name, pos),
+                        WsMsgIssueStatus::IssueStatusUpdate(id, name, pos).into(),
                         model.ws.as_ref(),
                         orders,
                     );
@@ -153,7 +157,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         )) => {
             let name = page.name.value.clone();
             let position = model.issue_statuses.len();
-            let ws_msg = WsMsg::IssueStatusCreate(name, position as i32);
+            let ws_msg = WsMsgIssueStatus::IssueStatusCreate(name, position as i32).into();
             send_ws_msg(ws_msg, model.ws.as_ref(), orders);
         }
         _ => (),
@@ -226,7 +230,7 @@ fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
                 _ => continue,
             };
         send_ws_msg(
-            WsMsg::IssueStatusUpdate(id, name.clone(), *position),
+            WsMsgIssueStatus::IssueStatusUpdate(id, name.clone(), *position).into(),
             model.ws.as_ref(),
             orders,
         );
@@ -247,5 +251,9 @@ fn build_page_content(model: &mut Model, orders: &mut impl Orders<Msg>) {
             PageContent::ProjectSettings(Box::new(ProjectSettingsPage::new(mode, project)));
     }
 
-    send_ws_msg(WsMsg::IssueStatusesLoad, model.ws.as_ref(), orders);
+    send_ws_msg(
+        WsMsgIssueStatus::IssueStatusesLoad.into(),
+        model.ws.as_ref(),
+        orders,
+    );
 }

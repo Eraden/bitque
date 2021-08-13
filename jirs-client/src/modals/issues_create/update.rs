@@ -1,3 +1,4 @@
+use jirs_data::msg::{WsMsgEpic, WsMsgIssue};
 use jirs_data::{IssueFieldId, UserId, WsMsg};
 use seed::prelude::*;
 
@@ -24,7 +25,11 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
         }
         Msg::AddEpic => {
             send_ws_msg(
-                WsMsg::EpicCreate(modal.title_state.value.clone(), None, None),
+                WsMsg::Epic(WsMsgEpic::EpicCreate(
+                    modal.title_state.value.clone(),
+                    None,
+                    None,
+                )),
                 model.ws.as_ref(),
                 orders,
             );
@@ -51,7 +56,7 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
                     };
 
                     send_ws_msg(
-                        jirs_data::WsMsg::IssueCreate(payload),
+                        jirs_data::WsMsg::Issue(WsMsgIssue::IssueCreate(payload)),
                         model.ws.as_ref(),
                         orders,
                     );

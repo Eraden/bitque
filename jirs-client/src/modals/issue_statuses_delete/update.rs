@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgIssueStatus;
 use jirs_data::WsMsg;
 use seed::prelude::*;
 
@@ -13,7 +14,7 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::DeleteIssueStatus(issue_status_id) => {
             crate::ws::send_ws_msg(
-                WsMsg::IssueStatusDelete(*issue_status_id),
+                WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusDelete(*issue_status_id)),
                 model.ws.as_ref(),
                 orders,
             );

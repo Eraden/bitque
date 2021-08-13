@@ -2,13 +2,36 @@ use std::collections::HashMap;
 
 use database_actor::issue_assignees::LoadAssignees;
 use database_actor::issues::{LoadProjectIssues, UpdateIssue};
-use futures::executor::block_on;
+use jirs_data::msg::{WsMsgIssue, WsMsgProject};
 use jirs_data::{
     CreateIssuePayload, IssueAssignee, IssueFieldId, IssueId, IssueStatusId, ListPosition,
     PayloadVariant, WsMsg,
 };
 
-use crate::{db_or_debug_and_return, WebSocketActor, WsHandler, WsResult};
+use crate::{db_or_debug_and_return, AsyncHandler, WebSocketActor, WsResult};
+
+#[async_trait::async_trait]
+impl AsyncHandler<WsMsgIssue> for WebSocketActor {
+    async fn exec(&mut self, msg: WsMsgIssue) -> WsResult {
+        match msg {
+            WsMsgIssue::IssueUpdate(id, field_id, payload) => {
+                self.exec(UpdateIssueHandler {
+                    id,
+                    field_id,
+                    payload,
+                })
+                .await
+            }
+            WsMsgIssue::IssueCreate(payload) => self.exec(payload).await,
+            WsMsgIssue::IssueDelete(id) => self.exec(DeleteIssue { id }).await,
+            WsMsgIssue::IssueSyncListPosition(sync) => self.exec(SyncIssueListPosition(sync)).await,
+
+            WsMsgIssue::IssueUpdated(_) => Ok(None),
+            WsMsgIssue::IssueDeleted(_, _) => Ok(None),
+            WsMsgIssue::IssueCreated(_) => Ok(None),
+        }
+    }
+}
 
 pub struct UpdateIssueHandler {
     pub id: i32,
@@ -16,8 +39,9 @@ pub struct UpdateIssueHandler {
     pub payload: PayloadVariant,
 }
 
-impl WsHandler<UpdateIssueHandler> for WebSocketActor {
-    fn handle_msg(&mut self, msg: UpdateIssueHandler, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<UpdateIssueHandler> for WebSocketActor {
+    async fn exec(&mut self, msg: UpdateIssueHandler) -> WsResult {
         self.require_user()?;
 
         let UpdateIssueHandler {
@@ -123,23 +147,24 @@ impl WsHandler<UpdateIssueHandler> for WebSocketActor {
             _ => (),
         };
 
-        let issue = db_or_debug_and_return!(self, msg);
+        let issue = db_or_debug_and_return!(self, msg; async);
         let mut issue: jirs_data::Issue = issue.into();
 
         let assignees: Vec<IssueAssignee> =
-            db_or_debug_and_return!(self, LoadAssignees { issue_id: issue.id });
+            db_or_debug_and_return!(self, LoadAssignees { issue_id: issue.id }; async);
 
         for assignee in assignees {
             issue.user_ids.push(assignee.user_id);
         }
-        self.broadcast(&WsMsg::IssueUpdated(issue));
+        self.broadcast(&WsMsg::Issue(WsMsgIssue::IssueUpdated(issue)));
 
         Ok(None)
     }
 }
 
-impl WsHandler<CreateIssuePayload> for WebSocketActor {
-    fn handle_msg(&mut self, msg: CreateIssuePayload, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<CreateIssuePayload> for WebSocketActor {
+    async fn exec(&mut self, msg: CreateIssuePayload) -> WsResult {
         self.require_user()?;
         let msg = database_actor::issues::CreateIssue {
             title: msg.title,
@@ -156,8 +181,8 @@ impl WsHandler<CreateIssuePayload> for WebSocketActor {
             user_ids: msg.user_ids,
             epic_id: msg.epic_id,
         };
-        let issue = db_or_debug_and_return!(self, msg);
-        Ok(Some(WsMsg::IssueCreated(issue.into())))
+        let issue = db_or_debug_and_return!(self, msg; async);
+        Ok(Some(WsMsg::Issue(WsMsgIssue::IssueCreated(issue.into()))))
     }
 }
 
@@ -165,24 +190,26 @@ pub struct DeleteIssue {
     pub id: IssueId,
 }
 
-impl WsHandler<DeleteIssue> for WebSocketActor {
-    fn handle_msg(&mut self, msg: DeleteIssue, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<DeleteIssue> for WebSocketActor {
+    async fn exec(&mut self, msg: DeleteIssue) -> WsResult {
         self.require_user()?;
         let n = db_or_debug_and_return!(
             self,
-            database_actor::issues::DeleteIssue { issue_id: msg.id }
+            database_actor::issues::DeleteIssue { issue_id: msg.id }; async
         );
-        Ok(Some(WsMsg::IssueDeleted(msg.id, n)))
+        Ok(Some(WsMsg::Issue(WsMsgIssue::IssueDeleted(msg.id, n))))
     }
 }
 
 pub struct LoadIssues;
 
-impl WsHandler<LoadIssues> for WebSocketActor {
-    fn handle_msg(&mut self, _msg: LoadIssues, _ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<LoadIssues> for WebSocketActor {
+    async fn exec(&mut self, _msg: LoadIssues) -> WsResult {
         let project_id = self.require_user_project()?.project_id;
 
-        let v = db_or_debug_and_return!(self, LoadProjectIssues { project_id });
+        let v = db_or_debug_and_return!(self, LoadProjectIssues { project_id }; async);
         let issues: Vec<jirs_data::Issue> = v.into_iter().map(|i| i.into()).collect();
         let mut issue_map = HashMap::new();
         let mut queue = vec![];
@@ -192,7 +219,7 @@ impl WsHandler<LoadIssues> for WebSocketActor {
             issue_map.insert(issue.id, issue);
         }
         for f in queue {
-            if let Ok(Ok(assignees)) = block_on(f) {
+            if let Ok(Ok(assignees)) = f.await {
                 for assignee in assignees {
                     if let Some(issue) = issue_map.get_mut(&assignee.issue_id) {
                         issue.user_ids.push(assignee.user_id);
@@ -206,14 +233,17 @@ impl WsHandler<LoadIssues> for WebSocketActor {
         }
         issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
 
-        Ok(Some(WsMsg::ProjectIssuesLoaded(issues)))
+        Ok(Some(WsMsg::Project(WsMsgProject::ProjectIssuesLoaded(
+            issues,
+        ))))
     }
 }
 
 pub struct SyncIssueListPosition(pub Vec<(IssueId, ListPosition, IssueStatusId, Option<IssueId>)>);
 
-impl WsHandler<SyncIssueListPosition> for WebSocketActor {
-    fn handle_msg(&mut self, msg: SyncIssueListPosition, ctx: &mut Self::Context) -> WsResult {
+#[async_trait::async_trait]
+impl AsyncHandler<SyncIssueListPosition> for WebSocketActor {
+    async fn exec(&mut self, msg: SyncIssueListPosition) -> WsResult {
         let _project_id = self.require_user_project()?.project_id;
         for (issue_id, list_position, status_id, epic_id) in msg.0 {
             crate::actor_or_debug_and_ignore!(
@@ -226,10 +256,10 @@ impl WsHandler<SyncIssueListPosition> for WebSocketActor {
                     epic_id: Some(epic_id),
                     ..Default::default()
                 },
-                |_| {}
+                |_| {}; async
             );
         }
 
-        self.handle_msg(LoadIssues, ctx)
+        self.exec(LoadIssues).await
     }
 }

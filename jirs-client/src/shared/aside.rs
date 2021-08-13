@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgProject;
 use jirs_data::{UserRole, WsMsg};
 use seed::prelude::*;
 use seed::*;
@@ -13,8 +14,8 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         enqueue_ws_msg(
             vec![
                 WsMsg::UserProjectsLoad,
-                WsMsg::ProjectsLoad,
-                WsMsg::ProjectUsersLoad,
+                WsMsg::Project(WsMsgProject::ProjectsLoad),
+                WsMsg::Project(WsMsgProject::ProjectUsersLoad),
                 WsMsg::MessagesLoad,
             ],
             model.ws.as_ref(),

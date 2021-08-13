@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgEpic;
 use jirs_data::WsMsg;
 use seed::prelude::*;
 
@@ -12,7 +13,11 @@ pub fn update(msg: &Msg, model: &mut crate::model::Model, orders: &mut impl Orde
 
     match msg {
         Msg::DeleteEpic => {
-            send_ws_msg(WsMsg::EpicDelete(modal.epic_id), model.ws.as_ref(), orders);
+            send_ws_msg(
+                WsMsg::Epic(WsMsgEpic::EpicDelete(modal.epic_id)),
+                model.ws.as_ref(),
+                orders,
+            );
         }
         Msg::ResourceChanged(ResourceKind::Epic, OperationKind::SingleRemoved, Some(_)) => {
             orders.skip().send_msg(Msg::ModalDropped);

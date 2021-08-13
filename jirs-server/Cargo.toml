@@ -23,29 +23,9 @@ actix = { version = "0.10.0" }
 
 dotenv = { version = "*" }
 
-byteorder = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
-time = { version = "0.1" }
-url = { version = "2.1.0" }
-percent-encoding = { version = "2.1.0" }
-uuid = { version = "0.8.1", features = ["serde", "v4", "v5"] }
-ipnetwork = { version = ">=0.12.2, <0.17.0" }
-num-bigint = { version = ">=0.1.41, <0.3" }
-num-traits = { version = "0.2" }
-num-integer = { version = "0.1.32" }
-bigdecimal = { version = ">= 0.0.10, <= 0.1.0" }
-bitflags = { version = "1.0" }
-
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = ">=0.8.0, <2.0" }
 toml = { version = "0.5.6" }
-bincode = { version = "1.2.1" }
-
-log = { version = "0.4" }
-pretty_env_logger = { version = "0.4" }
-env_logger = { version = "0.7" }
-
-async-trait = { version = "*" }
 
 futures = { version = "*" }
 openssl-sys = { version = "*", features = ["vendored"] }

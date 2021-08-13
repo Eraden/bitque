@@ -1,3 +1,4 @@
+use jirs_data::msg::WsMsgComment;
 use jirs_data::{CommentId, EpicId, IssueId, IssueStatusId, TimeTracking, WsMsg};
 use seed::prelude::*;
 
@@ -193,7 +194,7 @@ fn push_edit_issue_modal(issue_id: EpicId, model: &mut Model, orders: &mut impl 
         crate::modals::issues_edit::Model::new(user_mode, issue, time_tracking_type)
     };
     send_ws_msg(
-        WsMsg::IssueCommentsLoad(issue_id),
+        WsMsg::Comment(WsMsgComment::IssueCommentsLoad(issue_id)),
         model.ws.as_ref(),
         orders,
     );

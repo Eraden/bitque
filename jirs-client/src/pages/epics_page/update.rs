@@ -1,4 +1,4 @@
-use jirs_data::WsMsg;
+use jirs_data::msg::WsMsgIssueStatus;
 use seed::app::Orders;
 
 use crate::model::{Model, Page, PageContent};
@@ -39,5 +39,9 @@ fn build_page_content(model: &mut Model, orders: &mut impl Orders<Msg>) {
         return;
     }
     model.page_content = PageContent::Epics(Box::new(super::EpicsPage::new(model)));
-    send_ws_msg(WsMsg::IssueStatusesLoad, model.ws.as_ref(), orders);
+    send_ws_msg(
+        WsMsgIssueStatus::IssueStatusesLoad.into(),
+        model.ws.as_ref(),
+        orders,
+    );
 }
