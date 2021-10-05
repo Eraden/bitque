@@ -13,7 +13,7 @@ wasm-pack --verbose build --mode ${MODE} ${BUILD_TYPE} --out-name jirs --out-dir
 
 cd ${CLIENT_ROOT}
 rm -Rf ${CLIENT_ROOT}/build/styles.css
-rsass -t Expanded ${PROJECT_ROOT}/jirs-client/js/styles.css >${CLIENT_ROOT}/tmp/styles.css
+rsass -t Expanded ${PROJECT_ROOT}/web/js/styles.css >${CLIENT_ROOT}/tmp/styles.css
 
 cp -r ${CLIENT_ROOT}/static/* ${CLIENT_ROOT}/tmp
 

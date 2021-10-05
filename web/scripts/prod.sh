@@ -6,7 +6,7 @@ if [[ "$status" != "0" ]]; then
 fi
 
 export PROJECT_ROOT=$(git rev-parse --show-toplevel)
-export CLIENT_ROOT=${PROJECT_ROOT}/jirs-client
+export CLIENT_ROOT=${PROJECT_ROOT}/web
 export HI_ROOT=${PROJECT_ROOT}/highlight/jirs-highlight
 export MODE=force
 export BUILD_TYPE=--release
@@ -24,7 +24,7 @@ wasm-pack build --mode normal --release --out-name hi --out-dir $CLIENT_ROOT/bui
 
 cd $CLIENT_ROOT
 rm -Rf ${CLIENT_ROOT}/build/styles.css
-rsass -t Compressed ${PROJECT_ROOT}/jirs-client/js/styles.css > ${CLIENT_ROOT}/build/styles.css
+rsass -t Compressed ${PROJECT_ROOT}/web/js/styles.css > ${CLIENT_ROOT}/build/styles.css
 
 cp -r ./static/* ./build
 cat ./static/index.js |

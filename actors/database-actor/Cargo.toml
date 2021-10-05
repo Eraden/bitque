@@ -16,8 +16,8 @@ path = "./src/lib.rs"
 common = { path = "../../shared/common" }
 actix = { version = "0.10.0" }
 
-serde = "*"
-bincode = "*"
+serde = { version = "*" }
+bincode = { version = "*" }
 toml = { version = "*" }
 
 futures = { version = "0.3.8" }
@@ -29,12 +29,12 @@ r2d2 = { version = ">= 0.8, < 0.9" }
 
 dotenv = { version = "*" }
 
-byteorder = "1.0"
+byteorder = { version = "1.0" }
 chrono = { version = "0.4", features = ["serde"] }
 time = { version = "0.1" }
 url = { version = "2.1.0" }
 percent-encoding = { version = "2.1.0" }
-uuid = { version = "0.8.1", features = ["serde", "v4", "v5"] }
+uuid = { version = "0.8.2", features = ["serde", "v4", "v5"] }
 ipnetwork = { version = ">=0.12.2, <0.17.0" }
 num-bigint = { version = ">=0.1.41, <0.3" }
 num-traits = { version = "0.2" }
@@ -54,5 +54,5 @@ features = ["backend"]
 path = "../../derive/derive_db_execute"
 
 [dependencies.diesel]
-version = "*"
-features = ["unstable", "postgres", "numeric", "extras", "uuidv07"]
+version = "1.4.7"
+features = [ "postgres", "numeric", "uuidv07", "r2d2", "extras" ]

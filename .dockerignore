@@ -82,9 +82,9 @@ fabric.properties
 
 /tmp/
 
-/jirs-client/target/
-/jirs-client/tmp/
-/jirs-client/build/
+/web/target/
+/web/tmp/
+/web/build/
 
 /jirs-server/target/
 /jirs-server/tmp/

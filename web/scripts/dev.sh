@@ -11,19 +11,22 @@ if [[ "${WASM_PACK_PATH}" == "" ]]; then
 fi
 
 export PROJECT_ROOT=$(git rev-parse --show-toplevel)
-export CLIENT_ROOT=${PROJECT_ROOT}/jirs-client
+export CLIENT_ROOT=${PROJECT_ROOT}/web
 export HI_ROOT=${PROJECT_ROOT}/highlight/jirs-highlight
 export MODE=force
 export BUILD_TYPE=--dev
+
+echo $PROJECT_ROOT
+echo $CLIENT_ROOT
 
 cd ${CLIENT_ROOT}
 
 . .env
 
 cargo watch \
-  -i ./jirs-client/src/location.rs \
+  -i ${CLIENT_ROOT}/src/location.rs \
   -s ${CLIENT_ROOT}/scripts/run-wasm-pack.sh \
   -w ${CLIENT_ROOT}/src \
   -w ${CLIENT_ROOT}/Cargo.toml \
-  -w ./static \
-  -w js
+  -w ${CLIENT_ROOT}/static \
+  -w ${CLIENT_ROOT}/js

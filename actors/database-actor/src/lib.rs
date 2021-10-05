@@ -51,7 +51,7 @@ pub fn build_pool() -> DbPool {
     dotenv::dotenv().ok();
     let config = jirs_config::database::Configuration::read();
 
-    let manager = ConnectionManager::<PgConnection>::new(config.database_url);
+    let manager = ConnectionManager::<PgConnection>::new(&config.database_url);
     r2d2::Pool::builder()
         .max_size(config.concurrency as u32)
         .build(manager)

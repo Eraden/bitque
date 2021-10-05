@@ -27,5 +27,5 @@ members = [
     "./actors/amazon-actor",
     "./actors/filesystem-actor",
     # Client
-    "./jirs-client"
+    "./web"
 ]
