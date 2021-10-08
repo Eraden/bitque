@@ -1,6 +1,9 @@
 #![feature(format_args_capture)]
 
 fn main() {
+    if std::fs::metadata("./src/location.rs").is_ok() {
+        return;
+    }
     if let Ok(contents) = std::fs::read_to_string("../.env") {
         for line in contents.lines() {
             if line.starts_with('#') {
@@ -14,14 +17,14 @@ fn main() {
         }
     }
 
-    let addr = std::env::var("JIRS_SERVER_BIND").unwrap_or("0.0.0.0".to_string());
+    let addr = std::env::var("JIRS_SERVER_BIND").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = if addr.as_str() == "0.0.0.0" || addr.as_str() == "localhost" {
         "localhost"
     } else {
         addr.as_str()
     }
     .to_string();
-    let port = std::env::var("JIRS_SERVER_PORT").unwrap_or("80".to_string());
+    let port = std::env::var("JIRS_SERVER_PORT").unwrap_or_else(|_| "80".to_string());
     let port = match port.as_str() {
         "80" | "8080" | "443" => "".to_string(),
         _ => format!(":{}", port),

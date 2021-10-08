@@ -1,4 +1,4 @@
-#![feature(type_ascription, trait_alias, drain_filter, or_patterns)]
+#![feature(type_ascription, trait_alias, drain_filter)]
 
 pub use changes::*;
 pub use components::*;
