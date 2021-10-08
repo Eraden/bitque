@@ -1,130 +1,51 @@
-<svg
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 640 640"
-        width="28"
-        height="28"
-        version="1.1"
->
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="42"
+     height="42">
     <defs>
-        <filter
-                id="shadow16022051"
-        >
-            <feFlood>
-            </feFlood>
-            <feComposite in2="SourceAlpha" operator="in">
-            </feComposite>
-            <feGaussianBlur stdDeviation="1">
-            </feGaussianBlur>
-            <feOffset dx="14" dy="10" result="afterOffset">
-            </feOffset>
-            <feFlood flood-color="#0d0e44" flood-opacity="0.5">
-            </feFlood>
-            <feComposite in2="afterOffset" operator="in">
-            </feComposite>
-            <feMorphology operator="dilate" radius="1">
-            </feMorphology>
-            <feComposite in2="SourceAlpha" operator="out">
-            </feComposite>
+        <path d="M500 300c0 110.38-89.62 200-200 200s-200-89.62-200-200c0-110.39 89.62-200 200-200s200 89.61 200 200Z"
+              id="a"/>
+        <path d="M520 338.18c0 110.38-89.62 200-200 200s-200-89.62-200-200 89.62-200 200-200 200 89.62 200 200Z"
+              id="b"/>
+        <path d="M543.03 374.84c0 110.39-89.62 200-200 200s-200-89.61-200-200c0-110.38 89.62-200 200-200s200 89.62 200 200Z"
+              id="c"/>
+        <mask id="e" x="78" y="78" width="600" height="600" maskUnits="userSpaceOnUse">
+            <path fill="#fff" d="M78 78h444v444H78z"/>
+            <use xlink:href="#a" opacity=".46"/>
+        </mask>
+        <mask id="f" x="98" y="116.18" width="444" height="444" maskUnits="userSpaceOnUse">
+            <path fill="#fff" d="M98 116.18h444v444H98z"/>
+            <use xlink:href="#b" opacity=".46"/>
+        </mask>
+        <mask id="g" x="121.03" y="152.84" width="444" height="444" maskUnits="userSpaceOnUse">
+            <path fill="#fff" d="M121.03 152.84h444v444h-444z"/>
+            <use xlink:href="#c" opacity=".46"/>
+        </mask>
+        <filter id="d">
+            <feFlood/>
+            <feComposite in2="SourceAlpha" operator="in"/>
+            <feGaussianBlur stdDeviation="1"/>
+            <feOffset dx="14" dy="10" result="afterOffset"/>
+            <feFlood flood-color="#0d0e44" flood-opacity=".5"/>
+            <feComposite in2="afterOffset" operator="in"/>
+            <feMorphology operator="dilate" radius="1"/>
+            <feComposite in2="SourceAlpha" operator="out"/>
         </filter>
-        <path
-                d="M500 300C500 410.38 410.38 500 300 500C189.62 500 100 410.38 100 300C100 189.61 189.62 100 300 100C410.38 100 500 189.61 500 300Z"
-                id="b6KNxjEO2"
-        >
-        </path>
-        <mask
-                id="maskb3oIvRAxi1"
-                x="78" y="78"
-                width="600"
-                height="600"
-                maskUnits="userSpaceOnUse"
-        >
-            <rect x="78" y="78" width="444" height="444" fill="white">
-            </rect>
-            <use xlink:href="#b6KNxjEO2" opacity="0.46" fill="black">
-            </use>
-        </mask>
-        <path
-                d="M520 338.18C520 448.56 430.38 538.18 320 538.18C209.62 538.18 120 448.56 120 338.18C120 227.8 209.62 138.18 320 138.18C430.38 138.18 520 227.8 520 338.18Z"
-                id="bDKGuSkBj"
-        >
-        </path>
-        <mask id="maskb4LRewzUS" x="98" y="116.18" width="444" height="444" maskUnits="userSpaceOnUse">
-            <rect x="98" y="116.18" width="444" height="444" fill="white">
-            </rect>
-            <use xlink:href="#bDKGuSkBj" opacity="0.46" fill="black">
-            </use>
-        </mask>
-        <path
-                d="M543.03 374.84C543.03 485.23 453.41 574.84 343.03 574.84C232.65 574.84 143.03 485.23 143.03 374.84C143.03 264.46 232.65 174.84 343.03 174.84C453.41 174.84 543.03 264.46 543.03 374.84Z"
-                id="a1k8tJrWR3"
-        >
-        </path>
-        <mask id="maskbctn2Bw0" x="121.03" y="152.84" width="444" height="444" maskUnits="userSpaceOnUse">
-            <rect x="121.03" y="152.84" width="444" height="444" fill="white">
-            </rect>
-            <use xlink:href="#a1k8tJrWR3" opacity="0.46" fill="black">
-            </use>
-        </mask>
     </defs>
-    <path
-            d="M500 300C500 410.38 410.38 500 300 500C189.62 500 100 410.38 100 300C100 189.61 189.62 100 300 100C410.38 100 500 189.61 500 300Z"
-            id="h3zi0EZA0A"
-            fill-opacity="1"
-            filter="url(#shadow16022051)"
-    >
-    </path>
-    <use xlink:href="#b6KNxjEO2" opacity="0.46" fill="#fefefe" fill-opacity="1">
-    </use>
-    <g mask="url(#maskb3oIvRAxi1)">
-        <use
-                xlink:href="#b6KNxjEO2"
-                opacity="0.46"
-                fill-opacity="0"
-                stroke="#06697d"
-                stroke-width="44"
-                stroke-opacity="1"
-        >
-        </use>
+    <path d="M500 300c0 110.38-89.62 200-200 200s-200-89.62-200-200c0-110.39 89.62-200 200-200s200 89.61 200 200Z"
+          filter="url(#d)"/>
+    <use xlink:href="#a" opacity=".46" fill="#fefefe"/>
+    <g mask="url(#e)">
+        <use xlink:href="#a" opacity=".46" fill-opacity="0" stroke="#06697d" stroke-width="44"/>
     </g>
-    <path
-            d="M520 338.18C520 448.56 430.38 538.18 320 538.18C209.62 538.18 120 448.56 120 338.18C120 227.8 209.62 138.18 320 138.18C430.38 138.18 520 227.8 520 338.18Z"
-            id="mzwSl44s1"
-            fill-opacity="1"
-            filter="url(#shadow16022051)"
-    >
-    </path>
-    <use xlink:href="#bDKGuSkBj" opacity="0.46" fill="#fefefe" fill-opacity="1">
-    </use>
-    <g mask="url(#maskb4LRewzUS)">
-        <use
-                xlink:href="#bDKGuSkBj"
-                opacity="0.46"
-                fill-opacity="0"
-                stroke="#06697d"
-                stroke-width="44"
-                stroke-opacity="1"
-        >
-        </use>
+    <path d="M520 338.18c0 110.38-89.62 200-200 200s-200-89.62-200-200 89.62-200 200-200 200 89.62 200 200Z"
+          filter="url(#d)"/>
+    <use xlink:href="#b" opacity=".46" fill="#fefefe"/>
+    <g mask="url(#f)">
+        <use xlink:href="#b" opacity=".46" fill-opacity="0" stroke="#06697d" stroke-width="44"/>
     </g>
-    <path
-            d="M543.03 374.84C543.03 485.23 453.41 574.84 343.03 574.84C232.65 574.84 143.03 485.23 143.03 374.84C143.03 264.46 232.65 174.84 343.03 174.84C453.41 174.84 543.03 264.46 543.03 374.84Z"
-            id="c16Px1v9IX"
-            fill-opacity="1"
-            filter="url(#shadow16022051)"
-    >
-    </path>
-    <use xlink:href="#a1k8tJrWR3" opacity="0.46" fill="#fefefe" fill-opacity="1">
-    </use>
-    <g mask="url(#maskbctn2Bw0)">
-        <use
-                xlink:href="#a1k8tJrWR3"
-                opacity="0.46"
-                fill-opacity="0"
-                stroke="#06697d"
-                stroke-width="44"
-                stroke-opacity="1"
-        >
-        </use>
+    <path d="M543.03 374.84c0 110.39-89.62 200-200 200s-200-89.61-200-200c0-110.38 89.62-200 200-200s200 89.62 200 200Z"
+          filter="url(#d)"/>
+    <use xlink:href="#c" opacity=".46" fill="#fefefe"/>
+    <g mask="url(#g)">
+        <use xlink:href="#c" opacity=".46" fill-opacity="0" stroke="#06697d" stroke-width="44"/>
     </g>
 </svg>

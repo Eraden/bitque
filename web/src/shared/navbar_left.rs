@@ -50,8 +50,12 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
 #[inline(always)]
 pub fn render(model: &Model) -> Vec<Node<Msg>> {
-    let logo_svg = img![
-        attrs![At::Src => "/logo2.svg"; At::Style => "background: rgba(244,244,244,.8); border-radius: 24px;"]
+    // let logo_svg = img![
+    //     attrs![At::Src => "/logo2.svg"; At::Style => "background:
+    // rgba(244,244,244,.8); border-radius: 24px;"] ];
+    let logo_svg = div![
+        attrs![At::Style => "background: rgba(244,244,244,.8); border-radius: 24px;"],
+        crate::images::logo::render()
     ];
 
     let user_icon = model.user.as_ref().map_or_else(
