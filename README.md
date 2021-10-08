@@ -180,8 +180,7 @@ cargo run --bin jirs_server
 ```bash
 curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 cd jirs_client
-yarn
-./scripts/prod.sh
+./web/scripts/prod.sh
 ```
 
 ```bash

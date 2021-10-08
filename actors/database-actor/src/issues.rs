@@ -193,7 +193,11 @@ impl CreateIssue {
             crate::issue_statuses::LoadIssueStatuses {
                 project_id: msg.project_id,
             }
-            .execute(conn)?
+            .execute(conn)
+            .map_err(|e| {
+                common::log::error!("Failed to find issue status. {:?}", e);
+                e
+            })?
             .first()
             .ok_or(crate::DatabaseError::Issue(
                 crate::IssueError::NoIssueStatuses,
@@ -223,12 +227,22 @@ impl CreateIssue {
             reporter_id: msg.reporter_id,
             epic_id: msg.epic_id,
         }
-        .execute(conn)?;
-        crate::issue_assignees::AsignMultiple {
-            issue_id: issue.id,
-            user_ids: assign_users,
+        .execute(conn)
+        .map_err(|e| {
+            common::log::error!("Failed to insert issue. {:?}", e);
+            e
+        })?;
+        if !assign_users.is_empty() {
+            crate::issue_assignees::AsignMultiple {
+                issue_id: issue.id,
+                user_ids: assign_users,
+            }
+            .execute(conn)
+            .map_err(|e| {
+                common::log::error!("Failed to apply multiple assignee to issue. {:?}", e);
+                e
+            })?;
         }
-        .execute(conn)?;
         issues.find(issue.id).get_result(conn).map_err(|e| {
             common::log::error!("{:?}", e);
             crate::DatabaseError::GenericFailure(

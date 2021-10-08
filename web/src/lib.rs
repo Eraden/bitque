@@ -156,60 +156,59 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.ws.is_none() {
         open_socket(model, orders);
     }
+    let mut msg = msg;
 
     let msg = match msg {
-        Msg::WebSocketChange(change) => {
-            match change {
-                WebSocketChanged::WebSocketOpened => {
-                    flush_queue(model, orders);
-                    send_ws_msg(WsMsg::Ping, model.ws.as_ref(), orders);
-                    authorize_or_redirect(model, orders);
-                    orders.skip();
-                    return;
-                }
-                WebSocketChanged::SendPing => {
-                    send_ws_msg(WsMsg::Ping, model.ws.as_ref(), orders);
-                    orders.skip();
-                    return;
-                }
-                WebSocketChanged::WebSocketMessage(incoming) => {
-                    orders.perform_cmd(read_incoming(incoming));
-                    orders.skip();
-                    return;
-                }
-                WebSocketChanged::WsMsg(ws_msg) => {
-                    ws::update(ws_msg, model, orders);
-                    orders.skip();
-                    return;
-                }
-                WebSocketChanged::WebSocketMessageLoaded(v) => {
-                    match bincode::deserialize(v.as_slice()) {
-                        Ok(WsMsg::Ping | WsMsg::Pong) => {
-                            orders.skip().perform_cmd(cmds::timeout(300, || {
-                                Msg::WebSocketChange(WebSocketChanged::SendPing)
-                            }));
-                        }
-                        Ok(m) => {
-                            log::info!("INCOMING {:?}", m);
-                            orders
-                                .skip()
-                                .send_msg(Msg::WebSocketChange(WebSocketChanged::WsMsg(m)));
-                        }
-                        _ => (),
-                    };
-                    return;
-                }
-                WebSocketChanged::WebSocketClosed => {
-                    open_socket(model, orders);
-                    return;
-                }
-                WebSocketChanged::Bounced(ws_msg) => {
-                    model.ws_queue.push(ws_msg);
-                    open_socket(model, orders);
-                    return;
-                }
-            };
-        }
+        Msg::WebSocketChange(change) => match change {
+            WebSocketChanged::WebSocketOpened => {
+                flush_queue(model, orders);
+                send_ws_msg(WsMsg::Ping, model.ws.as_ref(), orders);
+                authorize_or_redirect(model, orders);
+                orders.skip();
+                return;
+            }
+            WebSocketChanged::SendPing => {
+                send_ws_msg(WsMsg::Ping, model.ws.as_ref(), orders);
+                orders.skip();
+                return;
+            }
+            WebSocketChanged::WebSocketMessage(incoming) => {
+                orders.perform_cmd(read_incoming(incoming));
+                orders.skip();
+                return;
+            }
+            WebSocketChanged::WsMsg(mut ws_msg) => {
+                ws::update(&mut ws_msg, model, orders);
+                orders.skip();
+                Msg::WebSocketChange(WebSocketChanged::WsMsg(ws_msg))
+            }
+            WebSocketChanged::WebSocketMessageLoaded(v) => {
+                match bincode::deserialize(v.as_slice()) {
+                    Ok(WsMsg::Ping | WsMsg::Pong) => {
+                        orders.skip().perform_cmd(cmds::timeout(300, || {
+                            Msg::WebSocketChange(WebSocketChanged::SendPing)
+                        }));
+                    }
+                    Ok(m) => {
+                        log::info!("INCOMING {:?}", m);
+                        orders
+                            .skip()
+                            .send_msg(Msg::WebSocketChange(WebSocketChanged::WsMsg(m)));
+                    }
+                    _ => (),
+                };
+                return;
+            }
+            WebSocketChanged::WebSocketClosed => {
+                open_socket(model, orders);
+                return;
+            }
+            WebSocketChanged::Bounced(ws_msg) => {
+                model.ws_queue.push(ws_msg);
+                open_socket(model, orders);
+                return;
+            }
+        },
         _ => msg,
     };
 

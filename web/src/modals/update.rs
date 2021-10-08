@@ -113,7 +113,10 @@ fn push_modal(modal_type: &ModalType, model: &mut Model, orders: &mut impl Order
 }
 
 fn drop_modal(model: &mut Model, orders: &mut impl Orders<Msg>) {
-    let modal = model.modal_stack_mut().pop().unwrap();
+    let modal = match model.modal_stack_mut().pop() {
+        Some(modal) => modal,
+        _ => return,
+    };
     let modals = model.modals_mut();
     match modal {
         ModalType::AddIssue(_) => {

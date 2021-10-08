@@ -45,9 +45,10 @@ pub fn send_ws_msg(msg: WsMsg, ws: Option<&WebSocket>, orders: &mut impl Orders<
             return;
         }
     };
-    let binary = bincode::serialize(&msg).unwrap();
-    ws.send_bytes(binary.as_slice())
-        .expect("Failed to send ws msg");
+    let binary = bincode::serialize(&msg).unwrap_or_default();
+    if let Err(e) = ws.send_bytes(binary.as_slice()) {
+        log::error!("Failed to send ws msg. {:?}", e);
+    }
 }
 
 pub fn open_socket(model: &mut Model, orders: &mut impl Orders<Msg>) {
@@ -92,12 +93,12 @@ pub async fn read_incoming(msg: WebSocketMessage) -> Msg {
     Msg::WebSocketChange(WebSocketChanged::WebSocketMessageLoaded(bytes))
 }
 
-pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
+pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         // auth
         WsMsg::Session(WsMsgSession::AuthorizeLoaded(Ok((user, setting)))) => {
-            model.user = Some(user);
-            model.user_settings = Some(setting);
+            model.user = Some(user.clone());
+            model.user_settings = Some(setting.clone());
 
             if is_non_logged_area() {
                 go_to_board(orders);
@@ -134,7 +135,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         // project
         WsMsg::Project(WsMsgProject::ProjectsLoaded(v)) => {
-            model.projects = v;
+            model.projects = std::mem::take(v);
             init_current_project(model, orders);
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Project,
@@ -145,7 +146,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         // user projects
         WsMsg::UserProjectsLoaded(v) => {
             model.current_user_project = v.iter().find(|up| up.is_current).cloned();
-            model.user_projects = v;
+            model.user_projects = std::mem::take(v);
             init_current_project(model, orders);
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::UserProject,
@@ -160,7 +161,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 up.is_current = up.id == user_project.id;
                 model.user_projects.push(up);
             }
-            model.current_user_project = Some(user_project);
+            model.current_user_project = Some(user_project.clone());
             init_current_project(model, orders);
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::UserProject,
@@ -170,23 +171,23 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         // user settings
         WsMsg::User(WsMsgUser::AvatarUrlChanged(id, url)) => {
-            if let Some(user) = model.user.as_mut().filter(|u| u.id == id) {
+            if let Some(user) = model.user.as_mut().filter(|u| u.id == *id) {
                 user.avatar_url = Some(url.clone());
             }
             if let Some(user) = model.users_by_id.get_mut(&id) {
                 user.avatar_url = Some(url.clone());
             }
-            if let Some(user) = model.users.iter_mut().find(|u| u.id == id) {
-                user.avatar_url = Some(url);
+            if let Some(user) = model.users.iter_mut().find(|u| u.id == *id) {
+                user.avatar_url = Some(url.clone());
             }
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::User,
                 OperationKind::SingleModified,
-                Some(id),
+                Some(*id),
             ));
         }
         WsMsg::User(WsMsgUser::UserSettingUpdated(setting)) => {
-            model.user_settings = Some(setting);
+            model.user_settings = Some(setting.clone());
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::UserSetting,
                 OperationKind::SingleModified,
@@ -196,7 +197,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 
         // issue statuses
         WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusesLoaded(v)) => {
-            model.issue_statuses = v;
+            model.issue_statuses = std::mem::take(v);
             model
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
@@ -208,7 +209,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusCreated(is)) => {
             let id = is.id;
-            model.issue_statuses.push(is);
+            model.issue_statuses.push(is.clone());
             model
                 .issue_statuses
                 .sort_by(|a, b| a.position.cmp(&b.position));
@@ -218,10 +219,10 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 Some(id),
             ));
         }
-        WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusUpdated(mut changed)) => {
+        WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusUpdated(changed)) => {
             let id = changed.id;
             if let Some(idx) = model.issue_statuses.iter().position(|c| c.id == changed.id) {
-                std::mem::swap(&mut model.issue_statuses[idx], &mut changed);
+                std::mem::swap(&mut model.issue_statuses[idx], changed);
             }
             model
                 .issue_statuses
@@ -236,7 +237,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             let mut old = vec![];
             std::mem::swap(&mut model.issue_statuses, &mut old);
             for is in old {
-                if is.id != dropped_id {
+                if is.id != *dropped_id {
                     model.issue_statuses.push(is);
                 }
             }
@@ -246,11 +247,11 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::IssueStatus,
                 OperationKind::SingleRemoved,
-                Some(dropped_id),
+                Some(*dropped_id),
             ));
         }
         // issues
-        WsMsg::Project(WsMsgProject::ProjectIssuesLoaded(mut v)) => {
+        WsMsg::Project(WsMsgProject::ProjectIssuesLoaded(v)) => {
             v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
             {
                 let _ = std::mem::replace(model.issues_mut(), v.clone());
@@ -266,12 +267,24 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 None,
             ));
         }
+        WsMsg::Issue(WsMsgIssue::IssueCreated(issue)) => {
+            let id = issue.id;
+            model.issues_by_id.insert(id, issue.clone());
+            if let Some(idx) = model.issues().iter().position(|i| i.id == issue.id) {
+                let _ = std::mem::replace(&mut model.issues_mut()[idx], issue.clone());
+            }
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Issue,
+                OperationKind::SingleCreated,
+                Some(id),
+            ));
+        }
         WsMsg::Issue(WsMsgIssue::IssueUpdated(issue)) => {
             let id = issue.id;
             model.issues_by_id.remove(&id);
             model.issues_by_id.insert(id, issue.clone());
             if let Some(idx) = model.issues().iter().position(|i| i.id == issue.id) {
-                let _ = std::mem::replace(&mut model.issues_mut()[idx], issue);
+                let _ = std::mem::replace(&mut model.issues_mut()[idx], issue.clone());
             }
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Issue,
@@ -280,10 +293,9 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         WsMsg::Issue(WsMsgIssue::IssueDeleted(id, _count)) => {
-            let mut old = vec![];
-            std::mem::swap(model.issues_mut(), &mut old);
+            let old = std::mem::take(model.issues_mut());
             for is in old {
-                if is.id == id {
+                if is.id == *id {
                     continue;
                 }
                 model.issues_mut().push(is);
@@ -291,7 +303,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Issue,
                 OperationKind::SingleRemoved,
-                Some(id),
+                Some(*id),
             ));
         }
         // users
@@ -308,7 +320,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         // comments
-        WsMsg::Comment(WsMsgComment::IssueCommentsLoaded(mut comments)) => {
+        WsMsg::Comment(WsMsgComment::IssueCommentsLoaded(comments)) => {
             let issue_id = match &model.modals().edit_issue {
                 Some(modal) => modal.id,
                 _ => return,
@@ -318,7 +330,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             }
             comments.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
             model.comments = comments.clone();
-            for comment in comments {
+            for comment in std::mem::take(comments) {
                 model.comments_by_id.insert(comment.id, comment);
             }
             orders.send_msg(Msg::ResourceChanged(
@@ -331,7 +343,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             let comment_id = comment.id;
             if let Some(idx) = model.comments.iter().position(|c| c.id == comment.id) {
                 let _ = std::mem::replace(&mut model.comments[idx], comment.clone());
-                model.comments_by_id.insert(comment.id, comment);
+                model.comments_by_id.insert(comment.id, comment.clone());
             }
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Comment,
@@ -340,20 +352,20 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         WsMsg::Comment(WsMsgComment::CommentDeleted(comment_id, _count)) => {
-            if let Some(idx) = model.comments.iter().position(|c| c.id == comment_id) {
+            if let Some(idx) = model.comments.iter().position(|c| c.id == *comment_id) {
                 model.comments.remove(idx);
             }
             model.comments_by_id.remove(&comment_id);
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Comment,
                 OperationKind::SingleRemoved,
-                Some(comment_id),
+                Some(*comment_id),
             ));
         }
         // messages
-        WsMsg::Message(WsMsgMessage::MessageUpdated(mut received)) => {
+        WsMsg::Message(WsMsgMessage::MessageUpdated(received)) => {
             if let Some(idx) = model.messages.iter().position(|m| m.id == received.id) {
-                std::mem::swap(&mut model.messages[idx], &mut received);
+                std::mem::swap(&mut model.messages[idx], received);
             }
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
             orders.send_msg(Msg::ResourceChanged(
@@ -363,7 +375,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         WsMsg::Message(WsMsgMessage::MessagesLoaded(v)) => {
-            model.messages = v;
+            model.messages = std::mem::take(v);
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Message,
@@ -372,14 +384,14 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         WsMsg::Message(WsMsgMessage::MessageMarkedSeen(id, _count)) => {
-            if let Some(idx) = model.messages.iter().position(|m| m.id == id) {
+            if let Some(idx) = model.messages.iter().position(|m| m.id == *id) {
                 model.messages.remove(idx);
             }
             model.messages.sort_by(|a, b| a.id.cmp(&b.id));
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Message,
                 OperationKind::SingleRemoved,
-                Some(id),
+                Some(*id),
             ));
         }
 
@@ -387,7 +399,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         WsMsg::Epic(WsMsgEpic::EpicsLoaded(epics)) => {
             model.epics = epics.clone();
             for epic in epics {
-                model.epics_by_id.insert(epic.id, epic);
+                model.epics_by_id.insert(epic.id, epic.clone());
             }
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Epic,
@@ -399,7 +411,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             let id = epic.id;
             model.epics.push(epic.clone());
             model.epics.sort_by(|a, b| a.id.cmp(&b.id));
-            model.epics_by_id.insert(epic.id, epic);
+            model.epics_by_id.insert(epic.id, epic.clone());
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Epic,
                 OperationKind::SingleCreated,
@@ -411,7 +423,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             if let Some(idx) = model.epics.iter().position(|e| e.id == epic.id) {
                 let _ = std::mem::replace(&mut model.epics[idx], epic.clone());
             }
-            model.epics_by_id.insert(epic.id, epic);
+            model.epics_by_id.insert(epic.id, epic.clone());
             model.epics.sort_by(|a, b| a.id.cmp(&b.id));
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Epic,
@@ -420,7 +432,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         WsMsg::Epic(WsMsgEpic::EpicDeleted(id, _count)) => {
-            if let Some(idx) = model.epics.iter().position(|e| e.id == id) {
+            if let Some(idx) = model.epics.iter().position(|e| e.id == *id) {
                 model.epics.remove(idx);
             }
             model.epics_by_id.remove(&id);
@@ -428,7 +440,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Epic,
                 OperationKind::SingleRemoved,
-                Some(id),
+                Some(*id),
             ));
         }
         WsMsg::Session(WsMsgSession::AuthenticateSuccess) => {
@@ -436,7 +448,7 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             page.login_success = true;
         }
         WsMsg::Session(WsMsgSession::BindTokenOk(access_token)) => {
-            match write_auth_token(Some(access_token)) {
+            match write_auth_token(Some(*access_token)) {
                 Ok(msg) => {
                     orders.skip().send_msg(msg);
                 }
