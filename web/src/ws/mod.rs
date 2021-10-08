@@ -169,6 +169,22 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             ));
         }
         // user settings
+        WsMsg::User(WsMsgUser::AvatarUrlChanged(id, url)) => {
+            if let Some(user) = model.user.as_mut().filter(|u| u.id == id) {
+                user.avatar_url = Some(url.clone());
+            }
+            if let Some(user) = model.users_by_id.get_mut(&id) {
+                user.avatar_url = Some(url.clone());
+            }
+            if let Some(user) = model.users.iter_mut().find(|u| u.id == id) {
+                user.avatar_url = Some(url);
+            }
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::User,
+                OperationKind::SingleModified,
+                Some(id),
+            ));
+        }
         WsMsg::User(WsMsgUser::UserSettingUpdated(setting)) => {
             model.user_settings = Some(setting);
             orders.send_msg(Msg::ResourceChanged(
@@ -332,23 +348,6 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 ResourceKind::Comment,
                 OperationKind::SingleRemoved,
                 Some(comment_id),
-            ));
-        }
-        WsMsg::User(WsMsgUser::AvatarUrlChanged(user_id, avatar_url)) => {
-            for user in model.users.iter_mut() {
-                if user.id == user_id {
-                    user.avatar_url = Some(avatar_url.clone());
-                }
-            }
-            if let Some(me) = model.user.as_mut() {
-                if me.id == user_id {
-                    me.avatar_url = Some(avatar_url);
-                }
-            }
-            orders.send_msg(Msg::ResourceChanged(
-                ResourceKind::User,
-                OperationKind::SingleModified,
-                Some(user_id),
             ));
         }
         // messages

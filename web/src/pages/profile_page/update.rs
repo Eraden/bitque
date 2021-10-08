@@ -39,6 +39,12 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 .unwrap_or_default()
                 .into();
         }
+        Msg::ResourceChanged(ResourceKind::User, OperationKind::SingleModified, Some(id)) => {
+            profile_page.avatar.url = model
+                .users_by_id
+                .get(&id)
+                .and_then(|u| u.avatar_url.clone());
+        }
         Msg::FileInputChanged(FieldId::Profile(UsersFieldId::Avatar), ..) => {
             let file = match profile_page.avatar.file.as_ref() {
                 Some(f) => f,
