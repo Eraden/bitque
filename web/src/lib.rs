@@ -219,7 +219,8 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
 
     match &msg {
         Msg::AuthTokenStored => {
-            go_to_board(orders);
+            authorize_or_redirect(model, orders);
+            // go_to_board(orders);
             return;
         }
         Msg::AuthTokenErased => {
