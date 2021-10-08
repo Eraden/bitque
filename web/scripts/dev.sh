@@ -15,6 +15,7 @@ export CLIENT_ROOT=${PROJECT_ROOT}/web
 export HI_ROOT=${PROJECT_ROOT}/highlight/jirs-highlight
 export MODE=force
 export BUILD_TYPE=--dev
+export COPY_TO=${CLIENT_ROOT}/tmp
 
 echo $PROJECT_ROOT
 echo $CLIENT_ROOT
