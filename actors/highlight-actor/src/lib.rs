@@ -128,7 +128,7 @@ impl Handler<HighlightCode> for HighlightActor {
     }
 }
 
-#[derive(actix::Message)]
+#[derive(actix::Message, Default)]
 #[rtype(result = "Result<String, HighlightError>")]
 pub struct TextHighlightCode {
     pub code: String,

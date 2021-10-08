@@ -30,13 +30,9 @@ lazy_static = { version = "*" }
 
 uuid = { version = "0.8.1", features = ["serde", "v4", "v5"] }
 
+comrak = { version = "*" }
+
 async-trait = { version = "*" }
-
-[dependencies.comrak]
-version = "*"
-
-[dependencies.pulldown-cmark]
-version = "*"
 
 [dependencies.jirs-config]
 path = "../../shared/jirs-config"

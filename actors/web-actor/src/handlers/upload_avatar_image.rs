@@ -79,7 +79,7 @@ pub(crate) async fn handle_image(
     let filename = disposition.get_filename().unwrap();
     let system_file_name = format!("{}-{}", user_id, filename);
 
-    let (sender, receiver) = tokio::sync::broadcast::channel(64);
+    let (sender, _receiver) = tokio::sync::broadcast::channel(64);
 
     let fs_fut = local_storage_write(system_file_name, fs, user_id, sender.subscribe());
     let read_fut = read_form_data(&mut field, sender);

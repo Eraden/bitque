@@ -62,58 +62,12 @@ impl AsyncHandler<UpdateIssueHandler> for WebSocketActor {
                 msg.title = Some(s);
             }
             (IssueFieldId::Description, PayloadVariant::String(s)) => {
-                let html: String = {
-                    use pulldown_cmark::*;
-                    let parser = pulldown_cmark::Parser::new(s.as_str());
-                    enum ParseState {
-                        Code(highlight_actor::TextHighlightCode),
-                        Other,
-                    }
-                    let mut state = ParseState::Other;
+                let opts = comrak::ComrakOptions::default();
+                let hi = comrak::plugins::syntect::SyntectAdapter::new("InspiredGitHub");
+                let mut plugins = comrak::ComrakPlugins::default();
+                plugins.render.codefence_syntax_highlighter = Some(&hi);
 
-                    let parser = parser.flat_map(|event| match event {
-                        Event::Text(s) => {
-                            if let ParseState::Code(h) = &mut state {
-                                h.code.push_str(s.as_ref());
-                                return vec![];
-                            }
-                            vec![Event::Text(s)]
-                        }
-                        Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(name))) => {
-                            state = ParseState::Code(highlight_actor::TextHighlightCode {
-                                lang: name.to_string(),
-                                code: String::new(),
-                            });
-                            vec![Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(name)))]
-                        }
-                        Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(lang))) => {
-                            let ev = if let ParseState::Code(h) = &mut state {
-                                let mut msg = highlight_actor::TextHighlightCode {
-                                    code: String::new(),
-                                    lang: String::new(),
-                                };
-                                std::mem::swap(h, &mut msg);
-                                let highlighted =
-                                    match futures::executor::block_on(self.hi.send(msg)) {
-                                        Ok(Ok(res)) => res,
-                                        _ => s.to_string(),
-                                    };
-                                vec![
-                                    Event::Html(highlighted.into()),
-                                    Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(lang))),
-                                ]
-                            } else {
-                                vec![]
-                            };
-                            state = ParseState::Other;
-                            ev
-                        }
-                        _ => vec![event],
-                    });
-                    let mut buff = String::new();
-                    let _ = html::push_html(&mut buff, parser);
-                    buff
-                };
+                let html: String = comrak::markdown_to_html_with_plugins(&s, &opts, &plugins);
                 msg.description = Some(html);
                 msg.description_text = Some(s);
             }
