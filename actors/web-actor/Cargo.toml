@@ -15,7 +15,7 @@ path = "./src/lib.rs"
 [features]
 local-storage = ["filesystem-actor"]
 aws-s3 = ["amazon-actor"]
-default = ["local-storage", "aws-s3"]
+default = ["local-storage"]
 
 [dependencies]
 common = { path = "../../shared/common" }

@@ -30,6 +30,8 @@ libc = { version = "0.2.0", default-features = false }
 lettre = { version = "*" }
 lettre_email = { version = "*" }
 
+log = { version = "*" }
+
 [dependencies.jirs-config]
 path = "../../shared/jirs-config"
 features = ["mail", "web"]

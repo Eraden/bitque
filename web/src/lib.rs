@@ -34,8 +34,8 @@ mod shared;
 pub mod validations;
 mod ws;
 
-// #[global_allocator]
-// static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[derive(Debug)]
 #[repr(C)]
@@ -190,6 +190,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                             }));
                         }
                         Ok(m) => {
+                            log::info!("INCOMING {:?}", m);
                             orders
                                 .skip()
                                 .send_msg(Msg::WebSocketChange(WebSocketChanged::WsMsg(m)));
@@ -200,6 +201,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                 }
                 WebSocketChanged::WebSocketClosed => {
                     open_socket(model, orders);
+                    return;
                 }
                 WebSocketChanged::Bounced(ws_msg) => {
                     model.ws_queue.push(ws_msg);
@@ -207,7 +209,6 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
                     return;
                 }
             };
-            Msg::WebSocketChange(change)
         }
         _ => msg,
     };

@@ -47,6 +47,7 @@ path = "../actors/database-actor"
 
 [dependencies.web-actor]
 path = "../actors/web-actor"
+features = ["local-storage"]
 
 [dependencies.websocket-actor]
 path = "../actors/websocket-actor"

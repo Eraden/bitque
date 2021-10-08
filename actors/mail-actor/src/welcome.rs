@@ -41,6 +41,9 @@ impl Handler<Welcome> for MailExecutor {
             "#,
             bind_token = msg.bind_token,
         );
+        if cfg!(debug_assetrions) {
+            log::info!("Sending email:\n{}", html);
+        }
 
         let email = lettre_email::Email::builder()
             .from(from)

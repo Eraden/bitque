@@ -13,7 +13,7 @@ use database_actor::DbExecutor;
 #[cfg(feature = "local-storage")]
 use futures::executor::block_on;
 use futures::{StreamExt, TryStreamExt};
-use jirs_data::msg::WsMsgUser;
+use jirs_data::msg::{WsMsg, WsMsgUser};
 use jirs_data::{User, UserId};
 use websocket_actor::server::InnerMsg::BroadcastToChannel;
 use websocket_actor::server::WsServer;
@@ -136,7 +136,7 @@ pub async fn upload(
             let user = update_user_avatar(user_id, avatar_url.clone(), db).await?;
             ws.send(BroadcastToChannel(
                 project_id,
-                WsMsg::AvatarUrlChanged(user.id, avatar_url),
+                WsMsg::User(WsMsgUser::AvatarUrlChanged(user.id, avatar_url)),
             ))
             .await
             .map_err(|_| HttpResponse::UnprocessableEntity().finish())?;

@@ -432,7 +432,26 @@ pub fn update(msg: WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 Some(id),
             ));
         }
-        _ => (),
+        WsMsg::Session(WsMsgSession::AuthenticateSuccess) => {
+            let page = crate::match_page_mut!(model, SignIn);
+            page.login_success = true;
+        }
+        WsMsg::Session(WsMsgSession::BindTokenOk(access_token)) => {
+            match write_auth_token(Some(access_token)) {
+                Ok(msg) => {
+                    orders.skip().send_msg(msg);
+                }
+                Err(e) => {
+                    log::error!("{}", e);
+                }
+            }
+        }
+        _ => {
+            log::info!(
+                "got web socket message but don't know what to do with it {:?}",
+                msg
+            );
+        }
     };
 }
 

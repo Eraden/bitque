@@ -70,7 +70,7 @@ async fn main() -> Result<(), String> {
         app
     })
     .workers(web_config.concurrency)
-    .bind(web_config.addr())
+    .bind(web_config.bind_addr())
     .map_err(|e| format!("{}", e))?
     .run()
     .await

@@ -1901,6 +1901,7 @@ dependencies = [
  "lettre",
  "lettre_email",
  "libc",
+ "log",
  "openssl-sys",
  "serde",
  "toml",

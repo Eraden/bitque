@@ -134,7 +134,7 @@ async fn aws_s3(
 async fn local_storage_write(
     system_file_name: String,
     fs: Data<Addr<filesystem_actor::FileSystemExecutor>>,
-    user_id: jirs_data::UserId,
+    _user_id: jirs_data::UserId,
     receiver: Receiver<bytes::Bytes>,
 ) -> Option<String> {
     let web_config = jirs_config::web::config();
@@ -148,15 +148,9 @@ async fn local_storage_write(
         .await
     {
         Ok(Ok(_)) => Some(format!(
-            "{proto}://{bind}{port}{client_path}/{user_id}-{filename}",
-            proto = if web_config.ssl { "https" } else { "http" },
-            bind = web_config.bind,
-            port = match web_config.port.as_str() {
-                "80" | "443" => "".to_string(),
-                p => format!(":{}", p),
-            },
+            "{addr}{client_path}/{filename}",
+            addr = web_config.full_addr(),
             client_path = fs_config.client_path,
-            user_id = user_id,
             filename = system_file_name
         )),
         Ok(_) => None,

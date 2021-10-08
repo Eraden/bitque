@@ -51,6 +51,9 @@ impl actix::Handler<CreateFile> for FileSystemExecutor {
 
     fn handle(&mut self, msg: CreateFile, _ctx: &mut Self::Context) -> Self::Result {
         let Configuration { store_path, .. } = &self.config;
+        if std::fs::metadata(&store_path).is_err() {
+            let _ = std::fs::create_dir_all(&store_path);
+        }
         let CreateFile {
             mut source,
             file_name,

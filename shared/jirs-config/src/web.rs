@@ -12,6 +12,7 @@ pub struct Configuration {
     pub port: String,
     pub bind: String,
     pub ssl: bool,
+    pub public_addr: Option<String>,
 }
 
 impl Default for Configuration {
@@ -21,12 +22,20 @@ impl Default for Configuration {
             port: "5000".to_string(),
             bind: "0.0.0.0".to_string(),
             ssl: false,
+            public_addr: None,
         }
     }
 }
 
 impl Configuration {
     pub fn addr(&self) -> String {
+        match self.public_addr.as_deref() {
+            Some(s) => String::from(s),
+            _ => format!("{}:{}", self.bind, self.port),
+        }
+    }
+
+    pub fn bind_addr(&self) -> String {
         format!("{}:{}", self.bind, self.port)
     }
 
