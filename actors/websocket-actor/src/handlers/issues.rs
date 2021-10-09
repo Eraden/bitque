@@ -24,7 +24,10 @@ impl AsyncHandler<WsMsgIssue> for WebSocketActor {
             }
             WsMsgIssue::IssueCreate(payload) => self.exec(payload).await,
             WsMsgIssue::IssueDelete(id) => self.exec(DeleteIssue { id }).await,
-            WsMsgIssue::IssueSyncListPosition(sync) => self.exec(SyncIssueListPosition(sync)).await,
+            WsMsgIssue::IssueSyncListPosition(sync) => {
+                self.exec(SyncIssueListPosition(sync)).await?;
+                Ok(None)
+            }
 
             WsMsgIssue::IssueUpdated(_) => Ok(None),
             WsMsgIssue::IssueDeleted(_, _) => Ok(None),

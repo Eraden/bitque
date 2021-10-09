@@ -6,7 +6,7 @@ use crate::components::styled_avatar::*;
 use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_icon::*;
 use crate::model::PageContent;
-use crate::{match_page, BoardPageChange, Model, Msg, Page, PageChanged};
+use crate::{match_page, Model, Msg, Page};
 
 #[inline(always)]
 pub fn project_board_lists(model: &Model) -> Node<Msg> {
@@ -105,27 +105,8 @@ fn project_issue_list(
         .iter()
         .map(|issue| ProjectIssue { model, issue }.render())
         .collect();
-    let drop_handler = {
-        let send_status = status_id;
-        drag_ev(Ev::Drop, move |ev| {
-            ev.prevent_default();
-            ev.stop_propagation();
-            Some(Msg::PageChanged(PageChanged::Board(
-                BoardPageChange::IssueDropZone(send_status),
-            )))
-        })
-    };
-
-    let drag_over_handler = {
-        let send_status = status_id;
-        drag_ev(Ev::DragOver, move |ev| {
-            ev.prevent_default();
-            ev.stop_propagation();
-            Some(Msg::PageChanged(PageChanged::Board(
-                BoardPageChange::IssueDragOverStatus(send_status),
-            )))
-        })
-    };
+    let drop_handler = crate::pages::project_page::events::on_drop_issue_drop_zone(status_id);
+    let drag_over_handler = crate::pages::project_page::events::on_drag_over_move_issue(status_id);
 
     div![
         C!["list"],
@@ -185,40 +166,13 @@ impl<'l> ProjectIssue<'l> {
         .render();
 
         let issue_id = self.issue.id;
-        let drag_started = drag_ev(Ev::DragStart, move |ev| {
-            ev.stop_propagation();
-            Some(Msg::PageChanged(PageChanged::Board(
-                BoardPageChange::IssueDragStarted(issue_id),
-            )))
-        });
-        let drag_stopped = drag_ev(Ev::DragEnd, move |ev| {
-            ev.stop_propagation();
-            Some(Msg::PageChanged(PageChanged::Board(
-                BoardPageChange::IssueDragStopped(issue_id),
-            )))
-        });
-        let drag_over_handler = drag_ev(Ev::DragEnter, move |ev| {
-            ev.prevent_default();
-            ev.stop_propagation();
-            Some(Msg::PageChanged(PageChanged::Board(
-                BoardPageChange::ChangePosition(issue_id),
-            )))
-        });
-
-        let drag_out = drag_ev(Ev::DragLeave, move |_| {
-            Some(Msg::PageChanged(PageChanged::Board(
-                BoardPageChange::DragLeave(issue_id),
-            )))
-        });
-        let on_click = mouse_ev("click", move |ev| {
-            ev.prevent_default();
-            ev.stop_propagation();
-            seed::Url::new()
-                .add_path_part("issues")
-                .add_path_part(format!("{}", issue_id))
-                .go_and_push();
-            Msg::ChangePage(Page::EditIssue(issue_id))
-        });
+        let drag_started = crate::pages::project_page::events::on_drag_started_drag_issue(issue_id);
+        let drag_stopped =
+            crate::pages::project_page::events::on_drag_stop_issue_drag_stop(issue_id);
+        let drag_over_handler =
+            crate::pages::project_page::events::on_drag_enter_change_position(issue_id);
+        let drag_out = crate::pages::project_page::events::on_drag_leave_issue_drag_leave(issue_id);
+        let on_click = crate::pages::project_page::events::on_click_edit_issue(issue_id);
 
         a![
             drag_started,

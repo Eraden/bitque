@@ -156,7 +156,6 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
     if model.ws.is_none() {
         open_socket(model, orders);
     }
-    let mut msg = msg;
 
     let msg = match msg {
         Msg::WebSocketChange(change) => match change {

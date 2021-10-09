@@ -134,10 +134,12 @@ fn build_page_content(model: &mut Model) {
 }
 
 async fn update_avatar(data: FormData, host_url: String) -> Option<Msg> {
+    use seed::prelude::JsValue;
+
     let path = format!("{}/avatar/", host_url);
     let result = Request::new(path)
         .method(Method::Post)
-        .body(&data)
+        .body(JsValue::from(data))
         .fetch()
         .await;
     let response = match result {

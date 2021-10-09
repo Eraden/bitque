@@ -205,10 +205,10 @@ fn issue_list(page: &ReportsPage, project_name: &str, this_month_updated: &[&Iss
                 .render();
             let priority_icon = StyledIcon::from(Icon::from(*priority))
                 .render();
-            let desc = Node::from_html(None,
-                                       description
-                                           .as_deref()
-                                           .unwrap_or_default(),
+            let desc = Node::from_html(
+                description
+                    .as_deref()
+                    .unwrap_or_default(),
             );
             let link = StyledLink {
                 children: vec![

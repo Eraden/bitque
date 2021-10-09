@@ -20,7 +20,7 @@ default = []
 [dependencies]
 jirs-data = { path = "../shared/jirs-data", features = ["frontend"] }
 
-seed = { git = "https://github.com/seed-rs/seed.git" }
+seed = { version = "0.8.0" }
 
 serde = { version = "*" }
 serde_json = { version = "*" }
