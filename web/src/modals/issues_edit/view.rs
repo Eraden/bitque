@@ -452,10 +452,17 @@ fn reporters_select(
         opened: reporter_state.opened,
         variant: SelectVariant::Empty,
         text_filter: reporter_state.text_filter.as_str(),
-        options: Some(model.users.iter().map(reporter_select_option)),
+        options: Some(
+            model
+                .user_ids
+                .iter()
+                .filter_map(|id| model.users_by_id.get(id))
+                .map(reporter_select_option),
+        ),
         selected: model
-            .users
+            .user_ids
             .iter()
+            .filter_map(|id| model.users_by_id.get(id))
             .filter(|user| payload.reporter_id == user.id)
             .map(reporter_select_option)
             .collect(),
@@ -502,10 +509,17 @@ fn assignees_select(
         is_multi: true,
         opened: assignees_state.opened,
         text_filter: assignees_state.text_filter.as_str(),
-        options: Some(model.users.iter().map(assignee_select_option)),
+        options: Some(
+            model
+                .user_ids
+                .iter()
+                .filter_map(|id| model.users_by_id.get(id))
+                .map(assignee_select_option),
+        ),
         selected: model
-            .users
+            .user_ids
             .iter()
+            .filter_map(|id| model.users_by_id.get(id))
             .filter(|user| payload.user_ids.contains(&user.id))
             .map(assignee_select_option)
             .collect(),

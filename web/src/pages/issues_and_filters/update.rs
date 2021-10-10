@@ -79,7 +79,11 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                         Some(JqlPart::Field(FieldOption::Assignee))
                     ) =>
                 {
-                    let u = match model.users.get(n as usize) {
+                    let id = match model.user_ids.get(n as usize) {
+                        Some(idx) => idx,
+                        _ => return,
+                    };
+                    let u = match model.users_by_id.get(id) {
                         Some(u) => u,
                         _ => return,
                     };

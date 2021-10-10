@@ -70,8 +70,9 @@ fn options<'l, 'm: 'l>(model: &'m Model, jql: &Jql) -> Vec<StyledSelectOption<'l
             if matches!(jql.field(), Some(JqlPart::Field(FieldOption::Assignee))) =>
         {
             model
-                .users
+                .user_ids
                 .iter()
+                .filter_map(|id| model.users_by_id.get(id))
                 .map(|u| StyledSelectOption {
                     name: Some("user"),
                     icon: None,

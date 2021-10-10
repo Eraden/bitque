@@ -358,8 +358,9 @@ fn parse_description(model: &Model, desc: &str) -> Node<Msg> {
         let child = parse_email(word)
             .and_then(|email| {
                 model
-                    .users
+                    .user_ids
                     .iter()
+                    .filter_map(|id| model.users_by_id.get(id))
                     .enumerate()
                     .find(|(_, user)| user.email == email)
             })

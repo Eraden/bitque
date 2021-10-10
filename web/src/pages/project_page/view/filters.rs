@@ -73,8 +73,9 @@ pub fn avatars_filters(model: &Model) -> Node<Msg> {
     };
     let active_avatar_filters = &project_page.active_avatar_filters;
     let avatars: Vec<Node<Msg>> = model
-        .users
+        .user_ids
         .iter()
+        .filter_map(|id| model.users_by_id.get(id))
         .enumerate()
         .map(|(idx, user)| {
             let user_id = user.id;

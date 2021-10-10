@@ -402,18 +402,18 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     });
 
     {
-        let sender_clone = sender.clone();
-        let id = FieldId::ProjectSettings(ProjectFieldId::Description);
-        model
-            .distinct_key_up
-            .keyup_wih_reset(id.to_str(), 20, move |ev| {
-                let sender = sender_clone.clone();
-                let key_ev = seed::to_keyboard_event(&ev);
-                let target = key_ev.target().unwrap();
-                let el = seed::to_html_el(&target);
-                let value = el.inner_html();
-                sender.clone()(Some(Msg::StrInputChanged(id.clone(), value)));
-            });
+        // let sender_clone = sender.clone();
+        // let id = FieldId::ProjectSettings(ProjectFieldId::Description);
+        // model
+        //     .distinct_key_up
+        //     .keyup_wih_reset(id.to_str(), 20, move |ev| {
+        //         let sender = sender_clone.clone();
+        //         let key_ev = seed::to_keyboard_event(&ev);
+        //         let target = key_ev.target().unwrap();
+        //         let el = seed::to_html_el(&target);
+        //         let value = el.inner_html();
+        //         sender.clone()(Some(Msg::StrInputChanged(id.clone(),
+        // value)));     });
     }
 
     open_socket(&mut model, orders);

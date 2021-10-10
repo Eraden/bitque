@@ -233,17 +233,19 @@ fn reporter_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         variant: SelectVariant::Normal,
         text_filter: modal.reporter_state.text_filter.as_str(),
         opened: modal.reporter_state.opened,
-        options: Some(model.users.iter().map(reporter_select_option)),
+        options: Some(
+            model
+                .user_ids
+                .iter()
+                .filter_map(|id| model.users_by_id.get(id))
+                .map(reporter_select_option),
+        ),
         selected: model
-            .users
+            .user_ids
             .iter()
-            .filter_map(|user| {
-                if user.id == reporter_id {
-                    Some(reporter_select_option(user))
-                } else {
-                    None
-                }
-            })
+            .filter(|id| **id == reporter_id)
+            .filter_map(|id| model.users_by_id.get(id))
+            .map(reporter_select_option)
             .collect(),
 
         valid: true,
@@ -284,10 +286,17 @@ fn assignees_field(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         is_multi: true,
         text_filter: modal.assignees_state.text_filter.as_str(),
         opened: modal.assignees_state.opened,
-        options: Some(model.users.iter().map(assignee_select_option)),
+        options: Some(
+            model
+                .user_ids
+                .iter()
+                .filter_map(|id| model.users_by_id.get(id))
+                .map(assignee_select_option),
+        ),
         selected: model
-            .users
+            .user_ids
             .iter()
+            .filter_map(|id| model.users_by_id.get(id))
             .filter_map(|user| {
                 if modal.user_ids.contains(&user.id) {
                     Some(assignee_select_option(user))

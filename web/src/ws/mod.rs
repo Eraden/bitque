@@ -177,9 +177,6 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
             if let Some(user) = model.users_by_id.get_mut(&id) {
                 user.avatar_url = Some(url.clone());
             }
-            if let Some(user) = model.users.iter_mut().find(|u| u.id == *id) {
-                user.avatar_url = Some(url.clone());
-            }
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::User,
                 OperationKind::SingleModified,
@@ -308,7 +305,7 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
         }
         // users
         WsMsg::Project(WsMsgProject::ProjectUsersLoaded(v)) => {
-            model.users = v.clone();
+            model.user_ids = v.iter().map(|u| u.id).collect();
             model.users_by_id.clear();
             for user in v {
                 model.users_by_id.insert(user.id, user.clone());
