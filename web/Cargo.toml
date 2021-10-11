@@ -34,6 +34,8 @@ dotenv = { version = "*" }
 wasm-logger = { version = "*" }
 log = "*"
 
+console_error_panic_hook = { version = "*" }
+
 [dependencies.wee_alloc]
 version = "*"
 features = ["static_array_backend"]

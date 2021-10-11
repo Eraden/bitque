@@ -42,7 +42,7 @@ where
     )
 }
 
-fn epic_select_option<'l>(epic: &'l Epic) -> StyledSelectOption<'l> {
+fn epic_select_option(epic: &Epic) -> StyledSelectOption<'_> {
     StyledSelectOption {
         value: epic.id as u32,
         text: Some(epic.name.as_str()),

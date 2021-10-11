@@ -52,11 +52,9 @@ impl<'l> StyledImageInput<'l> {
             let v = input
                 .files()
                 .map(|list| {
-                    let mut v = vec![];
-                    for i in 0..list.length() {
-                        v.push(list.get(i).unwrap());
-                    }
-                    v
+                    (0..list.length())
+                        .filter_map(|i| list.get(i))
+                        .collect::<Vec<File>>()
                 })
                 .unwrap_or_default();
             Msg::FileInputChanged(field_id, v)

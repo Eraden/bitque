@@ -6,6 +6,7 @@ use crate::components::styled_avatar::*;
 use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_icon::*;
 use crate::model::PageContent;
+use crate::pages::project_page::{events, StatusIssueIds};
 use crate::{match_page, Model, Msg, Page};
 
 #[inline(always)]
@@ -14,23 +15,11 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
 
     let now = chrono::Utc::now().naive_utc();
     let rows = project_page.visible_issues.iter().map(|per_epic| {
-        let columns: Vec<Node<Msg>> = per_epic
+        let columns = per_epic
             .per_status_issues
             .iter()
-            .map(|per_status| {
-                let issues: Vec<&Issue> = per_status
-                    .issue_ids
-                    .iter()
-                    .filter_map(|id| model.issues_by_id.get(id))
-                    .collect();
-                project_issue_list(
-                    model,
-                    per_status.status_id,
-                    &per_status.status_name,
-                    issues.as_slice(),
-                )
-            })
-            .collect();
+            .map(|per_status| project_issue_list(model, per_status));
+
         let epic_name = match per_epic.epic_ref.as_ref() {
             Some((id, name, starts_at, ends_at)) => {
                 let id = *id;
@@ -95,18 +84,18 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
 }
 
 #[inline(always)]
-fn project_issue_list(
-    model: &Model,
-    status_id: IssueStatusId,
-    status_name: &str,
-    issues: &[&Issue],
-) -> Node<Msg> {
-    let issues: Vec<Node<Msg>> = issues
+fn project_issue_list(model: &Model, per_status: &StatusIssueIds) -> Node<Msg> {
+    let status_id = per_status.status_id;
+    let status_name = per_status.status_name.as_str();
+
+    let issues = per_status
+        .issue_ids
         .iter()
-        .map(|issue| ProjectIssue { model, issue }.render())
-        .collect();
-    let drop_handler = crate::pages::project_page::events::on_drop_issue_drop_zone(status_id);
-    let drag_over_handler = crate::pages::project_page::events::on_drag_over_move_issue(status_id);
+        .filter_map(|id| model.issues_by_id.get(id))
+        .map(|issue| ProjectIssue { model, issue }.render());
+
+    let drop_handler = events::on_drop_issue_drop_zone(status_id);
+    let drag_over_handler = events::on_drag_over_move_issue(status_id);
 
     div![
         C!["list"],
@@ -133,7 +122,7 @@ impl<'l> ProjectIssue<'l> {
             PageContent::Project(project_page) => project_page.issue_drag.is_dragging(),
             _ => false,
         };
-        let avatars: Vec<Node<Msg>> = self
+        let avatars = self
             .issue
             .user_ids
             .iter()
@@ -146,8 +135,7 @@ impl<'l> ProjectIssue<'l> {
                     ..StyledAvatar::default()
                 }
                 .render()
-            })
-            .collect();
+            });
 
         let issue_type_icon = StyledIcon {
             icon: self.issue.issue_type.into(),
@@ -166,13 +154,11 @@ impl<'l> ProjectIssue<'l> {
         .render();
 
         let issue_id = self.issue.id;
-        let drag_started = crate::pages::project_page::events::on_drag_started_drag_issue(issue_id);
-        let drag_stopped =
-            crate::pages::project_page::events::on_drag_stop_issue_drag_stop(issue_id);
-        let drag_over_handler =
-            crate::pages::project_page::events::on_drag_enter_change_position(issue_id);
-        let drag_out = crate::pages::project_page::events::on_drag_leave_issue_drag_leave(issue_id);
-        let on_click = crate::pages::project_page::events::on_click_edit_issue(issue_id);
+        let drag_started = events::on_drag_started_drag_issue(self.issue.id);
+        let drag_stopped = events::on_drag_stop_issue_drag_stop(self.issue.id);
+        let drag_over_handler = events::on_drag_enter_change_position(self.issue.id);
+        let drag_out = events::on_drag_leave_issue_drag_leave(self.issue.id);
+        let on_click = events::on_click_edit_issue(self.issue.id);
 
         a![
             drag_started,
@@ -192,7 +178,7 @@ impl<'l> ProjectIssue<'l> {
                         div![C!["issueTypeIcon"], issue_type_icon],
                         div![C!["issuePriorityIcon"], priority_icon]
                     ],
-                    div![C!["assignees"], avatars,],
+                    div![C!["assignees"], avatars],
                 ]
             ]
         ]

@@ -34,8 +34,8 @@ mod shared;
 pub mod validations;
 mod ws;
 
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+// #[global_allocator]
+// static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[derive(Debug)]
 #[repr(C)]
@@ -179,7 +179,7 @@ fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>) {
             WebSocketChanged::WsMsg(mut ws_msg) => {
                 ws::update(&mut ws_msg, model, orders);
                 orders.skip();
-                Msg::WebSocketChange(WebSocketChanged::WsMsg(ws_msg))
+                return;
             }
             WebSocketChanged::WebSocketMessageLoaded(v) => {
                 match bincode::deserialize(v.as_slice()) {
@@ -325,6 +325,8 @@ fn resolve_page(url: Url) -> Option<Page> {
 
 #[wasm_bindgen]
 pub fn render() {
+    console_error_panic_hook::set_once();
+
     let app = seed::App::start("app", init, update, view);
     wasm_logger::init(wasm_logger::Config::default());
 
@@ -402,18 +404,18 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     });
 
     {
-        // let sender_clone = sender.clone();
-        // let id = FieldId::ProjectSettings(ProjectFieldId::Description);
-        // model
-        //     .distinct_key_up
-        //     .keyup_wih_reset(id.to_str(), 20, move |ev| {
-        //         let sender = sender_clone.clone();
-        //         let key_ev = seed::to_keyboard_event(&ev);
-        //         let target = key_ev.target().unwrap();
-        //         let el = seed::to_html_el(&target);
-        //         let value = el.inner_html();
-        //         sender.clone()(Some(Msg::StrInputChanged(id.clone(),
-        // value)));     });
+        let sender_clone = sender.clone();
+        let id = FieldId::ProjectSettings(ProjectFieldId::Description);
+        model
+            .distinct_key_up
+            .keyup_wih_reset(id.to_str(), 20, move |ev| {
+                let sender = sender_clone.clone();
+                let key_ev = seed::to_keyboard_event(&ev);
+                let target = key_ev.target().unwrap();
+                let el = seed::to_html_el(&target);
+                let value = el.inner_html();
+                sender.clone()(Some(Msg::StrInputChanged(id.clone(), value)));
+            });
     }
 
     open_socket(&mut model, orders);

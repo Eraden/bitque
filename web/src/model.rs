@@ -265,7 +265,7 @@ pub struct Model {
     pub epics_by_id: HashMap<EpicId, Epic>,
 
     pub key_triggers: std::rc::Rc<std::cell::RefCell<HashMap<char, Box<dyn BuildMsg>>>>,
-    // pub distinct_key_up: crate::shared::on_event::Distinct,
+    pub distinct_key_up: crate::shared::on_event::Distinct,
     pub show_extras: bool,
 }
 
@@ -307,7 +307,7 @@ impl Model {
             modals_stack: vec![],
             modals: Modals::default(),
             key_triggers: std::rc::Rc::new(std::cell::RefCell::new(HashMap::with_capacity(20))),
-            // distinct_key_up: crate::shared::on_event::distinct(),
+            distinct_key_up: crate::shared::on_event::distinct(),
         }
     }
 

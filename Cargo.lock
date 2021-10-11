@@ -1765,6 +1765,7 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "chrono",
+ "console_error_panic_hook",
  "derive_enum_iter",
  "derive_enum_primitive",
  "dotenv",

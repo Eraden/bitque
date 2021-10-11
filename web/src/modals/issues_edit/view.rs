@@ -19,7 +19,7 @@ use crate::components::styled_tip::styled_tip;
 use crate::modals::epic_field;
 use crate::modals::issues_edit::Model as EditIssueModal;
 use crate::modals::time_tracking::time_tracking_field;
-use crate::model::{ModalType, Model};
+use crate::model::Model;
 use crate::shared::tracking_widget::tracking_link;
 use crate::{BuildMsg, EditIssueModalSection, FieldChange, FieldId, Msg};
 
@@ -95,14 +95,8 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
             true,
         )))
     });
-    let close_handler = mouse_ev(Ev::Click, |ev| {
-        ev.prevent_default();
-        ev.stop_propagation();
-        Msg::ModalDropped
-    });
-    let delete_confirmation_handler = mouse_ev(Ev::Click, move |_| {
-        Msg::ModalOpened(ModalType::DeleteIssueConfirm(Some(issue_id)))
-    });
+    let close_handler = super::events::on_click_close_modal();
+    let delete_confirmation_handler = super::events::on_click_open_delete_confirm(issue_id);
 
     let copy_button = StyledButton {
         variant: ButtonVariant::Empty,
@@ -181,7 +175,7 @@ fn modal_header(_model: &Model, modal: &EditIssueModal) -> Node<Msg> {
 }
 
 #[inline(always)]
-fn type_select_option<'l>(t: IssueType, text: &'l str) -> StyledSelectOption<'l> {
+fn type_select_option(t: IssueType, text: &str) -> StyledSelectOption<'_> {
     let name = t.to_label();
     StyledSelectOption {
         class_list: name,
@@ -220,7 +214,7 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
     }
     .render();
 
-    let description = render_styled_editor(&description_state);
+    let description = render_styled_editor(description_state);
     let description_field = StyledField {
         input: description,
         ..Default::default()
@@ -478,7 +472,7 @@ fn reporters_select(
 }
 
 #[inline(always)]
-fn reporter_select_option<'l>(user: &'l User) -> StyledSelectOption<'l> {
+fn reporter_select_option(user: &User) -> StyledSelectOption<'_> {
     StyledSelectOption {
         value: user.id as u32,
         icon: Some(
@@ -535,7 +529,7 @@ fn assignees_select(
 }
 
 #[inline(always)]
-fn assignee_select_option<'l>(user: &'l User) -> StyledSelectOption<'l> {
+fn assignee_select_option(user: &User) -> StyledSelectOption<'_> {
     StyledSelectOption {
         value: user.id as u32,
         icon: Some(
