@@ -77,7 +77,7 @@ impl<'l> StyledMdEditor<'l> {
         let StyledMdEditor {
             id,
             initial_text,
-            text: _,
+            text,
             html,
             mode,
             update_event,
@@ -94,7 +94,7 @@ impl<'l> StyledMdEditor<'l> {
         let text_area = StyledTextarea {
             id: Some(id),
             height: 40,
-            value: initial_text,
+            value: if text.is_empty() { initial_text } else { text },
             update_event,
             ..Default::default()
         }

@@ -15,6 +15,11 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     modal.update_states(msg, orders);
 
     match msg {
+        Msg::ResourceChanged(ResourceKind::Issue, OperationKind::SingleRemoved, Some(id)) => {
+            if modal.id == *id {
+                orders.send_msg(crate::Msg::ModalDropped);
+            }
+        }
         Msg::ResourceChanged(ResourceKind::Issue, OperationKind::SingleModified, Some(id)) => {
             let m = model.issues_by_id.get(id).cloned();
             if let Some(issue) = m {
