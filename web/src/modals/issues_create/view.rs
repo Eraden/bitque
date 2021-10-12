@@ -31,9 +31,11 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
     let issue_type_field = issue_type_field(modal);
     let mut form = StyledForm {
         heading: issue_type.form_label(),
-        fields: vec![issue_type_field, crate::shared::divider()],
+        fields: Vec::with_capacity(10),
         ..Default::default()
     };
+    form.fields
+        .extend_from_slice(&[issue_type_field, crate::shared::divider()]);
 
     match issue_type {
         Type::Epic => {
@@ -63,25 +65,19 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
             }
             .render();
 
-            form.fields.push(name_field);
-            form.fields.push(starts);
-            form.fields.push(end)
+            form.fields.extend_from_slice(&[name_field, starts, end])
         }
         Type::Task | Type::Story | Type::Bug => {
-            let short_summary_field = short_summary_field(modal);
-            let description_field = description_field();
-            let reporter_field = reporter_field(model, modal);
-            let assignees_field = assignees_field(model, modal);
-            let issue_priority_field = issue_priority_field(modal);
-            let epic_field =
-                epic_field(model, modal, FieldId::AddIssueModal(IssueFieldId::EpicName));
-
-            form.fields.push(short_summary_field);
-            form.fields.push(description_field);
-            form.fields.push(reporter_field);
-            form.fields.push(assignees_field);
-            form.fields.push(issue_priority_field);
-            if let Some(field) = epic_field {
+            form.fields.extend_from_slice(&[
+                short_summary_field(modal),
+                description_field(),
+                reporter_field(model, modal),
+                assignees_field(model, modal),
+                issue_priority_field(modal),
+            ]);
+            if let Some(field) =
+                epic_field(model, modal, FieldId::AddIssueModal(IssueFieldId::EpicName))
+            {
                 form.fields.push(field);
             }
         }
@@ -105,9 +101,9 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         ..Default::default()
     }
     .render();
-    let actions = div![attrs![At::Class => "actions"], submit, cancel];
 
-    form.fields.push(actions);
+    form.fields
+        .push(div![attrs![At::Class => "actions"], submit, cancel]);
 
     StyledModal {
         class_list: "addIssue",
