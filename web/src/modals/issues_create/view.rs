@@ -14,7 +14,7 @@ use crate::components::styled_select::{SelectVariant, StyledSelect};
 use crate::components::styled_select_child::StyledSelectOption;
 use crate::components::styled_textarea::StyledTextarea;
 use crate::modals::epic_field;
-use crate::modals::issues_create::{Model as AddIssueModal, Type};
+use crate::modals::issues_create::{events, Model as AddIssueModal, Type};
 use crate::model::Model;
 use crate::shared::validate::Validator;
 use crate::{FieldId, Msg};
@@ -92,11 +92,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
             variant: ButtonVariant::Primary,
             text: Some(issue_type.submit_label()),
             class_list: "action submit actionButton",
-            on_click: Some(mouse_ev(Ev::Click, move |ev| {
-                ev.stop_propagation();
-                ev.prevent_default();
-                Some(issue_type.submit_action())
-            })),
+            on_click: Some(events::on_click_submit_action(issue_type)),
             ..Default::default()
         }
         .render()
@@ -105,11 +101,7 @@ pub fn view(model: &Model, modal: &AddIssueModal) -> Node<Msg> {
         variant: ButtonVariant::Empty,
         class_list: "action cancel actionButton",
         text: Some("Cancel"),
-        on_click: Some(mouse_ev(Ev::Click, |ev| {
-            ev.stop_propagation();
-            ev.prevent_default();
-            Some(Msg::ModalDropped)
-        })),
+        on_click: Some(events::on_click_close_modal()),
         ..Default::default()
     }
     .render();
