@@ -3,6 +3,35 @@ use seed::prelude::*;
 
 type EvHandler = EventHandler<crate::Msg>;
 
+pub fn on_click_submit_save_changes() -> EvHandler {
+    submit_changes(Ev::Click)
+}
+
+pub fn on_submit_submit_save_changes() -> EvHandler {
+    submit_changes(Ev::Submit)
+}
+
+pub fn on_focus_out_close_edit_status() -> EvHandler {
+    ev("focusout", move |ev| {
+        ev.stop_propagation();
+
+        crate::Msg::PageChanged(crate::PageChanged::ProjectSettings(
+            crate::ProjectPageChange::EditIssueStatusName(None),
+        ))
+    })
+}
+
+fn submit_changes(event: Ev) -> EvHandler {
+    ev(event, |ev| {
+        ev.prevent_default();
+        ev.stop_propagation();
+
+        crate::Msg::PageChanged(crate::PageChanged::ProjectSettings(
+            crate::ProjectPageChange::SubmitProjectSettingsForm,
+        ))
+    })
+}
+
 pub fn on_submit_create_column() -> EvHandler {
     ev(Ev::Submit, move |ev| {
         ev.prevent_default();
@@ -68,5 +97,13 @@ pub fn on_click_delete_column(issue_status_id: IssueStatusId) -> EvHandler {
         crate::Msg::ModalOpened(crate::ModalType::DeleteIssueStatusModal(Some(
             issue_status_id,
         )))
+    })
+}
+
+pub fn on_click_add_status() -> EvHandler {
+    mouse_ev(Ev::Click, move |_| {
+        crate::Msg::PageChanged(crate::PageChanged::ProjectSettings(
+            crate::ProjectPageChange::EditIssueStatusName(Some(0)),
+        ))
     })
 }

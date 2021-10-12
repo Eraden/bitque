@@ -14,10 +14,10 @@ use crate::components::styled_input::{InputVariant, StyledInput};
 use crate::components::styled_select::{SelectVariant, StyledSelect};
 use crate::components::styled_select_child::StyledSelectOption;
 use crate::components::styled_textarea::StyledTextarea;
-use crate::model::{self, ModalType, Model, PageContent};
+use crate::model::{self, Model, PageContent};
 use crate::pages::project_settings_page::{events, ProjectSettingsPage};
 use crate::shared::inner_layout;
-use crate::{FieldId, Msg, PageChanged, ProjectFieldId, ProjectPageChange};
+use crate::{FieldId, Msg, ProjectFieldId};
 
 static TIME_TRACKING_FIBONACCI: &str = include_str!("./time_tracking_fibonacci.txt");
 static TIME_TRACKING_HOURLY: &str = include_str!("./time_tracking_hourly.txt");
@@ -41,12 +41,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
 
     let save_button = StyledButton {
         class_list: "actionButton",
-        on_click: Some(mouse_ev(Ev::Click, |ev| {
-            ev.prevent_default();
-            Msg::PageChanged(PageChanged::ProjectSettings(
-                ProjectPageChange::SubmitProjectSettingsForm,
-            ))
-        })),
+        on_click: Some(events::on_click_submit_save_changes()),
         text: Some("Save changes"),
         ..Default::default()
     }
@@ -63,13 +58,7 @@ pub fn view(model: &model::Model) -> Node<Msg> {
             save_button,
             columns_field,
         ],
-        on_submit: Some(ev(Ev::Submit, |ev| {
-            ev.prevent_default();
-            ev.stop_propagation();
-            Msg::PageChanged(PageChanged::ProjectSettings(
-                ProjectPageChange::SubmitProjectSettingsForm,
-            ))
-        })),
+        on_submit: Some(events::on_submit_submit_save_changes()),
     }
     .render();
 
@@ -245,18 +234,10 @@ fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
 
 #[inline(always)]
 fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
-    let on_click = mouse_ev(Ev::Click, move |_| {
-        Msg::PageChanged(PageChanged::ProjectSettings(
-            ProjectPageChange::EditIssueStatusName(Some(0)),
-        ))
-    });
+    let on_click = events::on_click_add_status();
 
     if page.edit_column_id == Some(0) {
-        /*let blur = ev("focusout", |_| {
-            Msg::PageChanged(PageChanged::ProjectSettings(
-                ProjectPageChange::EditIssueStatusName(None),
-            ))
-        });*/
+        let blur = events::on_focus_out_close_edit_status();
         let on_submit = events::on_submit_create_column();
 
         let input = StyledInput {
@@ -265,14 +246,15 @@ fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
             auto_focus: true,
             variant: InputVariant::Primary,
             id: Some(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName)),
-            input_handlers: vec![/*blur*/],
+            input_handlers: vec![],
             ..Default::default()
         }
         .render();
 
         div![
             C!["columnPreview"],
-            div![C!["columnName"], form![on_submit, input]]
+            div![C!["columnName"], form![on_submit, input]],
+            blur
         ]
     } else {
         let add_column = StyledIcon::from(Icon::Plus).render();
@@ -293,23 +275,20 @@ fn column_preview(
     column_style: &str,
 ) -> Node<Msg> {
     if page.edit_column_id == Some(is.id) {
-        // let blur = ev("focusout", |_| {
-        //     Msg::PageChanged(PageChanged::ProjectSettings(
-        //         ProjectPageChange::EditIssueStatusName(None),
-        //     ))
-        // });
+        let blur = events::on_focus_out_close_edit_status();
+
         let input = StyledInput {
             value: page.name.value.as_str(),
             valid: page.name.is_valid(),
             variant: InputVariant::Primary,
             auto_focus: true,
-            input_handlers: vec![/*blur*/],
+            input_handlers: vec![],
             id: Some(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName)),
             ..Default::default()
         }
         .render();
 
-        div![C!["columnPreview"], div![C!["columnName"], input]]
+        div![C!["columnPreview"], div![C!["columnName"], input], blur]
     } else {
         show_column_preview(is, per_column_issue_count, column_style)
     }
