@@ -325,10 +325,15 @@ fn resolve_page(url: Url) -> Option<Page> {
 
 #[wasm_bindgen]
 pub fn render() {
-    console_error_panic_hook::set_once();
-
     let app = seed::App::start("app", init, update, view);
-    wasm_logger::init(wasm_logger::Config::default());
+    wasm_logger::init(if cfg!(debug_assertions) {
+        console_error_panic_hook::set_once();
+        wasm_logger::Config::default()
+    } else {
+        wasm_logger::Config::new(log::Level::Error)
+            .message_on_new_line()
+            .module_prefix("jirs")
+    });
 
     #[cfg(debug_assertions)]
     crate::shared::on_event::keydown(move |ev| {
