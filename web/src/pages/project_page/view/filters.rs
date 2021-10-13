@@ -1,14 +1,13 @@
-use seed::*;
 use seed::prelude::*;
+use seed::*;
 
-use crate::{FieldId, Model, Msg};
+use super::super::events;
 use crate::components::styled_avatar::*;
 use crate::components::styled_button::*;
 use crate::components::styled_icon::*;
 use crate::components::styled_input::*;
 use crate::model::PageContent;
-
-use super::super::events;
+use crate::{FieldId, Model, Msg};
 
 pub fn project_board_filters(model: &Model) -> Node<Msg> {
     let project_page = match &model.page_content {

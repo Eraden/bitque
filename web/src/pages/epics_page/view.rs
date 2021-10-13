@@ -1,13 +1,12 @@
 use chrono::NaiveDateTime;
-use seed::*;
-use seed::prelude::*;
-
 use jirs_data::{Issue, IssueStatus};
+use seed::prelude::*;
+use seed::*;
 
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::model::Model;
-use crate::Msg;
 use crate::shared::inner_layout;
+use crate::Msg;
 
 pub fn view(model: &Model) -> Node<Msg> {
     let page = crate::match_page!(model, Epics; Empty);

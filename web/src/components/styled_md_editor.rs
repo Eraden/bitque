@@ -1,8 +1,8 @@
-use seed::*;
 use seed::prelude::*;
+use seed::*;
 
-use crate::{FieldChange, FieldId, Msg};
 use crate::components::styled_textarea::StyledTextarea;
+use crate::{FieldChange, FieldId, Msg};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Hash)]
 #[repr(C)]
