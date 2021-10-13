@@ -68,6 +68,7 @@ impl StyledEditorState {
 }
 
 impl EditorMode {
+    #[inline(always)]
     pub fn update(&mut self, msg: &Msg, orders: &mut impl Orders<Msg>) {
         match self {
             EditorMode::Md(state) => state.update(msg),
@@ -167,10 +168,12 @@ fn build_state(
     }
 }
 
+#[inline(always)]
 fn build_state_rte(field_id: FieldId) -> EditorMode {
     EditorMode::Rte(StyledRteState::new(field_id))
 }
 
+#[inline(always)]
 fn build_state_md(field_id: FieldId, text: &str, html: &str) -> EditorMode {
     EditorMode::Md(StyledMdEditorState::new(
         field_id,

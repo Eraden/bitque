@@ -49,7 +49,7 @@ impl<'l> StyledTextarea<'l> {
             disable_auto_resize,
         } = self;
         let id = id.expect("Text area requires FieldId");
-        let mut style_list = vec![];
+        let mut style_list = Vec::with_capacity(3);
 
         let min_height = get_min_height(value, height as f64, disable_auto_resize);
         if min_height > 0f64 {
@@ -88,30 +88,11 @@ impl<'l> StyledTextarea<'l> {
         // });
 
         let handler_disable_auto_resize = disable_auto_resize;
-        let text_input_handler = {
-            let id = id.clone();
-            ev(update_event, move |event| {
-                event.stop_propagation();
-
-                let value = event
-                    .target()
-                    .map(|target| seed::to_textarea(&target).value())
-                    .unwrap_or_default();
-
-                if handler_disable_auto_resize && value.contains('\n') {
-                    event.prevent_default();
-                }
-
-                Some(Msg::StrInputChanged(
-                    id,
-                    if handler_disable_auto_resize {
-                        value.trim().to_string()
-                    } else {
-                        value
-                    },
-                ))
-            })
-        };
+        let text_input_handler = super::events::on_event_change_text_value(
+            id.clone(),
+            update_event,
+            handler_disable_auto_resize,
+        );
 
         div![
             id![format!("styledTextArea-{}", id)],

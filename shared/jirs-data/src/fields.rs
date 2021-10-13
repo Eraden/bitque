@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum ProjectFieldId {
     Name,
     Url,
@@ -11,20 +11,20 @@ pub enum ProjectFieldId {
     IssueStatusName,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum SignInFieldId {
     Username,
     Email,
     Token,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum SignUpFieldId {
     Username,
     Email,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum UsersFieldId {
     Username,
     Email,
@@ -34,17 +34,17 @@ pub enum UsersFieldId {
     TextEditorMode,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum InviteFieldId {
     Token,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum CommentFieldId {
     Body,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum IssueFieldId {
     Type,
     Title,
@@ -62,7 +62,7 @@ pub enum IssueFieldId {
     EpicEndsAt,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum EpicFieldId {
     Name,
     StartsAt,

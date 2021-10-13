@@ -48,7 +48,7 @@ impl<'l> StyledConfirmModal<'l> {
                 _ => cancel_text,
             }),
             variant: ButtonVariant::Secondary,
-            on_click: Some(mouse_ev(Ev::Click, |_| Msg::ModalDropped)),
+            on_click: Some(super::events::on_click_drop_modal()),
             ..Default::default()
         }
         .render();

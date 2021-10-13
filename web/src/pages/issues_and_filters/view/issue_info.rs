@@ -1,6 +1,7 @@
-use jirs_data::{Issue, IssueId};
-use seed::prelude::*;
 use seed::*;
+use seed::prelude::*;
+
+use jirs_data::{Issue, IssueId};
 
 use crate::components::styled_icon::*;
 use crate::components::styled_link::*;
@@ -163,7 +164,6 @@ fn issue_link(id: IssueId, project_name: &str) -> Node<Msg> {
         ],
         disabled: true,
         class_list: "withIcon issueLink",
-        ..Default::default()
     }
     .render()
 }

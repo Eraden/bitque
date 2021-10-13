@@ -1,5 +1,5 @@
-use seed::prelude::*;
 use seed::*;
+use seed::prelude::*;
 use web_sys::File;
 
 use crate::{FieldId, Msg};
@@ -45,20 +45,7 @@ impl<'l> StyledImageInput<'l> {
             url,
         } = self;
 
-        let field_id = id.clone();
-        let on_change = ev(Ev::Change, move |ev| {
-            let target = ev.target().unwrap();
-            let input = seed::to_input(&target);
-            let v = input
-                .files()
-                .map(|list| {
-                    (0..list.length())
-                        .filter_map(|i| list.get(i))
-                        .collect::<Vec<File>>()
-                })
-                .unwrap_or_default();
-            Msg::FileInputChanged(field_id, v)
-        });
+        let on_change = super::events::on_change_image_input(id.clone());
         let input_id = id.to_string();
 
         div![

@@ -1,8 +1,8 @@
-use seed::prelude::*;
 use seed::*;
+use seed::prelude::*;
 
-use crate::components::styled_textarea::StyledTextarea;
 use crate::{FieldChange, FieldId, Msg};
+use crate::components::styled_textarea::StyledTextarea;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Hash)]
 #[repr(C)]
@@ -84,8 +84,9 @@ impl<'l> StyledMdEditor<'l> {
         } = self;
 
         let id = id.expect("Styled Editor requires ID");
-        let on_editor_clicked = click_handler(id.clone(), MdEditorMode::Editor);
-        let on_view_clicked = click_handler(id.clone(), MdEditorMode::View);
+        let on_editor_clicked =
+            super::events::on_click_change_tab(id.clone(), MdEditorMode::Editor);
+        let on_view_clicked = super::events::on_click_change_tab(id.clone(), MdEditorMode::View);
 
         let editor_id = format!("editor-{}", id);
         let view_id = format!("view-{}", id);
@@ -139,12 +140,4 @@ impl<'l> StyledMdEditor<'l> {
             ],
         ]
     }
-}
-
-#[inline(always)]
-fn click_handler(field_id: FieldId, new_mode: MdEditorMode) -> EventHandler<Msg> {
-    mouse_ev(Ev::Click, move |ev| {
-        ev.stop_propagation();
-        Msg::ModalChanged(FieldChange::TabChanged(field_id, new_mode))
-    })
 }

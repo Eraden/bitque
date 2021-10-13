@@ -15,30 +15,28 @@ use crate::{match_page, model, FieldId, Msg};
 pub fn view(model: &model::Model) -> Node<Msg> {
     let page = match_page!(model, SignUp; Empty);
 
-    let username = StyledInput {
-        value: page.username.as_str(),
-        valid: !page.username_touched || page.username.len() > 1,
-        id: Some(FieldId::SignUp(SignUpFieldId::Username)),
-        ..Default::default()
-    }
-    .render();
     let username_field = StyledField {
         label: "Username",
-        input: username,
+        input: StyledInput {
+            value: page.username.as_str(),
+            valid: !page.username_touched || page.username.len() > 1,
+            id: Some(FieldId::SignUp(SignUpFieldId::Username)),
+            ..Default::default()
+        }
+        .render(),
         ..Default::default()
     }
     .render();
 
-    let email = StyledInput {
-        value: page.email.as_str(),
-        valid: !page.email_touched || is_email(page.email.as_str()),
-        id: Some(FieldId::SignUp(SignUpFieldId::Email)),
-        ..Default::default()
-    }
-    .render();
     let email_field = StyledField {
         label: "E-Mail",
-        input: email,
+        input: StyledInput {
+            value: page.email.as_str(),
+            valid: !page.email_touched || is_email(page.email.as_str()),
+            id: Some(FieldId::SignUp(SignUpFieldId::Email)),
+            ..Default::default()
+        }
+        .render(),
         ..Default::default()
     }
     .render();
@@ -59,16 +57,18 @@ pub fn view(model: &model::Model) -> Node<Msg> {
     }
     .render();
 
-    let sign_in_link = StyledLink {
-        children: vec![span!["Sign In"]],
-        class_list: "signInLink",
-        href: "/login",
-        ..Default::default()
-    }
-    .render();
-
     let submit_field = StyledField {
-        input: div![C!["twoRow"], submit, sign_in_link],
+        input: div![
+            C!["twoRow"],
+            submit,
+            StyledLink {
+                children: vec![span!["Sign In"]],
+                class_list: "signInLink",
+                href: "/login",
+                ..Default::default()
+            }
+            .render()
+        ],
         ..Default::default()
     }
     .render();

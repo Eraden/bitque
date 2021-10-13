@@ -77,10 +77,7 @@ pub fn view(model: &Model) -> Node<Msg> {
 
     let content = StyledForm {
         heading: "Profile",
-        on_submit: Some(ev(Ev::Submit, |ev| {
-            ev.prevent_default();
-            Msg::PageChanged(PageChanged::Profile(ProfilePageChange::SubmitForm))
-        })),
+        on_submit: Some(super::events::on_submit_submit_profile()),
         fields: vec![
             avatar,
             username_field,
@@ -96,18 +93,14 @@ pub fn view(model: &Model) -> Node<Msg> {
 
 fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
     let inner = if model.projects.len() <= 1 {
-        let name = model
-            .project
-            .as_ref()
-            .map(|p| p.name.as_str())
-            .unwrap_or_default();
+        let name = model.project.as_ref().map(|p| p.name.as_str());
         span![name]
     } else {
-        let mut project_by_id = HashMap::new();
+        let mut project_by_id = HashMap::with_capacity(model.projects.len());
         for p in model.projects.iter() {
             project_by_id.insert(p.id, p);
         }
-        let mut joined_projects = HashMap::new();
+        let mut joined_projects = HashMap::with_capacity(model.user_projects.len());
         for p in model.user_projects.iter() {
             joined_projects.insert(p.project_id, p);
         }
@@ -147,7 +140,7 @@ fn build_current_project(model: &Model, page: &ProfilePage) -> Node<Msg> {
 }
 
 #[inline(always)]
-fn project_select_option<'l>(project: &'l Project) -> StyledSelectOption<'l> {
+fn project_select_option(project: &Project) -> StyledSelectOption<'_> {
     StyledSelectOption {
         text: Some(project.name.as_str()),
         value: project.id as u32,
@@ -160,12 +153,11 @@ fn editor_mode_select(page: &ProfilePage) -> Node<Msg> {
     let time_tracking = StyledCheckbox {
         options: Some(
             vec![
-                TextEditorMode::MdOnly,
-                TextEditorMode::RteOnly,
-                TextEditorMode::Mixed,
+                editor_mode_checkbox_option(TextEditorMode::MdOnly, &page.text_editor_mode),
+                editor_mode_checkbox_option(TextEditorMode::RteOnly, &page.text_editor_mode),
+                editor_mode_checkbox_option(TextEditorMode::Mixed, &page.text_editor_mode),
             ]
-            .into_iter()
-            .map(|tem| editor_mode_checkbox_option(tem, &page.text_editor_mode)),
+            .into_iter(),
         ),
         class_list: "timeTracking",
     }

@@ -1,9 +1,7 @@
-use std::str::FromStr;
-
-use seed::prelude::*;
 use seed::*;
+use seed::prelude::*;
 
-use crate::{resolve_page, Msg};
+use crate::Msg;
 
 #[derive(Debug, Default)]
 pub struct StyledLink<'l> {
@@ -16,23 +14,7 @@ pub struct StyledLink<'l> {
 impl<'l> StyledLink<'l> {
     #[inline(always)]
     pub fn render(self) -> Node<Msg> {
-        let on_click = {
-            let href = self.href.to_string();
-            mouse_ev("click", move |ev| {
-                if href.starts_with('/') {
-                    ev.prevent_default();
-                    ev.stop_propagation();
-                    if let Ok(url) = seed::Url::from_str(href.as_str()) {
-                        url.go_and_push();
-                        if let Some(page) = resolve_page(url) {
-                            return Some(Msg::ChangePage(page));
-                        }
-                    }
-                }
-
-                None as Option<Msg>
-            })
-        };
+        let on_click = super::events::on_click_change_page(self.href.to_string());
 
         a![
             C!["styledLink", self.class_list],

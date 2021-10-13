@@ -1,57 +1,49 @@
 use chrono::NaiveDateTime;
-use jirs_data::{Issue, IssueStatus};
-use seed::prelude::*;
 use seed::*;
+use seed::prelude::*;
+
+use jirs_data::{Issue, IssueStatus};
 
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::model::Model;
-use crate::shared::inner_layout;
 use crate::Msg;
+use crate::shared::inner_layout;
 
 pub fn view(model: &Model) -> Node<Msg> {
     let page = crate::match_page!(model, Epics; Empty);
 
-    let epics: Vec<Node<Msg>> = model
-        .epics
-        .iter()
-        .map(|epic| {
-            let issues = page
-                .issues(epic.id)
-                .map(|v| {
-                    v.iter()
-                        .filter_map(|i| model.issues_by_id.get(i))
-                        .collect::<Vec<&Issue>>()
+    let epics = model.epics.iter().map(|epic| {
+        let issues = page.issues(epic.id).map(|v| {
+            v.iter()
+                .filter_map(|i| model.issues_by_id.get(i))
+                .map(|issue| {
+                    render_issue(
+                        issue,
+                        model.issue_statuses_by_id.get(&issue.issue_status_id),
+                    )
                 })
-                .unwrap_or_default();
+                .collect::<Vec<Node<Msg>>>()
+        });
 
-            li![
-                C!["epic"],
+        li![
+            C!["epic"],
+            div![
+                C!["firstRow"],
+                div![C!["epicName"], &epic.name],
                 div![
-                    C!["firstRow"],
-                    div![C!["epicName"], &epic.name],
-                    div![
-                        C!["date"],
-                        date_field("Starts at:", "startsAt", epic.starts_at.as_ref()),
-                        date_field("Ends at:", "endsAt", epic.ends_at.as_ref()),
-                    ],
-                    div![C!["counter"], "Number of issues:", issues.len()],
+                    C!["date"],
+                    date_field("Starts at:", "startsAt", epic.starts_at.as_ref()),
+                    date_field("Ends at:", "endsAt", epic.ends_at.as_ref()),
                 ],
                 div![
-                    C!["secondRow"],
-                    div![
-                        C!["issues"],
-                        issues
-                            .into_iter()
-                            .map(|issue| render_issue(
-                                issue,
-                                model.issue_statuses_by_id.get(&issue.issue_status_id)
-                            ))
-                            .collect::<Vec<Node<Msg>>>()
-                    ]
-                ]
-            ]
-        })
-        .collect();
+                    C!["counter"],
+                    "Number of issues:",
+                    issues.as_ref().map(Vec::len).unwrap_or(0)
+                ],
+            ],
+            div![C!["secondRow"], div![C!["issues"], issues]]
+        ]
+    });
 
     inner_layout(
         model,
@@ -83,12 +75,7 @@ fn render_issue(issue: &Issue, status: Option<&IssueStatus>) -> Node<Msg> {
     div![
         C!["issue"],
         div![C!["name"], issue.title.as_str()],
-        div![
-            C!["status"],
-            status
-                .map(|status| status.name.as_str())
-                .unwrap_or_default()
-        ],
+        div![C!["status"], status.map(|s| s.name.as_str())],
         div![
             C!["flags"],
             div![

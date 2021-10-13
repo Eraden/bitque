@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
-use jirs_data::{IssueStatus, ProjectCategory, TimeTracking};
-use seed::prelude::*;
 use seed::*;
+use seed::prelude::*;
 
+use jirs_data::{IssueStatus, ProjectCategory, TimeTracking};
+
+use crate::{FieldId, Msg, ProjectFieldId};
 use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_checkbox::{ChildBuilder, StyledCheckbox, StyledCheckboxState};
 use crate::components::styled_editor::render_styled_editor;
@@ -17,7 +19,6 @@ use crate::components::styled_textarea::StyledTextarea;
 use crate::model::{self, Model, PageContent};
 use crate::pages::project_settings_page::{events, ProjectSettingsPage};
 use crate::shared::inner_layout;
-use crate::{FieldId, Msg, ProjectFieldId};
 
 static TIME_TRACKING_FIBONACCI: &str = include_str!("./time_tracking_fibonacci.txt");
 static TIME_TRACKING_HOURLY: &str = include_str!("./time_tracking_hourly.txt");
@@ -246,7 +247,6 @@ fn add_column(page: &ProjectSettingsPage, column_style: &str) -> Node<Msg> {
             auto_focus: true,
             variant: InputVariant::Primary,
             id: Some(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName)),
-            input_handlers: vec![],
             ..Default::default()
         }
         .render();
@@ -282,7 +282,6 @@ fn column_preview(
             valid: page.name.is_valid(),
             variant: InputVariant::Primary,
             auto_focus: true,
-            input_handlers: vec![],
             id: Some(FieldId::ProjectSettings(ProjectFieldId::IssueStatusName)),
             ..Default::default()
         }
@@ -300,14 +299,16 @@ fn show_column_preview(
     per_column_issue_count: &HashMap<i32, i32>,
     column_style: &str,
 ) -> Node<Msg> {
-    let id = is.id;
     let drag_started = events::on_drag_start_start_drag_column(is.id);
     let drag_stopped = events::on_drag_end_stop_drag_column(is.id);
     let drag_over_handler = events::on_drag_over_exchange_position(is.id);
     let drag_out = events::on_drag_leave_leave_drag_column(is.id);
     let on_edit = events::on_click_edit_column(is.id);
 
-    let issue_count_in_column = per_column_issue_count.get(&id).cloned().unwrap_or_default();
+    let issue_count_in_column = per_column_issue_count
+        .get(&is.id)
+        .cloned()
+        .unwrap_or_default();
     let delete_row = if issue_count_in_column == 0 {
         let delete = StyledButton {
             variant: ButtonVariant::Primary,

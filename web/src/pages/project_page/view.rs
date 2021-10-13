@@ -26,7 +26,7 @@ fn breadcrumbs(model: &Model) -> Node<Msg> {
         C!["breadcrumbsContainer"],
         span!["Projects"],
         span![C!["breadcrumbsDivider"], "/"],
-        span![model.project_name().unwrap_or_default()],
+        span![model.project_name()],
         span![C!["breadcrumbsDivider"], "/"],
         span!["Kanban Board"]
     ]

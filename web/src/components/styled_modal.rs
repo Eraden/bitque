@@ -1,5 +1,5 @@
-use seed::prelude::*;
 use seed::*;
+use seed::prelude::*;
 
 use crate::components::styled_icon::{Icon, StyledIcon};
 use crate::Msg;
@@ -76,19 +76,11 @@ impl<'l> StyledModal<'l> {
             class_list,
         } = self;
 
-        let close_handler = mouse_ev(Ev::Click, |ev| {
-            ev.stop_propagation();
-            ev.prevent_default();
-            Msg::ModalDropped
-        });
-        let body_handler = mouse_ev(Ev::Click, |ev| {
-            ev.stop_propagation();
-            ev.prevent_default();
-            None as Option<Msg>
-        });
+        let close_handler = super::events::on_click_drop_modal();
+        let body_handler = super::events::on_click_noop();
 
         let styled_modal_style = match width {
-            Some(0) => "".to_string(),
+            Some(0) => String::from(""),
             Some(n) => format!("max-width: {width}px", width = n),
             _ => format!("max-width: {width}px", width = 130),
         };

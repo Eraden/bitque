@@ -18,3 +18,4 @@ pub mod styled_select_child;
 pub mod styled_textarea;
 pub mod styled_tip;
 pub mod styled_tooltip;
+mod events;

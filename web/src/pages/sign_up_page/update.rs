@@ -32,6 +32,10 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
             page.email_touched = true;
         }
         Msg::SignUpRequest => {
+            if page.email.is_empty() || page.username.is_empty() {
+                return;
+            }
+
             send_ws_msg(
                 WsMsgSession::SignUpRequest(page.email.clone(), page.username.clone()).into(),
                 model.ws.as_ref(),
@@ -47,6 +51,9 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
             }
             _ => (),
         },
+        Msg::InvalidPair => {
+            page.error = String::from("Pair already taken");
+        }
         _ => (),
     }
 }

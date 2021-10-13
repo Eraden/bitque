@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use jirs_data::msg::WsMsgSession;
+use jirs_data::msg::{WsError, WsMsgSession};
 use jirs_data::{SignInFieldId, WsMsg};
 use seed::prelude::*;
 use seed::*;
@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use crate::model::{self, Model, Page, PageContent};
 use crate::pages::sign_in_page::model::SignInPage;
+use crate::pages::sign_in_page::SignInState;
 use crate::shared::validate::*;
 use crate::shared::write_auth_token;
 use crate::ws::send_ws_msg;
@@ -39,11 +40,16 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
             page.token = value;
         }
         Msg::SignInRequest => {
+            if page.email.is_empty() || page.username.is_empty() {
+                return;
+            }
+
             send_ws_msg(
                 WsMsgSession::AuthenticateRequest(page.email.clone(), page.username.clone()).into(),
                 model.ws.as_ref(),
                 orders,
             );
+            page.state = SignInState::RequestSend;
         }
         Msg::BindClientRequest => {
             let bind_token: uuid::Uuid = match Uuid::from_str(page.token.as_str()) {
@@ -59,9 +65,15 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
                 orders,
             );
         }
+        Msg::InvalidPair => {
+            page.state = SignInState::InvalidPair;
+        }
         Msg::WebSocketChange(change) => match change {
             WebSocketChanged::WsMsg(WsMsg::Session(WsMsgSession::AuthenticateSuccess)) => {
-                page.login_success = true;
+                page.state = SignInState::EmailSend;
+            }
+            WebSocketChanged::WsMsg(WsMsg::Error(WsError::InvalidPair(_, _))) => {
+                page.state = SignInState::EmailSend;
             }
             WebSocketChanged::WsMsg(WsMsg::Session(WsMsgSession::BindTokenOk(access_token))) => {
                 match write_auth_token(Some(access_token)) {

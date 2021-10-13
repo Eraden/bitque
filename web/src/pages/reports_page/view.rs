@@ -55,7 +55,7 @@ fn this_month_graph(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<M
     let legend_margin_width = (dominant as f64).log10() * SVG_MARGIN_X as f64;
 
     // shapes, groups and texts
-    let mut svg_parts: Vec<Node<Msg>> = vec![];
+    let mut svg_parts: Vec<Node<Msg>> = Vec::with_capacity(40);
 
     // each piece is part of column drawable view where number of parts depends on
     // number of issues which have largest amount of issues
@@ -68,7 +68,7 @@ fn this_month_graph(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<M
         / page.last_day.day() as f64;
 
     let resolution = 10;
-    let mut legend_parts: Vec<Node<Msg>> = vec![];
+    let mut legend_parts: Vec<Node<Msg>> = Vec::with_capacity((resolution + 1) * 2);
     for y in 0..(resolution + 1) {
         let current = dominant as f64 * (y as f64 / resolution as f64);
 
@@ -86,7 +86,7 @@ fn this_month_graph(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<M
             At::Width => SVG_WIDTH as f64 - (legend_margin_width + SVG_MARGIN_X as f64),
             At::Height => 1,
             At::Style => "fill: var(--textLight);",
-        ],]);
+        ]]);
     }
     svg_parts.push(seed::g![legend_parts]);
 
@@ -115,7 +115,7 @@ fn this_month_graph(page: &ReportsPage, this_month_updated: &[&Issue]) -> Node<M
 
         let selected = page.selected_day;
         let current_date = day;
-        let on_click = mouse_ev("click", move |ev| {
+        let on_click = mouse_ev(Ev::Click, move |ev| {
             ev.stop_propagation();
             ev.prevent_default();
             Msg::PageChanged(PageChanged::Reports(ReportsPageChange::DaySelected(

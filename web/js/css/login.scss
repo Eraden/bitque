@@ -35,6 +35,18 @@
                 text-align: center;
             }
 
+            > .styledField {
+                .emailSend {
+                    text-align: center;
+
+                    > div > svg {
+                        width: 160px;
+                        margin: 0 auto;
+                        fill: var(--primary);
+                    }
+                }
+            }
+
             > .noPasswordSection {
                 line-height: 32px;
                 margin-top: 15px;
@@ -56,6 +68,18 @@
         .twoRow {
             display: flex;
             justify-content: space-between;
+        }
+    }
+
+    .error {
+        > p {
+            line-height: 1.4285;
+            color: var(--danger);
+            font-family: var(--font-medium);
+            text-align: center;
+            font-size: 14.5px;
+            border-top: 1px solid var(--danger);
+            margin-top: 15px;
         }
     }
 }

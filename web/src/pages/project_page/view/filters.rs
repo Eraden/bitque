@@ -1,12 +1,14 @@
-use seed::prelude::*;
 use seed::*;
+use seed::prelude::*;
 
+use crate::{FieldId, Model, Msg};
 use crate::components::styled_avatar::*;
 use crate::components::styled_button::*;
 use crate::components::styled_icon::*;
 use crate::components::styled_input::*;
 use crate::model::PageContent;
-use crate::{FieldId, Model, Msg};
+
+use super::super::events;
 
 pub fn project_board_filters(model: &Model) -> Node<Msg> {
     let project_page = match &model.page_content {
@@ -28,7 +30,7 @@ pub fn project_board_filters(model: &Model) -> Node<Msg> {
         active: project_page.only_my_filter,
         text: Some("Only My Issues"),
         class_list: "filterChild",
-        on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleOnlyMy)),
+        on_click: Some(events::on_click_toggle_only_my()),
         ..Default::default()
     }
     .render();
@@ -37,7 +39,7 @@ pub fn project_board_filters(model: &Model) -> Node<Msg> {
         variant: ButtonVariant::Empty,
         text: Some("Recently Updated"),
         class_list: "filterChild",
-        on_click: Some(mouse_ev(Ev::Click, |_| Msg::ProjectToggleRecentlyUpdated)),
+        on_click: Some(events::on_click_toggle_recent()),
         ..Default::default()
     }
     .render();
@@ -50,7 +52,7 @@ pub fn project_board_filters(model: &Model) -> Node<Msg> {
             id!["clearAllFilters"],
             C!["filterChild"],
             "Clear all",
-            mouse_ev(Ev::Click, |_| Msg::ProjectClearFilters),
+            events::on_click_clear_filters()
         ]
     } else {
         empty![]
@@ -72,7 +74,7 @@ pub fn avatars_filters(model: &Model) -> Node<Msg> {
         _ => return empty![],
     };
     let active_avatar_filters = &project_page.active_avatar_filters;
-    let avatars: Vec<Node<Msg>> = model
+    let avatars = model
         .user_ids
         .iter()
         .filter_map(|id| model.users_by_id.get(id))
@@ -83,9 +85,7 @@ pub fn avatars_filters(model: &Model) -> Node<Msg> {
             let styled_avatar = StyledAvatar {
                 avatar_url: user.avatar_url.as_deref(),
                 name: &user.name,
-                on_click: Some(mouse_ev(Ev::Click, move |_| {
-                    Msg::ProjectAvatarFilterChanged(user_id, active)
-                })),
+                on_click: Some(events::on_click_filter_by_user(user_id, active)),
                 user_index: idx,
                 ..StyledAvatar::default()
             }
@@ -95,8 +95,7 @@ pub fn avatars_filters(model: &Model) -> Node<Msg> {
                 C!["avatarIsActiveBorder"],
                 styled_avatar
             ]
-        })
-        .collect();
+        });
 
     div![id!["avatars"], C!["filterChild"], avatars]
 }

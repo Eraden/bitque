@@ -32,7 +32,7 @@ impl<'l> StyledAvatar<'l> {
             .chars()
             .rev()
             .last()
-            .map(|c| c.to_string())
+            .map(String::from)
             .unwrap_or_default();
         match avatar_url {
             Some(url) => {

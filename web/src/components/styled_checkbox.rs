@@ -1,6 +1,7 @@
 use seed::prelude::*;
 use seed::*;
 
+use super::events;
 use crate::{FieldId, Msg};
 
 #[derive(Debug)]
@@ -56,15 +57,7 @@ impl<'l> ChildBuilder<'l> {
     #[inline(always)]
     pub fn render(self) -> Node<Msg> {
         let id = self.field_id.to_string();
-        let handler: EventHandler<Msg> = {
-            let id = self.field_id;
-            let value = self.value;
-            mouse_ev(Ev::Click, move |ev| {
-                ev.stop_propagation();
-                ev.prevent_default();
-                Msg::U32InputChanged(id, value)
-            })
-        };
+        let handler = events::on_click_change_number_input(self.field_id, self.value);
 
         div![
             C![

@@ -5,7 +5,7 @@ use jirs_data::{
 
 pub type AvatarFilterActive = bool;
 
-#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum EditIssueModalSection {
     Issue(IssueFieldId),
     Comment(CommentFieldId),
@@ -84,7 +84,7 @@ impl ButtonId {
     }
 }
 
-#[derive(Clone, Debug, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Hash)]
 pub enum IssuesAndFiltersId {
     Jql,
 }

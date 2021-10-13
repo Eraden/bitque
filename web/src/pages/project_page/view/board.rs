@@ -1,13 +1,14 @@
-use jirs_data::*;
-use seed::prelude::*;
 use seed::*;
+use seed::prelude::*;
 
+use jirs_data::*;
+
+use crate::{match_page, Model, Msg};
 use crate::components::styled_avatar::*;
 use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_icon::*;
 use crate::model::PageContent;
 use crate::pages::project_page::{events, StatusIssueIds};
-use crate::{match_page, Model, Msg, Page};
 
 #[inline(always)]
 pub fn project_board_lists(model: &Model) -> Node<Msg> {
@@ -26,30 +27,14 @@ pub fn project_board_lists(model: &Model) -> Node<Msg> {
                 let edit_button = StyledButton {
                     variant: ButtonVariant::Empty,
                     icon: Some(StyledIcon::from(Icon::EditAlt).render()),
-                    on_click: Some(mouse_ev("click", move |ev| {
-                        ev.stop_propagation();
-                        ev.prevent_default();
-                        seed::Url::new()
-                            .add_path_part("edit-epic")
-                            .add_path_part(id.to_string())
-                            .go_and_push();
-                        Msg::ChangePage(Page::EditEpic(id))
-                    })),
+                    on_click: Some(events::on_click_goto_edit_epic(id)),
                     ..Default::default()
                 }
                 .render();
                 let delete_button = StyledButton {
                     variant: ButtonVariant::Empty,
                     icon: Some(StyledIcon::from(Icon::DeleteAlt).render()),
-                    on_click: Some(mouse_ev("click", move |ev| {
-                        ev.stop_propagation();
-                        ev.prevent_default();
-                        seed::Url::new()
-                            .add_path_part("delete-epic")
-                            .add_path_part(id.to_string())
-                            .go_and_push();
-                        Msg::ChangePage(Page::DeleteEpic(id))
-                    })),
+                    on_click: Some(events::on_click_goto_delete_epic(id)),
                     ..Default::default()
                 }
                 .render();

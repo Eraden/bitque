@@ -1,12 +1,13 @@
 pub use init_load_sets::*;
 use jirs_data::msg::{
-    WsMsgComment, WsMsgEpic, WsMsgIssue, WsMsgIssueStatus, WsMsgMessage, WsMsgProject,
+    WsError, WsMsgComment, WsMsgEpic, WsMsgIssue, WsMsgIssueStatus, WsMsgMessage, WsMsgProject,
     WsMsgSession, WsMsgUser,
 };
 use jirs_data::*;
 use seed::prelude::*;
 
 use crate::model::*;
+use crate::pages::sign_in_page::SignInState;
 use crate::shared::{go_to_board, write_auth_token};
 use crate::{Msg, OperationKind, ResourceKind, WebSocketChanged};
 
@@ -432,7 +433,7 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
             if let Some(idx) = model.epics.iter().position(|e| e.id == *id) {
                 model.epics.remove(idx);
             }
-            model.epics_by_id.remove(&id);
+            model.epics_by_id.remove(id);
             model.epics.sort_by(|a, b| a.id.cmp(&b.id));
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Epic,
@@ -442,7 +443,10 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
         }
         WsMsg::Session(WsMsgSession::AuthenticateSuccess) => {
             let page = crate::match_page_mut!(model, SignIn);
-            page.login_success = true;
+            page.state = SignInState::EmailSend;
+        }
+        WsMsg::Error(WsError::InvalidLoginPair) => {
+            orders.send_msg(Msg::InvalidPair);
         }
         WsMsg::Session(WsMsgSession::BindTokenOk(access_token)) => {
             match write_auth_token(Some(*access_token)) {
@@ -453,6 +457,9 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
                     log::error!("{}", e);
                 }
             }
+        }
+        WsMsg::Session(WsMsgSession::SignUpPairTaken) => {
+            orders.send_msg(Msg::InvalidPair);
         }
         _ => {
             log::info!(

@@ -160,14 +160,7 @@ impl<'l, 'm: 'l> StyledInput<'l, 'm> {
             .map(|icon| StyledIcon::from(icon).render())
             .unwrap_or(Node::Empty);
 
-        let on_change = {
-            let field_id = id.clone();
-            ev(Ev::Change, move |event| {
-                event.stop_propagation();
-                let target = event.target().unwrap();
-                Msg::StrInputChanged(field_id, seed::to_input(&target).value())
-            })
-        };
+        let on_change = super::events::on_change_set_str_input(id.clone());
 
         div![
             C![
@@ -183,7 +176,7 @@ impl<'l, 'm: 'l> StyledInput<'l, 'm> {
                     "inputElement",
                     variant.to_str(),
                     input_class_list,
-                    icon.as_ref().map(|_| "withIcon").unwrap_or_default()
+                    icon.map(|_| "withIcon")
                 ],
                 attrs![
                     "id" => format!("{}", id),

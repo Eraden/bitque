@@ -88,6 +88,7 @@ pub enum Msg {
     AuthTokenErased,
     SignInRequest,
     BindClientRequest,
+    InvalidPair,
 
     // users
     InviteRequest,

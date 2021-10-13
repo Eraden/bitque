@@ -1,7 +1,8 @@
+use jirs_data::{EpicId, UserId};
 use seed::prelude::*;
 
 use crate::model::Page;
-use crate::{BoardPageChange, Msg, PageChanged};
+use crate::{AvatarFilterActive, BoardPageChange, Msg, PageChanged};
 
 pub type EvHandler = seed::EventHandler<Msg>;
 
@@ -70,5 +71,57 @@ pub fn on_click_edit_issue(issue_id: i32) -> EvHandler {
             .add_path_part(format!("{}", issue_id))
             .go_and_push();
         Msg::ChangePage(Page::EditIssue(issue_id))
+    })
+}
+
+pub fn on_click_toggle_only_my() -> EvHandler {
+    ev(Ev::Click, move |ev| {
+        ev.stop_propagation();
+        Msg::ProjectToggleOnlyMy
+    })
+}
+
+pub fn on_click_toggle_recent() -> EvHandler {
+    ev(Ev::Click, move |ev| {
+        ev.stop_propagation();
+        Msg::ProjectToggleRecentlyUpdated
+    })
+}
+
+pub fn on_click_filter_by_user(user_id: UserId, active: AvatarFilterActive) -> EvHandler {
+    ev(Ev::Click, move |ev| {
+        ev.stop_propagation();
+        Msg::ProjectAvatarFilterChanged(user_id, active)
+    })
+}
+
+pub fn on_click_clear_filters() -> EvHandler {
+    ev(Ev::Click, move |ev| {
+        ev.stop_propagation();
+        Msg::ProjectClearFilters
+    })
+}
+
+pub fn on_click_goto_delete_epic(epic_id: EpicId) -> EvHandler {
+    ev(Ev::Click, move |ev| {
+        ev.stop_propagation();
+        ev.prevent_default();
+        seed::Url::new()
+            .add_path_part("delete-epic")
+            .add_path_part(epic_id.to_string())
+            .go_and_push();
+        Msg::ChangePage(Page::DeleteEpic(epic_id))
+    })
+}
+
+pub fn on_click_goto_edit_epic(epic_id: EpicId) -> EvHandler {
+    ev(Ev::Click, move |ev| {
+        ev.stop_propagation();
+        ev.prevent_default();
+        seed::Url::new()
+            .add_path_part("edit-epic")
+            .add_path_part(epic_id.to_string())
+            .go_and_push();
+        Msg::ChangePage(Page::EditEpic(epic_id))
     })
 }

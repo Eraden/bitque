@@ -105,13 +105,16 @@ impl StyledDateTimeInput {
         let calendar_start = StyledDateTimeInput::calendar_start(start);
         let calendar_end = StyledDateTimeInput::calendar_end(end);
         let current_month_range = start..=end;
-        // let current = calendar_start;
-        let mut weeks = vec![];
-        let mut current_week = vec![];
+
+        let mut weeks = Vec::with_capacity(7);
+        let mut current_week = Vec::with_capacity(6);
 
         for current in DateRange(calendar_start, calendar_end) {
             if current.weekday() == Weekday::Mon && !current_week.is_empty() {
-                weeks.push(div![C!["week"], std::mem::take(&mut current_week)]);
+                weeks.push(div![
+                    C!["week"],
+                    std::mem::replace(&mut current_week, Vec::with_capacity(7))
+                ]);
             }
 
             current_week.push(
@@ -130,21 +133,14 @@ impl StyledDateTimeInput {
         }
 
         let left_action = {
-            let field_id = self.field_id.clone();
-            let current = timestamp;
-            let on_click_left = mouse_ev(Ev::Click, move |ev| {
-                ev.stop_propagation();
-                ev.prevent_default();
-                let last_day_of_prev_month = current.with_day0(0).unwrap() - Duration::days(1);
+            let on_click_left = {
+                let last_day_of_prev_month = timestamp.with_day0(0).unwrap() - Duration::days(1);
 
                 let date = last_day_of_prev_month
                     .with_day0(timestamp.day0())
                     .unwrap_or(last_day_of_prev_month);
-                Msg::StyledDateTimeInputChanged(
-                    field_id,
-                    StyledDateTimeChanged::MonthChanged(Some(date)),
-                )
-            });
+                super::events::on_click_change_month(self.field_id.clone(), date)
+            };
             StyledButton {
                 on_click: Some(on_click_left),
                 icon: Some(StyledIcon::from(Icon::DoubleLeft).render()),
@@ -153,13 +149,11 @@ impl StyledDateTimeInput {
             }
             .render()
         };
+
         let right_action = {
-            let field_id = self.field_id.clone();
-            let current = timestamp;
-            let on_click_right = mouse_ev(Ev::Click, move |ev| {
-                ev.stop_propagation();
-                ev.prevent_default();
-                let first_day_of_next_month = (current + Duration::days(32)).with_day0(0).unwrap();
+            let on_click_right = {
+                let first_day_of_next_month =
+                    (timestamp + Duration::days(32)).with_day0(0).unwrap();
                 let last_day_of_next_month = (first_day_of_next_month + Duration::days(32))
                     .with_day0(0)
                     .unwrap()
@@ -167,11 +161,8 @@ impl StyledDateTimeInput {
                 let date = first_day_of_next_month
                     .with_day0(timestamp.day0())
                     .unwrap_or(last_day_of_next_month);
-                Msg::StyledDateTimeInputChanged(
-                    field_id,
-                    StyledDateTimeChanged::MonthChanged(Some(date)),
-                )
-            });
+                super::events::on_click_change_month(self.field_id.clone(), date)
+            };
             StyledButton {
                 on_click: Some(on_click_right),
                 icon: Some(StyledIcon::from(Icon::DoubleRight).render()),
@@ -210,16 +201,10 @@ impl StyledDateTimeInput {
         .render();
 
         let input = {
-            let field_id = self.field_id.clone();
-            let visible = self.popup_visible;
-            let on_focus = ev(Ev::Click, move |ev| {
-                ev.prevent_default();
-                ev.stop_propagation();
-                Msg::StyledDateTimeInputChanged(
-                    field_id,
-                    StyledDateTimeChanged::PopupVisibilityChanged(!visible),
-                )
-            });
+            let on_focus = super::events::on_click_change_date_time_visibility(
+                self.field_id.clone(),
+                self.popup_visible,
+            );
             let text = self
                 .timestamp
                 .unwrap_or_else(|| Utc::now().naive_utc())
@@ -279,25 +264,13 @@ pub struct DayCell<'l> {
 impl<'l> DayCell<'l> {
     #[inline(always)]
     pub fn render(self) -> Node<Msg> {
-        let on_click = {
-            let field_id = self.field_id.clone();
-            let date = *self.current;
-            ev(Ev::Click, move |ev| {
-                ev.stop_propagation();
-                ev.prevent_default();
-                log::info!("{:?}", date);
-                Msg::StyledDateTimeInputChanged(
-                    field_id,
-                    StyledDateTimeChanged::DayChanged(Some(date)),
-                )
-            })
-        };
+        let on_click = super::events::on_click_change_day(self.field_id.clone(), *self.current);
         div![
             C![
                 "day",
                 format!("{}", self.current.weekday()),
                 IF![self.is_selected() => "selected"],
-                if self.current_month_range.contains(&self.current) {
+                if self.current_month_range.contains(self.current) {
                     "inCurrentMonth"
                 } else {
                     "outCurrentMonth"

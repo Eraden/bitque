@@ -87,14 +87,15 @@ impl StyledSelectState {
                 self.text_filter = text.clone();
             }
             Msg::StyledSelectChanged(_, StyledSelectChanged::Changed(Some(v))) => {
-                self.values = vec![*v];
+                self.values.clear();
+                self.values.push(*v);
             }
             Msg::StyledSelectChanged(_, StyledSelectChanged::Changed(None)) => {
                 self.values.clear();
             }
             Msg::StyledSelectChanged(_, StyledSelectChanged::RemoveMulti(v)) => {
-                let mut old = vec![];
-                std::mem::swap(&mut old, &mut self.values);
+                let len = self.values.len();
+                let old = std::mem::replace(&mut self.values, Vec::with_capacity(len));
 
                 for u in old {
                     if u != *v {
@@ -164,19 +165,10 @@ where
             clearable,
         } = self;
 
-        let on_text = {
-            let field_id = id.clone();
-            input_ev(Ev::KeyUp, move |value| {
-                Msg::StyledSelectChanged(field_id, StyledSelectChanged::Text(value))
-            })
-        };
+        let on_text = super::events::on_keyup_change_select_text(id.clone());
 
-        let on_handler = {
-            let field_id = id.clone();
-            mouse_ev(Ev::Click, move |_| {
-                Msg::StyledSelectChanged(field_id, StyledSelectChanged::DropDownVisibility(!opened))
-            })
-        };
+        let on_handler =
+            super::events::on_click_change_select_dropdown_visibility(id.clone(), opened);
 
         let dropdown_style = dropdown_width.map_or_else(
             || "width: 100%;".to_string(),
@@ -184,14 +176,7 @@ where
         );
 
         let action_icon = if clearable && !selected.is_empty() {
-            let on_click = {
-                let field_id = id.clone();
-                mouse_ev(Ev::Click, move |ev| {
-                    ev.stop_propagation();
-                    ev.prevent_default();
-                    Msg::StyledSelectChanged(field_id, StyledSelectChanged::Changed(None))
-                })
-            };
+            let on_click = super::events::on_click_change_select_selected(id.clone(), None);
             StyledIcon {
                 icon: Icon::Close,
                 class_list: "chevronIcon",
@@ -210,26 +195,24 @@ where
             empty![]
         };
 
-        let skip = selected.iter().fold(HashMap::new(), |mut h, o| {
-            h.insert(o.value, true);
-            h
-        });
+        let skip = {
+            let len = selected.len();
+            selected
+                .iter()
+                .fold(HashMap::with_capacity(len), |mut h, o| {
+                    h.insert(o.value, true);
+                    h
+                })
+        };
         let children: Vec<Node<Msg>> = if let Some(options) = options {
             options
                 .filter(|o| !skip.contains_key(&o.value) && o.match_text(text_filter))
                 .map(|child| {
-                    let value = child.value();
+                    let on_change = super::events::on_click_change_select_selected(
+                        id.clone(),
+                        Some(child.value()),
+                    );
                     let node = child.render_option();
-
-                    let on_change = {
-                        let field_id = id.clone();
-                        mouse_ev(Ev::Click, move |_| {
-                            Msg::StyledSelectChanged(
-                                field_id,
-                                StyledSelectChanged::Changed(Some(value)),
-                            )
-                        })
-                    };
                     div![C!["option"], on_change, on_handler.clone(), node]
                 })
                 .collect()
@@ -240,10 +223,7 @@ where
         seed::div![
             C!["styledSelect", variant.to_str(), IF![!valid => "invalid"]],
             attrs![At::Style => dropdown_style.as_str()],
-            keyboard_ev(Ev::KeyUp, |ev| {
-                ev.stop_propagation();
-                None as Option<Msg>
-            }),
+            super::events::on_keyup_noop(),
             div![
                 C!["valueContainer", variant.to_str()],
                 on_handler,
@@ -287,18 +267,8 @@ where
     }
 
     fn multi_value(child: StyledSelectOption, id: FieldId) -> Node<Msg> {
-        let value = child.value();
+        let handler = super::events::on_click_change_select_remove_multi(id, child.value());
 
-        let opt = child.render_multi_value();
-
-        let handler = {
-            let field_id = id;
-            mouse_ev(Ev::Click, move |ev| {
-                ev.stop_propagation();
-                Msg::StyledSelectChanged(field_id, StyledSelectChanged::RemoveMulti(value))
-            })
-        };
-
-        div![C!["valueMultiItem"], opt, handler]
+        div![C!["valueMultiItem"], child.render_multi_value(), handler]
     }
 }

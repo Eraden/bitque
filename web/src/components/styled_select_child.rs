@@ -13,6 +13,7 @@ pub enum DisplayType {
     SelectMultiValue,
 }
 
+#[derive(Default)]
 pub struct StyledSelectOption<'l> {
     pub name: Option<&'l str>,
     pub icon: Option<Node<Msg>>,
@@ -20,19 +21,6 @@ pub struct StyledSelectOption<'l> {
     pub value: u32,
     pub class_list: &'l str,
     pub variant: SelectVariant,
-}
-
-impl<'l> Default for StyledSelectOption<'l> {
-    fn default() -> Self {
-        Self {
-            name: None,
-            icon: None,
-            text: None,
-            value: 0,
-            class_list: "",
-            variant: Default::default(),
-        }
-    }
 }
 
 impl<'l> StyledSelectOption<'l> {
@@ -75,31 +63,26 @@ impl<'l> StyledSelectOption<'l> {
             variant,
         } = self;
 
-        let label_node = text.map_or_else(
-            || Node::Empty,
-            |text| {
-                div![
-                    C![
-                        variant.to_str(),
-                        name.as_deref()
-                            .map(|s| format!("{}Label", s))
-                            .unwrap_or_default(),
-                        match display_type {
-                            DisplayType::SelectOption => "optionLabel",
-                            DisplayType::SelectValue | DisplayType::SelectMultiValue =>
-                                "selectItemLabel",
-                        },
-                        class_list
-                    ],
-                    text
-                ]
-            },
-        );
+        let label_node = text.map(|text| {
+            div![
+                C![
+                    variant.to_str(),
+                    name.map(|s| format!("{}Label", s)),
+                    match display_type {
+                        DisplayType::SelectOption => "optionLabel",
+                        DisplayType::SelectValue | DisplayType::SelectMultiValue =>
+                            "selectItemLabel",
+                    },
+                    class_list
+                ],
+                text
+            ]
+        });
 
         div![
             C![
                 variant.to_str(),
-                name.as_deref().unwrap_or_default(),
+                name,
                 match display_type {
                     DisplayType::SelectOption => "optionItem",
                     DisplayType::SelectValue | DisplayType::SelectMultiValue => "selectItem value",
