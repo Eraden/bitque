@@ -1,7 +1,8 @@
 use actix::{Handler, Message};
+use lettre::message::Mailbox;
 use uuid::Uuid;
 
-use crate::MailExecutor;
+use crate::{email_address, MailError, MailExecutor};
 
 #[derive(Debug)]
 pub struct Invite {
@@ -11,17 +12,18 @@ pub struct Invite {
 }
 
 impl Message for Invite {
-    type Result = Result<(), String>;
+    type Result = Result<(), MailError>;
 }
 
 impl Handler<Invite> for MailExecutor {
-    type Result = Result<(), String>;
+    type Result = Result<(), MailError>;
 
     fn handle(&mut self, msg: Invite, _ctx: &mut Self::Context) -> Self::Result {
         use lettre::Transport;
         let transport = &mut self.transport;
-        let from = self.config.from.as_str();
         let addr = jirs_config::web::Configuration::read().full_addr();
+        let from = email_address(self.config.from.as_str())?;
+        let to = email_address(&msg.email)?;
 
         let html = format!(
             r#"
@@ -43,17 +45,19 @@ impl Handler<Invite> for MailExecutor {
             addr = addr,
         );
 
-        let email = lettre_email::Email::builder()
-            .from(from)
-            .to(msg.email.as_str())
-            .html(html.as_str())
+        let mail = lettre::Message::builder()
+            .to(Mailbox::new(None, to))
+            .from(Mailbox::new(None, from))
             .subject("Invitation to JIRS project")
-            .build()
-            .map_err(|_| "Email is not valid".to_string())?;
+            .body(html)
+            .map_err(|e| {
+                log::error!("{:?}", e);
+                MailError::MailformedBody
+            })?;
 
-        transport
-            .send(email.into())
-            .map(|_| ())
-            .map_err(|e| format!("Mailer: {}", e))
+        transport.send(&mail).map(|_| ()).map_err(|e| {
+            log::error!("Mailer: {}", e);
+            MailError::FailedToSendEmail
+        })
     }
 }

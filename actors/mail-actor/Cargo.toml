@@ -21,13 +21,13 @@ toml = { version = "*" }
 
 dotenv = { version = "*" }
 
-uuid = { version = "0.8.1", features = ["serde", "v4", "v5"] }
+uuid = { version = "0.8.2", features = ["serde", "v4", "v5"] }
 
 futures = { version = "*" }
 openssl-sys = { version = "*", features = ["vendored"] }
 libc = { version = "0.2.0", default-features = false }
 
-lettre = { version = "*" }
+lettre = { version = "0.10.0-rc.3" }
 lettre_email = { version = "*" }
 
 log = { version = "*" }

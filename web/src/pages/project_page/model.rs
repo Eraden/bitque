@@ -29,13 +29,16 @@ pub struct ProjectPage {
 }
 
 impl ProjectPage {
-    pub fn visible_issues(
+    pub fn visible_issues<'issue, IssueStream>(
         page: &ProjectPage,
         epics: &[Epic],
         statuses: &[IssueStatus],
-        issues: &[Issue],
+        issues: IssueStream,
         user: &Option<User>,
-    ) -> Vec<EpicIssuePerStatus> {
+    ) -> Vec<EpicIssuePerStatus>
+    where
+        IssueStream: std::iter::Iterator<Item = &'issue Issue>,
+    {
         let epics = vec![None].into_iter().chain(
             epics
                 .iter()
@@ -43,7 +46,7 @@ impl ProjectPage {
         );
 
         let statuses = statuses.iter().map(|s| (s.id, s.name.as_str()));
-        let issues = issues.iter().filter(|issue| {
+        let issues = issues.filter(|issue| {
             issue_filter_with_avatars(issue, &page.active_avatar_filters)
                 && issue_filter_with_text(issue, page.text_filter.as_str())
                 && issue_filter_with_only_my(issue, page.only_my_filter, user)

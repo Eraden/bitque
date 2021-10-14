@@ -17,6 +17,7 @@ use crate::components::styled_tooltip::{TooltipVariant as StyledTooltip, Tooltip
 use crate::modals::DebugMsg;
 use crate::model::{ModalType, Model, Page};
 use crate::pages::issues_and_filters::IssuesAndFiltersMsg;
+use crate::pages::sign_in_page::SignInMsg;
 use crate::shared::go_to_login;
 use crate::ws::{flush_queue, open_socket, read_incoming, send_ws_msg};
 
@@ -89,6 +90,7 @@ pub enum Msg {
     SignInRequest,
     BindClientRequest,
     InvalidPair,
+    SignIn(SignInMsg),
 
     // users
     InviteRequest,

@@ -23,7 +23,7 @@ futures = { version = "0.3.8" }
 openssl-sys = { version = "*", features = ["vendored"] }
 libc = { version = "0.2.0", default-features = false }
 
-uuid = { version = "0.8.1", features = ["serde", "v4", "v5"] }
+uuid = { version = "0.8.2", features = ["serde", "v4", "v5"] }
 
 [dependencies.jirs-config]
 path = "../../shared/jirs-config"

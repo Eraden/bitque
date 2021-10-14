@@ -1,12 +1,8 @@
 [package]
-name = "jirs-cli"
+name = "jirsc"
 version = "0.1.0"
 authors = ["Adrian Wozniak <adrian.wozniak@ita-prog.pl>"]
 edition = "2018"
-
-[[bin]]
-name = "jirs"
-path = "./src/main.rs"
 
 [dependencies]
 common = { path = "../shared/common" }

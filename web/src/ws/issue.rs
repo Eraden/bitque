@@ -131,15 +131,19 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
         return;
     }
 
-    let mut issues: Vec<Issue> = model
-        .issues_mut()
-        .drain_filter(|issue| {
-            if issue.id == dragged_id {
-                issue.issue_status_id = status_id;
-            }
-            issue.issue_status_id == status_id && issue.epic_id == epic_id
-        })
-        .collect();
+    let mut issues = {
+        let mut h = std::mem::take(&mut model.issues_by_id);
+        h.keys()
+            .filter_map(|id| h.remove(id))
+            .collect::<Vec<Issue>>()
+    }
+    .drain_filter(|issue| {
+        if issue.id == dragged_id {
+            issue.issue_status_id = status_id;
+        }
+        issue.issue_status_id == status_id && issue.epic_id == epic_id
+    })
+    .collect::<Vec<Issue>>();
 
     issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
 
@@ -153,7 +157,8 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
         }
 
         dirty.push(issue.id);
-        model.issues_mut().push(issue);
+        model.issue_ids.push(issue.id);
+        model.issues_by_id.insert(issue.id, issue);
     }
     {
         let project_page = crate::match_page_mut!(model, Project);
@@ -166,7 +171,10 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
         crate::match_page!(model, Project),
         model.epics(),
         model.issue_statuses(),
-        model.issues(),
+        model
+            .issue_ids
+            .iter()
+            .filter_map(|id| model.issues_by_id.get(id)),
         model.user(),
     );
 

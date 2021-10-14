@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub use init_load_sets::*;
 use jirs_data::msg::{
     WsError, WsMsgComment, WsMsgEpic, WsMsgIssue, WsMsgIssueStatus, WsMsgMessage, WsMsgProject,
@@ -7,7 +9,7 @@ use jirs_data::*;
 use seed::prelude::*;
 
 use crate::model::*;
-use crate::pages::sign_in_page::SignInState;
+use crate::pages::sign_in_page::SignInMsg;
 use crate::shared::{go_to_board, write_auth_token};
 use crate::{Msg, OperationKind, ResourceKind, WebSocketChanged};
 
@@ -252,7 +254,15 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
         WsMsg::Project(WsMsgProject::ProjectIssuesLoaded(v)) => {
             v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
             {
-                let _ = std::mem::replace(model.issues_mut(), v.clone());
+                model.issue_ids = Vec::with_capacity(v.len());
+                model.issues_by_id =
+                    std::mem::take(v)
+                        .into_iter()
+                        .fold(HashMap::with_capacity(v.len()), |h, o| {
+                            model.issue_ids.push(o.id);
+                            h.insert(o.id, o);
+                            h
+                        });
             };
             model.issues_by_id.clear();
             for issue in v {
@@ -267,10 +277,8 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
         }
         WsMsg::Issue(WsMsgIssue::IssueCreated(issue)) => {
             let id = issue.id;
+            model.issue_ids.push(issue.id);
             model.issues_by_id.insert(id, issue.clone());
-            if let Some(idx) = model.issues().iter().position(|i| i.id == issue.id) {
-                let _ = std::mem::replace(&mut model.issues_mut()[idx], issue.clone());
-            }
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Issue,
                 OperationKind::SingleCreated,
@@ -280,10 +288,11 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
         WsMsg::Issue(WsMsgIssue::IssueUpdated(issue)) => {
             let id = issue.id;
             model.issues_by_id.remove(&id);
+            model.issue_ids = std::mem::take(&mut model.issue_ids)
+                .into_iter()
+                .filter(|id| *id != issue.id)
+                .collect();
             model.issues_by_id.insert(id, issue.clone());
-            if let Some(idx) = model.issues().iter().position(|i| i.id == issue.id) {
-                let _ = std::mem::replace(&mut model.issues_mut()[idx], issue.clone());
-            }
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Issue,
                 OperationKind::SingleModified,
@@ -291,13 +300,12 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
             ));
         }
         WsMsg::Issue(WsMsgIssue::IssueDeleted(id, _count)) => {
-            let old = std::mem::take(model.issues_mut());
-            for is in old {
-                if is.id == *id {
-                    continue;
-                }
-                model.issues_mut().push(is);
-            }
+            model.issue_ids = std::mem::take(&mut model.issue_ids)
+                .into_iter()
+                .filter(|old| *old != *id)
+                .collect();
+            model.issues_by_id.remove(id);
+
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Issue,
                 OperationKind::SingleRemoved,
@@ -442,8 +450,7 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
             ));
         }
         WsMsg::Session(WsMsgSession::AuthenticateSuccess) => {
-            let page = crate::match_page_mut!(model, SignIn);
-            page.state = SignInState::EmailSend;
+            orders.send_msg(Msg::SignIn(SignInMsg::AuthenticateSuccess));
         }
         WsMsg::Error(WsError::InvalidLoginPair) => {
             orders.send_msg(Msg::InvalidPair);

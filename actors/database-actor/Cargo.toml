@@ -54,5 +54,5 @@ features = ["backend"]
 path = "../../derive/derive_db_execute"
 
 [dependencies.diesel]
-version = "1.4.7"
-features = [ "postgres", "numeric", "uuidv07", "r2d2", "extras" ]
+version = "1.4.8"
+features = [ "postgres", "numeric", "uuidv07", "r2d2", "chrono" ]

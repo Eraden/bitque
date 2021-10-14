@@ -230,8 +230,8 @@ pub struct Model {
     pub current_user_project: Option<UserProject>,
 
     // issues
-    issues: Vec<Issue>,
-    pub issues_by_id: HashMap<EpicId, Issue>,
+    pub issue_ids: Vec<IssueId>,
+    pub issues_by_id: HashMap<IssueId, Issue>,
 
     // users
     pub user: Option<User>,
@@ -309,16 +309,6 @@ impl Model {
             key_triggers: std::rc::Rc::new(std::cell::RefCell::new(HashMap::with_capacity(20))),
             distinct_key_up: crate::shared::on_event::distinct(),
         }
-    }
-
-    #[inline(always)]
-    pub fn issues(&self) -> &[Issue] {
-        &self.issues
-    }
-
-    #[inline(always)]
-    pub fn issues_mut(&mut self) -> &mut Vec<Issue> {
-        &mut self.issues
     }
 
     #[inline(always)]

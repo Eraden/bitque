@@ -109,8 +109,8 @@ Ensure `$HOME/.cargo/bin` is in `$PATH`
 * Compile server
 
 ```bash
-cargo build --bin jirs_server --release --no-default-features --features local-storage
-cp ./target/release/jirs_server /usr/bin/jirs_server
+cargo build --bin jirs --release --no-default-features --features local-storage
+cp ./target/release/jirs /usr/bin/jirs
 ```
 
 * Compile web client

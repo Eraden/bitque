@@ -9,6 +9,12 @@ pub type UsernameValidator = Touched<Between<4, 36>>;
 pub type EmailValidator = Touched<Chain<Changed<AtLeast<6>>, Changed<EmailFormat>>>;
 pub type TokenValidator = Touched<Chain<Between<10, 36>, Changed<UuidFormat>>>;
 
+#[derive(Debug)]
+pub enum SignInMsg {
+    AuthenticateSuccess,
+    InvalidPair,
+}
+
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum SignInState {
     Initial,

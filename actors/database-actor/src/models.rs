@@ -4,7 +4,6 @@ use jirs_data::{
     TimeTracking, UserId,
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::schema::*;
 
@@ -103,15 +102,6 @@ pub struct UserForm {
     pub name: String,
     pub email: String,
     pub avatar_url: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Insertable)]
-#[table_name = "tokens"]
-pub struct TokenForm {
-    pub user_id: i32,
-    pub access_token: Uuid,
-    pub refresh_token: Uuid,
-    pub bind_token: Option<Uuid>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Insertable)]

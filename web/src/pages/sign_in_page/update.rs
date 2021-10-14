@@ -68,6 +68,10 @@ pub fn update(msg: Msg, model: &mut model::Model, orders: &mut impl Orders<Msg>)
         Msg::InvalidPair => {
             page.state = SignInState::InvalidPair;
         }
+        Msg::SignIn(crate::pages::sign_in_page::SignInMsg::AuthenticateSuccess) => {
+            let page = crate::match_page_mut!(model, SignIn);
+            page.state = SignInState::EmailSend;
+        }
         Msg::WebSocketChange(change) => match change {
             WebSocketChanged::WsMsg(WsMsg::Session(WsMsgSession::AuthenticateSuccess)) => {
                 page.state = SignInState::EmailSend;
