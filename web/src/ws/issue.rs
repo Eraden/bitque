@@ -30,8 +30,9 @@ pub fn change_position(below_id: EpicId, model: &mut Model) {
     }
 
     let (issue_status_id, epic_id) = model
-        .issues()
+        .issue_ids
         .iter()
+        .filter_map(|id| model.issues_by_id.get(id))
         .find_map(|issue| {
             if issue.id == dragged_id {
                 Some((issue.issue_status_id, issue.epic_id))

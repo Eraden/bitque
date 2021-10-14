@@ -37,15 +37,24 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 .jql
                 .remove_from(idx);
             let issues = super::IssuesAndFiltersPage::visible_issues(
-                model.issues(),
+                model
+                    .issue_ids
+                    .iter()
+                    .filter_map(|id| model.issues_by_id.get(id)),
                 &crate::match_page!(model, IssuesAndFilters).jql,
             );
             crate::match_page_mut!(model, IssuesAndFilters).visible_issues = issues;
         }
         Msg::ResourceChanged(ResourceKind::Issue, OperationKind::ListLoaded, _) => {
             let jql = &match_page!(model, IssuesAndFilters).jql;
-            let issues = super::IssuesAndFiltersPage::visible_issues(model.issues(), jql);
-            let first_id = model.issues().first().as_ref().map(|issue| issue.id);
+            let issues = super::IssuesAndFiltersPage::visible_issues(
+                model
+                    .issue_ids
+                    .iter()
+                    .filter_map(|id| model.issues_by_id.get(id)),
+                jql,
+            );
+            let first_id = model.issue_ids.first().copied();
             let page = crate::match_page_mut!(model, IssuesAndFilters);
             if page.active_id.is_none() {
                 page.active_id = first_id;
@@ -56,7 +65,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             crate::match_page_mut!(model, IssuesAndFilters).active_id = Some(id);
         }
         Msg::SetActiveIssue(None) => {
-            let first_id = model.issues().first().as_ref().map(|issue| issue.id);
+            let first_id = model.issue_ids.first().copied();
             crate::match_page_mut!(model, IssuesAndFilters).active_id = first_id;
         }
         Msg::StyledSelectChanged(
@@ -114,7 +123,10 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             page.current_jql_part.reset();
             page.current_jql_part.opened = true;
             let issues = super::IssuesAndFiltersPage::visible_issues(
-                model.issues(),
+                model
+                    .issue_ids
+                    .iter()
+                    .filter_map(|id| model.issues_by_id.get(id)),
                 &crate::match_page!(model, IssuesAndFilters).jql,
             );
             crate::match_page_mut!(model, IssuesAndFilters).visible_issues = issues;

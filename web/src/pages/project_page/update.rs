@@ -120,7 +120,10 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
             crate::match_page!(model, Project),
             model.epics(),
             model.issue_statuses(),
-            model.issues(),
+            model
+                .issue_ids
+                .iter()
+                .filter_map(|id| model.issues_by_id.get(id)),
             model.user(),
         );
         crate::match_page_mut!(model, Project).visible_issues = visible_issues;

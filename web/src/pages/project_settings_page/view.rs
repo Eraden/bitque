@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 
-use seed::*;
-use seed::prelude::*;
-
 use jirs_data::{IssueStatus, ProjectCategory, TimeTracking};
+use seed::prelude::*;
+use seed::*;
 
-use crate::{FieldId, Msg, ProjectFieldId};
 use crate::components::styled_button::{ButtonVariant, StyledButton};
 use crate::components::styled_checkbox::{ChildBuilder, StyledCheckbox, StyledCheckboxState};
 use crate::components::styled_editor::render_styled_editor;
@@ -19,6 +17,7 @@ use crate::components::styled_textarea::StyledTextarea;
 use crate::model::{self, Model, PageContent};
 use crate::pages::project_settings_page::{events, ProjectSettingsPage};
 use crate::shared::inner_layout;
+use crate::{FieldId, Msg, ProjectFieldId};
 
 static TIME_TRACKING_FIBONACCI: &str = include_str!("./time_tracking_fibonacci.txt");
 static TIME_TRACKING_HOURLY: &str = include_str!("./time_tracking_hourly.txt");
@@ -206,10 +205,18 @@ fn category_select_option<'l>(pc: ProjectCategory) -> StyledSelectOption<'l> {
 fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
     let width = 100f64 / (model.issue_statuses.len() + 1) as f64;
     let column_style = format!("width: calc({width}% - 10px)", width = width);
-    let per_column_issue_count = model.issues().iter().fold(HashMap::new(), |mut h, issue| {
-        *h.entry(issue.issue_status_id).or_insert(0) += 1;
-        h
-    });
+    let per_column_issue_count = model
+        .issue_ids
+        .iter()
+        .filter_map(|id| model.issues_by_id.get(id))
+        .iter()
+        .fold(
+            HashMap::with_capacity(model.issue_statuses_by_id.len()),
+            |mut h, issue| {
+                *h.entry(issue.issue_status_id).or_insert(0) += 1;
+                h
+            },
+        );
     let columns: Vec<Node<Msg>> = model
         .issue_statuses
         .iter()

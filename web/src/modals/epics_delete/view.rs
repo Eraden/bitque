@@ -34,7 +34,7 @@ pub fn view(model: &model::Model, modal: &Model) -> Node<Msg> {
 }
 
 fn warning(model: &model::Model, modal: &Model) -> Node<Msg> {
-    let issues: Vec<Node<Msg>> = modal
+    let issues = modal
         .related_issues
         .iter()
         .flat_map(|id| model.issues_by_id.get(id))
@@ -48,12 +48,11 @@ fn warning(model: &model::Model, modal: &Model) -> Node<Msg> {
                     issue.title.as_str()
                 ]
             ]]
-        })
-        .collect();
+        });
 
     let close = StyledButton {
         text: Some("Close"),
-        on_click: Some(mouse_ev("click", move |ev| {
+        on_click: Some(mouse_ev(Ev::Click, move |ev| {
             ev.stop_propagation();
             ev.prevent_default();
             Msg::ModalDropped

@@ -27,14 +27,14 @@ impl Model {
         };
 
         let related_issues = model
-            .issues()
+            .issue_ids
             .iter()
-            .filter_map(|issue| {
-                if issue.epic_id == Some(epic_id) {
-                    Some(issue.id)
-                } else {
-                    None
-                }
+            .filter_map(|id| {
+                model
+                    .issues_by_id
+                    .get(id)
+                    .filter(|issue| issue.epic_id == Some(epic_id))
+                    .map(|issue| issue.id)
             })
             .collect();
         Self {

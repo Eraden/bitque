@@ -240,8 +240,9 @@ fn issue_list(page: &ReportsPage, project_name: &str, this_month_updated: &[&Iss
 
 fn this_month_updated<'a>(model: &'a Model, page: &ReportsPage) -> Vec<&'a Issue> {
     model
-        .issues()
+        .issue_ids
         .iter()
+        .filter_map(|id| model.issues_by_id.get(id))
         .filter(|issue| {
             issue.updated_at.date() >= page.first_day && issue.updated_at.date() <= page.last_day
         })

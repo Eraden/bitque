@@ -20,8 +20,14 @@ pub struct IssuesAndFiltersPage {
 impl IssuesAndFiltersPage {
     pub fn new(model: &model::Model) -> Self {
         let jql = Jql::default();
-        let visible_issues = Self::visible_issues(model.issues(), &jql);
-        let active_id = model.issues().first().as_ref().map(|issue| issue.id);
+        let visible_issues = Self::visible_issues(
+            model
+                .issue_ids
+                .iter()
+                .filter_map(|id| model.issues_by_id.get(id)),
+            &jql,
+        );
+        let active_id = model.issue_ids.first().copied();
 
         Self {
             visible_issues,
@@ -34,9 +40,11 @@ impl IssuesAndFiltersPage {
         }
     }
 
-    pub fn visible_issues(issues: &[Issue], jql: &Jql) -> Vec<IssueId> {
+    pub fn visible_issues<'l, IssueStream>(issues: IssueStream, jql: &Jql) -> Vec<IssueId>
+    where
+        IssueStream: std::iter::Iterator<Item = &'l Issue>,
+    {
         issues
-            .iter()
             .filter(|issue| jql.is_visible(issue))
             .map(|issue| issue.id)
             .collect()
