@@ -11,7 +11,7 @@ pub fn epic_field<Modal>(model: &Model, modal: &Modal, field_id: FieldId) -> Opt
 where
     Modal: IssueModal,
 {
-    if model.epics.is_empty() {
+    if model.epic_ids.is_empty() {
         return None;
     }
     let input = StyledSelect {
@@ -19,10 +19,16 @@ where
         name: "epic",
         selected: vec![modal
             .epic_id_value()
-            .and_then(|id| model.epics.iter().find(|epic| epic.id == id as EpicId))
+            .and_then(|id| model.epics_by_id.get(&(id as EpicId)))
             .map(epic_select_option)
             .unwrap_or_default()],
-        options: Some(model.epics.iter().map(epic_select_option)),
+        options: Some(
+            model
+                .epic_ids
+                .iter()
+                .filter_map(|id| model.epics_by_id.get(id))
+                .map(epic_select_option),
+        ),
         variant: SelectVariant::Normal,
         clearable: true,
         text_filter: modal.epic_state().text_filter.as_str(),

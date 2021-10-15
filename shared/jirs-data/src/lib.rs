@@ -258,7 +258,7 @@ pub struct Issue {
 pub struct IssueStatus {
     pub id: IssueStatusId,
     pub name: String,
-    pub position: ProjectId,
+    pub position: ListPosition,
     pub project_id: ProjectId,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,

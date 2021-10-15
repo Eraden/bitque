@@ -203,7 +203,7 @@ fn category_select_option<'l>(pc: ProjectCategory) -> StyledSelectOption<'l> {
 /// Build draggable columns preview with option to remove and add new columns
 #[inline(always)]
 fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
-    let width = 100f64 / (model.issue_statuses.len() + 1) as f64;
+    let width = 100f64 / (model.issue_status_ids.len() + 1) as f64;
     let column_style = format!("width: calc({width}% - 10px)", width = width);
     let per_column_issue_count = model
         .issue_ids
@@ -216,11 +216,11 @@ fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
                 h
             },
         );
-    let columns: Vec<Node<Msg>> = model
-        .issue_statuses
+    let columns = model
+        .issue_status_ids
         .iter()
-        .map(|is| column_preview(is, page, &per_column_issue_count, column_style.as_str()))
-        .collect();
+        .filter_map(|id| model.issue_statuses_by_id.get(id))
+        .map(|is| column_preview(is, page, &per_column_issue_count, column_style.as_str()));
 
     let columns_section = section![
         C!["columnsSection"],

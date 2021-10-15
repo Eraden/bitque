@@ -254,11 +254,11 @@ pub struct Model {
     pub user_settings: Option<UserSetting>,
 
     // comments
-    pub comments: Vec<Comment>,
+    pub comment_ids: Vec<CommentId>,
     pub comments_by_id: HashMap<CommentId, Comment>,
 
     // issue_statuses
-    pub issue_statuses: Vec<IssueStatus>,
+    pub issue_status_ids: Vec<IssueStatusId>,
     pub issue_statuses_by_id: HashMap<IssueStatusId, IssueStatus>,
     pub issue_statuses_by_name: HashMap<String, IssueStatus>,
 
@@ -273,7 +273,7 @@ pub struct Model {
     pub projects: Vec<Project>,
 
     // epics
-    pub epics: Vec<Epic>,
+    pub epic_ids: Vec<EpicId>,
     pub epics_by_id: HashMap<EpicId, Epic>,
 
     pub key_triggers: std::rc::Rc<std::cell::RefCell<HashMap<char, Box<dyn BuildMsg>>>>,
@@ -304,15 +304,15 @@ impl Model {
             user_ids: vec![],
             users_by_id: HashMap::with_capacity(1_000),
             user_settings: None,
-            comments: vec![],
+            comment_ids: vec![],
             comments_by_id: HashMap::with_capacity(1_000),
-            issue_statuses: vec![],
+            issue_status_ids: vec![],
             issue_statuses_by_id: HashMap::with_capacity(1_000),
             issue_statuses_by_name: HashMap::with_capacity(1_000),
             messages: vec![],
             user_projects: vec![],
             projects: vec![],
-            epics: vec![],
+            epic_ids: vec![],
             issues_by_id: HashMap::with_capacity(1_000),
             show_extras: false,
             epics_by_id: HashMap::with_capacity(1_000),
@@ -321,16 +321,6 @@ impl Model {
             key_triggers: std::rc::Rc::new(std::cell::RefCell::new(HashMap::with_capacity(20))),
             distinct_key_up: crate::shared::on_event::distinct(),
         }
-    }
-
-    #[inline(always)]
-    pub fn issue_statuses(&self) -> &[IssueStatus] {
-        &self.issue_statuses
-    }
-
-    #[inline(always)]
-    pub fn epics(&self) -> &[Epic] {
-        &self.epics
     }
 
     #[inline(always)]

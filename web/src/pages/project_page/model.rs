@@ -29,24 +29,26 @@ pub struct ProjectPage {
 }
 
 impl ProjectPage {
-    pub fn visible_issues<'issue, IssueStream>(
+    pub fn visible_issues<'model, IssueStream, IssueStatusStream, EpicStream>(
         page: &ProjectPage,
-        epics: &[Epic],
-        statuses: &[IssueStatus],
+        num_of_epics: usize,
+        epics: EpicStream,
+        statuses: IssueStatusStream,
         issues: IssueStream,
         user: &Option<User>,
     ) -> Vec<EpicIssuePerStatus>
     where
-        IssueStream: std::iter::Iterator<Item = &'issue Issue>,
+        IssueStream: std::iter::Iterator<Item = &'model Issue>,
+        IssueStatusStream: std::iter::Iterator<Item = &'model IssueStatus>,
+        EpicStream: std::iter::Iterator<Item = &'model Epic>,
     {
-        let num_of_epics = epics.len();
         let epics = vec![None].into_iter().chain(
-            epics
-                .iter()
-                .map(|epic| Some((epic.id, epic.name.as_str(), epic.starts_at, epic.ends_at))),
+            epics.map(|epic| Some((epic.id, epic.name.as_str(), epic.starts_at, epic.ends_at))),
         );
 
-        let statuses = statuses.iter().map(|s| (s.id, s.name.as_str()));
+        let statuses = statuses
+            .map(|s| (s.id, s.name.as_str()))
+            .collect::<Vec<(IssueStatusId, &str)>>();
         let issues = issues.filter(|issue| {
             issue_filter_with_avatars(issue, &page.active_avatar_filters)
                 && issue_filter_with_text(issue, page.text_filter.as_str())
@@ -93,15 +95,15 @@ impl ProjectPage {
                     ..Default::default()
                 };
 
-                for (current_status_id, issue_status_name) in statuses.to_owned() {
+                for (current_status_id, issue_status_name) in statuses.iter() {
                     let per_status_map = StatusIssueIds {
-                        status_id: current_status_id,
+                        status_id: *current_status_id,
                         status_name: issue_status_name.to_string(),
                         issue_ids: issues_per_epic_id
                             .get(&epic.map(|(id, ..)| id))
                             .map(|v| {
                                 v.iter()
-                                    .filter(|issue| issue_filter_status(issue, current_status_id))
+                                    .filter(|issue| issue_filter_status(issue, *current_status_id))
                                     .map(|issue| issue.id)
                                     .collect()
                             })

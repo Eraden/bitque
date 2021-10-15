@@ -197,10 +197,20 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
 
         // issue statuses
         WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusesLoaded(v)) => {
-            model.issue_statuses = std::mem::take(v);
-            model
-                .issue_statuses
-                .sort_by(|a, b| a.position.cmp(&b.position));
+            let len = v.len();
+            let mut issue_statuses = std::mem::take(v);
+            issue_statuses.sort_by(|a, b| a.position.cmp(&b.position));
+            model.issue_status_ids = Vec::with_capacity(len);
+
+            model.issue_statuses_by_id =
+                issue_statuses
+                    .into_iter()
+                    .fold(HashMap::with_capacity(len), |mut h, is| {
+                        model.issue_status_ids.push(is.id);
+                        h.insert(is.id, is);
+                        h
+                    });
+
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::IssueStatus,
                 OperationKind::ListLoaded,
@@ -208,42 +218,33 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
             ));
         }
         WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusCreated(is)) => {
-            let id = is.id;
-            model.issue_statuses.push(is.clone());
-            model
-                .issue_statuses
-                .sort_by(|a, b| a.position.cmp(&b.position));
+            model.issue_status_ids.push(is.id);
+            model.issue_statuses_by_id.insert(is.id, is.clone());
+
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::IssueStatus,
                 OperationKind::SingleCreated,
-                Some(id),
+                Some(is.id),
             ));
         }
         WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusUpdated(changed)) => {
-            let id = changed.id;
-            if let Some(idx) = model.issue_statuses.iter().position(|c| c.id == changed.id) {
-                std::mem::swap(&mut model.issue_statuses[idx], changed);
-            }
             model
-                .issue_statuses
-                .sort_by(|a, b| a.position.cmp(&b.position));
+                .issue_statuses_by_id
+                .insert(changed.id, changed.clone());
+            sort_issue_statuses(model);
+
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::IssueStatus,
                 OperationKind::SingleModified,
-                Some(id),
+                Some(changed.id),
             ));
         }
         WsMsg::IssueStatus(WsMsgIssueStatus::IssueStatusDeleted(dropped_id, _count)) => {
-            let mut old = vec![];
-            std::mem::swap(&mut model.issue_statuses, &mut old);
-            for is in old {
-                if is.id != *dropped_id {
-                    model.issue_statuses.push(is);
-                }
-            }
-            model
-                .issue_statuses
-                .sort_by(|a, b| a.position.cmp(&b.position));
+            model.issue_statuses_by_id.remove(dropped_id);
+            model.issue_status_ids = std::mem::take(&mut model.issue_status_ids)
+                .into_iter()
+                .filter(|id| id != dropped_id)
+                .collect();
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::IssueStatus,
                 OperationKind::SingleRemoved,
@@ -315,6 +316,11 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
                     issue.epic_id = o.epic_id;
                 }
             }
+            orders.send_msg(Msg::ResourceChanged(
+                ResourceKind::Issue,
+                OperationKind::ListLoaded,
+                None,
+            ));
         }
         // users
         WsMsg::Project(WsMsgProject::ProjectUsersLoaded(v)) => {
@@ -335,12 +341,12 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
                 Some(modal) => modal.id,
                 _ => return,
             };
+            comments.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
             if comments.iter().any(|c| c.issue_id != issue_id) {
                 return;
             }
-            comments.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
-            model.comments = comments.clone();
             for comment in std::mem::take(comments) {
+                model.comment_ids.push(comment.id);
                 model.comments_by_id.insert(comment.id, comment);
             }
             orders.send_msg(Msg::ResourceChanged(
@@ -351,10 +357,7 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
         }
         WsMsg::Comment(WsMsgComment::CommentUpdated(comment)) => {
             let comment_id = comment.id;
-            if let Some(idx) = model.comments.iter().position(|c| c.id == comment.id) {
-                let _ = std::mem::replace(&mut model.comments[idx], comment.clone());
-                model.comments_by_id.insert(comment.id, comment.clone());
-            }
+            model.comments_by_id.insert(comment.id, comment.clone());
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Comment,
                 OperationKind::SingleModified,
@@ -362,8 +365,8 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
             ));
         }
         WsMsg::Comment(WsMsgComment::CommentDeleted(comment_id, _count)) => {
-            if let Some(idx) = model.comments.iter().position(|c| c.id == *comment_id) {
-                model.comments.remove(idx);
+            if let Some(idx) = model.comment_ids.iter().position(|id| *id == *comment_id) {
+                model.comment_ids.remove(idx);
             }
             model.comments_by_id.remove(&comment_id);
             orders.send_msg(Msg::ResourceChanged(
@@ -407,10 +410,19 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
 
         // epics
         WsMsg::Epic(WsMsgEpic::EpicsLoaded(epics)) => {
-            model.epics = epics.clone();
-            for epic in epics {
-                model.epics_by_id.insert(epic.id, epic.clone());
-            }
+            let epics = std::mem::take(epics);
+            let len = epics.len();
+
+            model.epic_ids = Vec::with_capacity(len);
+            model.epics_by_id =
+                epics
+                    .into_iter()
+                    .fold(HashMap::with_capacity(len), |mut h, epic| {
+                        model.epic_ids.push(epic.id);
+                        h.insert(epic.id, epic);
+                        h
+                    });
+
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Epic,
                 OperationKind::ListLoaded,
@@ -419,9 +431,10 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
         }
         WsMsg::Epic(WsMsgEpic::EpicCreated(epic)) => {
             let id = epic.id;
-            model.epics.push(epic.clone());
-            model.epics.sort_by(|a, b| a.id.cmp(&b.id));
+            model.epic_ids.push(epic.id);
+            model.epic_ids.sort();
             model.epics_by_id.insert(epic.id, epic.clone());
+
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Epic,
                 OperationKind::SingleCreated,
@@ -430,11 +443,8 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
         }
         WsMsg::Epic(WsMsgEpic::EpicUpdated(epic)) => {
             let epic_id = epic.id;
-            if let Some(idx) = model.epics.iter().position(|e| e.id == epic.id) {
-                let _ = std::mem::replace(&mut model.epics[idx], epic.clone());
-            }
             model.epics_by_id.insert(epic.id, epic.clone());
-            model.epics.sort_by(|a, b| a.id.cmp(&b.id));
+
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Epic,
                 OperationKind::SingleModified,
@@ -442,11 +452,11 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
             ));
         }
         WsMsg::Epic(WsMsgEpic::EpicDeleted(id, _count)) => {
-            if let Some(idx) = model.epics.iter().position(|e| e.id == *id) {
-                model.epics.remove(idx);
-            }
             model.epics_by_id.remove(id);
-            model.epics.sort_by(|a, b| a.id.cmp(&b.id));
+            model.epic_ids = std::mem::take(&mut model.epic_ids)
+                .into_iter()
+                .filter(|epic_id| epic_id != id)
+                .collect();
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Epic,
                 OperationKind::SingleRemoved,
@@ -479,6 +489,17 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
             );
         }
     };
+}
+
+pub fn sort_issue_statuses(model: &mut Model) {
+    let mut ids = model
+        .issue_status_ids
+        .iter()
+        .filter_map(|id| model.issue_statuses_by_id.get(id))
+        .map(|is| (is.id, is.position))
+        .collect::<Vec<_>>();
+    ids.sort_by(|(_, a), (_, b)| a.cmp(b));
+    model.issue_status_ids = ids.into_iter().map(|(id, _)| id).collect();
 }
 
 fn init_current_project(model: &mut Model, orders: &mut impl Orders<Msg>) {

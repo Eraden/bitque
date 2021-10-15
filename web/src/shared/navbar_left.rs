@@ -81,7 +81,7 @@ pub fn render(model: &Model) -> Vec<Node<Msg>> {
         },
     );
 
-    let issue_nav = if model.issue_statuses.is_empty() {
+    let issue_nav = if model.issue_status_ids.is_empty() {
         vec![]
     } else {
         vec![

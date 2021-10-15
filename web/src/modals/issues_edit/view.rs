@@ -243,7 +243,11 @@ fn left_modal_column(model: &Model, modal: &EditIssueModal) -> Node<Msg> {
         vec![div![C!["fakeTextArea"], "Add a comment...", handler]]
     };
 
-    let comments = model.comments.iter().flat_map(|c| comment(model, modal, c));
+    let comments = model
+        .comment_ids
+        .iter()
+        .flat_map(|id| model.comments_by_id.get(id))
+        .flat_map(|c| comment(model, modal, c));
 
     div![
         C!["left"],
@@ -403,11 +407,22 @@ fn status_select(
         opened: status_state.opened,
         variant: SelectVariant::Normal,
         text_filter: status_state.text_filter.as_str(),
-        options: Some(model.issue_statuses.iter().map(issue_status_select_option)),
+        options: Some(
+            model
+                .issue_status_ids
+                .iter()
+                .filter_map(|id| model.issue_statuses_by_id.get(id))
+                .map(issue_status_select_option),
+        ),
         selected: model
-            .issue_statuses
+            .issue_status_ids
             .iter()
-            .filter(|is| is.id == payload.issue_status_id)
+            .filter_map(|id| {
+                model
+                    .issue_statuses_by_id
+                    .get(id)
+                    .filter(|is| is.id == payload.issue_status_id)
+            })
             .map(issue_status_select_option)
             .collect(),
 
@@ -424,7 +439,7 @@ fn status_select(
 }
 
 #[inline(always)]
-fn issue_status_select_option<'l>(is: &'l IssueStatus) -> StyledSelectOption<'l> {
+fn issue_status_select_option(is: &IssueStatus) -> StyledSelectOption<'_> {
     StyledSelectOption {
         value: is.id as u32,
         class_list: is.name.as_str(),

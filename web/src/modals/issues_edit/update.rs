@@ -339,15 +339,13 @@ pub fn update(msg: &Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
             FieldId::EditIssueModal(EditIssueModalSection::Comment(CommentFieldId::Body)),
             comment_id,
         )) => {
-            let id = *comment_id;
             let body = model
-                .comments
-                .iter()
-                .find(|c| c.id == id)
+                .comments_by_id
+                .get(comment_id)
                 .map(|c| c.body.clone())
                 .unwrap_or_default();
             modal.comment_form.body = body;
-            modal.comment_form.id = Some(id);
+            modal.comment_form.id = Some(*comment_id);
             modal.comment_form.creating = true;
         }
         Msg::DeleteComment(comment_id) => {

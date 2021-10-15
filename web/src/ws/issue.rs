@@ -168,8 +168,15 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) -> bool {
 pub fn change_visible(model: &mut Model) {
     let visible = ProjectPage::visible_issues(
         crate::match_page!(model, Project),
-        model.epics(),
-        model.issue_statuses(),
+        model.epic_ids.len(),
+        model
+            .epic_ids
+            .iter()
+            .filter_map(|id| model.epics_by_id.get(id)),
+        model
+            .issue_status_ids
+            .iter()
+            .filter_map(|id| model.issue_statuses_by_id.get(id)),
         model
             .issue_ids
             .iter()
