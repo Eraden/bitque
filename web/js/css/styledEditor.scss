@@ -61,6 +61,20 @@
     display: none;
     min-height: 40px;
     padding-top: 15px;
+
+    ul {
+      > li {
+        list-style: disc;
+        margin-left: 20px;
+      }
+    }
+
+    ol {
+      > li {
+        list-style: decimal;
+        margin-left: 28px;
+      }
+    }
   }
 
   > input.editorRadio {

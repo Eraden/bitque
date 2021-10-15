@@ -1,4 +1,5 @@
 use actix::{Handler, Message};
+use lettre::message::header::ContentType;
 use lettre::message::Mailbox;
 use uuid::Uuid;
 
@@ -49,6 +50,7 @@ impl Handler<Invite> for MailExecutor {
             .to(Mailbox::new(None, to))
             .from(Mailbox::new(None, from))
             .subject("Invitation to JIRS project")
+            .header(ContentType::TEXT_HTML)
             .body(html)
             .map_err(|e| {
                 log::error!("{:?}", e);
