@@ -253,21 +253,16 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
         // issues
         WsMsg::Project(WsMsgProject::ProjectIssuesLoaded(v)) => {
             v.sort_by(|a, b| (a.list_position as i64).cmp(&(b.list_position as i64)));
-            {
-                model.issue_ids = Vec::with_capacity(v.len());
-                model.issues_by_id =
-                    std::mem::take(v)
-                        .into_iter()
-                        .fold(HashMap::with_capacity(v.len()), |h, o| {
-                            model.issue_ids.push(o.id);
-                            h.insert(o.id, o);
-                            h
-                        });
-            };
-            model.issues_by_id.clear();
-            for issue in v {
-                model.issues_by_id.insert(issue.id, issue.clone());
-            }
+            let len = v.len();
+            model.issue_ids = Vec::with_capacity(len);
+            model.issues_by_id =
+                std::mem::take(v)
+                    .into_iter()
+                    .fold(HashMap::with_capacity(len), |mut h, o| {
+                        model.issue_ids.push(o.id);
+                        h.insert(o.id, o);
+                        h
+                    });
 
             orders.send_msg(Msg::ResourceChanged(
                 ResourceKind::Issue,
@@ -311,6 +306,15 @@ pub fn update(msg: &mut WsMsg, model: &mut Model, orders: &mut impl Orders<Msg>)
                 OperationKind::SingleRemoved,
                 Some(*id),
             ));
+        }
+        WsMsg::Issue(WsMsgIssue::IssueSyncedListPosition(sync)) => {
+            for o in sync {
+                if let Some(issue) = model.issues_by_id.get_mut(&o.id) {
+                    issue.list_position = o.list_position;
+                    issue.issue_status_id = o.issue_status_id;
+                    issue.epic_id = o.epic_id;
+                }
+            }
         }
         // users
         WsMsg::Project(WsMsgProject::ProjectUsersLoaded(v)) => {

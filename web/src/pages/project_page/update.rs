@@ -5,6 +5,7 @@ use seed::prelude::Orders;
 use crate::components::styled_select::StyledSelectChanged;
 use crate::model::{Model, Page, PageContent};
 use crate::pages::project_page::model::ProjectPage;
+use crate::ws::issue::change_visible;
 use crate::ws::{board_load, send_ws_msg};
 use crate::{
     BoardPageChange, EditIssueModalSection, FieldId, Msg, OperationKind, PageChanged, ResourceKind,
@@ -97,7 +98,9 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
                 issue_bellow_id,
             ))) => crate::ws::issue::change_position(issue_bellow_id, model),
             Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDragOverStatus(status))) => {
-                crate::ws::issue::change_status(status, model)
+                if !crate::ws::issue::change_status(status, model) {
+                    orders.skip();
+                }
             }
             Msg::PageChanged(PageChanged::Board(BoardPageChange::IssueDropZone(_status))) => {
                 crate::ws::issue::sync(model, orders)
@@ -116,17 +119,7 @@ pub fn update(msg: Msg, model: &mut crate::model::Model, orders: &mut impl Order
         }
     }
     if rebuild_visible {
-        let visible_issues = ProjectPage::visible_issues(
-            crate::match_page!(model, Project),
-            model.epics(),
-            model.issue_statuses(),
-            model
-                .issue_ids
-                .iter()
-                .filter_map(|id| model.issues_by_id.get(id)),
-            model.user(),
-        );
-        crate::match_page_mut!(model, Project).visible_issues = visible_issues;
+        change_visible(model);
     }
 }
 

@@ -39,6 +39,7 @@ impl ProjectPage {
     where
         IssueStream: std::iter::Iterator<Item = &'issue Issue>,
     {
+        let num_of_epics = epics.len();
         let epics = vec![None].into_iter().chain(
             epics
                 .iter()
@@ -51,7 +52,7 @@ impl ProjectPage {
                 && issue_filter_with_text(issue, page.text_filter.as_str())
                 && issue_filter_with_only_my(issue, page.only_my_filter, user)
         });
-        let issues = if page.recently_updated_filter {
+        let mut issues = if page.recently_updated_filter {
             let mut m = HashMap::new();
             let mut sorted: Vec<(IssueId, NaiveDateTime)> = issues
                 .map(|issue| {
@@ -71,12 +72,14 @@ impl ProjectPage {
             issues.collect()
         };
 
+        issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
         let issues_per_epic_id = {
-            let issues_len = issues.len();
             issues
                 .into_iter()
-                .fold(HashMap::with_capacity(issues_len), |mut m, issue| {
-                    m.entry(issue.epic_id).or_insert_with(Vec::new).push(issue);
+                .fold(HashMap::with_capacity(num_of_epics), |mut m, issue| {
+                    m.entry(issue.epic_id)
+                        .or_insert_with(|| Vec::with_capacity(100))
+                        .push(issue);
                     m
                 })
         };

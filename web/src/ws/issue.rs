@@ -1,4 +1,4 @@
-use jirs_data::msg::WsMsgIssue;
+use jirs_data::msg::{IssueSync, WsMsgIssue};
 use jirs_data::*;
 use seed::prelude::Orders;
 use seed::*;
@@ -30,59 +30,51 @@ pub fn change_position(below_id: EpicId, model: &mut Model) {
     }
 
     let (issue_status_id, epic_id) = model
+        .issues_by_id
+        .get(&dragged_id)
+        .map(|issue| (issue.issue_status_id, issue.epic_id))
+        .unwrap_or_default();
+
+    let mut issues = model
         .issue_ids
         .iter()
-        .filter_map(|id| model.issues_by_id.get(id))
-        .find_map(|issue| {
-            if issue.id == dragged_id {
-                Some((issue.issue_status_id, issue.epic_id))
-            } else {
-                None
-            }
+        .filter_map(|id| {
+            model
+                .issues_by_id
+                .get(id)
+                .filter(|issue| {
+                    issue.issue_status_id == issue_status_id && issue.epic_id == epic_id
+                })
+                .map(|issue| (issue.id, issue.list_position))
         })
-        .unwrap_or_default();
+        .collect::<Vec<(i32, i32)>>();
+    issues.sort_by(|(_, a), (_, b)| a.cmp(b));
 
-    let mut issues: Vec<Issue> = model
-        .issues_mut()
-        .drain_filter(|issue| issue.issue_status_id == issue_status_id && issue.epic_id == epic_id)
-        .collect();
-    issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
-
-    let below_idx = issues
-        .iter()
-        .position(|issue| issue.id == below_id)
-        .unwrap_or_default();
-    let dragged_idx = issues
-        .iter()
-        .position(|issue| issue.id == dragged_id)
-        .unwrap_or_default();
-
-    let dragged = issues.remove(dragged_idx);
-    issues.insert(below_idx, dragged);
-
-    let mut changed = Vec::with_capacity(issues.len());
-    for (idx, mut issue) in issues.into_iter().enumerate() {
-        issue.list_position = idx as i32;
-        if let Some(iss) = model.issues_by_id.get_mut(&issue.id) {
-            iss.list_position = issue.list_position;
-        }
-        changed.push((issue.id, issue.list_position));
-        model.issues_mut().push(issue);
+    {
+        let below_idx = issues
+            .iter()
+            .position(|(id, _)| *id == below_id)
+            .unwrap_or_default();
+        let dragged_idx = issues
+            .iter()
+            .position(|(id, _)| *id == dragged_id)
+            .unwrap_or_default();
+        let dragged = issues.remove(dragged_idx);
+        issues.insert(below_idx, dragged);
     }
 
-    let visible = ProjectPage::visible_issues(
-        crate::match_page!(model, Project),
-        model.epics(),
-        model.issue_statuses(),
-        model.issues(),
-        model.user(),
-    );
-    if let PageContent::Project(project_page) = &mut model.page_content {
-        project_page.visible_issues = visible;
-        for (id, _) in changed.iter() {
-            project_page.issue_drag.mark_dirty(*id);
+    {
+        for (idx, (id, _)) in issues.into_iter().enumerate() {
+            if let Some(issue) = model.issues_by_id.get_mut(&id) {
+                issue.list_position = idx as i32;
+            }
+            crate::match_page_mut!(model, Project)
+                .issue_drag
+                .mark_dirty(id);
         }
     }
+
+    change_visible(model);
 }
 
 pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
@@ -91,19 +83,17 @@ pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
         _ => return,
     };
 
-    let changes: Vec<(EpicId, ListPosition, IssueStatusId, Option<EpicId>)> = dirty
+    let changes = dirty
         .into_iter()
         .filter_map(|id| {
-            model.issues_by_id.get(&id).map(|issue| {
-                (
-                    issue.id,
-                    issue.list_position,
-                    issue.issue_status_id,
-                    issue.epic_id,
-                )
+            model.issues_by_id.get(&id).map(|issue| IssueSync {
+                id: issue.id,
+                list_position: issue.list_position,
+                issue_status_id: issue.issue_status_id,
+                epic_id: issue.epic_id,
             })
         })
-        .collect();
+        .collect::<Vec<IssueSync>>();
 
     send_ws_msg(
         WsMsg::Issue(WsMsgIssue::IssueSyncListPosition(changes)),
@@ -113,15 +103,18 @@ pub fn sync(model: &mut Model, orders: &mut impl Orders<Msg>) {
     crate::match_page_mut!(model, Project).issue_drag.clear();
 }
 
-pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
-    let dragged_id = match crate::match_page!(model, Project)
+pub fn change_status(status_id: IssueStatusId, model: &mut Model) -> bool {
+    let dragged_id = match crate::match_page!(model, Project, false)
         .issue_drag
         .dragged_id
         .as_ref()
         .cloned()
     {
         Some(issue_id) => issue_id,
-        _ => return error!("Nothing is dragged"),
+        _ => {
+            error!("Nothing is dragged");
+            return false;
+        }
     };
     let (issue_status_id, epic_id) = model
         .issues_by_id
@@ -129,45 +122,50 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
         .map(|issue| (issue.issue_status_id, issue.epic_id))
         .unwrap_or_default();
     if status_id == issue_status_id {
-        return;
+        return false;
     }
 
-    let mut issues = {
-        let mut h = std::mem::take(&mut model.issues_by_id);
-        h.keys()
-            .filter_map(|id| h.remove(id))
-            .collect::<Vec<Issue>>()
-    }
-    .drain_filter(|issue| {
-        if issue.id == dragged_id {
-            issue.issue_status_id = status_id;
-        }
-        issue.issue_status_id == status_id && issue.epic_id == epic_id
-    })
-    .collect::<Vec<Issue>>();
-
-    issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
-
-    let mut dirty = vec![];
-    for mut issue in issues {
-        if issue.id == dragged_id {
-            issue.issue_status_id = status_id;
-            if let Some(iss) = model.issues_by_id.get_mut(&issue.id) {
-                iss.issue_status_id = status_id;
-            }
-        }
-
-        dirty.push(issue.id);
-        model.issue_ids.push(issue.id);
-        model.issues_by_id.insert(issue.id, issue);
-    }
+    let epic_and_status_issues_count = model
+        .issue_ids
+        .iter()
+        .filter_map(|id| {
+            model
+                .issues_by_id
+                .get(id)
+                .filter(|issue| same_epic_and_status(status_id, epic_id, issue))
+        })
+        .count();
     {
-        let project_page = crate::match_page_mut!(model, Project);
-        for id in dirty {
+        if let Some(issue) = model.issues_by_id.get_mut(&dragged_id) {
+            issue.issue_status_id = status_id;
+            issue.list_position = epic_and_status_issues_count as ListPosition;
+        }
+    }
+
+    let issues_in_column = model
+        .issue_ids
+        .iter()
+        .filter_map(|id| {
+            model
+                .issues_by_id
+                .get(id)
+                .filter(|issue| same_epic_and_status(status_id, epic_id, issue))
+                .map(|issue| issue.id)
+        })
+        .collect::<Vec<i32>>();
+
+    {
+        let project_page = crate::match_page_mut!(model, Project, false);
+        for id in issues_in_column {
             project_page.issue_drag.mark_dirty(id);
         }
     }
 
+    change_visible(model);
+    true
+}
+
+pub fn change_visible(model: &mut Model) {
     let visible = ProjectPage::visible_issues(
         crate::match_page!(model, Project),
         model.epics(),
@@ -180,4 +178,8 @@ pub fn change_status(status_id: IssueStatusId, model: &mut Model) {
     );
 
     crate::match_page_mut!(model, Project).visible_issues = visible;
+}
+
+fn same_epic_and_status(status_id: IssueStatusId, epic_id: Option<EpicId>, issue: &&Issue) -> bool {
+    issue.issue_status_id == status_id && issue.epic_id == epic_id
 }

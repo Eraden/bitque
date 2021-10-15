@@ -2,11 +2,8 @@ use std::collections::HashMap;
 
 use database_actor::issue_assignees::LoadAssignees;
 use database_actor::issues::{LoadProjectIssues, UpdateIssue};
-use jirs_data::msg::{WsMsgIssue, WsMsgProject};
-use jirs_data::{
-    CreateIssuePayload, IssueAssignee, IssueFieldId, IssueId, IssueStatusId, ListPosition,
-    PayloadVariant, WsMsg,
-};
+use jirs_data::msg::{IssueSync, WsMsgIssue, WsMsgProject};
+use jirs_data::{CreateIssuePayload, IssueAssignee, IssueFieldId, IssueId, PayloadVariant, WsMsg};
 
 use crate::{db_or_debug_and_return, AsyncHandler, WebSocketActor, WsResult};
 
@@ -24,14 +21,12 @@ impl AsyncHandler<WsMsgIssue> for WebSocketActor {
             }
             WsMsgIssue::IssueCreate(payload) => self.exec(payload).await,
             WsMsgIssue::IssueDelete(id) => self.exec(DeleteIssue { id }).await,
-            WsMsgIssue::IssueSyncListPosition(sync) => {
-                self.exec(SyncIssueListPosition(sync)).await?;
-                Ok(None)
-            }
+            WsMsgIssue::IssueSyncListPosition(sync) => self.exec(SyncIssueListPosition(sync)).await,
 
             WsMsgIssue::IssueUpdated(_) => Ok(None),
             WsMsgIssue::IssueDeleted(_, _) => Ok(None),
             WsMsgIssue::IssueCreated(_) => Ok(None),
+            WsMsgIssue::IssueSyncedListPosition(_) => Ok(None),
         }
     }
 }
@@ -196,27 +191,37 @@ impl AsyncHandler<LoadIssues> for WebSocketActor {
     }
 }
 
-pub struct SyncIssueListPosition(pub Vec<(IssueId, ListPosition, IssueStatusId, Option<IssueId>)>);
+pub struct SyncIssueListPosition(pub Vec<IssueSync>);
 
 #[async_trait::async_trait]
 impl AsyncHandler<SyncIssueListPosition> for WebSocketActor {
     async fn exec(&mut self, msg: SyncIssueListPosition) -> WsResult {
         let _project_id = self.require_user_project()?.project_id;
-        for (issue_id, list_position, status_id, epic_id) in msg.0 {
+        let mut result = Vec::with_capacity(msg.0.len());
+        for issue_sync in msg.0 {
             crate::actor_or_debug_and_ignore!(
                 self,
                 db,
                 database_actor::issues::UpdateIssue {
-                    issue_id,
-                    list_position: Some(list_position),
-                    issue_status_id: Some(status_id),
-                    epic_id: Some(epic_id),
+                    issue_id: issue_sync.id,
+                    list_position: Some(issue_sync.list_position),
+                    issue_status_id: Some(issue_sync.issue_status_id),
+                    epic_id: Some(issue_sync.epic_id),
                     ..Default::default()
                 },
-                |_| {}; async
+                |issue: database_actor::models::Issue| {
+                    result.push(IssueSync {
+                        id: issue.id,
+                        list_position: issue.list_position,
+                        issue_status_id: issue.issue_status_id,
+                        epic_id: issue.epic_id,
+                    });
+                }; async
             );
         }
 
-        self.exec(LoadIssues).await
+        Ok(Some(WsMsg::Issue(WsMsgIssue::IssueSyncedListPosition(
+            result,
+        ))))
     }
 }

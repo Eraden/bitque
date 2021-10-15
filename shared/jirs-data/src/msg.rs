@@ -120,6 +120,14 @@ impl WsError {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct IssueSync {
+    pub id: IssueId,
+    pub list_position: ListPosition,
+    pub issue_status_id: IssueStatusId,
+    pub epic_id: Option<IssueId>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum WsMsgIssue {
     IssueUpdate(IssueId, IssueFieldId, PayloadVariant),
     IssueUpdated(Issue),
@@ -127,7 +135,8 @@ pub enum WsMsgIssue {
     IssueDeleted(IssueId, NumberOfDeleted),
     IssueCreate(CreateIssuePayload),
     IssueCreated(Issue),
-    IssueSyncListPosition(Vec<(IssueId, ListPosition, IssueStatusId, Option<IssueId>)>),
+    IssueSyncListPosition(Vec<IssueSync>),
+    IssueSyncedListPosition(Vec<IssueSync>),
 }
 
 impl From<WsMsgIssue> for WsMsg {

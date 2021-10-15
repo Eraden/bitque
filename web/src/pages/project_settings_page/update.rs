@@ -118,7 +118,7 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::ColumnDropZone(
             _issue_status_id,
         ))) => {
-            sync(model, orders);
+            // sync(model, orders);
         }
         Msg::PageChanged(PageChanged::ProjectSettings(ProjectPageChange::EditIssueStatusName(
             id,

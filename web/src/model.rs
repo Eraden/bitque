@@ -169,6 +169,12 @@ macro_rules! match_page {
             _ => return,
         }
     };
+    ($model: ident, $ty: ident, $def: expr) => {
+        match &$model.page_content {
+            crate::model::PageContent::$ty(page) => page,
+            _ => return $def,
+        }
+    };
     ($model: ident, $ty: ident; Empty) => {
         match &$model.page_content {
             crate::model::PageContent::$ty(page) => page,
@@ -182,6 +188,12 @@ macro_rules! match_page_mut {
         match &mut $model.page_content {
             PageContent::$ty(page) => page,
             _ => return,
+        }
+    };
+    ($model: ident, $ty: ident, $def: expr) => {
+        match &mut $model.page_content {
+            PageContent::$ty(page) => page,
+            _ => return $def,
         }
     };
 }
@@ -288,7 +300,7 @@ impl Model {
             current_user_project: None,
             about_tooltip_visible: false,
             messages_tooltip_visible: false,
-            issues: vec![],
+            issue_ids: vec![],
             user_ids: vec![],
             users_by_id: HashMap::with_capacity(1_000),
             user_settings: None,
@@ -354,15 +366,15 @@ impl Model {
     }
 
     pub fn epic_issue_ids(&self, epic_id: EpicId) -> Vec<IssueId> {
-        self.issues()
+        self.issue_ids
             .iter()
-            .filter_map(|issue| {
-                if issue.epic_id == Some(epic_id) {
-                    Some(issue.id)
-                } else {
-                    None
-                }
+            .filter(|id| {
+                self.issues_by_id
+                    .get(id)
+                    .filter(|issue| issue.epic_id == Some(epic_id))
+                    .is_some()
             })
+            .copied()
             .collect()
     }
 

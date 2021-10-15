@@ -209,7 +209,6 @@ fn columns_section(model: &Model, page: &ProjectSettingsPage) -> Node<Msg> {
         .issue_ids
         .iter()
         .filter_map(|id| model.issues_by_id.get(id))
-        .iter()
         .fold(
             HashMap::with_capacity(model.issue_statuses_by_id.len()),
             |mut h, issue| {
