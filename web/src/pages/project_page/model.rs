@@ -54,7 +54,7 @@ impl ProjectPage {
                 && issue_filter_with_text(issue, page.text_filter.as_str())
                 && issue_filter_with_only_my(issue, page.only_my_filter, user)
         });
-        let mut issues = if page.recently_updated_filter {
+        let mut issues: Vec<&Issue> = if page.recently_updated_filter {
             let mut m = HashMap::new();
             let mut sorted: Vec<(IssueId, NaiveDateTime)> = issues
                 .map(|issue| {
@@ -63,19 +63,17 @@ impl ProjectPage {
                 })
                 .collect();
             sorted.sort_by(|(_, a_time), (_, b_time)| a_time.cmp(b_time));
-            let mut issues: Vec<&Issue> = sorted
+            sorted
                 .into_iter()
                 .take(10)
                 .flat_map(|(id, _)| m.remove(&id))
-                .collect();
-            issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
-            issues
+                .collect()
         } else {
             issues.collect()
         };
-
         issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
-        let issues_per_epic_id = {
+
+        let issues_per_epic_id =
             issues
                 .into_iter()
                 .fold(HashMap::with_capacity(num_of_epics), |mut m, issue| {
@@ -83,20 +81,16 @@ impl ProjectPage {
                         .or_insert_with(|| Vec::with_capacity(100))
                         .push(issue);
                     m
-                })
-        };
+                });
 
         epics
-            .map(|epic| {
-                let mut per_epic_map = EpicIssuePerStatus {
-                    epic_ref: epic.map(|(id, name, starts_at, ends_at)| {
-                        (id, name.to_string(), starts_at, ends_at)
-                    }),
-                    ..Default::default()
-                };
-
-                for (current_status_id, issue_status_name) in statuses.iter() {
-                    let per_status_map = StatusIssueIds {
+            .map(|epic| EpicIssuePerStatus {
+                epic_ref: epic.map(|(id, name, starts_at, ends_at)| {
+                    (id, name.to_string(), starts_at, ends_at)
+                }),
+                per_status_issues: statuses
+                    .iter()
+                    .map(|(current_status_id, issue_status_name)| StatusIssueIds {
                         status_id: *current_status_id,
                         status_name: issue_status_name.to_string(),
                         issue_ids: issues_per_epic_id
@@ -108,10 +102,8 @@ impl ProjectPage {
                                     .collect()
                             })
                             .unwrap_or_default(),
-                    };
-                    per_epic_map.per_status_issues.push(per_status_map);
-                }
-                per_epic_map
+                    })
+                    .collect(),
             })
             .collect()
     }
