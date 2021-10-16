@@ -173,6 +173,7 @@ pub fn change_visible(model: &mut Model) {
             .epic_ids
             .iter()
             .filter_map(|id| model.epics_by_id.get(id)),
+        model.issue_status_ids.len(),
         model
             .issue_status_ids
             .iter()

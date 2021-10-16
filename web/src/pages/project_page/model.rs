@@ -33,6 +33,7 @@ impl ProjectPage {
         page: &ProjectPage,
         num_of_epics: usize,
         epics: EpicStream,
+        num_of_statuses: usize,
         statuses: IssueStatusStream,
         issues: IssueStream,
         user: &Option<User>,
@@ -49,39 +50,33 @@ impl ProjectPage {
         let statuses = statuses
             .map(|s| (s.id, s.name.as_str()))
             .collect::<Vec<(IssueStatusId, &str)>>();
-        let issues = issues.filter(|issue| {
-            issue_filter_with_avatars(issue, &page.active_avatar_filters)
-                && issue_filter_with_text(issue, page.text_filter.as_str())
-                && issue_filter_with_only_my(issue, page.only_my_filter, user)
-        });
-        let mut issues: Vec<&Issue> = if page.recently_updated_filter {
-            let mut m = HashMap::new();
-            let mut sorted: Vec<(IssueId, NaiveDateTime)> = issues
-                .map(|issue| {
-                    m.insert(issue.id, issue);
-                    (issue.id, issue.updated_at)
-                })
-                .collect();
-            sorted.sort_by(|(_, a_time), (_, b_time)| a_time.cmp(b_time));
-            sorted
-                .into_iter()
-                .take(10)
-                .flat_map(|(id, _)| m.remove(&id))
-                .collect()
-        } else {
-            issues.collect()
-        };
-        issues.sort_by(|a, b| a.list_position.cmp(&b.list_position));
 
-        let issues_per_epic_id =
-            issues
-                .into_iter()
-                .fold(HashMap::with_capacity(num_of_epics), |mut m, issue| {
-                    m.entry(issue.epic_id)
-                        .or_insert_with(|| Vec::with_capacity(100))
-                        .push(issue);
-                    m
-                });
+        let mut scoped_issues = {
+            let issues = issues.filter(|issue| {
+                issue_filter_with_avatars(issue, &page.active_avatar_filters)
+                    && issue_filter_with_text(issue, page.text_filter.as_str())
+                    && issue_filter_with_only_my(issue, page.only_my_filter, user)
+            });
+            if page.recently_updated_filter {
+                let mut m = HashMap::with_capacity(num_of_statuses * num_of_epics);
+                let mut sorted: Vec<(IssueId, NaiveDateTime)> = issues
+                    .map(|issue| {
+                        m.insert(issue.id, issue);
+                        (issue.id, issue.updated_at)
+                    })
+                    .collect();
+                sorted.sort_by(|(_, a_time), (_, b_time)| a_time.cmp(b_time));
+                to_per_epic_and_status_scoped(
+                    num_of_epics,
+                    sorted
+                        .into_iter()
+                        .take(10)
+                        .flat_map(|(id, _)| m.remove(&id)),
+                )
+            } else {
+                to_per_epic_and_status_scoped(num_of_epics, issues)
+            }
+        };
 
         epics
             .map(|epic| EpicIssuePerStatus {
@@ -93,13 +88,11 @@ impl ProjectPage {
                     .map(|(current_status_id, issue_status_name)| StatusIssueIds {
                         status_id: *current_status_id,
                         status_name: issue_status_name.to_string(),
-                        issue_ids: issues_per_epic_id
-                            .get(&epic.map(|(id, ..)| id))
-                            .map(|v| {
-                                v.iter()
-                                    .filter(|issue| issue_filter_status(issue, *current_status_id))
-                                    .map(|issue| issue.id)
-                                    .collect()
+                        issue_ids: scoped_issues
+                            .remove(&(epic.map(|(id, ..)| id), *current_status_id))
+                            .map(|mut v| {
+                                v.sort_by(|a, b| a.list_position.cmp(&b.list_position));
+                                v.iter().map(|issue| issue.id).collect()
                             })
                             .unwrap_or_default(),
                     })
@@ -118,11 +111,6 @@ fn issue_filter_with_avatars(issue: &Issue, user_ids: &[UserId]) -> bool {
 }
 
 #[inline]
-fn issue_filter_status(issue: &Issue, current_status_id: IssueStatusId) -> bool {
-    issue.issue_status_id == current_status_id
-}
-
-#[inline]
 fn issue_filter_with_text(issue: &Issue, text: &str) -> bool {
     text.is_empty() || issue.title.contains(text)
 }
@@ -131,4 +119,19 @@ fn issue_filter_with_text(issue: &Issue, text: &str) -> bool {
 fn issue_filter_with_only_my(issue: &Issue, only_my: bool, user: &Option<User>) -> bool {
     let my_id = user.as_ref().map(|u| u.id).unwrap_or_default();
     !only_my || issue.user_ids.contains(&my_id)
+}
+
+fn to_per_epic_and_status_scoped<'model, IssueStream>(
+    num_of_epics: usize,
+    issues: IssueStream,
+) -> HashMap<(Option<EpicId>, IssueStatusId), Vec<&'model Issue>>
+where
+    IssueStream: std::iter::Iterator<Item = &'model Issue>,
+{
+    issues.fold(HashMap::with_capacity(num_of_epics), |mut m, issue| {
+        m.entry((issue.epic_id, issue.issue_status_id))
+            .or_insert_with(|| Vec::with_capacity(100))
+            .push(issue);
+        m
+    })
 }
