@@ -29,28 +29,20 @@ pub struct ProjectPage {
 }
 
 impl ProjectPage {
-    pub fn visible_issues<'model, IssueStream, IssueStatusStream, EpicStream>(
+    pub fn visible_issues<'model, IssueIter, IssueStatusIter, EpicIter>(
         page: &ProjectPage,
         num_of_epics: usize,
-        epics: EpicStream,
+        epics: EpicIter,
         num_of_statuses: usize,
-        statuses: IssueStatusStream,
-        issues: IssueStream,
+        statuses: IssueStatusIter,
+        issues: IssueIter,
         user: &Option<User>,
     ) -> Vec<EpicIssuePerStatus>
     where
-        IssueStream: std::iter::Iterator<Item = &'model Issue>,
-        IssueStatusStream: std::iter::Iterator<Item = &'model IssueStatus>,
-        EpicStream: std::iter::Iterator<Item = &'model Epic>,
+        IssueIter: std::iter::Iterator<Item = &'model Issue>,
+        IssueStatusIter: std::iter::Iterator<Item = &'model IssueStatus>,
+        EpicIter: std::iter::Iterator<Item = &'model Epic>,
     {
-        let epics = vec![None].into_iter().chain(
-            epics.map(|epic| Some((epic.id, epic.name.as_str(), epic.starts_at, epic.ends_at))),
-        );
-
-        let statuses = statuses
-            .map(|s| (s.id, s.name.as_str()))
-            .collect::<Vec<(IssueStatusId, &str)>>();
-
         let mut scoped_issues = {
             let issues = issues.filter(|issue| {
                 issue_filter_with_avatars(issue, &page.active_avatar_filters)
@@ -78,7 +70,15 @@ impl ProjectPage {
             }
         };
 
-        epics
+        let statuses = statuses
+            .map(|s| (s.id, s.name.as_str()))
+            .collect::<Vec<(IssueStatusId, &str)>>();
+
+        vec![None]
+            .into_iter()
+            .chain(
+                epics.map(|epic| Some((epic.id, epic.name.as_str(), epic.starts_at, epic.ends_at))),
+            )
             .map(|epic| EpicIssuePerStatus {
                 epic_ref: epic.map(|(id, name, starts_at, ends_at)| {
                     (id, name.to_string(), starts_at, ends_at)
@@ -92,7 +92,7 @@ impl ProjectPage {
                             .remove(&(epic.map(|(id, ..)| id), *current_status_id))
                             .map(|mut v| {
                                 v.sort_by(|a, b| a.list_position.cmp(&b.list_position));
-                                v.iter().map(|issue| issue.id).collect()
+                                v.into_iter().map(|issue| issue.id).collect()
                             })
                             .unwrap_or_default(),
                     })
@@ -121,12 +121,12 @@ fn issue_filter_with_only_my(issue: &Issue, only_my: bool, user: &Option<User>) 
     !only_my || issue.user_ids.contains(&my_id)
 }
 
-fn to_per_epic_and_status_scoped<'model, IssueStream>(
+fn to_per_epic_and_status_scoped<'model, IssueIter>(
     num_of_epics: usize,
-    issues: IssueStream,
+    issues: IssueIter,
 ) -> HashMap<(Option<EpicId>, IssueStatusId), Vec<&'model Issue>>
 where
-    IssueStream: std::iter::Iterator<Item = &'model Issue>,
+    IssueIter: std::iter::Iterator<Item = &'model Issue>,
 {
     issues.fold(HashMap::with_capacity(num_of_epics), |mut m, issue| {
         m.entry((issue.epic_id, issue.issue_status_id))
