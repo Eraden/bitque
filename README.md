@@ -23,7 +23,8 @@ Demo: https://jirs.ita-prog.pl
 
 ## Known bugs
 
-* Bad sorting when dragging up and down
+* No inject code
+* Add issue generate broken issue description
 
 ## Roadmap
 
@@ -53,21 +54,21 @@ Demo: https://jirs.ita-prog.pl
 * Fix S3 upload with upgraded version of `rusoto`
 * Remove Custom Elements
 * Replace CSS with SCSS
-* Disable RTE until properly optimized 
+* Disable RTE until properly optimized
+
+##### Version 1.2
+
+* Epics as subgroups
+* Simple issues and filters view with large issue description
+* Basic RTE with most functionalities
+* Performance fixes
+* Code highlight after saving
 
 ##### Work Progress
 
-* [X] Add Epic
-* [X] Edit Epic
-* [X] Delete Epic
-* [X] Epic `starts` and `ends` date
-* [X] Grouping by Epic
-* [X] Basic Rich Text Editor
+* [ ] Sprints
+* [ ] Better reports
 * [ ] Insert Code in Rich Text Editor
-* [X] Code syntax
-* [X] Personal settings to choose MDE (Markdown Editor) or RTE
-* [X] Issues and filters view
-* [X] Issues and filters working filters
 
 ## How to run it
 
