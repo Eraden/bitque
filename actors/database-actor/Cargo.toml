@@ -31,7 +31,7 @@ dotenv = { version = "*" }
 
 byteorder = { version = "1.0" }
 chrono = { version = "0.4", features = ["serde"] }
-time = { version = "0.1" }
+time = { version = "0.2" }
 url = { version = "2.1.0" }
 percent-encoding = { version = "2.1.0" }
 uuid = { version = "0.8.2", features = ["serde", "v4", "v5"] }

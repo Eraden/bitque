@@ -915,7 +915,7 @@ dependencies = [
  "pq-sys",
  "r2d2",
  "serde",
- "time 0.1.43",
+ "time 0.2.27",
  "toml",
  "url",
  "uuid 0.8.2",
